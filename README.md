@@ -2,8 +2,8 @@
 
 
 ### Dependencies
--cmake
--boost
+- cmake
+- boost
 
 ### Compiling/Building
 ```
