@@ -2,4 +2,4 @@
 mkdir build
 cd build
 cmake ..
-make
+make pep_sirf
