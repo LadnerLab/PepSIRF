@@ -12,7 +12,7 @@ class options_parser
 {
 public:
     options_parser();
-    options parse( int argc, char ***argv );
+    void parse( int argc, char ***argv, options& opts );
 };
 
 

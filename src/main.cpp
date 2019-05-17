@@ -17,7 +17,7 @@ int main( int argc, char **argv )
             // create our option parser for parsing command-line options
             parser = options_parser();
             // parse the arguments, any incorrect arguments will raise an error
-            opts = parser.parse( argc, &argv );
+            parser.parse( argc, &argv, opts );
         }
     catch( std::exception& e )
         {
@@ -27,4 +27,7 @@ int main( int argc, char **argv )
             return EXIT_FAILURE;
         }
 
+    // run PepSIRF with options parsed from command-line
+
+    return EXIT_SUCCESS;
 }
