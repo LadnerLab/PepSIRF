@@ -6,7 +6,7 @@ set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF) 
 
 find_package(OpenMP REQUIRED)
-find_package(Boost COMPONENTS regex)
+find_package(Boost COMPONENTS program_options)
 
 include_directories(include)
 add_compile_options( "-Wall" "-std=c++11" "-Wextra" 
@@ -19,7 +19,7 @@ endif()
 
 include_directories(${Boost_INCLUDE_DIRS})
 add_executable(pep_sirf src/main.cpp)
-add_library(pepsirf_lib SHARED src/Student.cpp)
+add_library(pepsirf_lib SHARED src/parsers/options_parser.cpp)
 add_executable(pepsirf_test test/pepsirf_test.cpp)
 target_include_directories( pepsirf_test PUBLIC lib )
 
