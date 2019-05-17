@@ -21,6 +21,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 add_executable(pep_sirf src/main.cpp)
 add_library(pepsirf_lib SHARED src/Student.cpp)
 add_executable(pepsirf_test test/pepsirf_test.cpp)
+target_include_directories( pepsirf_test PUBLIC lib )
 
 target_link_libraries(pep_sirf PRIVATE OpenMP::OpenMP_CXX pepsirf_lib ${Boost_LIBRARIES})
 target_link_libraries(pepsirf_test PRIVATE OpenMP::OpenMP_CXX pepsirf_lib ${Boost_LIBRARIES})
