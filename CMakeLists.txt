@@ -19,9 +19,9 @@ endif()
 
 include_directories(${Boost_INCLUDE_DIRS})
 add_executable(pep_sirf src/main.cpp)
-add_library(pepsirf_lib SHARED src/parsers/options_parser.cpp)
+add_library(pepsirf_lib STATIC src/parsers/options_parser.cpp)
 add_executable(pepsirf_test test/pepsirf_test.cpp)
-target_include_directories( pepsirf_test PUBLIC lib )
+target_include_directories(pepsirf_test PUBLIC lib)
 
-target_link_libraries(pep_sirf PRIVATE OpenMP::OpenMP_CXX pepsirf_lib ${Boost_LIBRARIES})
-target_link_libraries(pepsirf_test PRIVATE OpenMP::OpenMP_CXX pepsirf_lib ${Boost_LIBRARIES})
+target_link_libraries(pep_sirf PUBLIC OpenMP::OpenMP_CXX pepsirf_lib ${Boost_LIBRARIES})
+target_link_libraries(pepsirf_test PUBLIC OpenMP::OpenMP_CXX pepsirf_lib ${Boost_LIBRARIES})
