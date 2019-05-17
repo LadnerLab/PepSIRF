@@ -6,6 +6,7 @@ void options_parser::parse( int argc, char ***argv, options& opts )
 {
     namespace po = boost::program_options;
     char **argv_loc = *argv;
+    po::variables_map vm;
 
     po::options_description desc( "PepSIRF: Peptide-based Serological Immune Response Framework" );
     desc.add_options()
@@ -18,23 +19,10 @@ void options_parser::parse( int argc, char ***argv, options& opts )
         )
         ( "num_threads,t", po::value<int>(), "Number of threads to use for analyses." );
 
-    po::variables_map vm;
     po::store( po::parse_command_line( argc, argv_loc, desc ), vm );
 
     if( vm.count( "help" ) )
         {
             std::cout << desc << std::endl;
-        }
-
-    // throws an exception if this is not included
-    check_required( vm, "input_r1" );
-    check_required( vm, "library" );
-}
-
-void options_parser::check_required( boost::program_options::variables_map& vm, std::string arg )
-{
-    if( !vm.count( arg ) )
-        {
-            throw std::runtime_error( std::string( "Required argument missing: " ) + arg );
         }
 }

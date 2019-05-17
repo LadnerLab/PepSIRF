@@ -14,10 +14,6 @@ class options_parser
 public:
     options_parser();
     void parse( int argc, char ***argv, options& opts );
-
-private:
-    void check_required( boost::program_options::variables_map& vm, std::string arg );
-    
 };
 
 
