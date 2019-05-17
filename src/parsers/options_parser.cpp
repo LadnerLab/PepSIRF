@@ -10,12 +10,13 @@ void options_parser::parse( int argc, char ***argv, options& opts )
     po::options_description desc( "PepSIRF: Peptide-based Serological Immune Response Framework" );
     desc.add_options()
         ( "help", "Produce help message" )
-        ( "input_r1", "Input forward reads fastq file to parse.") ;
-        ( "input_r2", "Input reverse reads fastq file to parse.") ;
-        ( "library,l", "Designed library containing amino acid peptides. "
-                       "Library should be in fasta format and should contain "
-                       "sequences that were used to design input_r1 and input_r2."
+        ( "input_r1", po::value<std::string>(), "Input forward reads fastq file to parse.")
+        ( "input_r2", po::value<std::string>(), "Input reverse reads fastq file to parse.")
+        ( "library,l", po::value<std::string>(), "Designed library containing amino acid peptides. "
+                                                         "Library should be in fasta format and should contain "
+                                                         "sequences that were used to design input_r1 and input_r2."
         )
+        ( "num_threads,t", po::value<int>( &opts.num_threads ), "Number of threads to use for analyses." );
 
     po::variables_map vm;
     po::store( po::parse_command_line( argc, argv_loc, desc ), vm );
@@ -23,5 +24,16 @@ void options_parser::parse( int argc, char ***argv, options& opts )
     if( vm.count( "help" ) )
         {
             std::cout << desc << std::endl;
+        }
+
+    // throws an exception if this is not included
+    check_required( vm, "input_r1" );
+}
+
+void options_parser::check_required( boost::program_options::variables_map& vm, std::string arg )
+{
+    if( !vm.count( arg ) )
+        {
+            throw std::runtime_error( std::string( "Required argument missing: " ) + arg );
         }
 }
