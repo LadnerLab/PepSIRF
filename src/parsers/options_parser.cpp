@@ -16,7 +16,7 @@ void options_parser::parse( int argc, char ***argv, options& opts )
                                                          "Library should be in fasta format and should contain "
                                                          "sequences that were used to design input_r1 and input_r2."
         )
-        ( "num_threads,t", po::value<int>( &opts.num_threads ), "Number of threads to use for analyses." );
+        ( "num_threads,t", po::value<int>(), "Number of threads to use for analyses." );
 
     po::variables_map vm;
     po::store( po::parse_command_line( argc, argv_loc, desc ), vm );
@@ -28,6 +28,7 @@ void options_parser::parse( int argc, char ***argv, options& opts )
 
     // throws an exception if this is not included
     check_required( vm, "input_r1" );
+    check_required( vm, "library" );
 }
 
 void options_parser::check_required( boost::program_options::variables_map& vm, std::string arg )
