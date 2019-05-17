@@ -1,3 +1,3 @@
 #include "options.h"
-Options::Options() = default;
+options::options() = default;
 

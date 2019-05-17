@@ -1,10 +1,10 @@
 #ifndef OPTIONS_HH_INCLUDED
 #define OPTIONS_HH_INCLUDED
 
-class Options
+class options
 {
 public:
-    Options();
+    options();
 };
 
 #endif //OPTIONS_HH_INCLUDED

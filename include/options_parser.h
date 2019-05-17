@@ -5,12 +5,14 @@
 #include <iterator>
 #include <exception>
 
+#include "options.h"
 
-class OptionsParser
+
+class options_parser
 {
 public:
-    OptionsParser();
-    void parse( int argc, char ***argv );
+    options_parser();
+    options parse( int argc, char ***argv );
 };
 
 
