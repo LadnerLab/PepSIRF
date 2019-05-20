@@ -19,7 +19,7 @@ endif()
 
 include_directories(${Boost_INCLUDE_DIRS})
 add_executable(pep_sirf src/main.cpp)
-add_library(pepsirf_lib STATIC src/parsers/options_parser.cpp src/options.cpp)
+add_library(pepsirf_lib STATIC src/parsers/options_parser.cpp src/options.cpp src/sequence.cpp src/parsers/fastq_parser.cpp src/parsers/fasta_parser.cpp)
 add_executable(pepsirf_test test/pepsirf_test.cpp)
 target_include_directories(pepsirf_test PUBLIC lib)
 
