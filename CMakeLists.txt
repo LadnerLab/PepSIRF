@@ -8,7 +8,8 @@ set(Boost_USE_STATIC_RUNTIME OFF)
 find_package(OpenMP REQUIRED)
 find_package(Boost COMPONENTS program_options)
 
-include_directories(include)
+include_directories(include/modules/core)
+include_directories(include/modules/parsers)
 include_directories(include/modules/demux)
 add_compile_options( "-Wall" "-std=c++11" "-Wextra" 
                      "$<$<CONFIG:DEBUG>:-O0;-g>" 
