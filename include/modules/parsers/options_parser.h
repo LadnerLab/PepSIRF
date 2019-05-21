@@ -21,6 +21,11 @@ public:
     options_parser(); 
 
     /**
+     * Default destructor.
+     **/
+    virtual ~options_parser();
+
+    /**
      * Parse command-line arguments, store parsed options in the 
      * members of the opts item.
      * @param argc The number of arguments passed from the command-line.
