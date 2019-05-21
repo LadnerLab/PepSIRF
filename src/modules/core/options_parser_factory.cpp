@@ -37,5 +37,5 @@ options_parser *options_parser_factory::create( int argc, char ***argv )
         {
             return new options_parser_demux();
         }
-    throw "Invalid module name entered";
+    throw std::runtime_error( "Invalid module name entered" );
 }
