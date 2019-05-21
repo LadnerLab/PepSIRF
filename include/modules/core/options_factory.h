@@ -6,6 +6,10 @@
 class options_factory
 {
  public:
+
+    /**
+     * Create an options factory.
+     **/
     options *create( int argc, char ***argv );
 };
 

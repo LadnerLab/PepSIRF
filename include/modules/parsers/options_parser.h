@@ -9,7 +9,7 @@
 #include "options.h"
 
 /*!
- * Basic class for parsing options from the commandline. Makes use of 
+ * Base class for parsing options from the commandline. Makes use of 
  * boost::program_options. 
  */
 class options_parser

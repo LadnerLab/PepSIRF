@@ -11,7 +11,8 @@
 
 /*!
  * Basic class for parsing options from the commandline. Makes use of 
- * boost::program_options. 
+ * boost::program_options. Note that this class is used for parsing options 
+ * pertinent to the 'demux' module.
  */
 class options_parser_demux: public options_parser
 {
