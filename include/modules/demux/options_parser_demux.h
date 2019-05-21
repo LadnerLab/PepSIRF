@@ -1,24 +1,25 @@
-#ifndef OPTIONS_PARSER_HH_INCLUDED
-#define OPTIONS_PARSER_HH_INCLUDED
+#ifndef OPTIONS_PARSER_DEMUX_HH_INCLUDED
+#define OPTIONS_PARSER_DEMUX_HH_INCLUDED
 #include <boost/program_options.hpp>
 #include <iostream>
 #include <iterator>
 #include <exception>
 #include <stdexcept>
 
-#include "options.h"
+#include "options_parser.h"
+#include "options_demux.h"
 
 /*!
  * Basic class for parsing options from the commandline. Makes use of 
  * boost::program_options. 
  */
-class options_parser
+class options_parser_demux: public options_parser
 {
 public:
     /**
      * Default constructor.
      **/
-    options_parser(); 
+    options_parser_demux(); 
 
     /**
      * Parse command-line arguments, store parsed options in the 
@@ -29,7 +30,7 @@ public:
      *             the arguments from the commandline.
      * @throws error upon required argument not supplied.
      **/
-    void parse( int argc, char ***argv, options& opts );
+    void parse( int argc, char ***argv, options_demux& opts );
 };
 
 
