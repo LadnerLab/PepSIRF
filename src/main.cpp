@@ -3,19 +3,19 @@
 #include <exception>
 #include <stdlib.h>
 
-#include "options_parser.h"
-#include "options.h"
+#include "options_parser_demux.h"
+#include "options_demux.h"
 
 int main( int argc, char **argv )
 {
     // create objects to be used
-    options_parser parser;
-    options opts;
+    options_parser_demux parser;
+    options_demux opts;
 
     try
         {
             // create our option parser for parsing command-line options
-            parser = options_parser();
+            parser = options_parser_demux();
             // parse the arguments, any incorrect arguments will raise an error
             parser.parse( argc, &argv, opts );
         }
