@@ -7,14 +7,20 @@
 #include "options_factory.h"
 #include "options_parser.h"
 #include "options.h"
+#include "module.h"
+#include "module_factory.h"
 
 int main( int argc, char **argv )
 {
     // create objects to be used
-    options_parser *parser;
-    options *opts;
-    options_factory opts_fact;
     options_parser_factory parser_fact;
+    options_parser *parser = nullptr;
+
+    options_factory opts_fact;
+    options *opts = nullptr;
+
+    module_factory mod_fact;
+    module *mod = nullptr;
 
     try
         {
@@ -31,6 +37,10 @@ int main( int argc, char **argv )
 
             // parse the arguments, any incorrect arguments will raise an error
             parser->parse( argc, &argv, opts );
+
+            mod = mod_fact.create( argv[ 2 ] );
+
+            mod->run( opts );
         }
     catch( std::exception& e )
         {
@@ -42,6 +52,7 @@ int main( int argc, char **argv )
 
     // run PepSIRF with options parsed from command-line
     delete parser;
+    delete mod;
     delete opts;
     return EXIT_SUCCESS;
 }
