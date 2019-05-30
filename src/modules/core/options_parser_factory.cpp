@@ -28,6 +28,12 @@ options_parser *options_parser_factory::create( int argc, char ***argv )
                run() , vm
              );
 
+    if( vm.count( "help" ) )
+        {
+            std::cout << desc << "\n";
+
+            return nullptr;
+        }
 
     mod_name = vm[ "mod_name" ].as<std::string>();
 
