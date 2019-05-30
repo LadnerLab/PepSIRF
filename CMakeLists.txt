@@ -26,10 +26,16 @@ add_executable(pep_sirf src/main.cpp)
 add_library(pepsirf_common STATIC src/modules/parsers/options_parser.cpp src/modules/core/options.cpp 
             src/modules/core/sequence.cpp 
 			src/modules/parsers/fastq_parser.cpp src/modules/parsers/fasta_parser.cpp
-			src/modules/core/options_factory.cpp src/modules/core/options_parser_factory.cpp)
+			src/modules/core/options_factory.cpp src/modules/core/options_parser_factory.cpp
+			src/modules/core/module_factory.cpp src/modules/core/module_factory.cpp
+			src/modules/core/module.cpp
+		   )
 
 add_library(modules_demux STATIC src/modules/demux/options_demux.cpp src/modules/demux/options_parser_demux.cpp src/modules/parsers/options_parser.cpp 
-            src/modules/core/options.cpp src/modules/core/options_parser_factory.cpp)
+            src/modules/core/options.cpp src/modules/core/options_parser_factory.cpp
+			src/modules/core/module_factory.cpp
+			src/modules/core/module.cpp src/modules/demux/module_demux.cpp
+		   )
 
 add_executable(pepsirf_test test/pepsirf_test.cpp)
 target_include_directories(pepsirf_test PUBLIC lib)
