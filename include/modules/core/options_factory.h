@@ -2,6 +2,7 @@
 #define OPTIONS_FACTORY_HH_INCLUDED 
 #include "options.h"
 #include "options_factory.h"
+#include "options_demux.h"
 
 class options_factory
 {
