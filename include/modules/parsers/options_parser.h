@@ -34,7 +34,7 @@ public:
      *             the arguments from the commandline.
      * @throws error upon required argument not supplied.
      **/
-    virtual void parse( int argc, char ***argv, options& opts );
+    virtual void parse( int argc, char ***argv, options *opts );
 };
 
 
