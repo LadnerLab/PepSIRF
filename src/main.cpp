@@ -38,7 +38,7 @@ int main( int argc, char **argv )
             // parse the arguments, any incorrect arguments will raise an error
             parser->parse( argc, &argv, opts );
 
-            mod = mod_fact.create( argv[ 2 ] );
+            mod = mod_fact.create( argv[ 1 ] );
 
             mod->run( opts );
         }
