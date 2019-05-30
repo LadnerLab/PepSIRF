@@ -31,7 +31,7 @@ public:
      *             the arguments from the commandline.
      * @throws error upon required argument not supplied.
      **/
-    void parse( int argc, char ***argv, options_demux& opts );
+    void parse( int argc, char ***argv, options *opts );
 };
 
 
