@@ -1,6 +1,7 @@
 #ifndef MODULE_FACTORY_HH_INCLUDED
 #define MODULE_FACTORY_HH_INCLUDED
 #include "module.h"
+#include "module_demux.h"
 
 /**
  * Class for creating modules based on a string identifier passed as a 
