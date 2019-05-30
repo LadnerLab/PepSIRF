@@ -29,9 +29,8 @@ int main( int argc, char **argv )
             // create the correct options object
             opts = opts_fact.create( argc, &argv );
 
-            // opts = opts_fact.create( argc, &argv );
             // parse the arguments, any incorrect arguments will raise an error
-            parser->parse( argc, &argv, *opts );
+            parser->parse( argc, &argv, opts );
         }
     catch( std::exception& e )
         {
