@@ -21,10 +21,10 @@ bool fastq_parser::parse( std::ifstream& input_file, std::vector<sequence>& seq_
     std::string strings[ STRINGS_PER_RECORD ];
     while( count < max && input_file.good() )
         {
-            std::getline( input_file, strings[ 0 ] );
-            std::getline( input_file, strings[ 1 ] );
-            std::getline( input_file, strings[ 2 ] );
-            std::getline( input_file, strings[ 3 ] );
+            std::getline( input_file, strings[ SEQUENCE_NAME ] );
+            std::getline( input_file, strings[ SEQUENCE ] );
+            std::getline( input_file, strings[ SEQUENCE_REPEAT ] );
+            std::getline( input_file, strings[ SEQUENCE_SCORE ] );
 
             if( input_file.good() )
                 {

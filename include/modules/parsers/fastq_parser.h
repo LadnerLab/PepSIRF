@@ -29,6 +29,14 @@ class fastq_parser
      **/
     bool parse( std::ifstream& input_file, std::vector<sequence>& seq_vector, std::size_t max_num_records );
 
+ private:
+    enum fastq_item_indices { SEQUENCE_NAME = 0,
+                              SEQUENCE,
+                              SEQUENCE_REPEAT,
+                              SEQUENCE_SCORE
+                            };
+          
+
 };
 
 
