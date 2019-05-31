@@ -21,7 +21,7 @@ class fastq_parser
      * @param input_file Reference to an open ifstream.
      * @param seq_vector Vector containing (or an empty vector) sequences.
      * @param max_num_records The maximum number of records to parse. Note that a 'record' is considered 
-     *        one entry in the fastq entry. So 4 * max_num_records will be read from the file, and at most 
+     *        one entry in the fastq file. So 4 * max_num_records lines will be read from the file, and at most 
      *        max_num_records entries will be added to seq_vector. If max_num_records is set to 0, the entire 
      *        file will be read.
      * @returns bool true if max_num_records were read from the file, false if less than max_num_records were 
