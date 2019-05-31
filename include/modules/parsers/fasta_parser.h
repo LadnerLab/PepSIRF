@@ -2,8 +2,8 @@
 #define FASTA_PARSER_HH_INCLUDED
 
 #include <stdexcept>
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <iterator>
 #include <vector>
 
@@ -21,12 +21,8 @@ class fasta_parser
     /**
      * Parse a fasta file. Records are stored in members of the sequence class.
      * @param filename Name of file to parse.
-     * @returns A vector containing sequences, one entry for each '>' character found in the file.
-     * @throws Exception upon filename not a valid file.
      **/
     std::vector<sequence> parse( std::string filename );
-    
-
 
 };
 #endif // FASTA_PARSER_HH_INCLUDED
