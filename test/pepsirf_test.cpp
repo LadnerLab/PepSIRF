@@ -63,3 +63,71 @@ TEST_CASE( "Parse Fasta", "[fasta_parser]" )
     remove( "out.fasta" );
 
 }
+
+TEST_CASE( "Parse Fastq", "[fastq_parser]" )
+{
+    std::vector<sequence> seq_vec;
+    std::string fastq_fname = "../test/test_fastq.fastq";
+    std::ifstream in_file( fastq_fname, std::ios_base::in );
+
+    fastq_parser parse;
+
+    size_t step = 10;
+
+    parse.parse( in_file, seq_vec, 0 );
+
+    REQUIRE( seq_vec.size() == 100 );
+    size_t index = 0;
+
+    for( index = 0; index < seq_vec.size(); ++index )
+        {
+            REQUIRE( seq_vec[ index ].seq.compare( "" ) );
+            REQUIRE( seq_vec[ index ].name.compare( "" ) );
+        }
+
+    // reset file pointer
+    in_file.clear();
+    in_file.seekg( 0 );
+
+    std::vector<sequence> seq_vec2;
+    seq_vec2.reserve( 100 );
+
+    REQUIRE( seq_vec2.size() == 0 );
+
+    for( index = 0; index < 10; ++index )
+        {
+            parse.parse( in_file, seq_vec2, step );
+        }
+    REQUIRE( seq_vec2.size() == 100 );
+
+
+    std::vector<sequence> seq_vec3;
+    seq_vec3.reserve( 100 );
+    // reset file pointer
+    in_file.clear();
+    in_file.seekg( 0 );
+
+    while( parse.parse( in_file, seq_vec3, 3 ) ) ;
+
+    REQUIRE( seq_vec3.size() == 100 );
+
+    for( index = 0; index < seq_vec3.size(); ++index )
+        {
+            REQUIRE( seq_vec3[ index ].seq.compare( "" ) );
+            REQUIRE( seq_vec3[ index ].name.compare( "" ) );
+        }
+
+    for( index = 0; index < seq_vec2.size(); ++index )
+        {
+            REQUIRE( seq_vec2[ index ].seq.compare( "" ) );
+            REQUIRE( seq_vec2[ index ].name.compare( "" ) );
+        }
+    for( index = 0; index < seq_vec2.size(); ++index )
+        {
+            REQUIRE( !seq_vec2[ index ].seq.compare( seq_vec[ index ].seq ) );
+            REQUIRE( !seq_vec2[ index ].name.compare( seq_vec[ index ].name ) );
+            REQUIRE( !seq_vec3[ index ].name.compare( seq_vec[ index ].name ) );
+            REQUIRE( !seq_vec3[ index ].seq.compare( seq_vec[ index ].seq ) );
+        }
+
+}
