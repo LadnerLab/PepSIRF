@@ -74,7 +74,7 @@ TEST_CASE( "Parse Fastq", "[fastq_parser]" )
 
     size_t step = 10;
 
-    parse.parse( in_file, seq_vec, 0 );
+    REQUIRE( parse.parse( in_file, seq_vec, 0 ) == true );
 
     REQUIRE( seq_vec.size() == 100 );
     size_t index = 0;
