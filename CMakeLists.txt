@@ -22,6 +22,7 @@ endif()
 include_directories(${Boost_INCLUDE_DIRS})
 add_executable(pep_sirf src/main.cpp)
 
+
 # Library common to all modules
 add_library(pepsirf_common STATIC src/modules/parsers/options_parser.cpp src/modules/core/options.cpp 
             src/modules/core/sequence.cpp 
@@ -37,8 +38,14 @@ add_library(modules_demux STATIC src/modules/demux/options_demux.cpp src/modules
 			src/modules/core/module.cpp src/modules/demux/module_demux.cpp
 		   )
 
-add_executable(pepsirf_test test/pepsirf_test.cpp)
-target_include_directories(pepsirf_test PUBLIC lib)
+
+option( BUILD_TESTS "Determines whether to build tests." ON )
+if(BUILD_TESTS)
+  add_executable(pepsirf_test test/pepsirf_test.cpp)
+  include_directories(pepsirf_test lib)
+  enable_testing()
+  target_link_libraries(pepsirf_test PUBLIC OpenMP::OpenMP_CXX pepsirf_common modules_demux ${Boost_LIBRARIES})
+  add_test( NAME test COMMAND pepsirf_test ) 
+endif()
 
 target_link_libraries(pep_sirf PUBLIC OpenMP::OpenMP_CXX pepsirf_common modules_demux ${Boost_LIBRARIES})
-target_link_libraries(pepsirf_test PUBLIC OpenMP::OpenMP_CXX pepsirf_common modules_demux ${Boost_LIBRARIES})
