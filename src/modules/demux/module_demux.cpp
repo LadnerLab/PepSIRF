@@ -7,18 +7,39 @@ module_demux::module_demux()
 
 void module_demux::run( options *opts )
 {
+    // options from the command line
     options_demux *d_opts = (options_demux*) opts;
+
+    struct time_keep::timer total_time;
+
+    omp_set_num_threads( opts->num_threads );
+
+    total_time.start = omp_get_wtime();
+
+    // vector to store the .fna sequences that represent a designed library
     std::vector<sequence> library_seqs;
+    std::vector<sequence> reads;
+
+    reads.reserve( d_opts->read_per_loop );
 
     // create parsers for the encoded library and the fastq reads.
     fasta_parser fasta_p;
+    fastq_parser fastq_p;
+
+    // open the read file so we can iterate over it 
+    std::ifstream reads_file( d_opts->input_r1_fname, std::ios_base::in );
 
     library_seqs = fasta_p.parse( d_opts->library_fname );
 
-    std::cout << "Number of input seqs: " << library_seqs.size() << "\n";
+    // while we still have reads to process
+    while( fastq_p.parse( reads_file, reads, d_opts->read_per_loop  ) )
+        {
+            reads.clear();
+        }
 
+    total_time.end = omp_get_wtime();
 
-    // 
+    std::cout << "Total elapsed time (seconds): " << time_keep::get_elapsed( total_time ) << ".\n";
 
 }
 
