@@ -1,7 +1,10 @@
 #include <iostream>
 #include "module.h"
 
-module::module() = default;
+module::module()
+{
+    name = "default module";
+}
 module::~module() = default;
 
 void module::run( options *opts )
@@ -10,4 +13,9 @@ void module::run( options *opts )
         {
             std::cout << "Zero threads!\n";
         }
+}
+
+std::string module::get_name()
+{
+    return name;
 }

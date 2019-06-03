@@ -7,6 +7,12 @@ class module
 {
 
  public:
+
+    /**
+     * Get the name of a module.
+     **/
+    std::string name;
+
     /**
      * Default constructor.
      **/
@@ -23,6 +29,12 @@ class module
      *        its own type of options. 
      **/
     virtual void run( options *opts );
+
+    /**
+     * Class to retrieve the name of a module. 
+     * @returns string name of a module.
+     **/
+    virtual std::string get_name();
 
 };
 #endif 
