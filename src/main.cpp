@@ -40,6 +40,8 @@ int main( int argc, char **argv )
 
             mod = mod_fact.create( argv[ 1 ] );
 
+            std::cout << "Starting module " << mod->get_name() << " with arguments: \n " << opts->get_arguments();
+
             mod->run( opts );
         }
     catch( std::exception& e )
