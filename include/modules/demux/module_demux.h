@@ -2,12 +2,17 @@
 #define MODULE_DEMUX_HH_INCLUDED
 #include <vector>
 #include <string>
+#include <fstream>
+#include <algorithm>
+#include <omp.h>
+#include <parallel_hashmap/phmap.h>
 
 #include "options_demux.h"
 #include "module.h"
 #include "sequence.h"
 #include "fasta_parser.h"
 #include "fastq_parser.h"
+#include "time_keep.h"
 
 /**
  * Class for running the demultiplex module. Given a file of reads and a file containing 
