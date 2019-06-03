@@ -36,6 +36,8 @@ add_library(modules_demux STATIC src/modules/demux/options_demux.cpp src/modules
             src/modules/core/options.cpp src/modules/core/options_parser_factory.cpp
 			src/modules/core/module_factory.cpp
 			src/modules/core/module.cpp src/modules/demux/module_demux.cpp
+			src/modules/parsers/fasta_parser.cpp src/modules/parsers/fastq_parser.cpp
+            src/modules/core/sequence.cpp 
 		   )
 
 
