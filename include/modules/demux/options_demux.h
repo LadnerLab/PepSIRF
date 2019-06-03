@@ -1,6 +1,7 @@
 #ifndef OPTIONS_DEMUX_HH_INCLUDED
 #define OPTIONS_DEMUX_HH_INCLUDED
 #include <string>
+#include <sstream>
 #include "options.h"
 
 /*! Data class to contain and handle 
@@ -19,6 +20,12 @@ public:
      **/
     long int read_per_loop; 
     const long int DEFAULT_READ_PER_LOOP;
+
+    /**
+     * Returns the arguments that are stored by 
+     * the options object.
+     **/
+    std::string get_arguments();
 };
 
 #endif //OPTIONS_HH_INCLUDED

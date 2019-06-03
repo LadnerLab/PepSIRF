@@ -10,8 +10,18 @@ class options
 {
 public:
     options(): DEFAULT_NUM_THREADS( 2 ){} //!< Default constructor.
+    virtual ~options();
+
     int num_threads; //!< The number of threads to use for computation.
     const int DEFAULT_NUM_THREADS; //!< The default number of threads to use
+
+    /**
+     * Get the arguments that were supplied to the options 
+     * class by the command-line.
+     * @returns String containing arguments, one per line. Arguments are formatted in 
+     *          '--arg_name argument' format.
+     **/
+    virtual std::string get_arguments();
 };
 
 #endif //OPTIONS_HH_INCLUDED
