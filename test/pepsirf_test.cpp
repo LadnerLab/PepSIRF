@@ -9,6 +9,8 @@
 #include "fasta_parser.h"
 #include "fastq_parser.h"
 #include "module_demux.h"
+#include "samplelist_parser.h"
+#include "sample.h"
 
 static std::string fasta_ex = ">Example sequence 1\nDJFKDLFJSF\nDJFKDJFDJKFJKDF\n\nJDSKFLJFDKSFLJ\n>Example Sequence 2\n\n\nDJFKLSFJDKLSFJKSLFJSKDLFJDKSLFJKLDKDKDK\n\n\n";
 TEST_CASE( "Sequence", "[sequence]" )
@@ -163,4 +165,24 @@ TEST_CASE( "Add seqs to map", "[module_demux]" )
             ++it;
         }
 
+}
+
+TEST_CASE( "Test samplelist_parser and sample", "[samplelist_parser]" )
+{
+    samplelist_parser slp;
+    std::string filename = "../test/test_samplelist.tsv";
+
+    auto vec = slp.parse( filename );
+
+    REQUIRE( vec.size() == 96 );
+
+
+    unsigned int index = 0;
+    std::unordered_map<sample, int> s_map( vec.size() );
+    for( index = 0 ; index < vec.size(); ++index )
+        {
+            s_map[ vec[ index ] ] = vec[ index ].id;
+        }
+
+    REQUIRE( s_map.size() == vec.size() );
 }
