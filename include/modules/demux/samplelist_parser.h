@@ -2,6 +2,7 @@
 #define SAMPLELIST_PARSER_HH_INCLUDED
 #include <string>
 #include <vector>
+#include <stdexcept>
 #include <fstream>
 #include <utility>
 
@@ -15,7 +16,7 @@ class samplelist_parser
      * @param filename The name of the file to parse.
      * @returns vector of samples, one per line in the input file.
      **/
-    std::vector<sample> parse( std::string filename );
+    std::vector<sample> parse( const std::string filename );
 };
 
 #endif // SAMPLELIST_PARSER_HH_INCLUDED
