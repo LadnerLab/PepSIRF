@@ -1,5 +1,4 @@
 #include "samplelist_parser.h"
-#include <iostream>
 
 std::vector<sample> samplelist_parser::parse( const std::string filename )
 {
