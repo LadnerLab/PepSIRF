@@ -14,6 +14,7 @@ public:
     options_demux(): DEFAULT_READ_PER_LOOP( 100000 ){} //!< Automatic constructor
     std::string input_r1_fname; //!< Filename for forward reads, can be a .zip archive or a regular fastq file.
     std::string library_fname; //!< Filename containing a FASTA file containing a library of amino acid peptide sequences.
+    std::string samplelist_fname; //!< Name of tab-delimited file containing a list of samples.
     /**
      * The number of fastq records to read per loop. A higher value here will result in higher memory usage by the program.
      * However, higher values can also result in better performance as fewer disk accesses are performed.
