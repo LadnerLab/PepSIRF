@@ -37,9 +37,27 @@ class sample
 
     /**
      * Get the first id of a sample.
+     * @returns const Reference to a sample's first id
+     **/
+    const std::string& get_first_id() const
+        {
+            return std::get<0>( string_ids );
+        }
+
+    /**
+     * Get the second id of a sample.
+     * @returns const Reference to a sample's second id
+     **/
+    const std::string& get_second_id() const 
+        {
+            return std::get<1>( string_ids );
+        }
+
+    /**
+     * Get the first id of a sample.
      * @returns Reference to a sample's first id
      **/
-    std::string& get_first_id()
+     std::string& get_first_id() 
         {
             return std::get<0>( string_ids );
         }
@@ -48,7 +66,7 @@ class sample
      * Get the second id of a sample.
      * @returns Reference to a sample's second id
      **/
-    std::string& get_second_id()
+     std::string& get_second_id()  
         {
             return std::get<1>( string_ids );
         }
@@ -64,7 +82,7 @@ namespace std
 template <>
 struct hash<sample>
 {
-    std::size_t operator()( sample& s ) const
+    std::size_t operator()( const sample& s ) const
         {
             using std::hash;
             using std::string;
