@@ -4,6 +4,7 @@ project(PepSIRF)
 set(Boost_USE_STATIC_LIBS ON) 
 set(Boost_USE_MULTITHREADED ON)  
 set(Boost_USE_STATIC_RUNTIME OFF) 
+set(CMAKE_CXX_STANDARD 11)
 
 find_package(OpenMP REQUIRED)
 find_package(Boost COMPONENTS program_options)
