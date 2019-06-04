@@ -11,6 +11,7 @@ void module_demux::run( options *opts )
     options_demux *d_opts = (options_demux*) opts;
 
     struct time_keep::timer total_time;
+    std::unordered_map<sequence, std::vector<std::size_t>> reference_counts;
 
     omp_set_num_threads( opts->num_threads );
 
@@ -30,6 +31,7 @@ void module_demux::run( options *opts )
     std::ifstream reads_file( d_opts->input_r1_fname, std::ios_base::in );
 
     library_seqs = fasta_p.parse( d_opts->library_fname );
+    add_seqs_to_map( reference_counts, library_seqs, 11 );
 
     // while we still have reads to process
     while( fastq_p.parse( reads_file, reads, d_opts->read_per_loop  ) )
@@ -40,11 +42,21 @@ void module_demux::run( options *opts )
     total_time.end = omp_get_wtime();
 
     std::cout << "Total elapsed time (seconds): " << time_keep::get_elapsed( total_time ) << ".\n";
-
 }
 
 
 std::string module_demux::get_name()
 {
     return name;
+}
+
+void module_demux::add_seqs_to_map( std::unordered_map<sequence, std::vector<std::size_t>>& input_map, std::vector<sequence>& seqs, size_t num_samples )
+{
+    std::size_t index = 0;
+    input_map.reserve( seqs.size() );
+
+    for( index = 0; index < seqs.size(); ++index )
+        {
+            input_map[ seqs[ index ] ] = std::vector<std::size_t>( num_samples );
+        }
 }

@@ -5,7 +5,7 @@
 #include <fstream>
 #include <algorithm>
 #include <omp.h>
-#include <parallel_hashmap/phmap.h>
+#include <unordered_map>
 
 #include "options_demux.h"
 #include "module.h"
@@ -44,6 +44,13 @@ class module_demux : public module
 
 
     std::string get_name();
+
+    /**
+     * Adds sequences to an unordered map, where the key is the string sequence, and the value is a vector of 
+     * size_t counts. Each count will be used to keep track of how many times each sequence is found per sample.
+     * @param input_map unordered_map which will have sequences as keys, and vectors of size_t as values. 
+     **/
+    void add_seqs_to_map( std::unordered_map<sequence, std::vector<std::size_t>>& input_map, std::vector<sequence>& seqs, size_t num_samples );
 
 };
 #endif // MODULE_DEMUX_HH_INCLUDED
