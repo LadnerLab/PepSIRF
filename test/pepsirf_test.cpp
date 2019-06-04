@@ -4,9 +4,11 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <unordered_map>
 #include "sequence.h"
 #include "fasta_parser.h"
 #include "fastq_parser.h"
+#include "module_demux.h"
 
 static std::string fasta_ex = ">Example sequence 1\nDJFKDLFJSF\nDJFKDJFDJKFJKDF\n\nJDSKFLJFDKSFLJ\n>Example Sequence 2\n\n\nDJFKLSFJDKLSFJKSLFJSKDLFJDKSLFJKLDKDKDK\n\n\n";
 TEST_CASE( "Sequence", "[sequence]" )
@@ -128,6 +130,37 @@ TEST_CASE( "Parse Fastq", "[fastq_parser]" )
             REQUIRE( !seq_vec2[ index ].name.compare( seq_vec[ index ].name ) );
             REQUIRE( !seq_vec3[ index ].name.compare( seq_vec[ index ].name ) );
             REQUIRE( !seq_vec3[ index ].seq.compare( seq_vec[ index ].seq ) );
+        }
+
+}
+
+TEST_CASE( "Add seqs to map", "[module_demux]" )
+{
+    fasta_parser fp;
+    module_demux mod;
+
+    std::vector<sequence> vec;
+    std::size_t num_samples = 12;
+    vec = fp.parse( "../test/test.fasta" );
+
+    std::unordered_map<sequence, std::vector<std::size_t>> my_map;
+
+    mod.add_seqs_to_map( my_map, vec, num_samples );
+
+    REQUIRE( my_map.size() == 110 );
+
+    std::unordered_map<sequence, std::vector<std::size_t>>::iterator it = my_map.begin();
+    size_t index = 0;
+                       
+    while( it != my_map.end() )
+        {
+            REQUIRE( it->second.size() == num_samples );
+
+            for( index = 0; index < it->second.size(); ++index )
+                {
+                    REQUIRE( it->second[ index ] == 0 );
+                }
+            ++it;
         }
 
 }
