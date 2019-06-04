@@ -58,5 +58,20 @@ class sequence
      **/
     int count( const char val );
 
+    bool operator==( const sequence& s ) const;
+
 };
+
+namespace std
+    {
+        template <>
+        struct hash<sequence>
+        {
+            size_t operator()( const sequence& s ) const
+            {
+                return hash<std::string>()( s.seq );
+            }
+        };
+    }
+
 #endif //SEQUENCE_HH_INCLUDED 

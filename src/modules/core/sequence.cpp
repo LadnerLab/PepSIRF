@@ -37,3 +37,8 @@ int sequence::count( const char val )
         }
     return count;
 }
+
+bool sequence::operator==( const sequence& s ) const
+{
+    return !s.seq.compare( seq );
+}
