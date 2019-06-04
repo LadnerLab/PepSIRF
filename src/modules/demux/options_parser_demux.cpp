@@ -16,9 +16,13 @@ void options_parser_demux::parse( int argc, char ***argv, options *opts )
                                                              "Library should be in fasta format and should contain "
                                                              "sequences that were used to design input_r1."
         )
-        ( "read_per_loop,r", po::value<long int>( &opts_demux->read_per_loop )->default_value( opts_demux->DEFAULT_READ_PER_LOOP, "The number of fastq "
+        ( "read_per_loop,r", po::value<long int>( &opts_demux->read_per_loop )->default_value( opts_demux->DEFAULT_READ_PER_LOOP ), "The number of fastq "
           "records read a time. A higher value will result in more memory usage by the program, but will also result in fewer disk accesses, "
-          "increasing performance of the program." )
+          "increasing performance of the program."
+        )
+        ( "samplelist,s", po::value<std::string>( &opts_demux->samplelist_fname )->required(), "A tab-delimited list of samples, one sample per line. Each line "
+          "must have three tab-delimited entries, where the first entry is the forward id of the sample, the second is the reverse id of the sample, and the "
+          "third is the name of the sample. This file MUST not have any spaces, including in any of the ids or sample names."
         )
         ( "num_threads,t", po::value<int>( &opts_demux->num_threads )->default_value( opts_demux->DEFAULT_NUM_THREADS ), "Number of threads to use for analyses." );
 
