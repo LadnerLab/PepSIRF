@@ -13,7 +13,7 @@ include_directories(include/modules/core)
 include_directories(include/modules/parsers)
 include_directories(include/modules/demux)
 include_directories(lib/parallel_hashmap)
-add_compile_options( "-Wall" "-std=c++11" "-Wextra" 
+add_compile_options( "-Wall" "-std=c++11" "-Wextra" "-fopenmp"
                      "$<$<CONFIG:DEBUG>:-O0;-g>" 
 					 "$<$<CONFIG:RELEASE>:-O3>")
 
