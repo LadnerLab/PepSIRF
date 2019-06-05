@@ -5,14 +5,17 @@
 #include <fstream>
 #include <algorithm>
 #include <omp.h>
-#include <unordered_map>
 
 #include "options_demux.h"
+#include "maps.h"
 #include "module.h"
 #include "sequence.h"
 #include "fasta_parser.h"
 #include "fastq_parser.h"
 #include "time_keep.h"
+#include "samplelist_parser.h"
+#include "sample.h"
+
 
 /**
  * Class for running the demultiplex module. Given a file of reads and a file containing 
@@ -49,8 +52,11 @@ class module_demux : public module
      * Adds sequences to an unordered map, where the key is the string sequence, and the value is a vector of 
      * size_t counts. Each count will be used to keep track of how many times each sequence is found per sample.
      * @param input_map unordered_map which will have sequences as keys, and vectors of size_t as values. 
+     * @param seqs The sequences that will be added to the unordered_map
+     * @param num_samples The number of samples that were processed in the sequencing run.
+
      **/
-    void add_seqs_to_map( std::unordered_map<sequence, std::vector<std::size_t>>& input_map, std::vector<sequence>& seqs, size_t num_samples );
+    void add_seqs_to_map( parallel_map<sequence, std::vector<std::size_t>>& input_map, std::vector<sequence>& seqs, size_t num_samples );
 
 };
 #endif // MODULE_DEMUX_HH_INCLUDED
