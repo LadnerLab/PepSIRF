@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <fstream>
 #include <utility>
+#include <boost/algorithm/string.hpp>
 
 #include "sample.h" 
 
