@@ -24,7 +24,7 @@ class fastq_parser
      *        one entry in the fastq file. So 4 * max_num_records lines will be read from the file, and at most 
      *        max_num_records entries will be added to seq_vector. If max_num_records is set to 0, the entire 
      *        file will be read.
-     * @returns bool true if max_num_records were read from the file, false if less than max_num_records were 
+     * @returns bool true if any records were read from the file, false if zero records were 
      *          read from the file.
      **/
     bool parse( std::ifstream& input_file, std::vector<sequence>& seq_vector, std::size_t max_num_records );

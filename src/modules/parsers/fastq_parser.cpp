@@ -28,10 +28,11 @@ bool fastq_parser::parse( std::ifstream& input_file, std::vector<sequence>& seq_
 
             if( input_file.good() )
                 {
-                    seq = sequence( strings[ 0 ], strings[ 1 ] );
-                    seq_vector.push_back( seq );
+                    seq_vector.emplace_back( strings[ 0 ], strings[ 1 ] );
                     ++count;
                 }
         }
-    return count == max || max_num_records == 0 ? true : false;
+
+    // return false if no records were parsed
+    return !( count == 0 );
 }
