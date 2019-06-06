@@ -36,6 +36,22 @@ class sample
         }
 
     /**
+     * Copy constructor.
+     * @param s Sample object to copy.
+     **/
+    sample( const sample& s )
+        {
+            string_ids = s.string_ids;
+            name       = s.name;
+            id = s.id;
+        }
+
+    /**
+     * Default constructor
+     **/
+    sample() = default;
+
+    /**
      * Get the first id of a sample.
      * @returns const Reference to a sample's first id
      **/
@@ -71,6 +87,20 @@ class sample
             return std::get<1>( string_ids );
         }
 
+     std::string get_ids()
+         {
+             std::string out_str = get_first_id() + get_second_id();
+             return out_str;
+         }
+
+     /**
+      * Equality operator for samples. 
+      * For two samples a and b, we say a == b iff
+      * ( a.get_first_id() == b.get_first_id() ) 
+      *  and ( a.get_second_id() == b.get_second_id() ) 
+      *
+      * @param other sample against which to compare sequences
+      **/
     bool operator==( const sample& other ) const
     {
         return string_ids == other.string_ids;
