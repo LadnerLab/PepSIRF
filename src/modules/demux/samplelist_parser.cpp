@@ -1,5 +1,4 @@
-#include "samplelist_parser.h"
-#include <iostream>
+#include "samplelist_parser.h":
 
 std::vector<sample> samplelist_parser::parse( const std::string filename )
 {
@@ -27,7 +26,7 @@ std::vector<sample> samplelist_parser::parse( const std::string filename )
             if( split_line.size() == FORWARD_ONLY_SIZE )
                 {
                     id1  = split_line[ 0 ];
-                    name = split_line[ 2 ];
+                    name = split_line[ 1 ];
                 }
             else if( split_line.size() == FORWARD_AND_REVERSE_SIZE )
                 {
