@@ -2,13 +2,16 @@
 
 options_parser_demux::options_parser_demux() = default;
 
-void options_parser_demux::parse( int argc, char ***argv, options *opts )
+bool options_parser_demux::parse( int argc, char ***argv, options *opts )
 {
     options_demux *opts_demux = (options_demux*) opts;
     namespace po = boost::program_options;
     po::variables_map vm;
 
-    po::options_description desc( "PepSIRF: Peptide-based Serological Immune Response Framework" );
+    po::options_description desc( "PepSIRF: Peptide-based Serological Immune Response Framework demultiplexing module. \n"
+                                  "This module takes the following parameters and outputs the counts of each reference \n"
+                                  "sequence for each sample."
+                                );
     desc.add_options()
         ( "help,h", "Produce help message" )
         ( "input_r1", po::value<std::string>( &opts_demux->input_r1_fname )->required(), "Input forward reads fastq file to parse.\n")
@@ -24,6 +27,11 @@ void options_parser_demux::parse( int argc, char ***argv, options *opts )
           "records read a time. A higher value will result in more memory usage by the program, but will also result in fewer disk accesses, "
           "increasing performance of the program.\n"
         )
+        ( "output,o", po::value<std::string>( &opts_demux->output_fname )->default_value( opts_demux->DEFAULT_OUTPUT_FNAME ), "The name of the output file to write counts to. "
+          "Each line in this file will be a comma-separated list of values, where each entry i is either the name of a sequence or the counts for this sequence in "
+          "sample i. This file will have a header labelling each column, i'th comma-separated value of column i of the header will be the sample name of sample i. "
+          "If we traverse this column, we will see the count of this sample for each sequence. \n"
+        )
         ( "samplelist,s", po::value<std::string>( &opts_demux->samplelist_fname )->required(), "A tab-delimited list of samples, one sample per line. If the samples are "
           "already indexed by I2 only the forward index (I1) and the sample name are required. The first item in each tab-delimited line is the forward (I1) index, the second "
           "(if included) is the reverse (I2) index, and the third is the samplename. \n"
@@ -35,9 +43,11 @@ void options_parser_demux::parse( int argc, char ***argv, options *opts )
     if( vm.count( "help" ) )
         {
             std::cout << desc << std::endl;
+            return false;
         }
     else
         {
             po::notify( vm );
+            return true;
         }
 }

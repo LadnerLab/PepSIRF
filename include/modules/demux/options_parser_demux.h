@@ -30,8 +30,10 @@ public:
      * @param opts Reference to opts object, values will be populated by 
      *             the arguments from the commandline.
      * @throws error upon required argument not supplied.
+     * @returns boolean true if arguments other than '-h, --help' have 
+     *          been supplied, false otherwise.
      **/
-    void parse( int argc, char ***argv, options *opts );
+    bool parse( int argc, char ***argv, options *opts );
 };
 
 
