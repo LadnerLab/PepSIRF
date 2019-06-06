@@ -22,6 +22,8 @@ int main( int argc, char **argv )
     module_factory mod_fact;
     module *mod = nullptr;
 
+    bool help_msg_only = false;
+
     try
         {
             // create our option parser for parsing command-line options
@@ -36,13 +38,16 @@ int main( int argc, char **argv )
             opts = opts_fact.create( argc, &argv );
 
             // parse the arguments, any incorrect arguments will raise an error
-            parser->parse( argc, &argv, opts );
+            // note that parser->parse returns true if arguments other than
+            // help are passed
+            help_msg_only = !parser->parse( argc, &argv, opts );
 
-            mod = mod_fact.create( argv[ 1 ] );
-
-            std::cout << "Starting module " << mod->get_name() << " with arguments: \n " << opts->get_arguments();
-
-            mod->run( opts );
+            if( !help_msg_only )
+                {
+                    mod = mod_fact.create( argv[ 1 ] );
+                    std::cout << "Starting module " << mod->get_name() << " with arguments: \n " << opts->get_arguments();
+                    mod->run( opts );
+                }
         }
     catch( std::exception& e )
         {
