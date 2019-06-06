@@ -121,7 +121,7 @@ void module_demux::run( options *opts )
               << processed_total << " (" << ( (long double) processed_success / (long double) processed_total ) * 100
               << "%) successful.\n";
 
-    write_outputs( "out_test", reference_counts, samplelist );
+    write_outputs( d_opts->output_fname, reference_counts, samplelist );
 
 }
 
