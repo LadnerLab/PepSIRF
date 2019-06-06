@@ -33,8 +33,10 @@ public:
      * @param opts Reference to opts object, values will be populated by 
      *             the arguments from the commandline.
      * @throws error upon required argument not supplied.
+     * @returns boolean true if arguments other than '--help', '-h' are supplied, 
+     *          false otherwise.
      **/
-    virtual void parse( int argc, char ***argv, options *opts );
+    virtual bool parse( int argc, char ***argv, options *opts );
 };
 
 

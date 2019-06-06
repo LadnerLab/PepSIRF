@@ -3,7 +3,7 @@
 options_parser::options_parser() = default;
 options_parser::~options_parser() = default;
 
-void options_parser::parse( int argc, char ***argv, options *opts )
+bool options_parser::parse( int argc, char ***argv, options *opts )
 {
     namespace po = boost::program_options;
     char **argv_loc = *argv;
@@ -19,7 +19,10 @@ void options_parser::parse( int argc, char ***argv, options *opts )
     if( vm.count( "help" ) )
         {
             std::cout << desc << std::endl;
+            return false;
         }
 
     po::notify( vm );
+    return true;
 }
+
