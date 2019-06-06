@@ -28,7 +28,7 @@ std::vector<sequence> fasta_parser::parse( std::string filename )
 
                             // create a new sequence, set its name to the line
                             seq = sequence();
-                            seq.name = line;
+                            seq.name = line.substr( 1 );
                         }
                     else
                         {
