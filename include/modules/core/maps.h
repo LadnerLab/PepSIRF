@@ -13,8 +13,23 @@
         NMSP::container_internal::hash_default_eq<K>, \
         std::allocator<std::pair<const K, V>>, 1, NMSP::NullMutex
 
+#define EXTRAARGS_PSET , NMSP::container_internal::hash_default_hash<K>, \
+        NMSP::container_internal::hash_default_eq<K>, \
+        std::allocator<K>, 8, std::mutex
+
+#define EXTRAARGS_SSET , NMSP::container_internal::hash_default_hash<K>, \
+        NMSP::container_internal::hash_default_eq<K>, \
+        std::allocator<K>, 1, NMSP::NullMutex
+
+
 template <class K, class V>
 using parallel_map = MAPNAME< K, V EXTRAARGS_PMAP>;
 
 template <class K, class V>
 using sequential_map = MAPNAME< K, V EXTRAARGS_SMAP>;
+
+template <class K>
+using parallel_set = phmap::parallel_flat_hash_set< K EXTRAARGS_PSET>;
+
+template <class K>
+using sequential_set = phmap::parallel_flat_hash_set< K EXTRAARGS_SSET>;
