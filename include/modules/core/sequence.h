@@ -64,6 +64,12 @@ class sequence
      **/
     int count( const char val );
 
+    /**
+     * Equality operator override. 
+     * For two sequences a and b we say a == b iff 
+     * a.seq == b.seq. 
+     * @param s Sequence to compare against.
+     **/
     bool operator==( const sequence& s ) const;
 
 };

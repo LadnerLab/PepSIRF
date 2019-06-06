@@ -5,10 +5,16 @@ sequence::sequence()
     name = std::string();
     seq  = std::string();
 }
-sequence::sequence( std::string& in_name, std::string& in_seq )
+sequence::sequence( const std::string& in_name, const std::string& in_seq )
 {
     name = in_name;
     seq  = in_seq;
+}
+
+sequence::sequence( const sequence& s )
+{
+    name = s.name;
+    seq = s.seq;
 }
 
 sequence::~sequence() = default;
