@@ -162,6 +162,18 @@ void module_demux::write_outputs( std::string outfile_name,
     std::size_t index        = 0;
     std::size_t second_index = 0;
 
+    std::string header       = "Sequence name,";
+
+    for( index = 0; index < samples.size() - 1; ++index )
+        {
+            header.append( samples[ index ].name );
+            header.append( "," );
+        }
+    header.append( samples[ index ].name );
+    header.append( "\n" );
+
+    outfile << header;
+
     for( index = 0; index < seq_scores.size(); ++index )
         {
             const sequence& curr = seq_iter->first;
