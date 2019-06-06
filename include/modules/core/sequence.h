@@ -19,7 +19,13 @@ class sequence
      * @param in_seq The genetic data of a sequence. The sequence's name 
      *        will be set to the value of this string.
      **/
-    sequence( std::string& in_name, std::string& in_seq );
+    sequence( const std::string& in_name, const std::string& in_seq );
+
+    /**
+     * Copy constructor.
+     * @param s Sequence to copy.
+     **/
+    sequence( const sequence& s );
 
     /** 
      * Default destructor.
