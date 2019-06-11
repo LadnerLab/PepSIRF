@@ -1,7 +1,7 @@
 #ifndef SEQUENCE_INDEXER_HH_INCLUDED
 #define SEQUENCE_INDEXER_HH_INCLUDED
 #include <vector>
-#include<algorithm>
+#include <algorithm>
 
 #include "sequence.h"
 
@@ -34,6 +34,28 @@ class sequence_indexer
      * @note The index is managed internally, to query this index call sequence_indexer::index
      **/
     void index( std::vector<sequence>& seqs, std::string& origin );
+
+    /**
+     * Query the indexed sequences to find all sequences that are 
+     * similar to query_seq. For two sequences a and b, and threshold c we say a and b are similar 
+     * iff the levenshtein distance D between a and b is less than or equal to c, i.e.
+     * a is similar to b iff D( a, b ) <= c. Pointers to sequences that are 
+     * found to be similar to query_seq are placed into the 
+     * results vector as a pair, where the second item of the pair is the integer distance 
+     * of the sequence to the query_seq.
+     * @param results Reference to a vector whose entries are ordered pairs.
+     *        The first value in each pair is a pointer to the sequence that was similar 
+     *        to query_seq.
+     * @param query_seq Reference to sequence that we are searching for the sequences similar to.
+     * @param max_dist The maximum allowable distance between sequences in order for them to be 
+     *        considered similar.
+     * @returns The number of sequences that were found similar to query_seq.
+     * @note This method is thread safe with respect to the internal data structures of 
+     *       sequence_indexer, but not with respect to the results vector.
+     **/
+    unsigned int query( std::vector<std::pair<sequence*,int>>& results,
+                        sequence& query_seq, int max_dist
+                      );
 
     /**
      * A node class, these nodes are stored in a vector used internally by 
@@ -80,6 +102,8 @@ class sequence_indexer
      * origin.
      **/
     std::vector<node> indexed_seqs;
+
+    std::string origin_seq;
 };
 
 
