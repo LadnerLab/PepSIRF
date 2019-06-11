@@ -8,23 +8,17 @@ sequence_indexer::sequence_indexer() = default;
 void sequence_indexer::index( std::vector<sequence>& seqs, std::string& origin )
 {
     std::size_t index = 0;
-    std::size_t size_origin = origin.length();
-    origin_seq = origin;
+    int distance = 0;
 
-    EdlibAlignConfig config = edlibDefaultAlignConfig();
-    EdlibAlignResult result;
+    origin_seq = origin;
 
     indexed_seqs.reserve( seqs.size() );
 
     for( index = 0; index < seqs.size(); ++index )
         {
-            result = edlibAlign( seqs[ index ].seq.c_str(), seqs[ index ].seq.length(),
-                                 origin.c_str(), size_origin, config
-                               );
+            distance = edit_distance( origin, seqs[ index ].seq );
 
-            indexed_seqs.emplace_back( result.editDistance, &seqs[ index ] );
-
-            edlibFreeAlignResult( result );
+            indexed_seqs.emplace_back( distance, &seqs[ index ] );
         }
     std::sort( indexed_seqs.begin(), indexed_seqs.end() );
 }
@@ -33,9 +27,6 @@ unsigned int sequence_indexer::query( std::vector<std::pair<sequence*,int>>& res
                                       sequence& query_seq, int max_dist
                                     )
 {
-    EdlibAlignConfig config = edlibDefaultAlignConfig();
-    EdlibAlignResult result;
-
     int orig_distance    = 0;
     int current_distance = 0;
     int lev_distance     = 0;
@@ -43,15 +34,9 @@ unsigned int sequence_indexer::query( std::vector<std::pair<sequence*,int>>& res
 
     std::vector<node>::iterator it = indexed_seqs.begin();
 
-    result = edlibAlign( query_seq.seq.c_str(), query_seq.seq.length(),
-                         origin_seq.c_str(), origin_seq.length(), config
-                       );
-
-    orig_distance = result.editDistance;
+    orig_distance = edit_distance( query_seq.seq, origin_seq );
 
     current_distance = it->distance;
-
-    edlibFreeAlignResult( result );
 
     // skip over the sequences whose distance is greater than
     // our distance + max_dist, we don't need to compute levenshtein distance
@@ -67,13 +52,7 @@ unsigned int sequence_indexer::query( std::vector<std::pair<sequence*,int>>& res
            && it != indexed_seqs.end()
          )
         {
-            result = edlibAlign( it->seq->seq.c_str(), it->seq->seq.length(),
-                                 query_seq.seq.c_str(), query_seq.seq.length(),
-                                 config
-                               );
-            lev_distance = result.editDistance;
-
-            edlibFreeAlignResult( result );
+            lev_distance = edit_distance( it->seq->seq, query_seq.seq );
 
             if( lev_distance <= max_dist)
                 {
@@ -98,4 +77,21 @@ sequence_indexer::node::node() = default;
     bool sequence_indexer::node::operator<( const node& compare )
 {
     return distance < compare.distance;
+}
+
+int sequence_indexer::edit_distance( const std::string& s1, const std::string& s2 )
+{
+    EdlibAlignConfig config = edlibDefaultAlignConfig();
+    EdlibAlignResult result;
+
+    int distance;
+
+    result = edlibAlign( s1.c_str(), s1.length(),
+                         s2.c_str(), s2.length(),
+                         config
+                       );
+    distance = result.editDistance;
+    edlibFreeAlignResult( result );
+
+    return distance;
 }

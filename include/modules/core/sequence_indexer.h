@@ -104,6 +104,15 @@ class sequence_indexer
     std::vector<node> indexed_seqs;
 
     std::string origin_seq;
+
+ private:
+    /**
+     * Calcualte the edit distance D between strings s1 and s2. 
+     * @param s1 The first string to compare to.
+     * @param s2 The second string to compare to.
+     * @returns the integer Levenshtein distance between s1 and s2.
+     **/
+    int edit_distance( const std::string& s1, const std::string& s2 );
 };
 
 
