@@ -41,13 +41,6 @@ unsigned int sequence_indexer::query( std::vector<std::pair<sequence*,int>>& res
     it = std::upper_bound( indexed_seqs.begin(), indexed_seqs.end(),
                            node( orig_distance - max_dist - 1, nullptr )
                          );
-    // while( std::abs( current_distance - orig_distance ) > max_dist
-    //        && it != indexed_seqs.end()
-    //      )
-    //     {
-    //         ++it;
-    //         current_distance = it->distance;
-    //     }
     current_distance = it->distance;
 
     while( std::abs( current_distance - orig_distance ) <= max_dist
