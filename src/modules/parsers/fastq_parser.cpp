@@ -36,3 +36,12 @@ bool fastq_parser::parse( std::ifstream& input_file, std::vector<sequence>& seq_
     // return false if no records were parsed
     return !( count == 0 );
 }
+
+std::vector<sequence> fastq_parser::parse( const std::string fname )
+{
+    std::ifstream ofile( fname, std::ios_base::in );
+    std::vector<sequence> seqs;
+    parse( ofile, seqs, 0 );
+    ofile.close();
+    return seqs;
+}

@@ -29,6 +29,16 @@ class fastq_parser
      **/
     bool parse( std::ifstream& input_file, std::vector<sequence>& seq_vector, std::size_t max_num_records );
 
+    /**
+     * Parse an entire fastq file at once, store the parsed sequence data  in 
+     * a vector of sequences.
+     * @param fname Name of the file to parse.
+     * @returns a vector of sequences, one entry in the vector per sequence in the file.
+     * @note a call to this function is equivalent to creating an ifstream, a sequence vector and 
+     *       calling fastq_parser::parse( ifstream, seq_vector, 0 )
+     **/
+    std::vector<sequence> parse( const std::string fname );
+
  private:
     /**
      * Enum member denoting where each item of a fastq entry will 
