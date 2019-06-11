@@ -83,6 +83,7 @@ class sequence_indexer
          **/
         bool operator<( const node& compare );
 
+
         /**
          * Integer distance from the origin. 
          * @note this is a signed integer because the value returned by 
@@ -115,6 +116,11 @@ class sequence_indexer
     int edit_distance( const std::string& s1, const std::string& s2 );
 };
 
-
-
+/**
+ * Comparison operator given two nodes.
+ **/
+bool operator<( sequence_indexer::node const& n1,
+                sequence_indexer::node const& n2
+              );
 #endif // SEQUENCE_INDEXER_HH_INCLUDED
+

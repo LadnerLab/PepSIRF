@@ -32,21 +32,23 @@ unsigned int sequence_indexer::query( std::vector<std::pair<sequence*,int>>& res
     int lev_distance     = 0;
     unsigned int matches = 0;
 
-    std::vector<node>::iterator it = indexed_seqs.begin();
+    std::vector<node>::iterator it;
 
     orig_distance = edit_distance( query_seq.seq, origin_seq );
 
-    current_distance = it->distance;
-
     // skip over the sequences whose distance is greater than
     // our distance + max_dist, we don't need to compute levenshtein distance
-    while( std::abs( current_distance - orig_distance ) > max_dist
-           && it != indexed_seqs.end()
-         )
-        {
-            ++it;
-            current_distance = it->distance;
-        }
+    it = std::upper_bound( indexed_seqs.begin(), indexed_seqs.end(),
+                           node( orig_distance - max_dist - 1, nullptr )
+                         );
+    // while( std::abs( current_distance - orig_distance ) > max_dist
+    //        && it != indexed_seqs.end()
+    //      )
+    //     {
+    //         ++it;
+    //         current_distance = it->distance;
+    //     }
+    current_distance = it->distance;
 
     while( std::abs( current_distance - orig_distance ) <= max_dist
            && it != indexed_seqs.end()
@@ -76,7 +78,8 @@ sequence_indexer::node::node( int in_dist, sequence *in_seq )
 }
 
 sequence_indexer::node::node() = default;
-    bool sequence_indexer::node::operator<( const node& compare )
+
+bool sequence_indexer::node::operator<( const node& compare )
 {
     return distance < compare.distance;
 }
@@ -96,4 +99,11 @@ int sequence_indexer::edit_distance( const std::string& s1, const std::string& s
     edlibFreeAlignResult( result );
 
     return distance;
+}
+
+bool operator<( sequence_indexer::node const& n1,
+                sequence_indexer::node const& n2
+              )
+{
+    return n1.distance < n2.distance;
 }
