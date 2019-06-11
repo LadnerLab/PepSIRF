@@ -62,6 +62,8 @@ unsigned int sequence_indexer::query( std::vector<std::pair<sequence*,int>>& res
                                         );
                     ++matches;
                 }
+            ++it;
+            current_distance = it->distance;
         }
     return matches;
 }
