@@ -80,6 +80,15 @@ class module_demux : public module
                       );
 
 
+ private:
+    /**
+     * Method to zero a vector of size_t elements.
+     * @param vec Pointer to the vector to zero.
+     * @pre vec must have been initialized with some number of 
+     *      elements, each element from vec[ 0 ] to vec[ size - 1 ]
+     *      will be zero'd out.
+     **/
+    void _zero_vector( std::vector<std::size_t>* vec );
 };
 
 namespace demux

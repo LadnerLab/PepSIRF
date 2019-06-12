@@ -16,13 +16,11 @@ void module_demux::run( options *opts )
     int forward_start  = 12;
     int forward_length = 12;
 
-    int reverse_start    = 21;
-    int reverse_length   = 23;
-
     size_t read_index = 0;
 
     struct time_keep::timer total_time;
     parallel_map<sequence, std::vector<std::size_t>*> reference_counts;
+
     sequential_map<std::string, sample> index_map;
 
     omp_set_num_threads( opts->num_threads );
@@ -101,6 +99,10 @@ void module_demux::run( options *opts )
 
                                     ++processed_success;
                                 }
+                            else
+                                {
+
+                                }
                         }
 
                     // record the number of records that are processed
@@ -134,7 +136,6 @@ std::string module_demux::get_name()
 void module_demux::add_seqs_to_map( parallel_map<sequence, std::vector<std::size_t>*>& input_map, std::vector<sequence>& seqs, size_t num_samples )
 {
     std::size_t index        = 0;
-    std::size_t inner_index  = 0;
 
     input_map.reserve( seqs.size() );
 
@@ -142,11 +143,7 @@ void module_demux::add_seqs_to_map( parallel_map<sequence, std::vector<std::size
     for( index = 0; index < seqs.size(); ++index )
         {
             input_map[ seqs[ index ] ] = new std::vector<std::size_t>( num_samples );
-
-            for( inner_index = 0; inner_index < num_samples; ++inner_index )
-                {
-                    input_map[ seqs[ index ] ]->at( inner_index ) = 0;
-                }
+            _zero_vector( input_map[ seqs[ index ] ] );
         }
 }
 
@@ -191,6 +188,15 @@ void module_demux::write_outputs( std::string outfile_name,
             delete curr_counts;
         }
     outfile.close();
+}
+
+void module_demux::_zero_vector( std::vector<std::size_t>* vec )
+{
+    std::size_t index = 0;
+    for( index = 0; index < vec->size(); ++index )
+        {
+            vec->at( index ) = 0;
+        }
 }
 
 void demux::create_index_map( sequential_map<std::string, sample>& map,
