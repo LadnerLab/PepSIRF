@@ -44,6 +44,11 @@ int sequence::count( const char val )
     return count;
 }
 
+std::size_t sequence::length()
+{
+    return seq.length();
+}
+
 bool sequence::operator==( const sequence& s ) const
 {
     return !s.seq.compare( seq );

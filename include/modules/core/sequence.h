@@ -72,6 +72,14 @@ class sequence
      **/
     bool operator==( const sequence& s ) const;
 
+
+    /**
+     * Get the length of the 'seq' member of this class.
+     * @returns the length of this sequence
+     * @note this is equivalent to calling this->seq.length()
+     **/
+    std::size_t length();
+
 };
 
 namespace std
