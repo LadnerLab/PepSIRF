@@ -16,7 +16,7 @@ include_directories(include/modules/parsers)
 include_directories(include/modules/demux)
 include_directories(lib/parallel_hashmap)
 include_directories(lib/edlib/edlib/include)
-add_compile_options( "-Wall" "-std=c++11" "-Wextra" "-fopenmp"
+add_compile_options( "-Wall" "-std=c++11" "-Wextra" "-fopenmp" 
                      "$<$<CONFIG:DEBUG>:-O0;-g>" 
 					 "$<$<CONFIG:RELEASE>:-O3>")
 
