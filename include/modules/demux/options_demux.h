@@ -18,6 +18,7 @@ public:
     std::string output_fname; //!< Filename of file to write output to.
     std::string samplelist_fname; //!< Name of tab-delimited file containing a list of samples.
     std::string index_fname; //!< Name of file containing indexed sequences.
+    std::size_t max_mismatches; //!< The maximum number of mismatches to tolerate when mapping imperfectly-read reads.
     /**
      * The number of fastq records to read per loop. A higher value here will result in higher memory usage by the program.
      * However, higher values can also result in better performance as fewer disk accesses are performed.

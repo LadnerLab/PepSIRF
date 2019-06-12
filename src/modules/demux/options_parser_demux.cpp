@@ -27,6 +27,14 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
           "records read a time. A higher value will result in more memory usage by the program, but will also result in fewer disk accesses, "
           "increasing performance of the program.\n"
         )
+        ( "max_mismatches,m", po::value<std::size_t>( &opts_demux->max_mismatches )->default_value( 0 ),
+          "The maximum number of 'mismatches' to tolerate when parsing reads. If a read is not within this value of "
+          "any of the sequences within the designed library it will not be considered. Note that here we define "
+          "a mismatch by the Levenshtein distance D between a reference sequence r and a read sequence s. If D( r, s ) "
+          "<= max_mismatches we say that r and s are similar. Note that if for some read q D( r, s ) <= max_mismatches and D( r, q ) "
+          "<= max_mismatches, then we say that the sequence whose distance is the minimum between D( r, s ) and D( r, q ) maps to "
+          "reference r. \n"
+        )
         ( "output,o", po::value<std::string>( &opts_demux->output_fname )->default_value( opts_demux->DEFAULT_OUTPUT_FNAME ), "The name of the output file to write counts to. "
           "Each line in this file will be a comma-separated list of values, where each entry i is either the name of a sequence or the counts for this sequence in "
           "sample i. This file will have a header labelling each column, i'th comma-separated value of column i of the header will be the sample name of sample i. "
