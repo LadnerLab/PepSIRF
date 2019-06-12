@@ -21,12 +21,18 @@
         NMSP::container_internal::hash_default_eq<K>, \
         std::allocator<K>, 1, NMSP::NullMutex
 
+#define EXTRAARGS_PFSET , NMSP::container_internal::hash_default_hash<K>, \
+        NMSP::container_internal::hash_default_eq<K>, \
+        std::allocator<K>, 8, std::mutex
 
 template <class K, class V>
 using parallel_map = MAPNAME< K, V EXTRAARGS_PMAP>;
 
 template <class K, class V>
 using sequential_map = MAPNAME< K, V EXTRAARGS_SMAP>;
+
+template <class K>
+using parallel_node_set = phmap::parallel_node_hash_set< K EXTRAARGS_PFSET>;
 
 template <class K>
 using parallel_set = phmap::parallel_flat_hash_set< K EXTRAARGS_PSET>;
