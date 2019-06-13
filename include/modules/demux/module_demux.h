@@ -94,18 +94,56 @@ class module_demux : public module
     std::size_t _get_read_length( std::ifstream& ofile );
     std::string _create_origin( std::size_t read_length );
 
-void _process_imperfect_matches( parallel_map<sequence,std::vector<std::size_t>*>& ref_cnt,
-                                 parallel_map<sequence,std::size_t>& non_perfect,
-                                 sequential_map<std::string, sample>& idx_map,
-                                 sequence_indexer& ref_idx, sequence_indexer& fwd_idx,
-                                 options_demux *opts
-                               );
+    /**
+     * Find the sequence mapped to, allowing for one shift to either the left 
+     * or to the right. We first check to see if the match is exact, no bases were 
+     * added, deleted, or changed during synthesization and reading.
+     * Then, we shift one to the left and check again, and one to the right and check again.
+     * If no match is found, we return map.end()
+     * @param map A map containing sequences as the keys, and anything as the value. 
+     * @param probe_seq The sequence we are looking for in the map.
+     * @param f_start The start index at which we should look for probe_seq.
+     * @param f_len The expected length of probe_seq, we search map for the substring of probe_seq
+     *        starting at position f_start and ending at position f_len.
+     * @returns Iterator to the exact match if found, map.end() otherwise
+     **/
+    template<class M>
+        typename M::iterator _find_with_shifted_mismatch( M &map,
+                                                          sequence probe_seq,
+                                                          std::size_t f_start, std::size_t f_len
+                                                         )
+        {
+            std::string substr = probe_seq.seq.substr( f_start, f_len );
+            auto temp = map.find( sequence( "", substr ) );
+
+            if( temp != map.end() )
+                {
+                    return temp;
+                }
+
+            if( f_start > 0 )
+                {
+                    substr = probe_seq.seq.substr( f_start - 1, f_len );
+                    temp = map.find( sequence( "", substr ) );
+
+                    if( temp != map.end() )
+                        {
+                            return temp;
+                        }
+                }
+
+            substr = probe_seq.seq.substr( f_start + 1, f_len );
+            temp = map.find( sequence( "", substr ) );
+
+            return temp;
+        }
+      
 
 };
 
 namespace demux
 {
-    void create_index_map( sequential_map<std::string, sample>& map,
+    void create_index_map( sequential_map<sequence, sample>& map,
                            std::vector<sequence>& index_seqs,
                            std::vector<sample>& samplelist
                          );
