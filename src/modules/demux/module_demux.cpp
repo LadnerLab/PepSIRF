@@ -20,6 +20,7 @@ void module_demux::run( options *opts )
 
     struct time_keep::timer total_time;
     parallel_map<sequence, std::vector<std::size_t>*> reference_counts;
+    parallel_map<sequence, std::size_t> non_perfect_match_seqs;
 
     sequential_map<std::string, sample> index_map;
 
@@ -69,6 +70,19 @@ void module_demux::run( options *opts )
     std::size_t processed_total   = 0;
     std::size_t processed_success = 0;
 
+    sequence_indexer lib_idx;
+    sequence_indexer f_index_idx;
+
+    std::size_t ref_length  = library_seqs[ 0 ].length();
+    std::string lib_origin  = _create_origin( ref_length );
+
+    std::string f_origin = _create_origin( index_seqs[ 0 ].length() );
+
+    // index the forward index sequences and the library
+    // sequences
+    lib_idx.index( library_seqs, lib_origin );
+    f_index_idx.index( index_seqs, f_origin );
+
     // while we still have reads to process, loop terminates when no fastq records
     // are read from the file
     while( fastq_p.parse( reads_file, reads, d_opts->read_per_loop  ) )
@@ -101,13 +115,32 @@ void module_demux::run( options *opts )
                                 }
                             else
                                 {
-
+                                    if( non_perfect_match_seqs.find( reads[ read_index ] ) == non_perfect_match_seqs.end() )
+                                        {
+                                            non_perfect_match_seqs.emplace( reads[ read_index ], 0 ) ;
+                                        }
+                                    ++non_perfect_match_seqs[ reads[ read_index ] ];
                                 }
+                        }
+                    else
+                        {
+                            if( non_perfect_match_seqs.find( reads[ read_index ] ) == non_perfect_match_seqs.end() )
+                                {
+                                            non_perfect_match_seqs.emplace( reads[ read_index ], 0 ) ;
+                                }
+                            ++non_perfect_match_seqs[ reads[ read_index ] ];
                         }
 
                     // record the number of records that are processed
                     ++processed_total;
                 }
+            // process the imperfect matches
+            _process_imperfect_matches( reference_counts,
+                                        non_perfect_match_seqs,
+                                        index_map,
+                                        lib_idx, f_index_idx,
+                                        d_opts
+                                      );
             reads.clear();
         }
 
@@ -139,7 +172,7 @@ void module_demux::add_seqs_to_map( parallel_map<sequence, std::vector<std::size
 
     input_map.reserve( seqs.size() );
 
-    #pragma omp parallel for private( index, inner_index  ) shared ( seqs, input_map, num_samples )
+    #pragma omp parallel for private( index ) shared ( seqs, input_map, num_samples )
     for( index = 0; index < seqs.size(); ++index )
         {
             input_map[ seqs[ index ] ] = new std::vector<std::size_t>( num_samples );
@@ -220,4 +253,47 @@ void demux::create_index_map( sequential_map<std::string, sample>& map,
                     map[ index_seqs[ index ].seq ] = sample_table[ index_seqs[ index ].name ];
                 }
         }
+}
+
+std::size_t module_demux::_get_read_length( std::ifstream& ofile )
+{
+    fastq_parser fq;
+    std::vector<sequence> seq;
+
+    fq.parse( ofile, seq, 1 );
+
+
+    // reset our file pointer
+    ofile.clear();
+    ofile.seekg( 0 );
+
+    return seq[ 0 ].seq.length();
+}
+
+void module_demux::_process_imperfect_matches( parallel_map<sequence,std::vector<std::size_t>*>& ref_cnt,
+                                               parallel_map<sequence,std::size_t>& non_perfect,
+                                               sequential_map<std::string, sample>& idx_map,
+                                               sequence_indexer& ref_idx, sequence_indexer& fwd_idx,
+                                               options_demux *opts
+                                             )
+{
+    std::size_t mismatches = opts->max_mismatches;
+
+    for( )
+        {
+
+        }
+}
+
+std::string module_demux::_create_origin( std::size_t read_length )
+{
+    std::size_t idx = 0;
+    std::string orig;
+    orig.reserve( read_length + 1 );
+
+    for( idx = 0; idx < read_length; ++idx )
+        {
+            orig.append( "A" );
+        }
+    return orig;
 }

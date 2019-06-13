@@ -14,6 +14,7 @@
 #include "fastq_parser.h"
 #include "time_keep.h"
 #include "samplelist_parser.h"
+#include "sequence_indexer.h"
 #include "sample.h"
 
 
@@ -89,6 +90,17 @@ class module_demux : public module
      *      will be zero'd out.
      **/
     void _zero_vector( std::vector<std::size_t>* vec );
+
+    std::size_t _get_read_length( std::ifstream& ofile );
+    std::string _create_origin( std::size_t read_length );
+
+void _process_imperfect_matches( parallel_map<sequence,std::vector<std::size_t>*>& ref_cnt,
+                                 parallel_map<sequence,std::size_t>& non_perfect,
+                                 sequential_map<std::string, sample>& idx_map,
+                                 sequence_indexer& ref_idx, sequence_indexer& fwd_idx,
+                                 options_demux *opts
+                               );
+
 };
 
 namespace demux
