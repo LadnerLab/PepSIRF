@@ -22,6 +22,17 @@ void sequence_indexer::index( std::vector<sequence>& seqs, std::string& origin )
         }
     std::sort( indexed_seqs.begin(), indexed_seqs.end() );
 }
+unsigned int sequence_indexer::query( std::vector<std::pair<sequence*,int>>& results,
+                                      sequence& query_seq, int max_dist,
+                                      bool normalize_sizes
+                                    )
+{
+    if( normalize_sizes )
+        {
+            return query( results, query_seq, max_dist );
+        }
+    return query( results, query_seq, max_dist + _size_difference( query_seq.seq, origin_seq ) );
+}
 
 unsigned int sequence_indexer::query( std::vector<std::pair<sequence*,int>>& results,
                                       sequence& query_seq, int max_dist
@@ -99,4 +110,14 @@ bool operator<( sequence_indexer::node const& n1,
               )
 {
     return n1.distance < n2.distance;
+}
+
+inline std::size_t
+sequence_indexer::_size_difference( const std::string& s1,
+                                    const std::string& s2
+                                  ) const
+{
+    std::size_t s1_l = s1.length();
+    std::size_t s2_l = s2.length();
+    return  s1_l > s2_l ? s1_l - s2_l : s2_l - s1_l;
 }

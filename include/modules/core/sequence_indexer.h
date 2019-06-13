@@ -57,6 +57,12 @@ class sequence_indexer
                         sequence& query_seq, int max_dist
                       );
 
+    unsigned int query( std::vector<std::pair<sequence*,int>>& results,
+                        sequence& query_seq, int max_dist,
+                        bool normalize_sizes
+                      );
+
+
     /**
      * A node class, these nodes are stored in a vector used internally by 
      * the sequence_indexer.
@@ -114,6 +120,11 @@ class sequence_indexer
      * @returns the integer Levenshtein distance between s1 and s2.
      **/
     int edit_distance( const std::string& s1, const std::string& s2 );
+
+    inline std::size_t
+        _size_difference( const std::string& s1,
+                          const std::string& s2
+                        ) const;
 };
 
 /**
@@ -122,5 +133,6 @@ class sequence_indexer
 bool operator<( sequence_indexer::node const& n1,
                 sequence_indexer::node const& n2
               );
+
 #endif // SEQUENCE_INDEXER_HH_INCLUDED
 
