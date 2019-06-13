@@ -1,7 +1,6 @@
 #include <cstring>
 
 #include "sequence_indexer.h"
-#include "edlib.h"
 
 sequence_indexer::sequence_indexer() = default;
 
@@ -90,17 +89,13 @@ bool sequence_indexer::node::operator<( const node& compare )
 
 int sequence_indexer::edit_distance( const std::string& s1, const std::string& s2 )
 {
-    EdlibAlignConfig config = edlibDefaultAlignConfig();
-    EdlibAlignResult result;
+    int distance = 0;
+    std::size_t index = 0;
 
-    int distance;
-
-    result = edlibAlign( s1.c_str(), s1.length(),
-                         s2.c_str(), s2.length(),
-                         config
-                       );
-    distance = result.editDistance;
-    edlibFreeAlignResult( result );
+    for( index = 0; index < s1.length(); ++index )
+        {
+            distance += s1[ index ] != s2[ index ];
+        }
 
     return distance;
 }
