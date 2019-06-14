@@ -23,7 +23,7 @@ void sequence_indexer::index( std::vector<sequence>& seqs, std::string& origin )
 }
 
 unsigned int sequence_indexer::query( std::vector<std::pair<sequence*,int>>& results,
-                                      sequence& query_seq, int max_dist
+                                      sequence& query_seq, std::size_t max_dist
                                     )
 {
     int orig_distance    = 0;
@@ -32,6 +32,7 @@ unsigned int sequence_indexer::query( std::vector<std::pair<sequence*,int>>& res
     unsigned int matches = 0;
 
     std::vector<node>::iterator it;
+    std::make_heap( results.begin(), results.end() );
 
     orig_distance = edit_distance( query_seq.seq, origin_seq );
 
@@ -50,10 +51,11 @@ unsigned int sequence_indexer::query( std::vector<std::pair<sequence*,int>>& res
 
             if( lev_distance <= max_dist)
                 {
-                    results.emplace_back( std::make_pair( it->seq,
-                                                          lev_distance
-                                                        )
-                                        );
+                    results.emplace_back( std::make_pair( it->seq, lev_distance ) );
+                                                                           
+                    std::push_heap( results.begin(), results.end(),
+                                    cmp_pairs()
+                                  );
                     ++matches;
                 }
             ++it;
@@ -95,3 +97,4 @@ bool operator<( sequence_indexer::node const& n1,
 {
     return n1.distance < n2.distance;
 }
+

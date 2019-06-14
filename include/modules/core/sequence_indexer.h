@@ -56,14 +56,8 @@ class sequence_indexer
      *       sequence_indexer, but not with respect to the results vector.
      **/
     unsigned int query( std::vector<std::pair<sequence*,int>>& results,
-                        sequence& query_seq, int max_dist
+                        sequence& query_seq, std::size_t max_dist
                       );
-
-    unsigned int query( std::vector<std::pair<sequence*,int>>& results,
-                        sequence& query_seq, int max_dist,
-                        bool normalize_sizes
-                      );
-
 
     /**
      * A node class, these nodes are stored in a vector used internally by 
@@ -130,6 +124,18 @@ class sequence_indexer
 bool operator<( sequence_indexer::node const& n1,
                 sequence_indexer::node const& n2
               );
+struct cmp_pairs
+{
+    typedef std::pair< sequence*, int> arg_type;
+    bool operator()( const arg_type& first,
+                         const arg_type& second
+                   ) const
+    {
+        return std::get<1>( first ) > std::get<1>( second );
+    }
+};
+
+
 
 #endif // SEQUENCE_INDEXER_HH_INCLUDED
 
