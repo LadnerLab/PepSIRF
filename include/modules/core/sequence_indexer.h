@@ -7,7 +7,7 @@
 
 /**
  * Class for indexing sequences. Takes a set of 
- * reference sequences and sorts them in order of Levenshtein distance 
+ * reference sequences and sorts them in order of hamming distance 
  * to an 'origin' sequence. Once indexed, the sequence_indexer can be 
  * queried (sequence_indexer::query) to find all of the sequences that 
  * are within a maximum distance of the query sequence. By indexing we 
@@ -25,20 +25,22 @@ class sequence_indexer
     /**
      * Index a vector of sequences. Sequences are placed in order of their 
      * distance to the origin sequence. Generally the origin sequence does not matter, 
-     * but you want the length of the origin sequence to be close (or exactly) to the length 
+     * but you want the length of the origin sequence to be exactly the length 
      * of all of the sequences in seqs. 
      * @param seqs Reference to vector holding sequences to be copied.
      * @param origin The 'origin' sequence. This origin is analogous to the point 
      *        (0,0) on the xy plane. Each sequence in seqs is ordered in terms of its distance
      *        from this origin sequence. 
      * @note The index is managed internally, to query this index call sequence_indexer::index
+     * @note All sequences must be exactly the same length, as hamming distance is not defined for 
+     *       strings of different length.
      **/
     void index( std::vector<sequence>& seqs, std::string& origin );
 
     /**
      * Query the indexed sequences to find all sequences that are 
      * similar to query_seq. For two sequences a and b, and threshold c we say a and b are similar 
-     * iff the levenshtein distance D between a and b is less than or equal to c, i.e.
+     * iff the hamming distance D between a and b is less than or equal to c, i.e.
      * a is similar to b iff D( a, b ) <= c. Pointers to sequences that are 
      * found to be similar to query_seq are placed into the 
      * results vector as a pair, where the second item of the pair is the integer distance 
@@ -117,7 +119,7 @@ class sequence_indexer
      * Calcualte the edit distance D between strings s1 and s2. 
      * @param s1 The first string to compare to.
      * @param s2 The second string to compare to.
-     * @returns the integer Levenshtein distance between s1 and s2.
+     * @returns the integer hamming distance between s1 and s2.
      **/
     int edit_distance( const std::string& s1, const std::string& s2 );
 
