@@ -122,11 +122,6 @@ class sequence_indexer
      * @returns the integer hamming distance between s1 and s2.
      **/
     int edit_distance( const std::string& s1, const std::string& s2 );
-
-    inline std::size_t
-        _size_difference( const std::string& s1,
-                          const std::string& s2
-                        ) const;
 };
 
 /**
