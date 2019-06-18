@@ -102,13 +102,6 @@ class sequence_indexer
     };
 
     /**
-     * Vector containing nodes. After a call to sequence_indexer::index,
-     * this vector will contain a set of nodes sorted on distance from the 
-     * origin.
-     **/
-    std::vector<node> indexed_seqs;
-
-    /**
      * Defines the 'distance' between two sequences. Here the distance metric must 
      * define a metric space, as the triangle inequality helps us reduce the search space.
      **/
