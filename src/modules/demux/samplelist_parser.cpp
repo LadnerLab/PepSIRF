@@ -1,4 +1,5 @@
 #include "samplelist_parser.h"
+#include <sstream>
 
 std::vector<sample> samplelist_parser::parse( const std::string filename )
 {
@@ -12,6 +13,7 @@ std::vector<sample> samplelist_parser::parse( const std::string filename )
     std::string name = "";
 
     std::string line;
+    std::size_t line_no = 0;
 
     std::vector<std::string> split_line;
 
@@ -22,6 +24,7 @@ std::vector<sample> samplelist_parser::parse( const std::string filename )
     while( std::getline( in_stream, line ) )
         {
             boost::split( split_line, line, boost::is_any_of( "\t" ) );
+            ++line_no;
 
             if( split_line.size() == FORWARD_ONLY_SIZE )
                 {
@@ -36,7 +39,10 @@ std::vector<sample> samplelist_parser::parse( const std::string filename )
                 }
             else
                 {
-                    throw std::runtime_error( "The samplelist file is not formatted correctly!" );
+                    std::stringstream err_str;
+                    err_str << "The samplelist file is not formatted correctly!\n" << 
+                        "the error occurs here: \n" << line_no << " " <<  line << "\n";
+                    throw std::runtime_error( err_str.str() );
                 }
 
             sample samp( id1, id2, name, sample_id );
