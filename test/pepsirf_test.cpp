@@ -237,3 +237,73 @@ TEST_CASE( "Test String Indexing", "[string_indexer]" )
     CHECK_THROWS_AS( si2.index( seqs2 ), std::runtime_error );
 
 }
+
+TEST_CASE( "Test Count Generation", "[module_demux]" )
+{
+
+    fastq_parser fp;
+    module_demux mod;
+    sequence_indexer lib_idx;
+
+    std::vector<sequence> vec;
+    std::size_t num_samples = 1;
+
+    std::size_t seq_length     = 150;
+    std::size_t seq_start      = 0;
+    std::size_t num_mismatches = 0;
+    
+    vec = fp.parse( "../test/test_fastq.fastq" );
+
+    lib_idx.index( vec );
+
+    parallel_map<sequence, std::vector<std::size_t>*> my_map;
+
+    mod.add_seqs_to_map( my_map, vec, num_samples );
+
+    parallel_map<sequence, std::vector<std::size_t>*>::iterator it = my_map.begin();
+    parallel_map<sequence, std::vector<std::size_t>*>::iterator seq_match;
+
+    std::size_t index = 0;
+
+    // perfect matches
+    for( index = 0; index < my_map.size(); ++index )
+        {
+                seq_match = mod._find_with_shifted_mismatch( my_map, vec[ index ],
+                                                             lib_idx, num_mismatches,
+                                                             seq_start, seq_length
+                                                           );
+            REQUIRE( seq_match != my_map.end() );
+            REQUIRE( seq_match->second->size() == 1 );
+
+            seq_match->second->at( 0 )++;
+
+            REQUIRE( seq_match->second->at( 0 ) == 1 );
+
+        }
+    sequence seq =
+    sequence( "", "AGCCAGCTTGCGGCAAAACTGCGTAACCGTCTTCTCGTTCTCTAAAAACCATTTTTCGTCCCCTTCGGGGCGGTGGTCTATAGTGTTATTAATATCAAGTTGGGGGAGCACATTGTAGCATTGTGCCAATTCATCCATTAACTTCTCAGT" );
+
+    seq_match = mod._find_with_shifted_mismatch( my_map, seq,
+                                                 lib_idx, num_mismatches,
+                                                 seq_start, seq_length
+                                                 );
+    REQUIRE( seq_match == my_map.end() );
+
+    seq_match = mod._find_with_shifted_mismatch( my_map, seq,
+                                                 lib_idx, 1,
+                                                 seq_start, seq_length
+                                                 );
+    REQUIRE( seq_match != my_map.end() );
+    seq =
+    sequence( "", "AGCCAGCTTGCGGCAAAACTGCGTAACCGTCTTCTCGTTCTCTAAAAACCATTTTTCGTCCCCTTCGGGGCGGTGGTCTATAGTGTTATTAATATCAAGTTGGGGGAGCACATTGTAGCATTGTGCCAATTCATCCATTAACTTCGCAAT" );
+
+    seq_match = mod._find_with_shifted_mismatch( my_map, seq,
+                                                 lib_idx, 3,
+                                                 seq_start, seq_length
+                                                 );
+    REQUIRE( seq_match != my_map.end() );
+
+
+
+
+}
