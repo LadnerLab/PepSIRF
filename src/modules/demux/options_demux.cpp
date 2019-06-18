@@ -15,6 +15,8 @@ std::string options_demux::get_arguments()
                   " --num_threads      " << num_threads << "\n" <<
                   " --seq_start        " << seq_start << "\n" <<
                   " --seq_len          " << seq_len << "\n" <<
+                  " --f_index_start    " << f_index_start << "\n" <<
+                  " --f_index_len      " << f_index_len << "\n" <<
                   " --max_mismatches   " << max_mismatches << "\n" << 
                   "\n";
 
