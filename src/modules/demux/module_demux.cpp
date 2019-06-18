@@ -13,8 +13,8 @@ void module_demux::run( options *opts )
 
     std::string index_str;
 
-    std::size_t forward_start  = 12;
-    std::size_t forward_length = 12;
+    std::size_t forward_start  = d_opts->f_index_start;
+    std::size_t forward_length = d_opts->f_index_len;
 
     std::size_t read_index = 0;
 
