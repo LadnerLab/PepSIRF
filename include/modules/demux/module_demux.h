@@ -82,7 +82,6 @@ class module_demux : public module
                       );
 
 
- private:
     /**
      * Method to zero a vector of size_t elements.
      * @param vec Pointer to the vector to zero.
