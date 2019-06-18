@@ -169,19 +169,23 @@ void module_demux::write_outputs( std::string outfile_name,
     std::ofstream outfile( outfile_name, std::ofstream::out );
     parallel_map<sequence, std::vector<std::size_t>*>::iterator seq_iter = seq_scores.begin();
 
+    const std::string DELIMITER = "\t";
+    const std::string NEWLINE   = "\n";
+
 
     std::size_t index        = 0;
     std::size_t second_index = 0;
 
-    std::string header       = "Sequence name,";
+    std::string header       = "Sequence name";
+    header.append( DELIMITER );
 
     for( index = 0; index < samples.size() - 1; ++index )
         {
             header.append( samples[ index ].name );
-            header.append( "," );
+            header.append( DELIMITER );
         }
     header.append( samples[ index ].name );
-    header.append( "\n" );
+    header.append( NEWLINE );
 
     outfile << header;
 
@@ -190,13 +194,13 @@ void module_demux::write_outputs( std::string outfile_name,
             const sequence& curr = seq_iter->first;
             const std::vector<std::size_t> *curr_counts = seq_iter->second;
 
-            outfile << curr.name << ",";
+            outfile << curr.name << DELIMITER;
 
             for( second_index = 0; second_index < samples.size() - 1; ++second_index )
                 {
-                    outfile << curr_counts->at( second_index ) << ',';
+                    outfile << curr_counts->at( second_index ) << DELIMITER;
                 }
-            outfile << curr_counts->at( samples.size() - 1 ) << "\n";
+            outfile << curr_counts->at( samples.size() - 1 ) << NEWLINE;
 
             ++seq_iter;
             delete curr_counts;

@@ -63,8 +63,8 @@ class module_demux : public module
 
     /**
      * Writes output to the outfile_name.
-     * Output is a comma-separated file, one line per sequence 
-     * where each comma-separated entry is the count for a certain 
+     * Output is a tab-separated file, one line per sequence 
+     * where each tab-separated entry is the count for a certain 
      * sample. 
      * @note A header is written to the file labelling each column.
      * @param outfile_name Name of file to write to.
