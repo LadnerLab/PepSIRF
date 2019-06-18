@@ -30,7 +30,7 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
         ( "max_mismatches,m", po::value<std::size_t>( &opts_demux->max_mismatches )->default_value( 0 ),
           "The maximum number of 'mismatches' to tolerate when parsing reads. If a read is not within this value of "
           "any of the sequences within the designed library it will not be considered. Note that here we define "
-          "a mismatch by the Levenshtein distance D between a reference sequence r and a read sequence s. If D( r, s ) "
+          "a mismatch by the Hamming distance D between a reference sequence r and a read sequence s. If D( r, s ) "
           "<= max_mismatches we say that r and s are similar. Note that if for some read q D( r, s ) <= max_mismatches and D( r, q ) "
           "<= max_mismatches, then we say that the sequence whose distance is the minimum between D( r, s ) and D( r, q ) maps to "
           "reference r. \n"

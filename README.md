@@ -76,7 +76,7 @@ sequence for each sample.:
                                        is not within this value of any of the 
                                        sequences within the designed library it
                                        will not be considered. Note that here 
-                                       we define a mismatch by the Levenshtein 
+                                       we define a mismatch by the Hamming 
                                        distance D between a reference sequence 
                                        r and a read sequence s. If D( r, s ) <=
                                        max_mismatches we say that r and s are 
