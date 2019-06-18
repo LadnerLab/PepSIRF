@@ -196,26 +196,15 @@ TEST_CASE( "Test String Indexing", "[string_indexer]" )
     std::string origin = "";
     sequence_indexer si;
     fastq_parser fp;
-    for( auto index = 0; index < 15; ++index )
-        {
-            origin += "AAAAAAAAAA";
-        }
-
     auto seqs = fp.parse( "../test/test_fastq.fastq" );
     std::vector<std::pair<sequence*,int>> result_set;
 
-    si.index( seqs, origin );
-    REQUIRE( si.indexed_seqs.size() > 0 );
-    REQUIRE( si.indexed_seqs.size() == seqs.size() );
+    si.index( seqs );
+    REQUIRE( si.tree.size() > 0 );
+    REQUIRE( si.tree.size() == seqs.size() );
 
-    for( unsigned int index = 0; index < si.indexed_seqs.size() - 1; ++index )
-        {
-            REQUIRE( si.indexed_seqs[ index ].distance <=
-                     si.indexed_seqs[ index + 1 ].distance
-                   );
-        }
     std::string q1 = "NGCCAGCTTGCGGCAAAACTGCGTAACCGTCTTCTCGTTCTCTAAAAACCATTTTTCGTCCCCTTCGGGGCGGTGGTCTATAGTGTTATTAATATCAAGTTGGGGGAGCACATTGTAGCATTGTGCCAATTCATCCATTAACTTCTCAGT";
-    std::string q2 = "AGCCAGGCTGCGGCAAAACTGCGTAACCGTCTTCTCGTTCTCTAAAAACCATTTTTCGTCCCCTTCGGGGCGGTGGTCTATAGTGTTATTAATATCAAGTTGGGGGAGCACATTGTAGCATTGTGCCAATTCATCCATTAACTTCTCAGT";
+    std::string q2 = "CTCCAGCTTGCGGCAAAACTGCGTAACCGTCTTCTCGTTCTCTAAAAACCATTTTTCGTCCCCTTCGGGGCGGTGGTCTATAGTGTTATTAATATCAAGTTGGGGGAGCACATTGTAGCATTGTGCCAATTCATCCATTAACTTATCAGT";
     sequence s1( "", q1 );
     sequence s2( "", q2 );
 
@@ -231,4 +220,20 @@ TEST_CASE( "Test String Indexing", "[string_indexer]" )
     REQUIRE( num_matches == 1 );
     REQUIRE( result_set.size() == 1 );
     REQUIRE( std::get<1>(result_set[ 0 ]) == 3 );
+
+    result_set.clear();
+    num_matches = si.query( result_set, s2, 150 );
+
+    REQUIRE( num_matches == 100 );
+    REQUIRE( result_set.size() == 100 );
+    REQUIRE( std::get<1>(result_set[ 0 ]) == 3 );
+
+    std::vector<sequence> seqs2;
+    seqs2.emplace_back( "", "ATGC" );
+    seqs2.emplace_back( "", "TGC" );
+
+    sequence_indexer si2;
+
+    CHECK_THROWS_AS( si2.index( seqs2 ), std::runtime_error );
+
 }
