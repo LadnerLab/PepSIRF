@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <fstream>
+#include <limits>
 #include <algorithm>
 #include <omp.h>
 
@@ -95,33 +96,52 @@ class module_demux : public module
     std::string _create_origin( std::size_t read_length );
 
     /**
-     * Find the sequence mapped to, allowing for one shift to either the left 
-     * or to the right. We first check to see if the match is exact, no bases were 
+     * Find the sequence mapped to, allowing for either one shift to the left or right,
+     * or up to and including num_mism substitutions. 
+     *W e first check to see if the match is exact, no bases were 
      * added, deleted, or changed during synthesization and reading.
      * Then, we shift one to the left and check again, and one to the right and check again.
+     * Finally, we check to see if a match is found at the original location, but up to and 
+     * include num_mism substitutions occurred. 
      * If no match is found, we return map.end()
      * @param map A map containing sequences as the keys, and anything as the value. 
      * @param probe_seq The sequence we are looking for in the map.
+     * @param idx A sequence_indexer to query if no exact match is found when 
+     *        searching from either shift. Note that the fuzzy match is only searched for 
+     *        in the original expected position of the sequence.
+     * @param num_mism The maximum number of mismatches (i.e. the maximum hamming distance) 
+     *        to tolerate when searching for imperfectly-matched sequences. Any matches that are 
+     *        found within this distance are included, and the minimum distance is used.  
      * @param f_start The start index at which we should look for probe_seq.
      * @param f_len The expected length of probe_seq, we search map for the substring of probe_seq
      *        starting at position f_start and ending at position f_len.
-     * @returns Iterator to the exact match if found, map.end() otherwise
+     * @returns Iterator to the match if found, map.end() otherwise
      **/
     template<class M>
         typename M::iterator _find_with_shifted_mismatch( M &map,
                                                           sequence probe_seq,
+                                                          sequence_indexer& idx, std::size_t num_mism,
                                                           std::size_t f_start, std::size_t f_len
                                                          )
         {
+            std::vector<std::pair<sequence *, int>> query_matches;
+            sequence *best_match = nullptr;
+            sequence seq_temp;
+
+            unsigned int num_matches = 0;
+
             std::string substr = probe_seq.seq.substr( f_start, f_len );
+
+            // Note: hash( sequence& seq ) = hash( seq.seq )
             auto temp = map.find( sequence( "", substr ) );
 
+            // first check for an exact match in the expected location
             if( temp != map.end() )
                 {
                     return temp;
                 }
 
-            if( f_start > 0 )
+            if( f_start > 0 ) // check that we are not shifting left from the beginning
                 {
                     substr = probe_seq.seq.substr( f_start - 1, f_len );
                     temp = map.find( sequence( "", substr ) );
@@ -132,14 +152,38 @@ class module_demux : public module
                         }
                 }
 
+            // shift one to the right, look for exact match.
             substr = probe_seq.seq.substr( f_start + 1, f_len );
             temp = map.find( sequence( "", substr ) );
 
+            if( temp == map.end() )
+                {
+                    substr = probe_seq.seq.substr( f_start, f_len );
+                    seq_temp = sequence( "", substr );
+                    num_matches = idx.query( query_matches,
+                                             seq_temp,
+                                             num_mism
+                                           );
+                    if( num_matches )
+                        {
+                            best_match = _get_min_dist( query_matches );
+                            temp = map.find( *best_match );
+                        }
+                }
+
+            // return the match, if found. Otherwise, map.end() is returned
             return temp;
         }
-      
+
+    /**
+     * Gets the minimum distance from a vectors, returns a pointer to the 
+     * sequence who has the minimum distance.
+     **/
+    sequence *_get_min_dist( std::vector<std::pair<sequence *, int>>& matches );
+
 
 };
+
 
 namespace demux
 {
