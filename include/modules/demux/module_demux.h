@@ -97,7 +97,7 @@ class module_demux : public module
     /**
      * Find the sequence mapped to, allowing for either one shift to the left or right,
      * or up to and including num_mism substitutions. 
-     *W e first check to see if the match is exact, no bases were 
+     * We first check to see if the match is exact, no bases were 
      * added, deleted, or changed during synthesization and reading.
      * Then, we shift one to the left and check again, and one to the right and check again.
      * Finally, we check to see if a match is found at the original location, but up to and 
