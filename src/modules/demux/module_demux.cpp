@@ -64,8 +64,8 @@ void module_demux::run( options *opts )
 
     parallel_map<sequence, std::vector<std::size_t>*>::iterator seq_iter;
 
-    std::size_t seq_start = 43;
-    std::size_t seq_length = 90;
+    std::size_t seq_start  = d_opts->seq_start;
+    std::size_t seq_length = d_opts->seq_len;
 
     std::size_t processed_total   = 0;
     std::size_t processed_success = 0;
