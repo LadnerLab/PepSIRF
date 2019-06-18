@@ -35,14 +35,14 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
           "<= max_mismatches, then we say that the sequence whose distance is the minimum between D( r, s ) and D( r, q ) maps to "
           "reference r. \n"
         )
-        ( "seq_start", po::value<std::size_t>( &opts_demux->seq_start ), "Start index (0-based) of each read where we expect the designed peptide to "
+        ( "seq_start", po::value<std::size_t>( &opts_demux->seq_start )->required(), "Start index (0-based) of each read where we expect the designed peptide to "
           "begin. For each read, we start at this index and read for seq_len number of characters. Remember: this argument should be zero-based!\n"
         )
-        ( "seq_len", po::value<std::size_t>( &opts_demux->seq_len ), "The length of the designed peptides. Note that we assume "
+        ( "seq_len", po::value<std::size_t>( &opts_demux->seq_len )->required(), "The length of the designed peptides. Note that we assume "
           "all of the designed peptides are the same length.\n"
         )
-        ( "f_index_start", po::value<std::size_t>( &opts_demux->f_index_start ), "Start index (0-based) of each read where we expect the forward index sequences to be found.\n" )
-        ( "f_index_len", po::value<std::size_t>( &opts_demux->f_index_len ), "Length of forward index sequences. For each read we start at f_index_start and grab f_index_len "
+        ( "f_index_start", po::value<std::size_t>( &opts_demux->f_index_start )->required(), "Start index (0-based) of each read where we expect the forward index sequences to be found.\n" )
+        ( "f_index_len", po::value<std::size_t>( &opts_demux->f_index_len )->required(), "Length of forward index sequences. For each read we start at f_index_start and grab f_index_len "
           "nucleotides.\n"
         )
         ( "output,o", po::value<std::string>( &opts_demux->output_fname )->default_value( opts_demux->DEFAULT_OUTPUT_FNAME ), "The name of the output file to write counts to. "
