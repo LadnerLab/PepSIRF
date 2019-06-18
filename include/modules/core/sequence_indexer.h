@@ -4,11 +4,13 @@
 #include <algorithm>
 
 #include "sequence.h"
+#include "bk_tree.h"
 
 /**
  * Class for indexing sequences. Takes a set of 
- * reference sequences and sorts them in order of hamming distance 
- * to an 'origin' sequence. Once indexed, the sequence_indexer can be 
+ * reference sequences and stores them in a 'bk-tree' in order of 
+ * distance to the first sequence added to the tree.
+ * Once indexed, the sequence_indexer can be 
  * queried (sequence_indexer::query) to find all of the sequences that 
  * are within a maximum distance of the query sequence. By indexing we 
  * are able to reduce the number of comparisons from O(n) to roughly 
@@ -23,10 +25,8 @@ class sequence_indexer
     sequence_indexer();
 
     /**
-     * Index a vector of sequences. Sequences are placed in order of their 
-     * distance to the origin sequence. Generally the origin sequence does not matter, 
-     * but you want the length of the origin sequence to be exactly the length 
-     * of all of the sequences in seqs. 
+     * Index a vector of sequences. Sequences are placed a bk-tree in order of their 
+     * distance to the first sequence added to the gree.
      * @param seqs Reference to vector holding sequences to be copied.
      * @param origin The 'origin' sequence. This origin is analogous to the point 
      *        (0,0) on the xy plane. Each sequence in seqs is ordered in terms of its distance
@@ -34,8 +34,10 @@ class sequence_indexer
      * @note The index is managed internally, to query this index call sequence_indexer::index
      * @note All sequences must be exactly the same length, as hamming distance is not defined for 
      *       strings of different length.
+     * @note Each sequence in seqs must be the exact same length. 
+     * @note An assertion will be thrown if any sequences in seqs are of different lengths.
      **/
-    void index( std::vector<sequence>& seqs, std::string& origin );
+    void index( std::vector<sequence>& seqs );
 
     /**
      * Query the indexed sequences to find all sequences that are 
@@ -106,7 +108,31 @@ class sequence_indexer
      **/
     std::vector<node> indexed_seqs;
 
-    std::string origin_seq;
+    /**
+     * Defines the 'distance' between two sequences. Here the distance metric must 
+     * define a metric space, as the triangle inequality helps us reduce the search space.
+     **/
+    struct seq_distance
+    {
+        /**
+         * Get the distance between two sequences, s1 and s2. Here we define 
+         * the distance D( s1, s2 ) as the number of mismatches in s1 and s2, 
+         * i.e. the hamming distance between s1 and s2.
+         **/
+        int operator()( const sequence *s1, const sequence *s2 )
+        {
+            return bk::hamming_distance()( s1->seq, s2->seq );
+        }
+    };
+
+    /**
+     * The bktree that serves as our string index.
+     * The first entry is a pointer the sequence stored in this node,
+     * the second the distance from this sequence to its parent, and 
+     * seq_distance defines a distance metric on sequences.
+     **/
+    bktree<sequence*, int, seq_distance> tree;
+
 
  private:
     /**
@@ -116,6 +142,8 @@ class sequence_indexer
      * @returns the integer hamming distance between s1 and s2.
      **/
     int edit_distance( const std::string& s1, const std::string& s2 );
+
+    void _insert( sequence *seq );
 };
 
 /**
@@ -124,6 +152,12 @@ class sequence_indexer
 bool operator<( sequence_indexer::node const& n1,
                 sequence_indexer::node const& n2
               );
+
+/**
+ * Compare a pair of entries of the form <sequence*, int>
+ * We say two pairs a and b are equal iff the second entry in 
+ * each pair is the same.
+ **/
 struct cmp_pairs
 {
     typedef std::pair< sequence*, int> arg_type;
