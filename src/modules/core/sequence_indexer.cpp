@@ -15,6 +15,11 @@ void sequence_indexer::index( std::vector<sequence>& seqs )
             ++seq_iter;
 
             assert( seq_iter->seq.length() == seqs.begin()->seq.length() );
+
+            if(  seq_iter->seq.length() == seqs.begin()->seq.length() )
+                {
+                    throw std::runtime_error( "The samplelist file is not formatted correctly!" );
+                }
         }
 }
 

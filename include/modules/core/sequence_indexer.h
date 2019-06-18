@@ -35,7 +35,7 @@ class sequence_indexer
      * @note All sequences must be exactly the same length, as hamming distance is not defined for 
      *       strings of different length.
      * @note Each sequence in seqs must be the exact same length. 
-     * @note An assertion will be thrown if any sequences in seqs are of different lengths.
+     * @throws std::runtime_error if not all sequences are the same length.
      **/
     void index( std::vector<sequence>& seqs );
 
