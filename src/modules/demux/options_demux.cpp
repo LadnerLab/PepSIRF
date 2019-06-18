@@ -13,7 +13,9 @@ std::string options_demux::get_arguments()
                   " --library          " << library_fname << "\n" <<
                   " --read_per_loop    " << read_per_loop << "\n" <<
                   " --num_threads      " << num_threads << "\n" <<
-                  "--max_mismatches " << max_mismatches << "\n" << 
+                  " --seq_start        " << seq_start << "\n" <<
+                  " --seq_len          " << seq_len << "\n" <<
+                  " --max_mismatches   " << max_mismatches << "\n" << 
                   "\n";
 
     return str_stream.str();
