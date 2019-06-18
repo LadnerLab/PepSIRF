@@ -178,6 +178,8 @@ class module_demux : public module
     /**
      * Gets the minimum distance from a vectors, returns a pointer to the 
      * sequence who has the minimum distance.
+     * @note Because a max heap is used, returns the first item in the query vector.
+     * @returns The item with the smallest value in the vector.
      **/
     sequence *_get_min_dist( std::vector<std::pair<sequence *, int>>& matches );
 

@@ -70,15 +70,15 @@ void module_demux::run( options *opts )
     std::size_t processed_total   = 0;
     std::size_t processed_success = 0;
 
-    // sequence_indexer lib_idx;
-    // sequence_indexer f_index_idx;
-
-    std::string f_origin = _create_origin( index_seqs[ 0 ].length() );
+    sequence_indexer lib_idx;
+    sequence_indexer f_index_idx;
 
     // index the forward index sequences and the library
     // sequences
-    // lib_idx.index( library_seqs, lib_origin );
-    // f_index_idx.index( index_seqs, f_origin );
+    lib_idx.index( library_seqs );
+    f_index_idx.index( index_seqs );
+
+    std::size_t sample_id = 0;
 
     // while we still have reads to process, loop terminates when no fastq records
     // are read from the file
@@ -91,68 +91,37 @@ void module_demux::run( options *opts )
                     fastq_p.parse( r2_reads, index_seqs, d_opts->read_per_loop );
                 }
 
-            #pragma omp parallel for private( seq_iter, nuc_seq, read_index, index_str, adapter ) \
-                shared( seq_start, seq_length, d_opts, reference_counts, library_seqs, index_seqs ) reduction( +:processed_total, processed_success )
+            #pragma omp parallel for private( seq_iter, nuc_seq, read_index, index_str, adapter, sample_id ) \
+                shared( seq_start, seq_length, d_opts, reference_counts, library_seqs, index_seqs ) \
+                reduction( +:processed_total, processed_success ) schedule( dynamic )
             for( read_index = 0; read_index < reads.size(); ++read_index )
                 {
                     // get the forward and the reverse indexes from the sequence, grab the id
                     // for this index. This gives the index of the location at the sequence to increment
                     sequential_map<sequence, sample>::iterator
                      idx_match = _find_with_shifted_mismatch( index_map, reads[ read_index ],
-                                                                forward_start, forward_length
-                                                              );
+                                                              f_index_idx, d_opts->max_mismatches,
+                                                              forward_start, forward_length
+                                                            );
                     if( idx_match != index_map.end() )
                         {
                             parallel_map<sequence, std::vector<std::size_t>*>::iterator
                                 seq_match = _find_with_shifted_mismatch( reference_counts, reads[ read_index ],
+                                                                         lib_idx, d_opts->max_mismatches,
                                                                          seq_start, seq_length
                                                                        );
 
                             if( seq_match != reference_counts.end() )
                                 {
-
+                                    sample_id = idx_match->second.id;
+                                    seq_match->second->at( sample_id )++;
                                     ++processed_success;
                                 }
                         }
-                    // if( index_map.find( adapter ) != index_map.end() )
-                    //     {
-                    //         nuc_seq = reads[ read_index ].seq.substr( seq_start, seq_length );
-                    //         seq_iter = reference_counts.find( sequence( "", nuc_seq ) );
-
-                    //         if( seq_iter != reference_counts.end() )
-                    //             {
-                    //                 ( seq_iter->second->at( index_map[ adapter ].id ) )++;
-
-                    //                 ++processed_success;
-                    //             }
-                    //         else
-                    //             {
-                    //                 if( non_perfect_match_seqs.find( reads[ read_index ] ) == non_perfect_match_seqs.end() )
-                    //                     {
-                    //                         non_perfect_match_seqs.emplace( reads[ read_index ], 0 ) ;
-                    //                     }
-                    //                 ++non_perfect_match_seqs[ reads[ read_index ] ];
-                    //             }
-                    //     }
-                    // else
-                    //     {
-                    //         if( non_perfect_match_seqs.find( reads[ read_index ] ) == non_perfect_match_seqs.end() )
-                    //             {
-                    //                         non_perfect_match_seqs.emplace( reads[ read_index ], 0 ) ;
-                    //             }
-                    //         ++non_perfect_match_seqs[ reads[ read_index ] ];
-                    //     }
-
                     // record the number of records that are processed
                     ++processed_total;
                 }
-            // process the imperfect matches
-            // _process_imperfect_matches( reference_counts,
-            //                             non_perfect_match_seqs,
-            //                             index_map,
-            //                             lib_idx, f_index_idx,
-            //                             d_opts
-            //                           );
+
             reads.clear();
         }
 
@@ -282,21 +251,6 @@ std::size_t module_demux::_get_read_length( std::ifstream& ofile )
     return seq[ 0 ].seq.length();
 }
 
-// void module_demux::_process_imperfect_matches( parallel_map<sequence,std::vector<std::size_t>*>& ref_cnt,
-//                                                parallel_map<sequence,std::size_t>& non_perfect,
-//                                                sequential_map<std::string, sample>& idx_map,
-//                                                sequence_indexer& ref_idx, sequence_indexer& fwd_idx,
-//                                                options_demux *opts
-//                                              )
-// {
-//     std::size_t mismatches = opts->max_mismatches;
-
-//     for( ;; )
-//         {
-
-//         }
-// }
-
 std::string module_demux::_create_origin( std::size_t read_length )
 {
     std::size_t idx = 0;
@@ -309,3 +263,9 @@ std::string module_demux::_create_origin( std::size_t read_length )
         }
     return orig;
 }
+
+sequence *module_demux::_get_min_dist( std::vector<std::pair<sequence *, int>>& matches )
+{
+    return std::get<0>( *matches.begin() );
+}
+
