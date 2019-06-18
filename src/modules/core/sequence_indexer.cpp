@@ -8,14 +8,13 @@ sequence_indexer::sequence_indexer() = default;
 void sequence_indexer::index( std::vector<sequence>& seqs )
 {
     std::vector<sequence>::iterator seq_iter = seqs.begin();
-    std::size_t seq_length = seq_iter->seq.length();
 
     while( seq_iter != seqs.end() )
         {
             tree.insert( &(*seq_iter) );
             ++seq_iter;
 
-            assert( seq_iter->seq.length() == seq_length );
+            assert( seq_iter->seq.length() == seqs.begin()->seq.length() );
         }
 }
 
