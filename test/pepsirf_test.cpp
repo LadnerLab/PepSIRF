@@ -149,25 +149,25 @@ TEST_CASE( "Add seqs to map", "[module_demux]" )
     std::size_t num_samples = 12;
     vec = fp.parse( "../test/test.fasta" );
 
-    parallel_map<sequence, std::vector<std::size_t>> my_map;
+    parallel_map<sequence, std::vector<std::size_t>*> my_map;
 
-    // mod.add_seqs_to_map( my_map, vec, num_samples );
+    mod.add_seqs_to_map( my_map, vec, num_samples );
 
-    // REQUIRE( my_map.size() == 110 );
+    REQUIRE( my_map.size() == 110 );
 
-    // parallel_map<sequence, std::vector<std::size_t>>::iterator it = my_map.begin();
-    // size_t index = 0;
+    parallel_map<sequence, std::vector<std::size_t>*>::iterator it = my_map.begin();
+    size_t index = 0;
                        
-    // while( it != my_map.end() )
-    //     {
-    //         REQUIRE( it->second.size() == num_samples );
+    while( it != my_map.end() )
+        {
+            REQUIRE( it->second->size() == num_samples );
 
-    //         for( index = 0; index < it->second.size(); ++index )
-    //             {
-    //                 REQUIRE( it->second[ index ] == 0 );
-    //             }
-    //         ++it;
-    //     }
+            for( index = 0; index < it->second->size(); ++index )
+                {
+                    REQUIRE( it->second->at( index ) == 0 );
+                }
+            ++it;
+        }
 
 }
 
