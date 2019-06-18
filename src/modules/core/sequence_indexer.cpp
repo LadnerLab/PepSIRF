@@ -11,15 +11,14 @@ void sequence_indexer::index( std::vector<sequence>& seqs )
 
     while( seq_iter != seqs.end() )
         {
+
             tree.insert( &(*seq_iter) );
-            ++seq_iter;
-
-            assert( seq_iter->seq.length() == seqs.begin()->seq.length() );
-
-            if(  seq_iter->seq.length() == seqs.begin()->seq.length() )
+            if(  seq_iter->seq.length() != seqs.begin()->seq.length() )
                 {
-                    throw std::runtime_error( "The samplelist file is not formatted correctly!" );
+                    throw std::runtime_error( "Sequences that are being indexed are not all the same length. " );
                 }
+
+            ++seq_iter;
         }
 }
 
