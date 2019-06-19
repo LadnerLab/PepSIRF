@@ -53,6 +53,11 @@ sequence for each sample.:
   -h [ --help ]                        Produce help message
   --input_r1 arg                       Input forward reads fastq file to parse.
                                        
+  --input_r2 arg                       Input reverse reads fastq file to parse.
+                                       Note that if this argument is not 
+                                       supplied only forward indices will be 
+                                       used to identify samples.
+                                       
   --index arg                          Name of fasta file containing forward 
                                        and (if included )reverse index 
                                        sequences.
@@ -112,16 +117,16 @@ sequence for each sample.:
                                        
   -o [ --output ] arg (=output.csv)    The name of the output file to write 
                                        counts to. Each line in this file will 
-                                       be a comma-separated list of values, 
-                                       where each entry i is either the name of
-                                       a sequence or the counts for this 
-                                       sequence in sample i. This file will 
-                                       have a header labelling each column, 
-                                       i'th comma-separated value of column i 
-                                       of the header will be the sample name of
-                                       sample i. If we traverse this column, we
-                                       will see the count of this sample for 
-                                       each sequence. 
+                                       be a comma-separated list of values, where
+                                       each entry i is either the name of a 
+                                       sequence or the counts for this sequence
+                                       in sample i. This file will have a 
+                                       header labelling each column, i'th 
+                                       comma-separated value of column i of the 
+                                       header will be the sample name of sample
+                                       i. If we traverse this column, we will 
+                                       see the count of this sample for each 
+                                       sequence. 
                                        
   -s [ --samplelist ] arg              A tab-delimited list of samples, one 
                                        sample per line. If the samples are 
@@ -134,4 +139,4 @@ sequence for each sample.:
                                        samplename. 
                                        
   -t [ --num_threads ] arg (=2)        Number of threads to use for analyses.
-```                                     
+```
