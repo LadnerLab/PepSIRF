@@ -22,6 +22,7 @@ public:
     std::size_t seq_start; //!< Start index of where the sequences are expected to be found within the reads.
     std::size_t seq_len; //!< The length (how many nucleotides) of the designed peptides. 
     std::string index_fname; //!< Name of file containing indexed sequences.
+    std::string concatemer; //!< Concatenated primer sequences, we look for this in our reads to determine whether a peptide exists
     std::size_t max_mismatches; //!< The maximum number of mismatches to tolerate when mapping imperfectly-read reads.
     /**
      * The number of fastq records to read per loop. A higher value here will result in higher memory usage by the program.

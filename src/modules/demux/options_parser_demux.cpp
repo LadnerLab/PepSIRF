@@ -45,6 +45,9 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
         ( "f_index_len", po::value<std::size_t>( &opts_demux->f_index_len )->required(), "Length of forward index sequences. For each read we start at f_index_start and grab f_index_len "
           "nucleotides.\n"
         )
+        ( "concatemer", po::value<std::string>( &opts_demux->concatemer ), "Concatenated primer sequences. If this concatemer is found within a read, we know that a potential sequence "
+          "from the designed library was not included. The number of times this concatemer is recorded in the input file is reported."
+        )
         ( "output,o", po::value<std::string>( &opts_demux->output_fname )->default_value( opts_demux->DEFAULT_OUTPUT_FNAME ), "The name of the output file to write counts to. "
           "Each line in this file will be a comma-separated list of values, where each entry i is either the name of a sequence or the counts for this sequence in "
           "sample i. This file will have a header labelling each column, i'th comma-separated value of column i of the header will be the sample name of sample i. "
