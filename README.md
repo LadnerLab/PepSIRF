@@ -108,12 +108,12 @@ sequence for each sample.:
                                        
   -o [ --output ] arg (=output.csv)    The name of the output file to write 
                                        counts to. Each line in this file will 
-                                       be a comma-separated list of values, 
+                                       be a tab-separated list of values, 
                                        where each entry i is either the name of
                                        a sequence or the counts for this 
                                        sequence in sample i. This file will 
                                        have a header labelling each column, 
-                                       i'th comma-separated value of column i 
+                                       i'th tab-separated value of column i 
                                        of the header will be the sample name of
                                        sample i. If we traverse this column, we
                                        will see the count of this sample for 
