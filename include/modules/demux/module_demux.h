@@ -95,11 +95,11 @@ class module_demux : public module
     std::string _create_origin( std::size_t read_length );
 
     /**
-     * Find the sequence mapped to, allowing for either one shift to the left or right,
+     * Find the sequence mapped to, allowing for either one shift to the right or up to two shifts to the left,
      * or up to and including num_mism substitutions. 
      * We first check to see if the match is exact, no bases were 
      * added, deleted, or changed during synthesization and reading.
-     * Then, we shift one to the left and check again, and one to the right and check again.
+     * Then, we shift one and then two to the left and check again, and one to the right and check again.
      * Finally, we check to see if a match is found at the original location, but up to and 
      * include num_mism substitutions occurred. 
      * If no match is found, we return map.end()
@@ -144,6 +144,12 @@ class module_demux : public module
                 {
                     substr = probe_seq.seq.substr( f_start - 1, f_len );
                     temp = map.find( sequence( "", substr ) );
+
+                    if( temp == map.end() )
+                        {
+                            substr = probe_seq.seq.substr( f_start - 2, f_len );
+                            temp = map.find( sequence( "", substr ) );
+                        }
 
                     if( temp != map.end() )
                         {
