@@ -18,6 +18,7 @@ std::string options_demux::get_arguments()
                   " --f_index_start    " << f_index_start << "\n" <<
                   " --f_index_len      " << f_index_len << "\n" <<
                   " --max_mismatches   " << max_mismatches << "\n" << 
+                  " --concatemer       " << concatemer << "\n" << 
                   "\n";
 
     return str_stream.str();
