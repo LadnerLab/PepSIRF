@@ -140,3 +140,17 @@ sequence for each sample.:
                                        
   -t [ --num_threads ] arg (=2)        Number of threads to use for analyses.
 ```
+
+### Generating Code Documentation
+To create documentation for the code run the following:
+```
+cd doc
+doxygen doxygen.conf
+```
+From here you can either use the html or LaTeX versions.
+If you choose to use the LaTeX version, run the following:
+```
+cd latex
+make
+```
+This creates a file named ```refman.pdf```.
