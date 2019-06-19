@@ -69,6 +69,7 @@ void module_demux::run( options *opts )
 
     std::size_t processed_total   = 0;
     std::size_t processed_success = 0;
+    std::size_t concatemer_found  = 0;
 
     sequence_indexer lib_idx;
     sequence_indexer f_index_idx;
@@ -93,7 +94,7 @@ void module_demux::run( options *opts )
 
             #pragma omp parallel for private( seq_iter, nuc_seq, read_index, index_str, adapter, sample_id ) \
                 shared( seq_start, seq_length, d_opts, reference_counts, library_seqs, index_seqs ) \
-                reduction( +:processed_total, processed_success ) schedule( dynamic )
+                reduction( +:processed_total, processed_success, concatemer_found ) schedule( dynamic )
             for( read_index = 0; read_index < reads.size(); ++read_index )
                 {
                     // get the forward and the reverse indexes from the sequence, grab the id
@@ -117,6 +118,15 @@ void module_demux::run( options *opts )
                                     seq_match->second->at( sample_id )++;
                                     ++processed_success;
                                 }
+                            else if( seq_match == reference_counts.end()
+                                     && d_opts->concatemer.length() > 0
+                                       && reads[ read_index ].seq.find( d_opts->concatemer,
+                                                                        d_opts->f_index_start + d_opts->f_index_len
+                                                                      )
+                                   )
+                                {
+                                    ++concatemer_found;
+                                }
                         }
                     // record the number of records that are processed
                     ++processed_total;
@@ -133,9 +143,15 @@ void module_demux::run( options *opts )
         }
 
     std::cout << "Processed " << processed_total << " records in " << time_keep::get_elapsed( total_time ) << " seconds.\n";
-    std::cout << processed_success << " records were an exact match out of "
+    std::cout << processed_success << " records were found to be a match out of "
               << processed_total << " (" << ( (long double) processed_success / (long double) processed_total ) * 100
               << "%) successful.\n";
+
+    if( d_opts->concatemer.length() > 0 )
+        {
+            std::cout << "The concatemer sequence was found " << concatemer_found << " times (" <<
+                ( (long double) concatemer_found / (long double) processed_total ) * 100 << "% of total).\n";
+        }
 
     write_outputs( d_opts->output_fname, reference_counts, samplelist );
 
