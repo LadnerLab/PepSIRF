@@ -43,6 +43,8 @@ USAGE: pep_sirf [ --help | module_name <module_args*> ]
 --help, -h displays this message, while 'pep_sirf module_name --help' will display the help for the module module_name.
 ```
 
+Currently only forward indexes and runs where samples have already been indexed on the Reverse indexes are supported.
+
 #### Module Demux
 ```
 PepSIRF: Peptide-based Serological Immune Response Framework demultiplexing module. 
@@ -51,10 +53,10 @@ sequence for each sample.:
   -h [ --help ]                        Produce help message
   --input_r1 arg                       Input forward reads fastq file to parse.
                                        
-  --input_r2 arg                       Input reverse reads fastq file to parse.
-                                       Note that if this argument is not 
-                                       supplied only forward indices will be 
-                                       used to identify samples.
+<!--  --input_r2 arg                       Input reverse reads fastq file to parse. -->
+<!--                                       Note that if this argument is not  -->
+<!--                                       supplied only forward indices will be  -->
+<!--                                       used to identify samples. -->
                                        
   --index arg                          Name of fasta file containing forward 
                                        and (if included )reverse index 
