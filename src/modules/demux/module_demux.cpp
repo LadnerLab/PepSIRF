@@ -121,8 +121,8 @@ void module_demux::run( options *opts )
                             else if( seq_match == reference_counts.end()
                                      && d_opts->concatemer.length() > 0
                                        && reads[ read_index ].seq.find( d_opts->concatemer,
-                                                                        d_opts->f_index_start + d_opts->f_index_len
-                                                                      )
+                                                                        0
+                                                                        ) != std::string::npos
                                    )
                                 {
                                     ++concatemer_found;
