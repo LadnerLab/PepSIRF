@@ -53,11 +53,6 @@ sequence for each sample.:
   -h [ --help ]                        Produce help message
   --input_r1 arg                       Input forward reads fastq file to parse.
                                        
-<!--  --input_r2 arg                       Input reverse reads fastq file to parse. -->
-<!--                                       Note that if this argument is not  -->
-<!--                                       supplied only forward indices will be  -->
-<!--                                       used to identify samples. -->
-                                       
   --index arg                          Name of fasta file containing forward 
                                        and (if included )reverse index 
                                        sequences.
