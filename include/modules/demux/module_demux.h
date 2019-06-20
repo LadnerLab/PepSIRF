@@ -91,9 +91,6 @@ class module_demux : public module
      **/
     void _zero_vector( std::vector<std::size_t>* vec );
 
-    std::size_t _get_read_length( std::ifstream& ofile );
-    std::string _create_origin( std::size_t read_length );
-
     /**
      * Find the sequence mapped to, allowing for either one shift to the right or up to two shifts to the left,
      * or up to and including num_mism substitutions. 

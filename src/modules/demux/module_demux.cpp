@@ -256,34 +256,6 @@ void demux::create_index_map( sequential_map<sequence, sample>& map,
         }
 }
 
-std::size_t module_demux::_get_read_length( std::ifstream& ofile )
-{
-    fastq_parser fq;
-    std::vector<sequence> seq;
-
-    fq.parse( ofile, seq, 1 );
-
-
-    // reset our file pointer
-    ofile.clear();
-    ofile.seekg( 0 );
-
-    return seq[ 0 ].seq.length();
-}
-
-std::string module_demux::_create_origin( std::size_t read_length )
-{
-    std::size_t idx = 0;
-    std::string orig;
-    orig.reserve( read_length + 1 );
-
-    for( idx = 0; idx < read_length; ++idx )
-        {
-            orig.append( "A" );
-        }
-    return orig;
-}
-
 inline bool module_demux::_multiple_best_matches( std::vector<std::pair<sequence *, int>>& matches )
 {
     return matches.size() >= 2 &&
