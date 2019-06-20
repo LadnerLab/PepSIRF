@@ -28,9 +28,6 @@ class sequence_indexer
      * Index a vector of sequences. Sequences are placed a bk-tree in order of their 
      * distance to the first sequence added to the gree.
      * @param seqs Reference to vector holding sequences to be copied.
-     * @param origin The 'origin' sequence. This origin is analogous to the point 
-     *        (0,0) on the xy plane. Each sequence in seqs is ordered in terms of its distance
-     *        from this origin sequence. 
      * @note The index is managed internally, to query this index call sequence_indexer::index
      * @note All sequences must be exactly the same length, as hamming distance is not defined for 
      *       strings of different length.
