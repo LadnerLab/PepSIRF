@@ -51,6 +51,9 @@ class sequence_indexer
      * @param max_dist The maximum allowable distance between sequences in order for them to be 
      *        considered similar.
      * @returns The number of sequences that were found similar to query_seq.
+     * @note Results are stored in the results vector in order sorted on the 
+     *       integer distance from query_seq, so the first entry has the smallest 
+     *       distance.
      * @note This method is thread safe with respect to the internal data structures of 
      *       sequence_indexer, but not with respect to the results vector.
      **/
