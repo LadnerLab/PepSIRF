@@ -188,7 +188,17 @@ class module_demux : public module
      **/
     sequence *_get_min_dist( std::vector<std::pair<sequence *, int>>& matches );
 
-
+    /**
+     * Determine if a sequence has had more than one best match. We say for sequence a 
+     * that a has multiple best matches iff the minimum of the second item in each 
+     * pair is not unique.
+     * @param matches A vector of pairs where the first item is a pointer to sequence,
+     *        and the second an integer count. 
+     * @returns boolean true if the minimum in matches appears more than once,
+     *          false
+     * @pre matches should be sorted
+     **/
+    inline bool _multiple_best_matches( std::vector<std::pair<sequence *, int>>& matches );
 };
 
 

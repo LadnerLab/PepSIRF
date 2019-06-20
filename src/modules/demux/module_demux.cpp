@@ -284,6 +284,12 @@ std::string module_demux::_create_origin( std::size_t read_length )
     return orig;
 }
 
+inline bool module_demux::_multiple_best_matches( std::vector<std::pair<sequence *, int>>& matches )
+{
+    return matches.size() >= 2 &&
+        std::get<1>( matches[ 0 ] ) == std::get<1>( matches[ 1 ] );
+}
+
 sequence *module_demux::_get_min_dist( std::vector<std::pair<sequence *, int>>& matches )
 {
     return std::get<0>( *matches.begin() );
