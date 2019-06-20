@@ -169,7 +169,8 @@ class module_demux : public module
                                              seq_temp,
                                              num_mism
                                            );
-                    if( num_matches )
+                    if( num_matches
+                        && !_multiple_best_matches( query_matches ) )
                         {
                             best_match = _get_min_dist( query_matches );
                             temp = map.find( *best_match );
@@ -183,7 +184,9 @@ class module_demux : public module
     /**
      * Gets the minimum distance from a vectors, returns a pointer to the 
      * sequence who has the minimum distance.
-     * @note Because a max heap is used, returns the first item in the query vector.
+     * @note Because matches is sorted, returns the first item in the vector
+     * @pre  matches must be a sorted vector, sorted in non-decreasing order on the second item 
+     *       in each pair
      * @returns The item with the smallest value in the vector.
      **/
     sequence *_get_min_dist( std::vector<std::pair<sequence *, int>>& matches );
