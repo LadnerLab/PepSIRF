@@ -33,9 +33,9 @@ unsigned int sequence_indexer::query( std::vector<std::pair<sequence*,int>>& res
     for( auto iter = result.begin(); iter < result.end(); ++iter )
         {
             results.emplace_back( std::make_pair( iter->first, iter->second ) );
-            std::push_heap( results.begin(), results.end(), cmp_pairs() );
             ++matches;
         }
+    std::sort( results.begin(), results.end(), cmp_pairs() );
     return matches;
 }
 
