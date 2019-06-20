@@ -87,6 +87,12 @@ class sample
             return std::get<1>( string_ids );
         }
 
+     /**
+      * Get the ids of this sample. If either (or both) of this sample's ids are 
+      * undefined, then we concatenate empty strings, so only the defined sample ids are 
+      * included. 
+      * @returns std::string The first id of this sample concatenated with the second.
+      **/
      std::string get_ids()
          {
              std::string out_str = get_first_id() + get_second_id();
