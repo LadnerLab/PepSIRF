@@ -61,6 +61,7 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
           "the designed library sequences with up to two allowed mismatches.\n."
         )
         ( "r_index", po::value<std::string>()
+                     ->default_value( "0,0,0" )
                      ->notifier( [&]( const std::string &vals ) {
                              opts_demux->set_info( &options_demux::r_index_data,
                                                     vals
