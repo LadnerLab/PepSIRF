@@ -23,7 +23,8 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
         ( "input_r2", po::value<std::string>( &opts_demux->input_r2_fname ), "Input reverse reads fastq file to parse. Note that if this argument is "
           "not supplied only forward indices will be used to identify samples.\n"
         )
-        ( "index", po::value<std::string>( &opts_demux->index_fname )->required(), "Name of fasta file containing forward and (if included )reverse index sequences.\n")
+        ( "f_index", po::value<std::string>( &opts_demux->f_index_fname )->required(), "Name of fasta file containing forward index sequences.\n")
+        ( "r_index", po::value<std::string>( &opts_demux->r_index_fname )->default_value( "" ), "Name of fasta file containing reverse index sequences.\n")
         ( "library,l", po::value<std::string>( &opts_demux->library_fname )->required(), "Designed library containing nucleic acid peptides. "
                                                              "Library should be in fasta format and should contain "
                                                              "sequences that were used to design input_r1.\n"
