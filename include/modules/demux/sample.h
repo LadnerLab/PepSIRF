@@ -16,6 +16,16 @@ class sample
     std::pair<std::string, std::string> string_ids;
 
     /**
+     * The sequences for a sample.
+     * Positionally, these items correspond with those in 
+     * sample::strings_ids.
+     * @note The second entry can be blank, indicating that 
+     *       either only one index is used for this run or 
+     *       that sequences are already indexed on R indices.
+     **/
+    std::pair<std::string, std::string> sequences;
+
+    /**
      * The third id of the sample, determined by the third entry in a tab-separated line.
      **/
     std::string name;
@@ -33,7 +43,24 @@ class sample
             string_ids = std::make_pair( id1, id2 );
             name       = sample_name;
             id         = sample_id;
+            sequences  = std::make_pair( "", "" );
         }
+
+    /**
+     * Construct a sample given both ids and sequences, a sample name and id.
+     **/
+    sample( std::string id1, std::string seq1,
+            std::string id2, std::string seq2,
+            std::string sample_name,
+            int sample_id
+          )
+        {
+            string_ids = std::make_pair( id1, id2 );
+            name       = sample_name;
+            id         = sample_id;
+            sequences  = std::make_pair( seq1, seq2 );
+        }
+
 
     /**
      * Copy constructor.
@@ -68,6 +95,23 @@ class sample
         {
             return std::get<1>( string_ids );
         }
+
+    /**
+     * Get reference to the first sequence.
+     **/
+    const std::string& get_first_seq()
+    {
+        return std::get<0>( sequences );
+    }
+
+    /**
+     * Get reference to the second sequence.
+     **/
+    const std::string& get_second_seq()
+    {
+        return std::get<1>( sequences );
+    }
+
 
     /**
      * Get the first id of a sample.
