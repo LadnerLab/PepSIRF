@@ -188,6 +188,11 @@ class module_demux : public module
      **/
     sequence *_get_min_dist( std::vector<std::pair<sequence *, int>>& matches );
 
+    void create_index_map( sequential_map<sequence, sample>& map,
+                           std::vector<sequence>& index_seqs,
+                           std::vector<sample>& samplelist
+                         );
+
     /**
      * Determine if a sequence has had more than one best match. We say for sequence a 
      * that a has multiple best matches iff the minimum of the second item in each 
@@ -198,17 +203,8 @@ class module_demux : public module
      *          false
      * @pre matches should be sorted
      **/
-    inline bool _multiple_best_matches( std::vector<std::pair<sequence *, int>>& matches );
+    bool _multiple_best_matches( std::vector<std::pair<sequence *, int>>& matches );
 };
 
-
-namespace demux
-{
-    void create_index_map( sequential_map<sequence, sample>& map,
-                           std::vector<sequence>& index_seqs,
-                           std::vector<sample>& samplelist
-                         );
-
-}
 
 #endif // MODULE_DEMUX_HH_INCLUDED

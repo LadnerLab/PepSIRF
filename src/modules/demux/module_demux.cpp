@@ -54,7 +54,7 @@ void module_demux::run( options *opts )
     library_seqs = fasta_p.parse( d_opts->library_fname );
     index_seqs   = fasta_p.parse( d_opts->index_fname );
 
-    demux::create_index_map( index_map, index_seqs, samplelist );
+    create_index_map( index_map, index_seqs, samplelist );
     sequential_map<sequence, sample> sample_table;
 
     add_seqs_to_map( reference_counts, library_seqs, samplelist.size() );
@@ -233,10 +233,10 @@ void module_demux::_zero_vector( std::vector<std::size_t>* vec )
         }
 }
 
-void demux::create_index_map( sequential_map<sequence, sample>& map,
-                              std::vector<sequence>& index_seqs,
-                              std::vector<sample>& samplelist
-                            )
+void module_demux::create_index_map( sequential_map<sequence, sample>& map,
+                                     std::vector<sequence>& index_seqs,
+                                     std::vector<sample>& samplelist
+                                   )
 {
     sequential_map<std::string, sample> sample_table;
 
@@ -256,7 +256,7 @@ void demux::create_index_map( sequential_map<sequence, sample>& map,
         }
 }
 
-inline bool module_demux::_multiple_best_matches( std::vector<std::pair<sequence *, int>>& matches )
+bool module_demux::_multiple_best_matches( std::vector<std::pair<sequence *, int>>& matches )
 {
     return matches.size() >= 2 &&
         std::get<1>( matches[ 0 ] ) == std::get<1>( matches[ 1 ] );
