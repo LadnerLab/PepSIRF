@@ -16,6 +16,10 @@ void module_demux::run( options *opts )
     std::size_t forward_start  = std::get<0>( d_opts->f_index_data );
     std::size_t forward_length = std::get<1>( d_opts->f_index_data );
 
+    std::size_t reverse_start  = std::get<0>( d_opts->r_index_data );
+    std::size_t reverse_length = std::get<1>( d_opts->r_index_data );
+
+
     std::size_t read_index = 0;
 
     struct time_keep::timer total_time;
@@ -93,18 +97,36 @@ void module_demux::run( options *opts )
                 }
 
             #pragma omp parallel for private( seq_iter, nuc_seq, read_index, index_str, adapter, sample_id ) \
-                shared( seq_start, seq_length, d_opts, reference_counts, library_seqs, index_seqs ) \
+                shared( seq_start, seq_length, d_opts, reference_counts, library_seqs, index_seqs, forward_start, \
+                        forward_length, reverse_start, reverse_length ) \
                 reduction( +:processed_total, processed_success, concatemer_found ) schedule( dynamic )
             for( read_index = 0; read_index < reads.size(); ++read_index )
                 {
+                    sequential_map<sequence, sample>::iterator r_idx_match;
+                    sequential_map<sequence, sample>::iterator f_idx_match;
+                    if( reverse_length > 0 )
+                        {
+                            r_idx_match = _find_with_shifted_mismatch( index_map, reads[ read_index ],
+                                                                       index_idx, std::get<2>( d_opts->r_index_data ),
+                                                                       reverse_start, reverse_length
+                                                                       );
+                        }
+
                     // get the forward and the reverse indexes from the sequence, grab the id
                     // for this index. This gives the index of the location at the sequence to increment
-                    sequential_map<sequence, sample>::iterator
-                     idx_match = _find_with_shifted_mismatch( index_map, reads[ read_index ],
-                                                              index_idx, std::get<2>( d_opts->f_index_data ),
-                                                              forward_start, forward_length
-                                                            );
-                    if( idx_match != index_map.end() )
+                    f_idx_match = _find_with_shifted_mismatch( index_map, reads[ read_index ],
+                                                               index_idx, std::get<2>( d_opts->f_index_data ),
+                                                               forward_start, forward_length
+                                                             );
+                    if( ( reverse_length == 0
+                          && f_idx_match != index_map.end()
+                        )
+                           || ( reverse_length != 0
+                               && f_idx_match != index_map.end()
+                                && r_idx_match != index_map.end()
+                              )
+
+                        )
                         {
                             parallel_map<sequence, std::vector<std::size_t>*>::iterator
                                 seq_match = _find_with_shifted_mismatch( reference_counts, reads[ read_index ],
@@ -112,9 +134,24 @@ void module_demux::run( options *opts )
                                                                          seq_start, seq_length
                                                                        );
 
-                            if( seq_match != reference_counts.end() )
+                            if( reverse_length == 0
+                                && seq_match != reference_counts.end()
+                              )
                                 {
-                                    sample_id = idx_match->second.id;
+                                    sample_id = f_idx_match->second.id;
+                                    seq_match->second->at( sample_id )++;
+                                    ++processed_success;
+                                }
+                            else if( reverse_length != 0
+                                      && seq_match != reference_counts.end()
+                              )
+                                {
+                                    std::string concat_idx = f_idx_match->first.seq
+                                                           + r_idx_match->first.seq;
+
+                                    auto d_id = index_map.find( sequence( "", concat_idx ) );
+
+                                    sample_id = d_id->second.id;
                                     seq_match->second->at( sample_id )++;
                                     ++processed_success;
                                 }
@@ -248,6 +285,10 @@ void module_demux::create_index_map( sequential_map<sequence, sample>& map,
     for( index = 0; index < index_seqs.size(); ++index )
         {
             st_table[ index_seqs[ index ].name ] = index_seqs[ index ].seq;
+            map[ sequence( index_seqs[ index ].name,
+                           index_seqs[ index ].seq
+                         )
+               ] = samplelist[ 0 ];;
         }
 
     for( index = 0; index < samplelist.size(); ++index )
