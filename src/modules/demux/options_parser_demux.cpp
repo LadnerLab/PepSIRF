@@ -10,7 +10,12 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
 
     po::options_description desc( "PepSIRF: Peptide-based Serological Immune Response Framework demultiplexing module. \n"
                                   "This module takes the following parameters and outputs the counts of each reference \n"
-                                  "sequence for each sample."
+                                  "sequence for each sample. Later we reference the 'distance' between sequences. For this "
+                                  "module we define distance by the Hamming distance D between a reference sequence r and a read sequence s. If D( r, s ) "
+                                  "<= max_mismatches we say that r and s are similar. Note that if for some read q D( r, s ) <= max_mismatches and D( r, q ) "
+                                  "<= max_mismatches, then we say that the sequence whose distance is the minimum between D( r, s ) and D( r, q ) maps to "
+                                  "reference r. Additionally if D( r, s ) == D( r, q ) then we discard the read as we cannot "
+                                  "say whether r maps to s or q. \n"
                                 );
     desc.add_options()
         ( "help,h", "Produce help message" )
@@ -27,24 +32,47 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
           "records read a time. A higher value will result in more memory usage by the program, but will also result in fewer disk accesses, "
           "increasing performance of the program.\n"
         )
-        ( "max_mismatches,m", po::value<std::size_t>( &opts_demux->max_mismatches )->default_value( 0 ),
-          "The maximum number of 'mismatches' to tolerate when parsing reads. If a read is not within this value of "
-          "any of the sequences within the designed library it will not be considered. Note that here we define "
-          "a mismatch by the Hamming distance D between a reference sequence r and a read sequence s. If D( r, s ) "
-          "<= max_mismatches we say that r and s are similar. Note that if for some read q D( r, s ) <= max_mismatches and D( r, q ) "
-          "<= max_mismatches, then we say that the sequence whose distance is the minimum between D( r, s ) and D( r, q ) maps to "
-          "reference r. \n"
+        ( "f_index", po::value<std::string>()
+                     ->required()
+                     ->notifier( [&]( const std::string &vals ) {
+                             opts_demux->set_info( &options_demux::f_index_data,
+                                                    vals
+                                                 );
+                                                                }
+                               ),
+          "Positional values for f_index. This argument must be passed as 3 comma-separated values. The first item represents the (0-based) expected "
+          "start index of the forward index. The second represents the length of the forward index, and the third represents the number "
+          "of mismatches that are tolerated for this index. An example is '--f_index 12,12,2'. This says that we start at (0-based) index "
+          "12, grab the next 12 characters, and if a perfect match is not found for these grabbed characters we look for a match to "
+          "the forward index sequences with up to two allowed mismatches.\n."
         )
-        ( "seq_start", po::value<std::size_t>( &opts_demux->seq_start )->required(), "Start index (0-based) of each read where we expect the designed peptide to "
-          "begin. For each read, we start at this index and read for seq_len number of characters. Remember: this argument should be zero-based!\n"
+        ( "seq", po::value<std::string>()
+                     ->required()
+                     ->notifier( [&]( const std::string &vals ) {
+                             opts_demux->set_info( &options_demux::seq_data,
+                                                    vals
+                                                 );
+                                                                }
+                               ),
+          "Positional values for nucleotide sequence data. This argument must be passed as 3 comma-separated values. The first item represents the (0-based) expected "
+          "start index of the sequence. The second represents the length of the sequence, and the third represents the number "
+          "of mismatches that are tolerated for a sequence. An example is '--seq 43,90,2'. This says that we start at (0-based) index "
+          "43, grab the next 90 characters, and if a perfect match is not found for these grabbed characters we look for a match to "
+          "the designed library sequences with up to two allowed mismatches.\n."
         )
-        ( "seq_len", po::value<std::size_t>( &opts_demux->seq_len )->required(), "The length of the designed peptides. Note that we assume "
-          "all of the designed peptides are the same length.\n"
-        )
-        ( "f_index_start", po::value<std::size_t>( &opts_demux->f_index_start )->required(), "Start index (0-based) of each read where we expect the forward index sequences to be found.\n" )
-        ( "f_index_len", po::value<std::size_t>( &opts_demux->f_index_len )->required(), "Length of forward index sequences. For each read we start at f_index_start and grab f_index_len "
-          "nucleotides.\n"
-        )
+        ( "r_index", po::value<std::string>()
+                     ->notifier( [&]( const std::string &vals ) {
+                             opts_demux->set_info( &options_demux::r_index_data,
+                                                    vals
+                                                 );
+                                                                }
+                               ),
+          "Positional values for r_index. This argument must be passed as 3 comma-separated values. The first item represents the (0-based) expected "
+          "start index of the reverse index. The second represents the length of the reverse index, and the third represents the number "
+          "of mismatches that are tolerated for this index. An example is '--r_index 12,12,2'. This says that we start at (0-based) index "
+          "12, grab the next 12 characters, and if a perfect match is not found for these grabbed characters we look for a match to "
+          "the reverse index sequences with up to two allowed mismatches.\n."
+        )       
         ( "concatemer", po::value<std::string>( &opts_demux->concatemer ), "Concatenated primer sequences. If this concatemer is found within a read, we know that a potential sequence "
           "from the designed library was not included. The number of times this concatemer is recorded in the input file is reported.\n"
         )
