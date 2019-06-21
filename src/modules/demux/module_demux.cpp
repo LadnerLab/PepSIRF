@@ -30,7 +30,7 @@ void module_demux::run( options *opts )
 
     // vector to store the .fna sequences that represent a designed library
     std::vector<sequence> library_seqs;
-    std::vector<sequence> index_seqs;
+    std::vector<sequence> f_index_seqs;
     std::vector<sequence> reads;
 
     reads.reserve( d_opts->read_per_loop );
@@ -51,10 +51,10 @@ void module_demux::run( options *opts )
             r2_reads.open( d_opts->input_r2_fname, std::ios_base::in );
         }
 
-    library_seqs = fasta_p.parse( d_opts->library_fname );
-    index_seqs   = fasta_p.parse( d_opts->index_fname );
+    library_seqs   = fasta_p.parse( d_opts->library_fname );
+    f_index_seqs   = fasta_p.parse( d_opts->f_index_fname );
 
-    create_index_map( index_map, index_seqs, samplelist );
+    create_index_map( index_map, f_index_seqs, samplelist );
     sequential_map<sequence, sample> sample_table;
 
     add_seqs_to_map( reference_counts, library_seqs, samplelist.size() );
@@ -77,7 +77,7 @@ void module_demux::run( options *opts )
     // index the forward index sequences and the library
     // sequences
     lib_idx.index( library_seqs );
-    f_index_idx.index( index_seqs );
+    f_index_idx.index( f_index_seqs );
 
     std::size_t sample_id = 0;
 
@@ -89,11 +89,11 @@ void module_demux::run( options *opts )
             if( d_opts->input_r2_fname.length() > 0 )
                 {
                     // get the index sequences for this set of sequences
-                    fastq_p.parse( r2_reads, index_seqs, d_opts->read_per_loop );
+                    fastq_p.parse( r2_reads, f_index_seqs, d_opts->read_per_loop );
                 }
 
             #pragma omp parallel for private( seq_iter, nuc_seq, read_index, index_str, adapter, sample_id ) \
-                shared( seq_start, seq_length, d_opts, reference_counts, library_seqs, index_seqs ) \
+                shared( seq_start, seq_length, d_opts, reference_counts, library_seqs, f_index_seqs ) \
                 reduction( +:processed_total, processed_success, concatemer_found ) schedule( dynamic )
             for( read_index = 0; read_index < reads.size(); ++read_index )
                 {
