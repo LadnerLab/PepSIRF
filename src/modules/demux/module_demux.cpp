@@ -84,6 +84,8 @@ void module_demux::run( options *opts )
     index_idx.index( index_seqs );
 
     std::size_t sample_id = 0;
+    sequential_map<sequence, sample>::iterator r_idx_match;
+    sequential_map<sequence, sample>::iterator f_idx_match;
 
     // while we still have reads to process, loop terminates when no fastq records
     // are read from the file
@@ -96,14 +98,26 @@ void module_demux::run( options *opts )
                     fastq_p.parse( r2_reads, index_seqs, d_opts->read_per_loop );
                 }
 
-            #pragma omp parallel for private( seq_iter, nuc_seq, read_index, index_str, adapter, sample_id ) \
+           #pragma omp parallel for private( seq_iter, nuc_seq, read_index, index_str, adapter, sample_id,  \
+                                              r_idx_match, f_idx_match ) \
                 shared( seq_start, seq_length, d_opts, reference_counts, library_seqs, index_seqs, forward_start, \
                         forward_length, reverse_start, reverse_length ) \
                 reduction( +:processed_total, processed_success, concatemer_found ) schedule( dynamic )
             for( read_index = 0; read_index < reads.size(); ++read_index )
                 {
-                    sequential_map<sequence, sample>::iterator r_idx_match;
-                    sequential_map<sequence, sample>::iterator f_idx_match;
+                    auto match_found = [&]() -> bool
+                        {
+                            return 
+                            ( reverse_length == 0
+                              && f_idx_match != index_map.end()
+                              )
+                            || ( reverse_length != 0
+                                 && f_idx_match != index_map.end()
+                                 && r_idx_match != index_map.end()
+                                 );
+                            
+
+                        };
                     if( reverse_length > 0 )
                         {
                             r_idx_match = _find_with_shifted_mismatch( index_map, reads[ read_index ],
@@ -118,15 +132,7 @@ void module_demux::run( options *opts )
                                                                index_idx, std::get<2>( d_opts->f_index_data ),
                                                                forward_start, forward_length
                                                              );
-                    if( ( reverse_length == 0
-                          && f_idx_match != index_map.end()
-                        )
-                           || ( reverse_length != 0
-                               && f_idx_match != index_map.end()
-                                && r_idx_match != index_map.end()
-                              )
-
-                        )
+                    if( match_found() )
                         {
                             parallel_map<sequence, std::vector<std::size_t>*>::iterator
                                 seq_match = _find_with_shifted_mismatch( reference_counts, reads[ read_index ],
