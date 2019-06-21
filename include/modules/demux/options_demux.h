@@ -22,7 +22,8 @@ public:
     std::tuple<std::size_t, std::size_t, std::size_t> f_index_data; //!< 0 = start, 1 = len, 2 = num_mismatches
     std::tuple<std::size_t, std::size_t, std::size_t> r_index_data; //!< 0 = start, 1 = len, 2 = num_mismatches
     std::tuple<std::size_t, std::size_t, std::size_t> seq_data;     //!< 0 = start, 1 = len, 2 = num_mismatches
-    std::string index_fname; //!< Name of file containing indexed sequences.
+    std::string f_index_fname; //!< Name of file containing forward indexed sequences.
+    std::string r_index_fname; //!< Name of file containing reverse indexed sequences.
     std::string concatemer; //!< Concatenated primer sequences, we look for this in our reads to determine whether a peptide exists
 
     /**
