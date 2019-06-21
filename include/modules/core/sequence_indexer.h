@@ -158,7 +158,7 @@ struct cmp_pairs
                          const arg_type& second
                    ) const
     {
-        return std::get<1>( first ) > std::get<1>( second );
+        return std::get<1>( first ) < std::get<1>( second );
     }
 };
 
