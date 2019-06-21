@@ -111,13 +111,24 @@ void module_demux::run( options *opts )
                             ( reverse_length == 0
                               && f_idx_match != index_map.end()
                               )
-                            || ( reverse_length != 0
+                            ||
+                            ( reverse_length != 0
                                  && f_idx_match != index_map.end()
                                  && r_idx_match != index_map.end()
-                                 );
+                               );
                             
 
                         };
+                    auto found_concatemer = [&]() -> bool
+                        {
+                            return 
+                                     d_opts->concatemer.length() > 0
+                                       && reads[ read_index ].seq.find( d_opts->concatemer,
+                                                                        0
+                                                                        ) != std::string::npos;
+
+                        };
+
                     if( reverse_length > 0 )
                         {
                             r_idx_match = _find_with_shifted_mismatch( index_map, reads[ read_index ],
@@ -162,11 +173,7 @@ void module_demux::run( options *opts )
                                     ++processed_success;
                                 }
                             else if( seq_match == reference_counts.end()
-                                     && d_opts->concatemer.length() > 0
-                                       && reads[ read_index ].seq.find( d_opts->concatemer,
-                                                                        0
-                                                                        ) != std::string::npos
-                                   )
+                                     && found_concatemer() )
                                 {
                                     ++concatemer_found;
                                 }
