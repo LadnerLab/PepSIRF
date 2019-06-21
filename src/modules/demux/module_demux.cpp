@@ -30,7 +30,7 @@ void module_demux::run( options *opts )
 
     // vector to store the .fna sequences that represent a designed library
     std::vector<sequence> library_seqs;
-    std::vector<sequence> f_index_seqs;
+    std::vector<sequence> index_seqs;
     std::vector<sequence> reads;
 
     reads.reserve( d_opts->read_per_loop );
@@ -52,9 +52,9 @@ void module_demux::run( options *opts )
         }
 
     library_seqs   = fasta_p.parse( d_opts->library_fname );
-    f_index_seqs   = fasta_p.parse( d_opts->f_index_fname );
+    index_seqs     = fasta_p.parse( d_opts->index_fname );
 
-    create_index_map( index_map, f_index_seqs, samplelist );
+    create_index_map( index_map, index_seqs, samplelist );
     sequential_map<sequence, sample> sample_table;
 
     add_seqs_to_map( reference_counts, library_seqs, samplelist.size() );
@@ -72,12 +72,12 @@ void module_demux::run( options *opts )
     std::size_t concatemer_found  = 0;
 
     sequence_indexer lib_idx;
-    sequence_indexer f_index_idx;
+    sequence_indexer index_idx;
 
     // index the forward index sequences and the library
     // sequences
     lib_idx.index( library_seqs );
-    f_index_idx.index( f_index_seqs );
+    index_idx.index( index_seqs );
 
     std::size_t sample_id = 0;
 
@@ -89,11 +89,11 @@ void module_demux::run( options *opts )
             if( d_opts->input_r2_fname.length() > 0 )
                 {
                     // get the index sequences for this set of sequences
-                    fastq_p.parse( r2_reads, f_index_seqs, d_opts->read_per_loop );
+                    fastq_p.parse( r2_reads, index_seqs, d_opts->read_per_loop );
                 }
 
             #pragma omp parallel for private( seq_iter, nuc_seq, read_index, index_str, adapter, sample_id ) \
-                shared( seq_start, seq_length, d_opts, reference_counts, library_seqs, f_index_seqs ) \
+                shared( seq_start, seq_length, d_opts, reference_counts, library_seqs, index_seqs ) \
                 reduction( +:processed_total, processed_success, concatemer_found ) schedule( dynamic )
             for( read_index = 0; read_index < reads.size(); ++read_index )
                 {
@@ -101,7 +101,7 @@ void module_demux::run( options *opts )
                     // for this index. This gives the index of the location at the sequence to increment
                     sequential_map<sequence, sample>::iterator
                      idx_match = _find_with_shifted_mismatch( index_map, reads[ read_index ],
-                                                              f_index_idx, std::get<2>( d_opts->f_index_data ),
+                                                              index_idx, std::get<2>( d_opts->f_index_data ),
                                                               forward_start, forward_length
                                                             );
                     if( idx_match != index_map.end() )
@@ -238,23 +238,28 @@ void module_demux::create_index_map( sequential_map<sequence, sample>& map,
                                      std::vector<sample>& samplelist
                                    )
 {
-    sequential_map<std::string, sample> sample_table;
+    sequential_map<std::string, std::string> st_table;
+    std::string concat_seq = "";
+    std::string seq1       = "";
+    std::string seq2       = "";
 
     unsigned int index = 0;
 
-    for( index = 0; index < samplelist.size(); ++index )
-        {
-            sample_table[ samplelist[ index ].get_ids() ] = samplelist[ index ];
-        }
-
     for( index = 0; index < index_seqs.size(); ++index )
         {
-            if( sample_table.find( index_seqs[ index ].name ) != sample_table.end() )
-                {
-                    map[ index_seqs[ index ] ] = sample_table[ index_seqs[ index ].name ];
-                }
+            st_table[ index_seqs[ index ].name ] = index_seqs[ index ].seq;
+        }
+
+    for( index = 0; index < samplelist.size(); ++index )
+        {
+            seq1 = st_table[ samplelist[ index ].get_first_id() ];
+            seq2 = st_table[ samplelist[ index ].get_second_id() ];
+            concat_seq = seq1 + seq2;
+
+            map[ sequence( "", concat_seq ) ] = samplelist[ index ];
         }
 }
+
 
 bool module_demux::_multiple_best_matches( std::vector<std::pair<sequence *, int>>& matches )
 {
