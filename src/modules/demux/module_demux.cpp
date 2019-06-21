@@ -13,8 +13,8 @@ void module_demux::run( options *opts )
 
     std::string index_str;
 
-    std::size_t forward_start  = d_opts->f_index_start;
-    std::size_t forward_length = d_opts->f_index_len;
+    std::size_t forward_start  = std::get<0>( d_opts->f_index_data );
+    std::size_t forward_length = std::get<1>( d_opts->f_index_data );
 
     std::size_t read_index = 0;
 
@@ -64,8 +64,8 @@ void module_demux::run( options *opts )
 
     parallel_map<sequence, std::vector<std::size_t>*>::iterator seq_iter;
 
-    std::size_t seq_start  = d_opts->seq_start;
-    std::size_t seq_length = d_opts->seq_len;
+    std::size_t seq_start  = std::get<0>( d_opts->seq_data );
+    std::size_t seq_length = std::get<1>( d_opts->seq_data );
 
     std::size_t processed_total   = 0;
     std::size_t processed_success = 0;
@@ -101,14 +101,14 @@ void module_demux::run( options *opts )
                     // for this index. This gives the index of the location at the sequence to increment
                     sequential_map<sequence, sample>::iterator
                      idx_match = _find_with_shifted_mismatch( index_map, reads[ read_index ],
-                                                              f_index_idx, d_opts->max_mismatches,
+                                                              f_index_idx, std::get<2>( d_opts->f_index_data ),
                                                               forward_start, forward_length
                                                             );
                     if( idx_match != index_map.end() )
                         {
                             parallel_map<sequence, std::vector<std::size_t>*>::iterator
                                 seq_match = _find_with_shifted_mismatch( reference_counts, reads[ read_index ],
-                                                                         lib_idx, d_opts->max_mismatches,
+                                                                         lib_idx, std::get<2>( d_opts->seq_data ),
                                                                          seq_start, seq_length
                                                                        );
 
