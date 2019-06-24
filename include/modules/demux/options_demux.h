@@ -18,6 +18,7 @@ public:
     std::string input_r2_fname; //!< Filename for reverse reads.
     std::string library_fname; //!< Filename containing a FASTA file containing a library of amino acid peptide sequences.
     std::string output_fname; //!< Filename of file to write output to.
+    std::string aggregate_fname; //!< Filename to write aggregate counts to.
     std::string samplelist_fname; //!< Name of tab-delimited file containing a list of samples.
     std::tuple<std::size_t, std::size_t, std::size_t> f_index_data; //!< 0 = start, 1 = len, 2 = num_mismatches
     std::tuple<std::size_t, std::size_t, std::size_t> r_index_data; //!< 0 = start, 1 = len, 2 = num_mismatches

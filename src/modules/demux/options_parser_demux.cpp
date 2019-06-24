@@ -82,6 +82,15 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
           "sample i. This file will have a header labelling each column, i'th tab-separated value of column i of the header will be the sample name of sample i. "
           "If we traverse this column, we will see the count of this sample for each sequence. \n"
         )
+        ( "aggregate,a", po::value<std::string>( &opts_demux->aggregate_fname )->default_value( "" ),
+          "The name of the file to write aggregated counts to when sequences from a designed library "
+          "have multiple different encodings. If this option is included, names of sequences in the file supplied "
+          "by the --library flag MUST be of the form ID-NUM, where ID can contain any characters but '-', and NUM "
+          "represents the id of this encoding. ID and NUM MUST be separated by a single dash '-' character. If supplied "
+          "aggregated counts for each sequence will be written to this file. For example, suppose we have TG1_1-1 and TG1_1-2 "
+          "in our library, which says that we generated two encodings for TG1_1. If included, the file will have a single TG1_1 "
+          "entry, where the count in column i is the sum of the value of column i from TG1_1-1 and TG1_1-2.\n"
+        )
         ( "samplelist,s", po::value<std::string>( &opts_demux->samplelist_fname )->required(), "A tab-delimited list of samples, one sample per line. If the samples are "
           "already indexed by I2 only the forward index (I1) and the sample name are required. The first item in each tab-delimited line is the forward (I1) index, the second "
           "(if included) is the reverse (I2) index, and the third is the samplename. \n"
