@@ -13,11 +13,6 @@ void sequence_indexer::index( std::vector<sequence>& seqs )
         {
 
             tree.insert( &(*seq_iter) );
-            if(  seq_iter->seq.length() != seqs.begin()->seq.length() )
-                {
-                    throw std::runtime_error( "Sequences that are being indexed are not all the same length. " );
-                }
-
             ++seq_iter;
         }
 }
