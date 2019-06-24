@@ -13,11 +13,11 @@ void module_demux::run( options *opts )
 
     std::string index_str;
 
-    std::size_t forward_start  = std::get<0>( d_opts->f_index_data );
-    std::size_t forward_length = std::get<1>( d_opts->f_index_data );
+    const std::size_t forward_start  = std::get<0>( d_opts->f_index_data );
+    const std::size_t forward_length = std::get<1>( d_opts->f_index_data );
 
-    std::size_t reverse_start  = std::get<0>( d_opts->r_index_data );
-    std::size_t reverse_length = std::get<1>( d_opts->r_index_data );
+    const std::size_t reverse_start  = std::get<0>( d_opts->r_index_data );
+    const std::size_t reverse_length = std::get<1>( d_opts->r_index_data );
 
 
     std::size_t read_index = 0;
@@ -100,11 +100,14 @@ void module_demux::run( options *opts )
 
            #pragma omp parallel for private( seq_iter, nuc_seq, read_index, index_str, adapter, sample_id,  \
                                               r_idx_match, f_idx_match ) \
-                shared( seq_start, seq_length, d_opts, reference_counts, library_seqs, index_seqs, forward_start, \
-                        forward_length, reverse_start, reverse_length ) \
+                shared( seq_start, seq_length, d_opts, reference_counts, library_seqs, index_seqs ) \
                 reduction( +:processed_total, processed_success, concatemer_found ) schedule( dynamic )
             for( read_index = 0; read_index < reads.size(); ++read_index )
                 {
+                    // lambda to return whether a match was found
+                    // if no reverse indexes are used, then we only
+                    // check the forward index match, otherwise
+                    // we need to check both
                     auto match_found = [&]() -> bool
                         {
                             return 
@@ -119,6 +122,9 @@ void module_demux::run( options *opts )
                             
 
                         };
+
+
+                    // checks to see that a concatemer was included
                     auto found_concatemer = [&]() -> bool
                         {
                             return 
@@ -168,9 +174,12 @@ void module_demux::run( options *opts )
 
                                     auto d_id = index_map.find( sequence( "", concat_idx ) );
 
-                                    sample_id = d_id->second.id;
-                                    seq_match->second->at( sample_id )++;
-                                    ++processed_success;
+                                    if( d_id != index_map.end() )
+                                        {
+                                            sample_id = d_id->second.id;
+                                            seq_match->second->at( sample_id )++;
+                                            ++processed_success;
+                                        }
                                 }
                             else if( seq_match == reference_counts.end()
                                      && found_concatemer() )
@@ -301,7 +310,7 @@ void module_demux::create_index_map( sequential_map<sequence, sample>& map,
             map[ sequence( index_seqs[ index ].name,
                            index_seqs[ index ].seq
                          )
-               ] = samplelist[ 0 ];;
+               ] = samplelist[ 0 ];
         }
 
     for( index = 0; index < samplelist.size(); ++index )
