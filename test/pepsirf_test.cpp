@@ -234,8 +234,6 @@ TEST_CASE( "Test String Indexing", "[string_indexer]" )
 
     sequence_indexer si2;
 
-    CHECK_THROWS_AS( si2.index( seqs2 ), std::runtime_error );
-
 }
 
 TEST_CASE( "Test Count Generation", "[module_demux]" )
