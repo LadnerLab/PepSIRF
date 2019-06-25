@@ -82,9 +82,9 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
           "sample i. This file will have a header labelling each column, i'th tab-separated value of column i of the header will be the sample name of sample i. "
           "If we traverse this column, we will see the count of this sample for each sequence. \n"
         )
-        ( "aggregate,a", po::value<std::string>( &opts_demux->aggregate_fname )->default_value( "" ),
-          "The name of the file to write aggregated counts to when sequences from a designed library "
-          "have multiple different encodings. If this option is included, names of sequences in the file supplied "
+        ( "aa_counts,a", po::value<std::string>( &opts_demux->aggregate_fname )->default_value( "" ),
+          "The name of the file to write aggregated counts to when aa sequences from a designed library "
+          "have multiple different nt encodings. If this option is included, names of sequences in the file supplied "
           "by the --library flag MUST be of the form ID-NUM, where ID can contain any characters but '-', and NUM "
           "represents the id of this encoding. ID and NUM MUST be separated by a single dash '-' character. If supplied "
           "aggregated counts for each sequence will be written to this file. For example, suppose we have TG1_1-1 and TG1_1-2 "
