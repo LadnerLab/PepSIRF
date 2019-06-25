@@ -1,5 +1,6 @@
 #include "samplelist_parser.h"
 #include <sstream>
+#include <boost/algorithm/string.hpp>
 
 std::vector<sample> samplelist_parser::parse( const std::string filename )
 {
@@ -23,6 +24,7 @@ std::vector<sample> samplelist_parser::parse( const std::string filename )
 
     while( std::getline( in_stream, line ) )
         {
+            boost::trim_right( line );
             boost::split( split_line, line, boost::is_any_of( "\t" ) );
             ++line_no;
 

@@ -1,4 +1,5 @@
 #include "fasta_parser.h"
+#include <boost/algorithm/string.hpp>
 
 fasta_parser::fasta_parser() = default;
 
@@ -14,6 +15,7 @@ std::vector<sequence> fasta_parser::parse( std::string filename )
 
     while( std::getline( input_file, line ).good() )
         {
+            boost::trim_right( line );
             // skip any empty lines
             if( line.length() > 0 )
                 {
