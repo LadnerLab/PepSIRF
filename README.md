@@ -43,7 +43,7 @@ USAGE: pep_sirf [ --help | module_name <module_args*> ]
 --help, -h displays this message, while 'pep_sirf module_name --help' will display the help for the module module_name.
 ```
 
-Currently only forward indexes and runs where samples have already been indexed on the Reverse indexes are supported.
+Currently only runs whose reads are short enough to fit in one read file are supported.
 
 #### Module Demux
 ```
