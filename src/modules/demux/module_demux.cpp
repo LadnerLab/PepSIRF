@@ -269,7 +269,8 @@ void module_demux::aggregate_counts( parallel_map<sequence, std::vector<std::siz
                     err_msg << "The following nucleotide sequence is not "
                             << "formatted correctly in order to retrieve "
                             << "aa-level counts: \n"
-                            << iter->first.name;
+                            << iter->first.name
+                            << "\n";
                    throw std::runtime_error( err_msg.str() );
                 }
 
