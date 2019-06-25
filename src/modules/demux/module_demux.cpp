@@ -244,6 +244,7 @@ void module_demux::aggregate_counts( parallel_map<sequence, std::vector<std::siz
     sequence current;
     std::vector<std::size_t> *current_vec_agg   = nullptr;
     std::vector<std::size_t> *current_vec_count = nullptr;
+    sequential_map<std::string, std::vector<std::size_t>*> ptr_map;
 
     constexpr int NUM_DELIMITED_ITEMS = 2;
 
@@ -272,14 +273,15 @@ void module_demux::aggregate_counts( parallel_map<sequence, std::vector<std::siz
                 }
 
             // if the trimmed name not in agg_map
-            if( agg_map.find( current ) == agg_map.end() )
+            if( ptr_map.find( strs[ 0 ] ) == ptr_map.end() )
                 {
                     // add the sequence to agg_map, initialize its data
                     agg_map[ current ] = new std::vector<std::size_t>( num_samples );
+                    ptr_map[ strs[ 0 ] ] = agg_map[ current ];
                     _zero_vector( agg_map[ current ] );
                 }
 
-            current_vec_agg   = agg_map[ current ];
+            current_vec_agg   = ptr_map[ current.name ];
             current_vec_count = iter->second;
 
             // add the counts from the untrimmed count_map entry to
