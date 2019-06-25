@@ -49,7 +49,8 @@ Currently only forward indexes and runs where samples have already been indexed 
 ```
 PepSIRF: Peptide-based Serological Immune Response Framework demultiplexing module. 
 This module takes the following parameters and outputs the counts of each reference 
-sequence for each sample.:
+sequence for each sample. Later we reference the 'distance' between sequences. For this module we define distance by the Hamming distance D between a reference sequence r and a read sequence s. If D( r, s ) <= max_mismatches we say that r and s are similar. Note that if for some read q D( r, s ) <= max_mismatches and D( r, q ) <= max_mismatches, then we say that the sequence whose distance is the minimum between D( r, s ) and D( r, q ) maps to reference r. Additionally if D( r, s ) == D( r, q ) then we discard the read as we cannot say whether r maps to s or q. 
+:
   -h [ --help ]                        Produce help message
   --input_r1 arg                       Input forward reads fastq file to parse.
                                        
@@ -59,7 +60,7 @@ sequence for each sample.:
                                        used to identify samples.
                                        
   --index arg                          Name of fasta file containing forward 
-                                       and (if included )reverse index 
+                                       and (potentially) reverse index 
                                        sequences.
                                        
   -l [ --library ] arg                 Designed library containing nucleic acid
@@ -73,41 +74,57 @@ sequence for each sample.:
                                        also result in fewer disk accesses, 
                                        increasing performance of the program.
                                        
-  -m [ --max_mismatches ] arg (=0)     The maximum number of 'mismatches' to 
-                                       tolerate when parsing reads. If a read 
-                                       is not within this value of any of the 
-                                       sequences within the designed library it
-                                       will not be considered. Note that here 
-                                       we define a mismatch by the Hamming 
-                                       distance D between a reference sequence 
-                                       r and a read sequence s. If D( r, s ) <=
-                                       max_mismatches we say that r and s are 
-                                       similar. Note that if for some read q D(
-                                       r, s ) <= max_mismatches and D( r, q ) 
-                                       <= max_mismatches, then we say that the 
-                                       sequence whose distance is the minimum 
-                                       between D( r, s ) and D( r, q ) maps to 
-                                       reference r. 
-                                       
-  --seq_start arg                      Start index (0-based) of each read where
-                                       we expect the designed peptide to begin.
-                                       For each read, we start at this index 
-                                       and read for seq_len number of 
-                                       characters. Remember: this argument 
-                                       should be zero-based!
-                                       
-  --seq_len arg                        The length of the designed peptides. 
-                                       Note that we assume all of the designed 
-                                       peptides are the same length.
-                                       
-  --f_index_start arg                  Start index (0-based) of each read where
-                                       we expect the forward index sequences to
-                                       be found.
-                                       
-  --f_index_len arg                    Length of forward index sequences. For 
-                                       each read we start at f_index_start and 
-                                       grab f_index_len nucleotides.
-                                       
+  --f_index arg                        Positional values for f_index. This 
+                                       argument must be passed as 3 
+                                       comma-separated values. The first item 
+                                       represents the (0-based) expected start 
+                                       index of the forward index. The second 
+                                       represents the length of the forward 
+                                       index, and the third represents the 
+                                       number of mismatches that are tolerated 
+                                       for this index. An example is '--f_index
+                                       12,12,2'. This says that we start at 
+                                       (0-based) index 12, grab the next 12 
+                                       characters, and if a perfect match is 
+                                       not found for these grabbed characters 
+                                       we look for a match to the forward index
+                                       sequences with up to two allowed 
+                                       mismatches.
+                                       .
+  --seq arg                            Positional values for nucleotide 
+                                       sequence data. This argument must be 
+                                       passed as 3 comma-separated values. The 
+                                       first item represents the (0-based) 
+                                       expected start index of the sequence. 
+                                       The second represents the length of the 
+                                       sequence, and the third represents the 
+                                       number of mismatches that are tolerated 
+                                       for a sequence. An example is '--seq 
+                                       43,90,2'. This says that we start at 
+                                       (0-based) index 43, grab the next 90 
+                                       characters, and if a perfect match is 
+                                       not found for these grabbed characters 
+                                       we look for a match to the designed 
+                                       library sequences with up to two allowed
+                                       mismatches.
+                                       .
+  --r_index arg (=0,0,0)               Positional values for r_index. This 
+                                       argument must be passed as 3 
+                                       comma-separated values. The first item 
+                                       represents the (0-based) expected start 
+                                       index of the reverse index. The second 
+                                       represents the length of the reverse 
+                                       index, and the third represents the 
+                                       number of mismatches that are tolerated 
+                                       for this index. An example is '--r_index
+                                       12,12,2'. This says that we start at 
+                                       (0-based) index 12, grab the next 12 
+                                       characters, and if a perfect match is 
+                                       not found for these grabbed characters 
+                                       we look for a match to the reverse index
+                                       sequences with up to two allowed 
+                                       mismatches.
+                                       .
   --concatemer arg                     Concatenated primer sequences. If this 
                                        concatemer is found within a read, we 
                                        know that a potential sequence from the 
@@ -117,16 +134,37 @@ sequence for each sample.:
                                        
   -o [ --output ] arg (=output.csv)    The name of the output file to write 
                                        counts to. Each line in this file will 
-                                       be a comma-separated list of values, where
+                                       be a tab-separated list of values, where
                                        each entry i is either the name of a 
                                        sequence or the counts for this sequence
                                        in sample i. This file will have a 
                                        header labelling each column, i'th 
-                                       comma-separated value of column i of the 
+                                       tab-separated value of column i of the 
                                        header will be the sample name of sample
                                        i. If we traverse this column, we will 
                                        see the count of this sample for each 
                                        sequence. 
+                                       
+  -a [ --aa_counts ] arg               The name of the file to write aggregated
+                                       counts to when aa sequences from a 
+                                       designed library have multiple different
+                                       nt encodings. If this option is 
+                                       included, names of sequences in the file
+                                       supplied by the --library flag MUST be 
+                                       of the form ID-NUM, where ID can contain
+                                       any characters but '-', and NUM 
+                                       represents the id of this encoding. ID 
+                                       and NUM MUST be separated by a single 
+                                       dash '-' character. If supplied 
+                                       aggregated counts for each sequence will
+                                       be written to this file. For example, 
+                                       suppose we have TG1_1-1 and TG1_1-2 in 
+                                       our library, which says that we 
+                                       generated two encodings for TG1_1. If 
+                                       included, the file will have a single 
+                                       TG1_1 entry, where the count in column i
+                                       is the sum of the value of column i from
+                                       TG1_1-1 and TG1_1-2.
                                        
   -s [ --samplelist ] arg              A tab-delimited list of samples, one 
                                        sample per line. If the samples are 
