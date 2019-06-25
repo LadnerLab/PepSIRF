@@ -214,8 +214,6 @@ void module_demux::run( options *opts )
                 ( (long double) concatemer_found / (long double) processed_total ) * 100 << "% of total).\n";
         }
 
-    write_outputs( d_opts->output_fname, reference_counts, samplelist );
-
     if( d_opts->aggregate_fname.length() > 0  )
         {
             parallel_map<sequence, std::vector<std::size_t>*> agg_map;
@@ -226,7 +224,7 @@ void module_demux::run( options *opts )
                            samplelist
                          );
         }
-
+    write_outputs( d_opts->output_fname, reference_counts, samplelist );
 }
 
 
@@ -255,9 +253,8 @@ void module_demux::aggregate_counts( parallel_map<sequence, std::vector<std::siz
         // trim the '-ID' from the name of the sequence
             boost::split( strs, iter->first.name, boost::is_any_of( "-") );
 
-            std::string empty( "" );
             std::string cpy = strs[ 0 ];
-            current = sequence( cpy, empty );
+            current = sequence( cpy, iter->first.seq );
 
             // we are not going to get correct results
             // if names are not in the expected
