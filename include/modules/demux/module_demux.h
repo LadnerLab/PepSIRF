@@ -5,6 +5,7 @@
 #include <fstream>
 #include <limits>
 #include <algorithm>
+#include <boost/algorithm/string.hpp>
 #include <omp.h>
 
 #include "options_demux.h"
@@ -204,6 +205,27 @@ class module_demux : public module
      * @pre matches should be sorted
      **/
     bool _multiple_best_matches( std::vector<std::pair<sequence *, int>>& matches );
+
+    /**
+     * Aggregate output counts, creating count data at the aa-level.
+     * When multiple encodings are created for each nt sequence, output 
+     * is reported at the aa-level. By summing the counts for each encoding of 
+     * each aa in the design, we get counts at the aa-level. 
+     * @param agg_map Reference to map where aggregate counts will be stored. 
+     * @param count_map Reference to map that contains counts at the nt-level.
+     * @param num_samples The number of samples for which the design has been 
+     *        sequenced. This is equivalent to the number of lines in the samplelist
+     *        file.
+     * @pre The names of keys in count_map are formatted as such:
+     *      NAME-ID, where NAME is the name of the aa sequence, and ID is the 
+     *      ID of the particular encoding of that sequence. Note the '-' separating 
+     *      the two identifiers.
+     **/
+    void aggregate_counts( parallel_map<sequence, std::vector<std::size_t>*>& agg_map,
+                           parallel_map<sequence, std::vector<std::size_t>*>& count_map,
+                           std::size_t num_samples
+                         );
+
 };
 
 

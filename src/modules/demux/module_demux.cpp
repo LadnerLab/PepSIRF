@@ -1,4 +1,6 @@
 #include "module_demux.h"
+#include <sstream>
+#include <stdexcept>
 
 
 module_demux::module_demux() 
@@ -214,6 +216,17 @@ void module_demux::run( options *opts )
 
     write_outputs( d_opts->output_fname, reference_counts, samplelist );
 
+    if( d_opts->aggregate_fname.length() > 0  )
+        {
+            parallel_map<sequence, std::vector<std::size_t>*> agg_map;
+
+            aggregate_counts( agg_map, reference_counts, samplelist.size() );
+            write_outputs( d_opts->aggregate_fname,
+                           agg_map,
+                           samplelist
+                         );
+        }
+
 }
 
 
@@ -222,6 +235,64 @@ std::string module_demux::get_name()
     return name;
 }
 
+void module_demux::aggregate_counts( parallel_map<sequence, std::vector<std::size_t>*>& agg_map,
+                                     parallel_map<sequence, std::vector<std::size_t>*>& count_map,
+                                     size_t num_samples
+                                   )
+{
+    auto iter = count_map.begin();
+    std::size_t index = 0;
+    std::vector<std::string> strs;
+    sequence current;
+    std::vector<std::size_t> *current_vec_agg   = nullptr;
+    std::vector<std::size_t> *current_vec_count = nullptr;
+
+    constexpr int NUM_DELIMITED_ITEMS = 2;
+
+    // for each in count map
+    for( ; iter != count_map.end(); ++iter )
+        {
+        // trim the '-ID' from the name of the sequence
+            boost::split( strs, iter->first.name, boost::is_any_of( "-") );
+
+            std::string empty( "" );
+            std::string cpy = strs[ 0 ];
+            current = sequence( cpy, empty );
+
+            // we are not going to get correct results
+            // if names are not in the expected
+            // format. 
+            if( strs.size() != NUM_DELIMITED_ITEMS )
+                {
+
+                    std::ostringstream err_msg;
+                    err_msg << "The following nucleotide sequence is not "
+                            << "formatted correctly in order to retrieve "
+                            << "aa-level counts: \n"
+                            << iter->first.name;
+                   throw std::runtime_error( err_msg.str() );
+                }
+
+            // if the trimmed name not in agg_map
+            if( agg_map.find( current ) == agg_map.end() )
+                {
+                    // add the sequence to agg_map, initialize its data
+                    agg_map[ current ] = new std::vector<std::size_t>( num_samples );
+                    _zero_vector( agg_map[ current ] );
+                }
+
+            current_vec_agg   = agg_map[ current ];
+            current_vec_count = iter->second;
+
+            // add the counts from the untrimmed count_map entry to
+            // the trimmed agg_map entry
+            for( index = 0; index < num_samples; ++index )
+                {
+                    current_vec_agg->at( index ) += current_vec_count->at( index );
+                }
+        }
+
+}
 void module_demux::add_seqs_to_map( parallel_map<sequence, std::vector<std::size_t>*>& input_map, std::vector<sequence>& seqs, size_t num_samples )
 {
     std::size_t index        = 0;
