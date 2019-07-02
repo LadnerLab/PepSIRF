@@ -156,10 +156,16 @@ class module_demux : public module
                 }
 
             // shift one to the right, look for exact match.
-            substr = probe_seq.seq.substr( f_start + 1, f_len );
-            temp = map.find( sequence( "", substr ) );
+            // but only if we have enough substring to search
+            if( f_start + 1 + f_len <= probe_seq.seq.length() )
+                {
+                    substr = probe_seq.seq.substr( f_start + 1, f_len );
+                    temp = map.find( sequence( "", substr ) );
+                }
 
-            if( temp == map.end() )
+            // look for a match at the expected coordinates within
+            // the number of mismatches that are tolerated
+            if( num_mism > 0 && temp == map.end() )
                 {
                     substr = probe_seq.seq.substr( f_start, f_len );
                     seq_temp = sequence( "", substr );

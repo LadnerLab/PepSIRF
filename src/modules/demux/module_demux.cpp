@@ -37,6 +37,7 @@ void module_demux::run( options *opts )
     // vector to store the .fna sequences that represent a designed library
     std::vector<sequence> library_seqs;
     std::vector<sequence> index_seqs;
+    std::vector<sequence> r2_seqs;
     std::vector<sequence> reads;
 
     reads.reserve( d_opts->read_per_loop );
@@ -97,12 +98,12 @@ void module_demux::run( options *opts )
             if( d_opts->input_r2_fname.length() > 0 )
                 {
                     // get the index sequences for this set of sequences
-                    fastq_p.parse( r2_reads, index_seqs, d_opts->read_per_loop );
+                    fastq_p.parse( r2_reads, r2_seqs, d_opts->read_per_loop );
                 }
 
            #pragma omp parallel for private( seq_iter, nuc_seq, read_index, index_str, adapter, sample_id,  \
                                               r_idx_match, f_idx_match ) \
-                shared( seq_start, seq_length, d_opts, reference_counts, library_seqs, index_seqs ) \
+               shared( seq_start, seq_length, d_opts, reference_counts, library_seqs, index_seqs, r2_seqs ) \
                 reduction( +:processed_total, processed_success, concatemer_found ) schedule( dynamic )
             for( read_index = 0; read_index < reads.size(); ++read_index )
                 {
@@ -139,10 +140,20 @@ void module_demux::run( options *opts )
 
                     if( reverse_length > 0 )
                         {
-                            r_idx_match = _find_with_shifted_mismatch( index_map, reads[ read_index ],
-                                                                       index_idx, std::get<2>( d_opts->r_index_data ),
-                                                                       reverse_start, reverse_length
-                                                                       );
+                            if( r2_seqs.size() == 0 )
+                                {
+                                    r_idx_match = _find_with_shifted_mismatch( index_map, reads[ read_index ],
+                                                                               index_idx, std::get<2>( d_opts->r_index_data ),
+                                                                               reverse_start, reverse_length
+                                                                             );
+                            }
+                            else
+                                {
+                                    r_idx_match = _find_with_shifted_mismatch( index_map, r2_seqs[ read_index ],
+                                                                               index_idx, std::get<2>( d_opts->r_index_data ),
+                                                                               reverse_start, reverse_length
+                                                                             );
+                                }
                         }
 
                     // get the forward and the reverse indexes from the sequence, grab the id
@@ -194,6 +205,11 @@ void module_demux::run( options *opts )
                 }
 
             reads.clear();
+
+            if( r2_seqs.size() )
+                {
+                    r2_seqs.clear();
+                }
         }
 
     total_time.end = omp_get_wtime();
