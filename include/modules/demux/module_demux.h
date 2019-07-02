@@ -157,7 +157,7 @@ class module_demux : public module
 
             // shift one to the right, look for exact match.
             // but only if we have enough substring to search
-            if( f_start + 1 + f_len <= substr.length() )
+            if( f_start + 1 + f_len <= probe_seq.seq.length() )
                 {
                     substr = probe_seq.seq.substr( f_start + 1, f_len );
                     temp = map.find( sequence( "", substr ) );
