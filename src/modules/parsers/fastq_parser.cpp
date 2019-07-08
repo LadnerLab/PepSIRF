@@ -1,9 +1,14 @@
 #include <limits>
+#include <fstream>
+#include <iostream>
 #include "fastq_parser.h"
 
 fastq_parser::fastq_parser() = default;
 
-bool fastq_parser::parse( std::ifstream& input_file, std::vector<sequence>& seq_vector, std::size_t max_num_records )
+bool fastq_parser::parse( std::istream& input_file,
+                          std::vector<fastq_sequence>& seq_vector,
+                          std::size_t max_num_records
+                        )
 {
     sequence seq;
     const int STRINGS_PER_RECORD = 4;
@@ -28,7 +33,10 @@ bool fastq_parser::parse( std::ifstream& input_file, std::vector<sequence>& seq_
 
             if( input_file.good() )
                 {
-                    seq_vector.emplace_back( strings[ 0 ], strings[ 1 ] );
+                    seq_vector.emplace_back( strings[ 0 ],
+                                             strings[ 1 ],
+                                             strings[ 2 ]
+                                           );
                     ++count;
                 }
         }
@@ -37,10 +45,10 @@ bool fastq_parser::parse( std::ifstream& input_file, std::vector<sequence>& seq_
     return !( count == 0 );
 }
 
-std::vector<sequence> fastq_parser::parse( const std::string fname )
+std::vector<fastq_sequence> fastq_parser::parse( const std::string fname )
 {
     std::ifstream ofile( fname, std::ios_base::in );
-    std::vector<sequence> seqs;
+    std::vector<fastq_sequence> seqs;
     parse( ofile, seqs, 0 );
     ofile.close();
     return seqs;

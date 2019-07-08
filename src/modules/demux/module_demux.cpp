@@ -1,7 +1,9 @@
-#include "module_demux.h"
 #include <sstream>
 #include <stdexcept>
 
+#include "module_demux.h"
+#include "fastq_sequence.h"
+#include "fastq_score.h"
 
 module_demux::module_demux() 
 {
@@ -37,8 +39,8 @@ void module_demux::run( options *opts )
     // vector to store the .fna sequences that represent a designed library
     std::vector<sequence> library_seqs;
     std::vector<sequence> index_seqs;
-    std::vector<sequence> r2_seqs;
-    std::vector<sequence> reads;
+    std::vector<fastq_sequence> r2_seqs;
+    std::vector<fastq_sequence> reads;
 
     reads.reserve( d_opts->read_per_loop );
 
@@ -138,6 +140,20 @@ void module_demux::run( options *opts )
 
                         };
 
+                    auto quality_match = [&]() -> bool
+                        {
+                            return ( !d_opts->min_phred_score
+                                     || ( fastq_score::get_avg_score( reads[ read_index ]
+                                                                      .seq.begin() + seq_start,
+
+                                                                      reads[ read_index ]
+                                                                      .seq.begin() + seq_start + seq_length,
+                                                                      d_opts->phred_base
+                                                                    ) >= d_opts->min_phred_score
+                                        )
+                                   );
+                        };
+
                     if( reverse_length > 0 )
                         {
                             if( r2_seqs.size() == 0 )
@@ -162,7 +178,9 @@ void module_demux::run( options *opts )
                                                                index_idx, std::get<2>( d_opts->f_index_data ),
                                                                forward_start, forward_length
                                                              );
-                    if( match_found() )
+                    if( match_found()
+                        && quality_match()
+                      )
                         {
                             parallel_map<sequence, std::vector<std::size_t>*>::iterator
                                 seq_match = _find_with_shifted_mismatch( reference_counts, reads[ read_index ],

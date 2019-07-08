@@ -7,13 +7,13 @@ set(Boost_USE_STATIC_RUNTIME OFF)
 set(CMAKE_CXX_STANDARD 11)
 
 find_package(OpenMP REQUIRED)
-find_package(Boost COMPONENTS program_options)
+find_package(Boost REQUIRED COMPONENTS program_options )
 
 include_directories(include/modules/core)
 include_directories(include/modules/parsers)
 include_directories(include/modules/demux)
 include_directories(lib/parallel_hashmap)
-add_compile_options( "-Wall" "-std=c++11" "-Wextra" "-fopenmp" 
+add_compile_options( "-Wall" "-std=c++11" "-Wextra" "-fopenmp"
                      "$<$<CONFIG:DEBUG>:-O0;-g>" 
 					 "$<$<CONFIG:RELEASE>:-O3>")
 
@@ -51,8 +51,8 @@ if(BUILD_TESTS)
   add_executable(pepsirf_test test/pepsirf_test.cpp)
   include_directories(pepsirf_test lib)
   enable_testing()
-  target_link_libraries(pepsirf_test PUBLIC OpenMP::OpenMP_CXX pepsirf_common modules_demux ${Boost_LIBRARIES})
+  target_link_libraries(pepsirf_test PUBLIC OpenMP::OpenMP_CXX pepsirf_common modules_demux ${Boost_LIBRARIES} )
   add_test( NAME test COMMAND pepsirf_test ) 
 endif()
 
-target_link_libraries(pep_sirf PUBLIC OpenMP::OpenMP_CXX pepsirf_common modules_demux ${Boost_LIBRARIES})
+target_link_libraries(pep_sirf PUBLIC OpenMP::OpenMP_CXX pepsirf_common modules_demux ${Boost_LIBRARIES} )
