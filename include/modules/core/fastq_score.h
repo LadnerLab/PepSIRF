@@ -1,4 +1,5 @@
 #include "fastq_sequence.h"
+#include <algorithm>
 
 namespace fastq_score
 {
@@ -15,23 +16,24 @@ namespace phred
         PHRED64 = PHRED64_ASCII_BASE
     };
 
-};
-
- double get_avg_score( std::string::iterator start, std::string::iterator end )
- {
-     int base = phred::phred_base::PHRED33;
-     return get_avg_score( start, end, base );
-  }
+}; // namesapce phred
 
  double get_avg_score( std::string::iterator start, std::string::iterator end,
                        int base
                      )
  {
-     for( auto current = start; current != end; ++current )
-         {
-             sum += *current - base;
-         }
-     return sum / scores.length();
+     double sum = 0;
+     double cnt = 0;
+         
+     std::for_each( start, end,
+                    [&]( const int& curr )
+                    {
+                        sum += curr - base;
+                    }
+                  );
+
+     // don't try to divide by 0
+     return cnt > 0 ? sum / cnt : 0;
  }
 
-}
+} //namespace fastq_score
