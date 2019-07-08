@@ -1,3 +1,6 @@
+#ifndef FASTQ_SCORE_HH_INCLUDED
+#define FASTQ_SCORE_HH_INCLUDED
+
 #include "fastq_sequence.h"
 #include <algorithm>
 
@@ -37,4 +40,6 @@ namespace phred
      return cnt > 0 ? sum / cnt : 0;
  }
 
-} //namespace fastq_score
+}; //namespace fastq_score
+
+#endif // FASTQ_SCORE_HH_INCLUDED
