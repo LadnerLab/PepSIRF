@@ -29,6 +29,7 @@ namespace phred
                     [&]( const int& curr )
                     {
                         sum += curr - base;
+                        ++cnt;
                     }
                   );
 
