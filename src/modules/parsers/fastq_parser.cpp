@@ -1,9 +1,11 @@
 #include <limits>
+#include <fstream>
+#include <iostream>
 #include "fastq_parser.h"
 
 fastq_parser::fastq_parser() = default;
 
-bool fastq_parser::parse( std::ifstream& input_file, std::vector<sequence>& seq_vector, std::size_t max_num_records )
+bool fastq_parser::parse( std::istream& input_file, std::vector<sequence>& seq_vector, std::size_t max_num_records )
 {
     sequence seq;
     const int STRINGS_PER_RECORD = 4;
