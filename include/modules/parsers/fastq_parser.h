@@ -17,8 +17,8 @@ class fastq_parser
     fastq_parser();
 
     /**
-     * Parse at most max_num_records from the ifstream input_file, storing sequences in seq_vector.
-     * @param input_file Reference to an open ifstream.
+     * Parse at most max_num_records from the istream input_file, storing sequences in seq_vector.
+     * @param input_file Reference to an open input stream.
      * @param seq_vector Vector containing (or an empty vector) sequences.
      * @param max_num_records The maximum number of records to parse. Note that a 'record' is considered 
      *        one entry in the fastq file. So 4 * max_num_records lines will be read from the file, and at most 
@@ -27,7 +27,7 @@ class fastq_parser
      * @returns bool true if any records were read from the file, false if zero records were 
      *          read from the file.
      **/
-    bool parse( std::ifstream& input_file, std::vector<sequence>& seq_vector, std::size_t max_num_records );
+    bool parse( std::istream& input_file, std::vector<sequence>& seq_vector, std::size_t max_num_records );
 
     /**
      * Parse an entire fastq file at once, store the parsed sequence data  in 
