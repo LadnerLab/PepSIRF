@@ -21,6 +21,8 @@ std::string options_demux::get_arguments()
                   " --seq              " << tup_to_string( seq_data ) << "\n" <<
                   " --f_index_data     " << tup_to_string( f_index_data ) << "\n" <<
                   " --r_index_data     " << tup_to_string( r_index_data ) << "\n" <<
+                  " --phred_base       " << phred_base << "\n" <<
+                  " --phred_min_score  " << min_phred_score << "\n" <<
                   " --concatemer       " << concatemer << "\n" << 
                   "\n";
 
