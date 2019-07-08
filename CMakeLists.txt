@@ -6,7 +6,6 @@ set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF) 
 set(CMAKE_CXX_STANDARD 11)
 
-find_package(ZLIB REQUIRED)
 find_package(OpenMP REQUIRED)
 find_package(Boost REQUIRED COMPONENTS program_options )
 
@@ -22,7 +21,6 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
 
-include_directories(${ZLIB_INCLUDE_DIRS})
 include_directories(${Boost_INCLUDE_DIRS})
 add_executable(pep_sirf src/main.cpp)
 
@@ -55,8 +53,8 @@ if(BUILD_TESTS)
   add_executable(pepsirf_test test/pepsirf_test.cpp)
   include_directories(pepsirf_test lib)
   enable_testing()
-  target_link_libraries(pepsirf_test PUBLIC OpenMP::OpenMP_CXX pepsirf_common modules_demux ${ZLIB_LIBRARIES} ${Boost_LIBRARIES} )
+  target_link_libraries(pepsirf_test PUBLIC OpenMP::OpenMP_CXX pepsirf_common modules_demux ${Boost_LIBRARIES} )
   add_test( NAME test COMMAND pepsirf_test ) 
 endif()
 
-target_link_libraries(pep_sirf PUBLIC ${ZLIB_LIBRARIES} OpenMP::OpenMP_CXX pepsirf_common modules_demux ${Boost_LIBRARIES} )
+target_link_libraries(pep_sirf PUBLIC OpenMP::OpenMP_CXX pepsirf_common modules_demux ${Boost_LIBRARIES} )
