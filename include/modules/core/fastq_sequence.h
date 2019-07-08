@@ -46,12 +46,6 @@ class fastq_sequence : public sequence
     std::string scores;
     int base;
 
-    double get_avg_score();
-
-    double get_avg_score( std::string::iterator start,
-                          std::string::iterator end
-                        );
-    
 };
 
 
