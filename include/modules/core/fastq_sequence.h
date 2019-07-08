@@ -34,6 +34,7 @@ class fastq_sequence : public sequence
         {
 
             base = phred::phred_base::PHRED33;
+            scores = score_str;
         }
 
     fastq_sequence( const std::string& in_name,
@@ -45,6 +46,7 @@ class fastq_sequence : public sequence
         {
 
             base = ascii_base;
+            scores = score_str;
 
             // make sure one of the standard bases is used
             assert( base == phred::phred_base::PHRED33
@@ -60,9 +62,15 @@ class fastq_sequence : public sequence
             base = 0;
         }
 
-    std::vector<unsigned char> score_vec;
+    std::string scores;
     int base;
 
+    double get_avg_score();
+
+    double get_avg_score( std::string::iterator start,
+                          std::string::iterator end
+                        );
+    
 };
 
 
