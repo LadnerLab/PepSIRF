@@ -1,7 +1,8 @@
-#include "module_demux.h"
 #include <sstream>
 #include <stdexcept>
 
+#include "module_demux.h"
+#include "fastq_sequence.h"
 
 module_demux::module_demux() 
 {
@@ -37,8 +38,8 @@ void module_demux::run( options *opts )
     // vector to store the .fna sequences that represent a designed library
     std::vector<sequence> library_seqs;
     std::vector<sequence> index_seqs;
-    std::vector<sequence> r2_seqs;
-    std::vector<sequence> reads;
+    std::vector<fastq_sequence> r2_seqs;
+    std::vector<fastq_sequence> reads;
 
     reads.reserve( d_opts->read_per_loop );
 
