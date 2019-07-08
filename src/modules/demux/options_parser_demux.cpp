@@ -1,4 +1,5 @@
 #include "options_parser_demux.h"
+#include <stdexcept>
 
 options_parser_demux::options_parser_demux() = default;
 
@@ -95,7 +96,22 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
           "already indexed by I2 only the forward index (I1) and the sample name are required. The first item in each tab-delimited line is the forward (I1) index, the second "
           "(if included) is the reverse (I2) index, and the third is the samplename. \n"
         )
+        ( "phred_base", po::value<int>( &opts_demux->phred_base )->default_value( 33 )
+          ->notifier( []( const int value ){
+                      if( !( value == 33 || value == 64 ) )
+                          { throw std::runtime_error( "Phred values can only be 33 or 64" ); } 
+                                            }
+                    ),
+          "Phred base to use when parsing fastq quality scores. Valid options include 33 or 64.\n"
+        )
+        ( "phred_min_score", po::value<int>( &opts_demux->min_phred_score )->default_value( 0 ),
+          "The minimum average score for the sequence "
+          "portion of a read for it to be considered for matching. This means that if the average "
+          "phred33/64 score for a read at the expected locations of a library sequence is not at least "
+          "this value then the read will be discarded.\n"
+        )
         ( "num_threads,t", po::value<int>( &opts_demux->num_threads )->default_value( opts_demux->DEFAULT_NUM_THREADS ), "Number of threads to use for analyses.\n" );
+
 
     po::store( po::command_line_parser( argc, *argv ).options( desc ).allow_unregistered().run(), vm);
 
