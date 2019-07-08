@@ -4,13 +4,15 @@
 #include <iostream>
 #include <fstream>
 #include <omp.h>
+#include <algorithm>
 #include <vector>
 #include <unordered_map>
 
 #include "sequence_indexer.h"
 #include "sequence.h"
+#include "fastq_sequence.h"
+#include "fastq_score.h"
 #include "maps.h"
-#include "fasta_parser.h"
 #include "fastq_parser.h"
 #include "module_demux.h"
 #include "samplelist_parser.h"
@@ -74,7 +76,7 @@ TEST_CASE( "Parse Fasta", "[fasta_parser]" )
 
 TEST_CASE( "Parse Fastq", "[fastq_parser]" )
 {
-    std::vector<sequence> seq_vec;
+    std::vector<fastq_sequence> seq_vec;
     std::string fastq_fname = "../test/test_fastq.fastq";
     std::ifstream in_file( fastq_fname, std::ios_base::in );
 
@@ -97,7 +99,7 @@ TEST_CASE( "Parse Fastq", "[fastq_parser]" )
     in_file.clear();
     in_file.seekg( 0 );
 
-    std::vector<sequence> seq_vec2;
+    std::vector<fastq_sequence> seq_vec2;
     seq_vec2.reserve( 100 );
 
     REQUIRE( seq_vec2.size() == 0 );
@@ -109,7 +111,7 @@ TEST_CASE( "Parse Fastq", "[fastq_parser]" )
     REQUIRE( seq_vec2.size() == 100 );
 
 
-    std::vector<sequence> seq_vec3;
+    std::vector<fastq_sequence> seq_vec3;
     seq_vec3.reserve( 100 );
     // reset file pointer
     in_file.clear();
@@ -199,7 +201,17 @@ TEST_CASE( "Test String Indexing", "[string_indexer]" )
     auto seqs = fp.parse( "../test/test_fastq.fastq" );
     std::vector<std::pair<sequence*,int>> result_set;
 
-    si.index( seqs );
+    std::vector<sequence> seqs_fastq;
+
+    std::for_each( seqs.begin(), seqs.end(),
+                   [&]( const sequence& seq )
+                   {
+                       seqs_fastq.emplace_back( seq.name, seq.seq );
+                   }
+                 );
+
+
+    si.index( seqs_fastq );
     REQUIRE( si.tree.size() > 0 );
     REQUIRE( si.tree.size() == seqs.size() );
 
@@ -243,6 +255,7 @@ TEST_CASE( "Test Count Generation", "[module_demux]" )
     module_demux mod;
     sequence_indexer lib_idx;
 
+    std::vector<fastq_sequence> vec_a;
     std::vector<sequence> vec;
     std::size_t num_samples = 1;
 
@@ -250,7 +263,15 @@ TEST_CASE( "Test Count Generation", "[module_demux]" )
     std::size_t seq_start      = 0;
     std::size_t num_mismatches = 0;
     
-    vec = fp.parse( "../test/test_fastq.fastq" );
+    vec_a = fp.parse( "../test/test_fastq.fastq" );
+
+    std::for_each( vec_a.begin(), vec_a.end(),
+                   [&]( const sequence& seq )
+                   {
+                       vec.emplace_back( seq.name, seq.seq );
+                   }
+                 );
+
 
     lib_idx.index( vec );
 
