@@ -3,6 +3,7 @@
 
 #include "module_demux.h"
 #include "fastq_sequence.h"
+#include "fastq_score.h"
 
 module_demux::module_demux() 
 {
@@ -139,6 +140,23 @@ void module_demux::run( options *opts )
 
                         };
 
+                    bool phred = false;
+                    int min_score = 0;
+
+                    auto quality_match = [&]() -> bool
+                        {
+                            return ( !phred
+                                     || ( fastq_score::get_avg_score( reads[ read_index ]
+                                                                      .seq.begin() + seq_start,
+
+                                                                      reads[ read_index ]
+                                                                      .seq.begin() + seq_start + seq_length,
+                                                                      fastq_score::phred::PHRED33
+                                                                    ) >= min_score
+                                        )
+                                   );
+                        };
+
                     if( reverse_length > 0 )
                         {
                             if( r2_seqs.size() == 0 )
@@ -163,7 +181,9 @@ void module_demux::run( options *opts )
                                                                index_idx, std::get<2>( d_opts->f_index_data ),
                                                                forward_start, forward_length
                                                              );
-                    if( match_found() )
+                    if( match_found()
+                        && quality_match()
+                      )
                         {
                             parallel_map<sequence, std::vector<std::size_t>*>::iterator
                                 seq_match = _find_with_shifted_mismatch( reference_counts, reads[ read_index ],
