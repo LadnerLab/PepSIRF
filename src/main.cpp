@@ -24,6 +24,8 @@ int main( int argc, char **argv )
 
     bool help_msg_only = false;
 
+	int ret_code = EXIT_SUCCESS;
+
     try
         {
             // create our option parser for parsing command-line options
@@ -44,6 +46,7 @@ int main( int argc, char **argv )
 
             if( !help_msg_only )
                 {
+				    // run PepSIRF with options parsed from command-line
                     mod = mod_fact.create( argv[ 1 ] );
                     std::cout << "Starting module " << mod->get_name() << " with arguments: \n " << opts->get_arguments();
                     mod->run( opts );
@@ -54,12 +57,11 @@ int main( int argc, char **argv )
             // command-line errors will be handled here
             std::cerr << "Error: " << e.what() << std::endl;
 
-            return EXIT_FAILURE;
+            ret_code = EXIT_FAILURE;
         }
 
-    // run PepSIRF with options parsed from command-line
     delete parser;
     delete mod;
-    delete opts;
-    return EXIT_SUCCESS;
+	delete opts;
+	return ret_code;
 }
