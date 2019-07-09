@@ -28,6 +28,11 @@ options_parser *options_parser_factory::create( int argc, char ***argv )
                 {
                     return new options_parser_demux();
                 }
+            else if( !arg.compare( "deconv" ) )
+                {
+                    return new options_parser_deconv();
+                }
+
         }
     throw std::runtime_error( "Invalid module name entered" );
 }

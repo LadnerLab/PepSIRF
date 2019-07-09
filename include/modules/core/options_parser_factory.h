@@ -7,6 +7,7 @@
 #include <stdexcept>
 
 #include "options_parser.h"
+#include "options_parser_deconv.h"
 #include "options_parser_demux.h"
 
 /**
