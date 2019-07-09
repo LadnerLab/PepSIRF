@@ -144,10 +144,10 @@ void module_demux::run( options *opts )
                         {
                             return ( !d_opts->min_phred_score
                                      || ( fastq_score::get_avg_score( reads[ read_index ]
-                                                                      .seq.begin() + seq_start,
+                                                                      .scores.begin() + seq_start,
 
                                                                       reads[ read_index ]
-                                                                      .seq.begin() + seq_start + seq_length,
+                                                                      .scores.begin() + seq_start + seq_length,
                                                                       d_opts->phred_base
                                                                     ) >= d_opts->min_phred_score
                                         )
