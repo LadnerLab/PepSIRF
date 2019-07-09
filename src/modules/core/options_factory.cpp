@@ -1,4 +1,5 @@
 #include "options_factory.h"
+#include "options_deconv.h"
 #include <algorithm>
 
 options *options_factory::create( int argc, char ***argv )
@@ -16,6 +17,11 @@ options *options_factory::create( int argc, char ***argv )
                 {
                     return new options_demux();
                 }
+            else if( !mod_name.compare( "deconv" ) )
+                {
+                    return new options_deconv();
+                }
+
         }
 
     return nullptr;
