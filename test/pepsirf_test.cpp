@@ -11,12 +11,12 @@
 #include "sequence_indexer.h"
 #include "sequence.h"
 #include "fastq_sequence.h"
-#include "fastq_score.h"
 #include "maps.h"
 #include "fastq_parser.h"
 #include "module_demux.h"
 #include "samplelist_parser.h"
 #include "sample.h"
+#include "fastq_score.h"
 
 static std::string fasta_ex = ">Example sequence 1\nDJFKDLFJSF\nDJFKDJFDJKFJKDF\n\nJDSKFLJFDKSFLJ\n>Example Sequence 2\n\n\nDJFKLSFJDKLSFJKSLFJSKDLFJDKSLFJKLDKDKDK\n\n\n";
 TEST_CASE( "Sequence", "[sequence]" )
@@ -325,4 +325,20 @@ TEST_CASE( "Test Count Generation", "[module_demux]" )
 
 
 
+}
+
+TEST_CASE( "Fastq_scorer", "[fastq_score]" )
+{
+
+    fastq_parser fp;
+    auto vec = fp.parse( "../test/test_fastq.fastq" );
+
+    for( auto it = vec.begin(); it != vec.end(); ++it )
+        {
+            auto score = fastq_score::get_avg_score( it->scores.begin(),
+                                                     it->scores.end(),
+                                                     fastq_score::phred::PHRED33
+                                                     );
+            REQUIRE( score >= 0 );
+        }
 }
