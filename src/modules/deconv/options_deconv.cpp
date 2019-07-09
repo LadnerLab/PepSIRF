@@ -7,7 +7,7 @@ std::string options_deconv::get_arguments()
 {
     std::ostringstream str_stream;
 
-    str_stream << ""
+    str_stream << "" <<
                   "\n";
 
     return str_stream.str();

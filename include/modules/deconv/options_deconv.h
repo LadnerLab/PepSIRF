@@ -2,8 +2,9 @@
 #define OPTIONS_DECONV_HH_INCLUDED
 
 #include <string>
+#include "options.h"
 
-class options_deconv
+class options_deconv : public options
 {
  public:
     
