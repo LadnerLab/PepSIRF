@@ -1,8 +1,10 @@
 #ifndef OPTIONS_DECONV_HH_INCLUDED
 #define OPTIONS_DECONV_HH_INCLUDED
 
-#include <string>
 #include "options.h"
+
+#include <string>
+#include <vector>
 
 class options_deconv : public options
 {
@@ -13,6 +15,8 @@ class options_deconv : public options
      * the options object.
      **/
     std::string get_arguments();
+
+    std::string linked_fname;
 };
 
 #endif // OPTIONS_DECONV_HH_INCLUDED
