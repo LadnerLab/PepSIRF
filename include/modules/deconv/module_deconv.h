@@ -43,19 +43,23 @@ class module_deconv : public module
                     std::vector<std::pair<std::string, std::vector<std::size_t>>>&
                     pep_species_vec
                   );
-    void count_species( sequential_map<std::size_t, std::size_t>&
-                        id_count_map,
+
+    void count_species( std::vector<std::pair<std::size_t, std::size_t>>&
+                        id_counts,
                         std::vector<std::pair<std::string, std::vector<std::size_t>>>&
                         vector
                       );
+
 };
 
 template <class K>
-struct compare_vec
+struct compare_pair
 {
-    bool operator()( std::vector<K>& first, std::vector<K>& second )
+    bool operator()( const std::pair<K,K>& first,
+                     const std::pair<K,K>& second
+                   )
     {
-        return first.size() < second.size();
+        return std::get<1>( first ) > std::get<1> ( second );
     }
 };
 

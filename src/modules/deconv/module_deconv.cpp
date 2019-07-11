@@ -27,13 +27,13 @@ void module_deconv::run( options *opts )
 
     sequential_map<std::size_t, std::vector<std::string>> id_pep_map;
     sequential_map<std::string, std::vector<std::size_t>> pep_id_map;
-    sequential_map<std::size_t, std::size_t> id_count_map;
+
+    // heap holding the species ids with the highest count
+    std::vector<std::pair<std::size_t, std::size_t>> id_count_heap;
 
     id_to_pep( id_pep_map, pep_species_vec );
     pep_to_id( pep_id_map, pep_species_vec );
-    count_species( id_count_map, pep_species_vec );
-
-    std::cout << "Map size " << pep_species_vec.size() << "\n";
+    count_species( id_count_heap, pep_species_vec );
 
 }
 
@@ -129,12 +129,13 @@ void module_deconv::pep_to_id( sequential_map<std::string, std::vector<std::size
         }
 }
 
-void module_deconv::count_species( sequential_map<std::size_t, std::size_t>&
-                                   id_count_map,
+void module_deconv::count_species( std::vector<std::pair<std::size_t, std::size_t>>&
+                                   id_counts,
                                    std::vector<std::pair<std::string, std::vector<std::size_t>>>&
                                    vector
                                  )
 {
+    sequential_map<std::size_t, std::size_t> id_count_map;
     for( auto it = vector.begin(); it != vector.end(); ++it )
         {
             std::vector<std::size_t>& id_ref = std::get<1>( *it );
@@ -149,4 +150,16 @@ void module_deconv::count_species( sequential_map<std::size_t, std::size_t>&
                     id_count_map[ *in ]++;
                 }
         }
+
+    id_counts.reserve( id_count_map.size() );
+
+    for( auto it = id_count_map.begin(); it != id_count_map.end(); ++it )
+        {
+            id_counts.emplace_back( it->first, it->second );
+        }
+
+    std::make_heap( id_counts.begin(),
+                    id_counts.end(),
+                    compare_pair<std::size_t>()
+                  );
 }
