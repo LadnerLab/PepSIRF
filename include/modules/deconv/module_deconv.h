@@ -3,10 +3,21 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <memory>
 
 #include "module.h"
 #include "options_deconv.h"
 #include "maps.h"
+
+struct species_data
+{
+public:
+    species_data();
+    int count;
+    std::vector<std::string> 
+    peptides;
+
+};
 
 class module_deconv : public module
 {
@@ -15,7 +26,7 @@ class module_deconv : public module
     std::string get_name();
     void run( options *opts );
 
-    parallel_map<std::size_t, int>
+    std::vector<std::pair<std::string,std::vector<std::size_t>>>
         parse_linked_file( std::string fname );
 
     int get_score( std::size_t size );
