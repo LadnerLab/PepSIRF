@@ -24,10 +24,16 @@ void module_deconv::run( options *opts )
 
     auto pep_species_vec = parse_linked_file( d_opts->linked_fname );
 
-    // auto id_pep_map = 
 
+    sequential_map<std::size_t, std::vector<std::string>> id_pep_map;
+    sequential_map<std::string, std::vector<std::size_t>> pep_id_map;
+    sequential_map<std::size_t, std::size_t> id_count_map;
 
-   std::cout << "Map size " << pep_species_vec.size() << "\n";
+    id_to_pep( id_pep_map, pep_species_vec );
+    pep_to_id( pep_id_map, pep_species_vec );
+    count_species( id_count_map, pep_species_vec );
+
+    std::cout << "Map size " << pep_species_vec.size() << "\n";
 
 }
 
@@ -72,26 +78,6 @@ module_deconv::parse_linked_file( std::string fname )
                                          );
                             ret_vec.emplace_back( split_line[ 0 ], id_ints );
 
-                            // auto spec_vec
-                            //     = std::make_shared<std::vector<std::shared_ptr<species_data>>>
-                            //     ( std::vector<std::shared_ptr<species_data>>() );
-                            // for( auto it = comma_delimited.begin(); it != comma_delimited.end(); ++it )
-                            //     {
-                            //         std::size_t id = boost::lexical_cast<std::size_t>( *it );
-
-                            //         if( ret_map.find( id ) == ret_map.end() ) 
-                            //             {
-                            //                 ret_map.insert( std::make_pair( id,
-                            //                                                 std::make_shared<species_data>
-                            //                                                 ( species_data() )
-                            //                                               )
-                            //                               );
-                            //                 spec_vec->push_back( ret_map.find( id )->second );
-                            //             }
-                            //         auto item = ret_map.find( id );
-                            //         item->second->count += get_score( comma_delimited.size() );
-                            //         item->second->common_peptides = spec_vec;
-                            //     }
                         }
                 }
             ++lineno;
@@ -100,7 +86,67 @@ module_deconv::parse_linked_file( std::string fname )
     return ret_vec;
 }
 
+void module_deconv::id_to_pep( sequential_map<std::size_t, std::vector<std::string>>&
+                               id_pep_map,
+                               std::vector<std::pair<std::string, std::vector<std::size_t>>>&
+                               pep_species_vec )
+{
+    for( auto it = pep_species_vec.begin(); it != pep_species_vec.end(); ++it )
+        {
+            std::string& pep = std::get<0>( *it );
+
+            for( auto inner = std::get<1>( *it ).begin();
+                     inner != std::get<1>( *it ).end();
+                 ++inner
+               )
+                {
+                    auto find = id_pep_map.find( *inner );
+                    if( find == id_pep_map.end() )
+                        {
+                            find = std::get<0>(
+                                   id_pep_map.emplace( *inner, std::vector<std::string>() )
+                                              );
+                        }
+                    find->second.push_back( pep );
+                }
+
+        }
+}
+
 int module_deconv::get_score( std::size_t size )
 {
     return 1;
+}
+void module_deconv::pep_to_id( sequential_map<std::string, std::vector<std::size_t>>&
+                               pep_id_map,
+                               std::vector<std::pair<std::string, std::vector<std::size_t>>>&
+                               pep_species_vec
+                             )
+{
+    for( auto it = pep_species_vec.begin(); it != pep_species_vec.end(); ++it )
+        {
+            pep_id_map.emplace( std::get<0>( *it ), std::get<1>( *it ) );
+        }
+}
+
+void module_deconv::count_species( sequential_map<std::size_t, std::size_t>&
+                                   id_count_map,
+                                   std::vector<std::pair<std::string, std::vector<std::size_t>>>&
+                                   vector
+                                 )
+{
+    for( auto it = vector.begin(); it != vector.end(); ++it )
+        {
+            std::vector<std::size_t>& id_ref = std::get<1>( *it );
+
+            for( auto in = id_ref.begin(); in != id_ref.end(); ++in )
+                {
+                    auto count = id_count_map.find( *in );
+                    if( count == id_count_map.end() )
+                        {
+                            id_count_map.emplace( *in, 0 );
+                        }
+                    id_count_map[ *in ]++;
+                }
+        }
 }

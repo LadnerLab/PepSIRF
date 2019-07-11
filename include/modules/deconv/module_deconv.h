@@ -31,6 +31,23 @@ class module_deconv : public module
 
     int get_score( std::size_t size );
 
+ private:
+
+    void id_to_pep( sequential_map<std::size_t, std::vector<std::string>>&
+                    id_pep_map,
+                    std::vector<std::pair<std::string, std::vector<std::size_t>>>&
+                    pep_species_vec );
+
+    void pep_to_id( sequential_map<std::string, std::vector<std::size_t>>&
+                    pep_id_map,
+                    std::vector<std::pair<std::string, std::vector<std::size_t>>>&
+                    pep_species_vec
+                  );
+    void count_species( sequential_map<std::size_t, std::size_t>&
+                        id_count_map,
+                        std::vector<std::pair<std::string, std::vector<std::size_t>>>&
+                        vector
+                      );
 };
 
 template <class K>
