@@ -9,6 +9,8 @@ std::string options_deconv::get_arguments()
 
     str_stream << "--linked    " << linked_fname  << "\n" << 
                   " --threshold " << threshold <<  "\n" << 
+                  " --enriched  " << enriched_fname <<  "\n" << 
+                  " --output    " << output_fname <<  "\n" << 
                   "\n";
 
     return str_stream.str();

@@ -28,9 +28,13 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
         ( "output,o", po::value<std::string>( &opts_deconv->output_fname ),
           "Name of the file to write output to. Output will be in the form of "
           "a tab-delimited file with a header. Each entry will be of the form:\n"
-          "species_id\tcount\n"
+          "species_id\\tcount\n"
+        )
+        ( "enriched,e", po::value<std::string>( &opts_deconv->enriched_fname ),
+          "File containing the names of enriched peptides, one per line. "
+          "Each file in this file should have a corresponding entry in the "
+          "file provided by the --linked option.\n"
         );
-
 
     po::store( po::command_line_parser( argc, *argv ).options( desc ).allow_unregistered().run(), vm);
 

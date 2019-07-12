@@ -18,6 +18,7 @@ class options_deconv : public options
 
     std::string linked_fname;
     std::string output_fname;
+    std::string enriched_fname;
     std::size_t threshold;
 
 };
