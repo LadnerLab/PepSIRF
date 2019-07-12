@@ -42,6 +42,7 @@ PepSIRF is a module-based program, and each module has its own set of arguments.
 USAGE: pep_sirf [ --help | module_name <module_args*> ] 
 --help, -h displays this message, while 'pep_sirf module_name --help' will display the help for the module module_name.
 ```
+To see usage information for each module, check out [this page](doc/module_readme).
 
 ### Generating Code Documentation
 To create documentation for the code run the following:
