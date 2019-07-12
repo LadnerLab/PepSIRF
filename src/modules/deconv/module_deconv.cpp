@@ -29,6 +29,16 @@ void module_deconv::run( options *opts )
 
     auto enriched_species = parse_enriched_file( d_opts->enriched_fname );
     auto pep_species_vec  = parse_linked_file( d_opts->linked_fname );
+
+    // filter out the peptides that are not enriched
+    auto it = std::remove_if( pep_species_vec.begin(), pep_species_vec.end(),
+                              [&]( std::pair<std::string,std::vector<std::size_t>>& i) -> bool 
+                              { return enriched_species.find( std::get<0>( i ) )
+                                      == enriched_species.end();
+                              }
+                            );
+    pep_species_vec.erase( it, pep_species_vec.end() );
+
     std::size_t thresh = d_opts->threshold;
 
     omp_set_num_threads( 2 );
