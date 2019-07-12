@@ -31,6 +31,11 @@ class module_deconv : public module
 
     int get_score( std::size_t size );
 
+    void write_outputs( std::string out_name,
+                        std::vector<std::pair<std::size_t,std::size_t>>& out_counts
+                      );
+
+
  private:
 
     void id_to_pep( sequential_map<std::size_t, std::vector<std::string>>&

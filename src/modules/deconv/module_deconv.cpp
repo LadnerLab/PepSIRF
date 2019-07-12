@@ -39,6 +39,8 @@ void module_deconv::run( options *opts )
     // vector holding the species ids with the highest count
     std::vector<std::pair<std::size_t, std::size_t>> id_counts;
 
+    std::vector<std::pair<std::size_t, std::size_t>> output_counts;
+
 
     #pragma omp parallel sections
     {
@@ -56,7 +58,6 @@ void module_deconv::run( options *opts )
 
     count_species( id_counts, id_pep_map );
     filter_counts( id_counts, thresh );
-    std::cout << "Species id\tCount\n";
 
     while( id_counts.size() )
         {
@@ -65,7 +66,7 @@ void module_deconv::run( options *opts )
             auto max = id_counts.begin();
             auto max_id = std::get<0>( *max );
 
-            std::cout << max_id << "\t" << std::get<1>( *max ) << "\n";
+            output_counts.emplace_back( max_id, std::get<1>( *max ) );
 
             auto max_peptides = id_pep_map.find( max_id )->second;
 
@@ -108,6 +109,8 @@ void module_deconv::run( options *opts )
     timer.end = omp_get_wtime();
 
     std::cout << "Took " << time_keep::get_elapsed( timer ) << " seconds.\n";
+
+    write_outputs( d_opts->output_fname, output_counts );
 
 
 
@@ -230,4 +233,22 @@ void module_deconv::filter_counts( std::vector<std::pair<std::size_t, std::size_
                               { return std::get<1>( i ) < thresh; }
                             );
     id_counts.erase( it, id_counts.end() );
+}
+
+void module_deconv::write_outputs( std::string out_name,
+                                   std::vector<std::pair<std::size_t,std::size_t>>& out_counts
+                                 )
+{
+    std::ofstream out_file( out_name );
+
+    out_file << "Species ID\tCount\n";
+
+    std::for_each( out_counts.begin(), out_counts.end(),
+                   [&]( std::pair<std::size_t,std::size_t> elem )
+                   {
+                       out_file << std::get<0>( elem ) << "\t" <<
+                           std::get<1>( elem ) << "\n";
+                   }
+                 );
+
 }
