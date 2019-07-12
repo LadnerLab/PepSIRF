@@ -6,6 +6,7 @@
 #include <boost/lexical_cast.hpp>
 
 #include "module_deconv.h"
+#include "time_keep.h"
 
 module_deconv::module_deconv() = default;
 
@@ -22,6 +23,9 @@ std::string module_deconv::get_name()
 void module_deconv::run( options *opts )
 {
     options_deconv *d_opts = ( options_deconv * ) opts;
+    time_keep::timer timer;
+
+    timer.start = omp_get_wtime();
 
     auto pep_species_vec = parse_linked_file( d_opts->linked_fname );
     std::size_t thresh = d_opts->threshold;
@@ -100,6 +104,11 @@ void module_deconv::run( options *opts )
             // recreate id_counts
             filter_counts( id_counts, thresh );
         }
+
+    timer.end = omp_get_wtime();
+
+    std::cout << "Took " << time_keep::get_elapsed( timer ) << " seconds.\n";
+
 
 
 }
