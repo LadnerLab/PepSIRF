@@ -21,6 +21,8 @@ class options_deconv : public options
     std::string enriched_fname;
     std::size_t threshold;
 
+    bool single_threaded;
+
 };
 
 #endif // OPTIONS_DECONV_HH_INCLUDED

@@ -30,6 +30,10 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "a tab-delimited file with a header. Each entry will be of the form:\n"
           "species_id\\tcount\n"
         )
+        ( "single_threaded", po::bool_switch( &opts_deconv->single_threaded )->default_value( false ),
+          "By default this module uses two threads. Include this option with no arguments if you only want "
+          " one thread to be used.\n"
+        )
         ( "enriched,e", po::value<std::string>( &opts_deconv->enriched_fname ),
           "File containing the names of enriched peptides, one per line. "
           "Each file in this file should have a corresponding entry in the "
