@@ -207,13 +207,22 @@ double module_deconv::get_score( sequential_map<std::string,std::vector<std::siz
                                  score_method::score_strategy strat
                                )
 {
-    std::size_t size = peptides.size();
-
-    if( strat == score_method::score_strategy::INTEGER_SCORING )
+    if( strat != score_method::score_strategy::INTEGER_SCORING )
         {
-            return (double) size;
+            return (double) peptides.size();
         }
-    return 1.0 / (double) size;
+
+    double score = 0;
+
+    std::size_t index = 0;
+
+    #pragma omp parallel for private( index ) \
+            shared( spec_count_map ) reduction( +:score )
+    for( index = 0; index < peptides.size(); ++index )
+        {
+            score += 1.0 / (double) spec_count_map[ peptides[ index ] ].size();
+        }
+    return score;
 }
 void module_deconv::pep_to_id( sequential_map<std::string, std::vector<std::size_t>>&
                                pep_id_map,
