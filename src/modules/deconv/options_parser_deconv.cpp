@@ -34,7 +34,7 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "By default this module uses two threads. Include this option with no arguments if you only want "
           " one thread to be used.\n"
         )
-        ( "fractional_scoring", po::bool_switch( &opts_deconv->float_scoring )->default_value( false ),
+        ( "fractional_scoring", po::bool_switch( &opts_deconv->fractional_scoring )->default_value( false ),
           "Use fractional instead of integer scoring. For integer scoring the score of each species is "
           "defined by the number of peptides that share a 7mer with that species. For fractional scoring "
           "the score of each species is defined by 1/n for each peptide, where n is the number of species "

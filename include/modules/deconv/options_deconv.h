@@ -22,7 +22,7 @@ class options_deconv : public options
     float threshold;
 
     bool single_threaded;
-    bool float_scoring;
+    bool fractional_scoring;
 
 };
 
