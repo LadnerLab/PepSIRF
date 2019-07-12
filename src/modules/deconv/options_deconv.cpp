@@ -7,7 +7,8 @@ std::string options_deconv::get_arguments()
 {
     std::ostringstream str_stream;
 
-    str_stream << "" <<
+    str_stream << "--linked    " << linked_fname  << "\n" << 
+                  " --threshold " << threshold <<  "\n" << 
                   "\n";
 
     return str_stream.str();

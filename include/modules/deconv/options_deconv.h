@@ -17,6 +17,7 @@ class options_deconv : public options
     std::string get_arguments();
 
     std::string linked_fname;
+    std::size_t threshold;
 };
 
 #endif // OPTIONS_DECONV_HH_INCLUDED
