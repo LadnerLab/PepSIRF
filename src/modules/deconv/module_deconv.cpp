@@ -25,6 +25,10 @@ void module_deconv::run( options *opts )
     auto enriched_species = parse_enriched_file( d_opts->enriched_fname );
     auto pep_species_vec  = parse_linked_file( d_opts->linked_fname );
 
+    score_method::score_strategy strat = d_opts->fractional_scoring ?
+             score_method::score_strategy::FRACTIONAL_SCORING :
+             score_method::score_strategy::INTEGER_SCORING;
+
     // filter out the peptides that are not enriched
     auto it = std::remove_if( pep_species_vec.begin(), pep_species_vec.end(),
                               [&]( std::pair<std::string,std::vector<std::size_t>>& i) -> bool 
@@ -62,7 +66,7 @@ void module_deconv::run( options *opts )
 
 
     count_species( id_counts, id_pep_map, pep_id_map,
-                   score_method::score_strategy::INTEGER_SCORING
+                   strat
                  );
     filter_counts( id_counts, thresh );
 
@@ -109,7 +113,7 @@ void module_deconv::run( options *opts )
 
 
             count_species( id_counts, id_pep_map, pep_id_map,
-                           score_method::score_strategy::INTEGER_SCORING
+                           strat
                          );
 
             // recreate id_counts
@@ -207,7 +211,7 @@ double module_deconv::get_score( sequential_map<std::string,std::vector<std::siz
                                  score_method::score_strategy strat
                                )
 {
-    if( strat != score_method::score_strategy::INTEGER_SCORING )
+    if( strat == score_method::score_strategy::INTEGER_SCORING )
         {
             return (double) peptides.size();
         }
