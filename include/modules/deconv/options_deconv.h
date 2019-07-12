@@ -16,12 +16,38 @@ class options_deconv : public options
      **/
     std::string get_arguments();
 
+    /**
+     * Name of the file containing lines linking 
+     * peptides to the species each peptide shares 
+     * a 7-mer with.
+     **/
     std::string linked_fname;
+
+    /**
+     * Name of the file to write output to.
+     **/
     std::string output_fname;
+
+    /**
+     * Name of file that contains names of enriched peptides,
+     * one per line.
+     **/
     std::string enriched_fname;
+
+    /**
+     * Threshold value for a peptide to not be filtered out.
+     **/
     float threshold;
 
+    /**
+     * If this value is true only one thread will be used for 
+     * operations. Otherwise, two will be used.
+     **/
     bool single_threaded;
+
+    /**
+     * Flag whether to use fractional scoring.
+     **/
     bool fractional_scoring;
 
 };
