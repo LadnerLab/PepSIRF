@@ -61,7 +61,7 @@ void module_deconv::run( options *opts )
     }
 
 
-    count_species( id_counts, id_pep_map,
+    count_species( id_counts, id_pep_map, pep_id_map,
                    score_method::score_strategy::INTEGER_SCORING
                  );
     filter_counts( id_counts, thresh );
@@ -72,8 +72,6 @@ void module_deconv::run( options *opts )
 
             auto max = id_counts.begin();
             double max_id = std::get<0>( *max );
-
-            std::cout << "Max " << std::get<1>( *max ) << "\n";
 
             output_counts.emplace_back( max_id, std::get<1>( *max ) );
 
@@ -110,7 +108,7 @@ void module_deconv::run( options *opts )
             }
 
 
-            count_species( id_counts, id_pep_map,
+            count_species( id_counts, id_pep_map, pep_id_map,
                            score_method::score_strategy::INTEGER_SCORING
                          );
 
@@ -203,8 +201,14 @@ void module_deconv::id_to_pep( sequential_map<std::size_t, std::vector<std::stri
         }
 }
 
-double module_deconv::get_score( std::size_t size, score_method::score_strategy strat )
+double module_deconv::get_score( sequential_map<std::string,std::vector<std::size_t>>&
+                                 spec_count_map,
+                                 std::vector<std::string>& peptides,
+                                 score_method::score_strategy strat
+                               )
 {
+    std::size_t size = peptides.size();
+
     if( strat == score_method::score_strategy::INTEGER_SCORING )
         {
             return (double) size;
@@ -227,6 +231,8 @@ void module_deconv::count_species( std::vector<std::pair<std::size_t, double>>&
                                    id_counts,
                                    sequential_map<std::size_t,std::vector<std::string>>&
                                    id_count_map,
+                                   sequential_map<std::string,std::vector<std::size_t>>&
+                                   spec_count_map,
                                    score_method::score_strategy strat
                                  )
 {
@@ -234,7 +240,10 @@ void module_deconv::count_species( std::vector<std::pair<std::size_t, double>>&
 
     for( auto it = id_count_map.begin(); it != id_count_map.end(); ++it )
         {
-            double score = get_score( it->second.size(), strat );
+            double score = get_score( spec_count_map,
+                                      it->second,
+                                      strat
+                                    );
             id_counts.emplace_back( it->first, score );
         }
     std::sort( id_counts.begin(), id_counts.end(),

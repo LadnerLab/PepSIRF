@@ -60,7 +60,12 @@ class module_deconv : public module
     /**
      *
      **/
-    double get_score( std::size_t size, score_method::score_strategy strat );
+    double get_score( sequential_map<std::string,std::vector<std::size_t>>&
+                      spec_count_map,
+                      std::vector<std::string>& peptides,
+                      score_method::score_strategy strat
+                    );
+
 
     /**
      * Write output to a file that will be named 'out_name'
@@ -122,12 +127,16 @@ class module_deconv : public module
      * @param id_counts vector in which the counts will be stored.
      * @param id_count_map input map containing id->peptides mapping.
      **/
+
     void count_species( std::vector<std::pair<std::size_t, double>>&
                         id_counts,
                         sequential_map<std::size_t,std::vector<std::string>>&
                         id_count_map,
+                        sequential_map<std::string,std::vector<std::size_t>>&
+                        spec_count_map,
                         score_method::score_strategy strat
                       );
+
 
 
 /**
