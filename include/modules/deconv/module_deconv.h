@@ -9,15 +9,14 @@
 #include "options_deconv.h"
 #include "maps.h"
 
-struct species_data
+namespace score_method
 {
-public:
-    species_data();
-    int count;
-    std::vector<std::string> 
-    peptides;
-
-};
+    enum score_strategy
+    {
+        INTEGER_SCORING = 0,
+        FRACTIONAL_SCORING
+    };
+}; //namespace score_method
 
 class module_deconv : public module
 {
@@ -61,7 +60,7 @@ class module_deconv : public module
     /**
      *
      **/
-    int get_score( std::size_t size );
+    double get_score( std::size_t size, score_method::score_strategy strat );
 
     /**
      * Write output to a file that will be named 'out_name'
@@ -71,7 +70,7 @@ class module_deconv : public module
      *        species. 
      **/
     void write_outputs( std::string out_name,
-                        std::vector<std::pair<std::size_t,std::size_t>>& out_counts
+                        std::vector<std::pair<std::size_t,double>>& out_counts
                       );
 
     /**
@@ -123,11 +122,13 @@ class module_deconv : public module
      * @param id_counts vector in which the counts will be stored.
      * @param id_count_map input map containing id->peptides mapping.
      **/
-    void count_species( std::vector<std::pair<std::size_t, std::size_t>>&
+    void count_species( std::vector<std::pair<std::size_t, double>>&
                         id_counts,
                         sequential_map<std::size_t,std::vector<std::string>>&
-                        id_count_map
+                        id_count_map,
+                        score_method::score_strategy strat
                       );
+
 
 /**
  * Filter counts that do not have a high enough score out of the id_counts vector.
@@ -136,22 +137,33 @@ class module_deconv : public module
  *        entry is strictly less than this value will be removed.
  * @note This method has the side effect of removing items from id_counts
  **/
- void filter_counts( std::vector<std::pair<std::size_t, std::size_t>>& id_counts,
-                     std::size_t thresh
-                   );
-
-
+    void filter_counts( std::vector<std::pair<std::size_t, double>>&
+                        id_counts,
+                        double thresh
+                      );
 };
 
-template <class K>
+template <class K, class V>
 struct compare_pair
 {
-    bool operator()( const std::pair<K,K>& first,
-                     const std::pair<K,K>& second
+    bool operator()( const std::pair<K,V>& first,
+                     const std::pair<K,V>& second
                    )
     {
         return std::get<1>( first ) > std::get<1>( second );
     }
 };
+
+template <class K, class V>
+struct compare_pair_non_decreasing
+{
+    bool operator()( const std::pair<K,V>& first,
+                     const std::pair<K,V>& second
+                   )
+    {
+        return std::get<1>( first ) < std::get<1>( second );
+    }
+};
+
 
 #endif // MODULE_DECONV_HH_INCLUDED 

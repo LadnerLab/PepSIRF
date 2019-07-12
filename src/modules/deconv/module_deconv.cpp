@@ -10,11 +10,6 @@
 
 module_deconv::module_deconv() = default;
 
-species_data::species_data() 
-{
-    count = 0;
-}
-
 std::string module_deconv::get_name()
 {
     return "Deconv";
@@ -39,7 +34,7 @@ void module_deconv::run( options *opts )
                             );
     pep_species_vec.erase( it, pep_species_vec.end() );
 
-    std::size_t thresh = d_opts->threshold;
+    double thresh = d_opts->threshold;
 
     omp_set_num_threads( d_opts->single_threaded ? 1 : 2 );
 
@@ -48,9 +43,9 @@ void module_deconv::run( options *opts )
     sequential_map<std::string, std::vector<std::size_t>> pep_id_map;
 
     // vector holding the species ids with the highest count
-    std::vector<std::pair<std::size_t, std::size_t>> id_counts;
+    std::vector<std::pair<std::size_t, double>> id_counts;
 
-    std::vector<std::pair<std::size_t, std::size_t>> output_counts;
+    std::vector<std::pair<std::size_t, double>> output_counts;
 
     #pragma omp parallel sections
     {
@@ -66,7 +61,9 @@ void module_deconv::run( options *opts )
     }
 
 
-    count_species( id_counts, id_pep_map );
+    count_species( id_counts, id_pep_map,
+                   score_method::score_strategy::INTEGER_SCORING
+                 );
     filter_counts( id_counts, thresh );
 
     while( id_counts.size() )
@@ -74,7 +71,9 @@ void module_deconv::run( options *opts )
             pep_species_vec.clear();
 
             auto max = id_counts.begin();
-            auto max_id = std::get<0>( *max );
+            double max_id = std::get<0>( *max );
+
+            std::cout << "Max " << std::get<1>( *max ) << "\n";
 
             output_counts.emplace_back( max_id, std::get<1>( *max ) );
 
@@ -111,7 +110,10 @@ void module_deconv::run( options *opts )
             }
 
 
-            count_species( id_counts, id_pep_map );
+            count_species( id_counts, id_pep_map,
+                           score_method::score_strategy::INTEGER_SCORING
+                         );
+
             // recreate id_counts
             filter_counts( id_counts, thresh );
         }
@@ -201,9 +203,13 @@ void module_deconv::id_to_pep( sequential_map<std::size_t, std::vector<std::stri
         }
 }
 
-int module_deconv::get_score( std::size_t size )
+double module_deconv::get_score( std::size_t size, score_method::score_strategy strat )
 {
-    return 1;
+    if( strat == score_method::score_strategy::INTEGER_SCORING )
+        {
+            return (double) size;
+        }
+    return 1.0 / (double) size;
 }
 void module_deconv::pep_to_id( sequential_map<std::string, std::vector<std::size_t>>&
                                pep_id_map,
@@ -217,36 +223,41 @@ void module_deconv::pep_to_id( sequential_map<std::string, std::vector<std::size
         }
 }
 
-void module_deconv::count_species( std::vector<std::pair<std::size_t, std::size_t>>&
+void module_deconv::count_species( std::vector<std::pair<std::size_t, double>>&
                                    id_counts,
                                    sequential_map<std::size_t,std::vector<std::string>>&
-                                   id_count_map
+                                   id_count_map,
+                                   score_method::score_strategy strat
                                  )
 {
     id_counts.reserve( id_count_map.size() );
 
     for( auto it = id_count_map.begin(); it != id_count_map.end(); ++it )
         {
-            id_counts.emplace_back( it->first, it->second.size() );
+            double score = get_score( it->second.size(), strat );
+            id_counts.emplace_back( it->first, score );
         }
     std::sort( id_counts.begin(), id_counts.end(),
-               compare_pair<std::size_t>()
+               compare_pair<std::size_t, double>()
              );
+
 }
 
-void module_deconv::filter_counts( std::vector<std::pair<std::size_t, std::size_t>>& id_counts,
-                                   std::size_t thresh
+void module_deconv::filter_counts( std::vector<std::pair<std::size_t, double>>& id_counts,
+                                   double thresh
                                  )
 {
     auto it = std::remove_if( id_counts.begin(), id_counts.end(),
-                              [&]( std::pair<std::size_t, std::size_t> i )
-                              { return std::get<1>( i ) < thresh; }
+                              [&]( std::pair<std::size_t, double> i )
+                              {
+                                  return std::get<1>( i ) < thresh;
+                              } 
                             );
     id_counts.erase( it, id_counts.end() );
 }
 
 void module_deconv::write_outputs( std::string out_name,
-                                   std::vector<std::pair<std::size_t,std::size_t>>& out_counts
+                                   std::vector<std::pair<std::size_t,double>>& out_counts
                                  )
 {
     std::ofstream out_file( out_name );
@@ -254,7 +265,7 @@ void module_deconv::write_outputs( std::string out_name,
     out_file << "Species ID\tCount\n";
 
     std::for_each( out_counts.begin(), out_counts.end(),
-                   [&]( std::pair<std::size_t,std::size_t> elem )
+                   [&]( std::pair<std::size_t,double> elem )
                    {
                        out_file << std::get<0>( elem ) << "\t" <<
                            std::get<1>( elem ) << "\n";
