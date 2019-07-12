@@ -35,6 +35,8 @@ class module_deconv : public module
                         std::vector<std::pair<std::size_t,std::size_t>>& out_counts
                       );
 
+    sequential_set<std::string>
+        parse_enriched_file( std::string f_name );
 
  private:
 

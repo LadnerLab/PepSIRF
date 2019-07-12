@@ -27,7 +27,8 @@ void module_deconv::run( options *opts )
 
     timer.start = omp_get_wtime();
 
-    auto pep_species_vec = parse_linked_file( d_opts->linked_fname );
+    auto enriched_species = parse_enriched_file( d_opts->enriched_fname );
+    auto pep_species_vec  = parse_linked_file( d_opts->linked_fname );
     std::size_t thresh = d_opts->threshold;
 
     omp_set_num_threads( 2 );
@@ -251,4 +252,21 @@ void module_deconv::write_outputs( std::string out_name,
                    }
                  );
 
+}
+
+sequential_set<std::string>
+module_deconv::parse_enriched_file( std::string f_name )
+{
+    sequential_set<std::string>
+        return_val;
+
+    std::ifstream in_file( f_name );
+    std::string line;
+
+    while( std::getline( in_file, line ) )
+        {
+            boost::trim_right( line );
+            return_val.insert( line );
+        }
+    return return_val;
 }
