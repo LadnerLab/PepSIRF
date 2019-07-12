@@ -41,7 +41,7 @@ void module_deconv::run( options *opts )
 
     std::size_t thresh = d_opts->threshold;
 
-    omp_set_num_threads( 2 );
+    omp_set_num_threads( d_opts->single_threaded ? 1 : 2 );
 
 
     sequential_map<std::size_t, std::vector<std::string>> id_pep_map;
@@ -51,7 +51,6 @@ void module_deconv::run( options *opts )
     std::vector<std::pair<std::size_t, std::size_t>> id_counts;
 
     std::vector<std::pair<std::size_t, std::size_t>> output_counts;
-
 
     #pragma omp parallel sections
     {
