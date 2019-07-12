@@ -22,7 +22,7 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
         ( "linked,l", po::value<std::string>( &opts_deconv->linked_fname ),
           "Name of file containing peptide to species linkages.\n"
         )
-        ( "threshold,t", po::value<std::size_t>( &opts_deconv->threshold ),
+        ( "threshold,t", po::value<float>( &opts_deconv->threshold ),
           "Threshold number of peptides for a species to be considered.\n"
         )
         ( "output,o", po::value<std::string>( &opts_deconv->output_fname ),
