@@ -50,6 +50,24 @@ class options_deconv : public options
      **/
     bool fractional_scoring;
 
+    /**
+     * Bool to determine whether to 
+     * create linkage.
+     **/
+    bool create_linkage;
+
+    /**
+     * Name of the fasta file containing 
+     * protein sequences
+     **/
+    std::string prot_file_fname;
+
+    /**
+     * Name of the fasta file containing peptide
+     * sequences.
+     **/
+    std::string peptide_file_fname;
+
 };
 
 #endif // OPTIONS_DECONV_HH_INCLUDED

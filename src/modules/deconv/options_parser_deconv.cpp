@@ -25,7 +25,7 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
         ( "threshold,t", po::value<float>( &opts_deconv->threshold ),
           "Threshold number of peptides for a species to be considered.\n"
         )
-        ( "output,o", po::value<std::string>( &opts_deconv->output_fname ),
+        ( "output,o", po::value<std::string>( &opts_deconv->output_fname )->default_value( "deconv_output.tsv" ),
           "Name of the file to write output to. Output will be in the form of "
           "a tab-delimited file with a header. Each entry will be of the form:\n"
           "species_id\\tcount\n"
@@ -45,6 +45,19 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "File containing the names of enriched peptides, one per line. "
           "Each file in this file should have a corresponding entry in the "
           "file provided by the --linked option.\n"
+        )
+        ( "create_linkage", po::bool_switch( &opts_deconv->create_linkage )->default_value( false ),
+          "Boolean switch to create the linkage file that is used as input for "
+          "the species deconvolution process. If this option is included "
+          "then 'protein_file' and 'peptide_file' must also be included.\n"
+        )
+        ( "protein_file", po::value<std::string>( &opts_deconv->prot_file_fname ),
+          "Name of fasta file containing protein sequences from which a design was "
+          "created.\n"
+        )
+        ( "peptide_file", po::value<std::string>( &opts_deconv->peptide_file_fname ),
+          "Name of fasta file containing aa peptides that have been designed as part "
+          "of a library.\n"
         );
 
     po::store( po::command_line_parser( argc, *argv ).options( desc ).allow_unregistered().run(), vm);
