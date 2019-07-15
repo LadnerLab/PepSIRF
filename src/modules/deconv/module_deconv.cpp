@@ -22,6 +22,31 @@ void module_deconv::run( options *opts )
 
     timer.start = omp_get_wtime();
 
+    if( true )
+        {
+            choose_kmers( d_opts );
+        }
+    else if( false )
+        {
+            create_linkage( d_opts );
+        }
+    // else
+    //     {
+
+    //     }
+
+    timer.end = omp_get_wtime();
+
+    std::cout << "Took " << time_keep::get_elapsed( timer ) << " seconds.\n";
+
+
+
+}
+
+void module_deconv::choose_kmers( options_deconv *opts )
+{
+    options_deconv *d_opts = opts;
+
     auto enriched_species = parse_enriched_file( d_opts->enriched_fname );
     auto pep_species_vec  = parse_linked_file( d_opts->linked_fname );
 
@@ -41,7 +66,6 @@ void module_deconv::run( options *opts )
     double thresh = d_opts->threshold;
 
     omp_set_num_threads( d_opts->single_threaded ? 1 : 2 );
-
 
     sequential_map<std::size_t, std::vector<std::string>> id_pep_map;
     sequential_map<std::string, std::vector<std::size_t>> pep_id_map;
@@ -120,13 +144,12 @@ void module_deconv::run( options *opts )
             filter_counts( id_counts, thresh );
         }
 
-    timer.end = omp_get_wtime();
-
-    std::cout << "Took " << time_keep::get_elapsed( timer ) << " seconds.\n";
-
     write_outputs( d_opts->output_fname, output_counts );
 
+}
 
+void module_deconv::create_linkage( options_deconv *opts )
+{
 
 }
 

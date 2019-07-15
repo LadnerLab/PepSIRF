@@ -137,6 +137,15 @@ class module_deconv : public module
                         score_method::score_strategy strat
                       );
 
+    /**
+     * Choose the 'best' kmers as defined by the scoring options passed to the program.
+     **/
+    void choose_kmers( options_deconv *opts );
+
+    /**
+     * Create the linkage file to be used by 'choose_kmers' method.
+     **/
+    void create_linkage( options_deconv *opts );
 
 
 /**
