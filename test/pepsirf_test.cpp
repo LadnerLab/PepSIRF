@@ -17,6 +17,7 @@
 #include "samplelist_parser.h"
 #include "sample.h"
 #include "fastq_score.h"
+#include "kmer_tools.h"
 
 static std::string fasta_ex = ">Example sequence 1\nDJFKDLFJSF\nDJFKDJFDJKFJKDF\n\nJDSKFLJFDKSFLJ\n>Example Sequence 2\n\n\nDJFKLSFJDKLSFJKSLFJSKDLFJDKSLFJKLDKDKDK\n\n\n";
 TEST_CASE( "Sequence", "[sequence]" )
@@ -341,4 +342,27 @@ TEST_CASE( "Fastq_scorer", "[fastq_score]" )
                                                      );
             REQUIRE( score >= 0 );
         }
+}
+
+TEST_CASE( "get_kmers", "[kmer_scores]" )
+{
+    std::string sequence = "ABCDEFGHIJKLMONPQRSTUVWXYZ";
+    std::vector<std::string> kmers;
+    int num_kmers = 0;
+
+    num_kmers = kmer_tools::get_kmers( kmers, sequence, 1 );
+    REQUIRE( num_kmers == 26 );
+    REQUIRE( kmers.size() == 26 );
+
+    kmers.clear();
+
+    for( std::size_t index = 0; index < sequence.length(); ++index  )
+        {
+            num_kmers = kmer_tools::get_kmers( kmers, sequence, index + 1 );
+            REQUIRE( num_kmers == sequence.length() - ( index + 1 ) + 1 );
+            REQUIRE( kmers.size() == sequence.length() - ( index + 1 ) + 1 );
+            kmers.clear();
+        }
+                                                    
+                                                  
 }
