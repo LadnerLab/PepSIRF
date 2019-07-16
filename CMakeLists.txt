@@ -7,7 +7,7 @@ set(Boost_USE_STATIC_RUNTIME OFF)
 set(CMAKE_CXX_STANDARD 11)
 
 find_package(OpenMP REQUIRED)
-find_package(Boost REQUIRED COMPONENTS program_options )
+find_package(Boost REQUIRED COMPONENTS program_options regex )
 
 include_directories(include/modules/core)
 include_directories(include/modules/parsers)
