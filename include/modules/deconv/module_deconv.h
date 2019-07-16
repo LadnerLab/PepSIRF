@@ -150,7 +150,16 @@ class module_deconv : public module
      **/
     void create_linkage( options_deconv *opts );
 
-    void create_pep_map( sequential_map<std::string,
+    /**
+     * Create a map linking kmers to the species that they 
+     * appear in. Each kmer in the sequences in 'sequences' is 
+     * given a count for each species that the kmer appears in.
+     * @note After completion of this function 'map' will contain 
+     *       mappings of the form: 'kmer' -> 'species_id' -> 'count'
+     * @param map The map that will store mappings of kmer -> species -> count.
+     * @param sequences The sequences to analyze.
+     **/
+    void create_prot_map( sequential_map<std::string,
                          sequential_map<std::size_t,std::size_t>>&
                          map,
                          std::vector<sequence>& sequences

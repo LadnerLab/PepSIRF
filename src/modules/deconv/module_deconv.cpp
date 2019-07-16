@@ -156,7 +156,7 @@ void module_deconv::create_linkage( options_deconv *opts )
                  sequential_map<std::size_t,std::size_t>>
     kmer_sp_map;
 
-    create_pep_map( kmer_sp_map, proteins );
+    create_prot_map( kmer_sp_map, proteins );
 
 }
 
@@ -355,7 +355,7 @@ std::size_t module_deconv::get_id( std::string name )
     return 0;
 }
 
-void module_deconv::create_pep_map( sequential_map<std::string,
+void module_deconv::create_prot_map( sequential_map<std::string,
                                     sequential_map<std::size_t,std::size_t>>&
                                     map,
                                     std::vector<sequence>& sequences
