@@ -7,6 +7,7 @@
 
 #include "module.h"
 #include "options_deconv.h"
+#include "sequence.h"
 #include "maps.h"
 
 namespace score_method
@@ -142,11 +143,18 @@ class module_deconv : public module
      **/
     void choose_kmers( options_deconv *opts );
 
+    std::size_t get_id( std::string name );
+
     /**
      * Create the linkage file to be used by 'choose_kmers' method.
      **/
     void create_linkage( options_deconv *opts );
 
+    void create_pep_map( sequential_map<std::string,
+                         sequential_map<std::size_t,std::size_t>>&
+                         map,
+                         std::vector<sequence>& sequences
+                       );
 
 /**
  * Filter counts that do not have a high enough score out of the id_counts vector.

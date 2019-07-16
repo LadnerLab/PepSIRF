@@ -4,9 +4,12 @@
 #include <boost/algorithm/string.hpp>
 #include <omp.h>
 #include <boost/lexical_cast.hpp>
+#include <boost/regex.hpp>
 
 #include "module_deconv.h"
+#include "kmer_tools.h"
 #include "time_keep.h"
+#include "fasta_parser.h"
 
 module_deconv::module_deconv() = default;
 
@@ -22,25 +25,18 @@ void module_deconv::run( options *opts )
 
     timer.start = omp_get_wtime();
 
-    if( true )
-        {
-            choose_kmers( d_opts );
-        }
-    else if( false )
+    if( d_opts->create_linkage )
         {
             create_linkage( d_opts );
         }
-    // else
-    //     {
-
-    //     }
+    else 
+        {
+            choose_kmers( d_opts );
+        }
 
     timer.end = omp_get_wtime();
 
-    std::cout << "Took " << time_keep::get_elapsed( timer ) << " seconds.\n";
-
-
-
+    std::cout << "Took " << time_keep::get_elapsed( timer ) << " second(s).\n";
 }
 
 void module_deconv::choose_kmers( options_deconv *opts )
@@ -150,6 +146,17 @@ void module_deconv::choose_kmers( options_deconv *opts )
 
 void module_deconv::create_linkage( options_deconv *opts )
 {
+    options_deconv *d_opts = opts;
+
+    fasta_parser fp;
+    std::vector<sequence> peptides = fp.parse( d_opts->peptide_file_fname );
+    std::vector<sequence> proteins = fp.parse( d_opts->prot_file_fname    );
+
+    sequential_map<std::string,
+                 sequential_map<std::size_t,std::size_t>>
+    kmer_sp_map;
+
+    create_pep_map( kmer_sp_map, proteins );
 
 }
 
@@ -334,4 +341,58 @@ module_deconv::parse_enriched_file( std::string f_name )
             return_val.insert( line );
         }
     return return_val;
+}
+
+std::size_t module_deconv::get_id( std::string name )
+{
+    static const boost::regex id_re{ "OXX=([0-9]+),([0-9]*),([0-9]*),([0-9])" };
+    boost::smatch match;
+
+    if( boost::regex_search( name, match, id_re ) )
+        {
+            return boost::lexical_cast<std::size_t>( match[ 2 ] );
+        }
+    return 0;
+}
+
+void module_deconv::create_pep_map( sequential_map<std::string,
+                                    sequential_map<std::size_t,std::size_t>>&
+                                    map,
+                                    std::vector<sequence>& sequences
+                  )
+{
+    std::size_t index   = 0;
+    std::size_t spec_id = 0;
+
+    double t_start = omp_get_wtime();
+    double num_prot = 0;
+
+    for( index = 0; index < sequences.size(); ++index )
+        {
+            ++num_prot;
+            std::vector<std::string> kmers;
+
+            spec_id = get_id( sequences[ index ].name );
+            kmer_tools::get_kmers( kmers, sequences[ index ].seq, 7 );
+
+            for( auto it = kmers.begin(); it != kmers.end(); ++it )
+                {
+                    // only inserts if key not already in map
+                    auto pair = std::get<0>(
+                                            map.emplace( *it,
+                                                         sequential_map<std::size_t,std::size_t>()
+                                                       )
+                                            );
+                    auto pair_s = std::get<0>(
+                                              pair->second.emplace( spec_id, 0 )
+                                             );
+                    ++(pair_s->second);
+                }
+
+            kmers.clear();
+        }
+
+    double t_end = omp_get_wtime();
+
+    std::cout << num_prot << " proteins done in " << t_end - t_start << " seconds. (" << ( t_end - t_start ) / num_prot << " seconds per peptide\n";
 }
