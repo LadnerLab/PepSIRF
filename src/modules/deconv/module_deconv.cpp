@@ -96,7 +96,7 @@ void module_deconv::choose_kmers( options_deconv *opts )
             pep_species_vec.clear();
 
             auto max = id_counts.begin();
-            double max_id = std::get<0>( *max );
+            std::size_t max_id = std::get<0>( *max );
 
             output_counts.emplace_back( max_id, std::get<1>( *max ) );
 
@@ -181,7 +181,6 @@ module_deconv::parse_linked_file( std::string fname )
     int lineno = 0;
     const boost::regex id_count_re{ "([0-9]+):{0,1}([0-9]*)" };
 
-    boost::smatch match;
 
     while( std::getline( in_stream, line ) )
         {
@@ -205,10 +204,12 @@ module_deconv::parse_linked_file( std::string fname )
 
                             for( auto& item : comma_delimited )
                                 {
+                                    boost::smatch match;
                                     boost::regex_search( item, match, id_count_re );
 
                                     // matched 'id', no count found
-                                    if( match.length() == 2 )
+                                    if( match[ 1 ] != ""
+                                        && match[ 2 ] == "" )
                                         {
                                             id_ints.emplace_back(
                                                                  std::make_pair(
@@ -220,7 +221,8 @@ module_deconv::parse_linked_file( std::string fname )
                                                                 );
                                         }
                                     // matched 'id:count'
-                                    else if( match.length() == 3 ) 
+                                    else if( match[ 1 ] != ""
+                                             && match[ 2 ] != "" ) 
                                         {
                                             id_ints.emplace_back(
                                                                  std::make_pair(
@@ -231,6 +233,12 @@ module_deconv::parse_linked_file( std::string fname )
                                                                                 )
                                                                 );
                                         }
+                                    else
+                                        {
+                                            std::cout << match.length() << "\n";
+                                            std:: cout << item << "\n";
+                                        }
+
                                 }
                             ret_vec.emplace_back( split_line[ 0 ], id_ints );
 
