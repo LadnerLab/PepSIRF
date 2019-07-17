@@ -68,6 +68,8 @@ class options_deconv : public options
      **/
     std::string peptide_file_fname;
 
+    std::size_t k;
+
 };
 
 #endif // OPTIONS_DECONV_HH_INCLUDED

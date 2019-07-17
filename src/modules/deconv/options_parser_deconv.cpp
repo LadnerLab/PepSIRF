@@ -58,7 +58,8 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
         ( "peptide_file", po::value<std::string>( &opts_deconv->peptide_file_fname ),
           "Name of fasta file containing aa peptides that have been designed as part "
           "of a library.\n"
-        );
+        )
+        ( "k_size,k", po::value<std::size_t>( &opts_deconv->k ), "Kmer size to use.\n" );
 
     po::store( po::command_line_parser( argc, *argv ).options( desc ).allow_unregistered().run(), vm);
 
