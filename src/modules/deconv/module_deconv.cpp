@@ -152,11 +152,18 @@ void module_deconv::create_linkage( options_deconv *opts )
     std::vector<sequence> peptides = fp.parse( d_opts->peptide_file_fname );
     std::vector<sequence> proteins = fp.parse( d_opts->prot_file_fname    );
 
+    // std::cout << "Peptides: " << peptides.size() << "\n";
+
     sequential_map<std::string,
-                 sequential_map<std::size_t,std::size_t>>
+                   std::map<std::size_t,std::size_t>>
     kmer_sp_map;
 
-    create_prot_map( kmer_sp_map, proteins );
+    std::vector<std::tuple<std::string,std::map<std::size_t,std::size_t>>>
+        peptide_sp_map;
+
+    create_prot_map( kmer_sp_map, proteins, d_opts->k );
+    create_pep_map( kmer_sp_map, peptide_sp_map, peptides, d_opts->k );
+    write_outputs( d_opts->output_fname, peptide_sp_map );
 
 }
 
@@ -258,6 +265,7 @@ double module_deconv::get_score( sequential_map<std::string,std::vector<std::siz
         }
     return score;
 }
+
 void module_deconv::pep_to_id( sequential_map<std::string, std::vector<std::size_t>>&
                                pep_id_map,
                                std::vector<std::pair<std::string, std::vector<std::size_t>>>&
@@ -356,10 +364,11 @@ std::size_t module_deconv::get_id( std::string name )
 }
 
 void module_deconv::create_prot_map( sequential_map<std::string,
-                                    sequential_map<std::size_t,std::size_t>>&
+                                     std::map<std::size_t,std::size_t>>&
                                     map,
-                                    std::vector<sequence>& sequences
-                  )
+                                     std::vector<sequence>& sequences,
+                                     std::size_t k
+                                   )
 {
     std::size_t index   = 0;
     std::size_t spec_id = 0;
@@ -373,18 +382,20 @@ void module_deconv::create_prot_map( sequential_map<std::string,
             std::vector<std::string> kmers;
 
             spec_id = get_id( sequences[ index ].name );
-            kmer_tools::get_kmers( kmers, sequences[ index ].seq, 7 );
+            kmer_tools::get_kmers( kmers, sequences[ index ].seq, k );
+            std::map<std::size_t,std::size_t> val_map;
 
             for( auto it = kmers.begin(); it != kmers.end(); ++it )
                 {
                     // only inserts if key not already in map
                     auto pair = std::get<0>(
-                                            map.emplace( *it,
-                                                         sequential_map<std::size_t,std::size_t>()
+                                            map.insert( std::make_pair( *it,
+                                                                        val_map
+                                                                      )
                                                        )
                                             );
                     auto pair_s = std::get<0>(
-                                              pair->second.emplace( spec_id, 0 )
+                                              pair->second.insert( std::make_pair( spec_id, 0 ) )
                                              );
                     ++(pair_s->second);
                 }
@@ -396,3 +407,85 @@ void module_deconv::create_prot_map( sequential_map<std::string,
 
     std::cout << num_prot << " proteins done in " << t_end - t_start << " seconds. (" << ( t_end - t_start ) / num_prot << " seconds per peptide\n";
 }
+
+void module_deconv::create_pep_map( sequential_map<std::string,
+                                    std::map<std::size_t,std::size_t>>&
+                                    kmer_sp_map,
+                                    std::vector<std::tuple<std::string,std::map<std::size_t,std::size_t>>>&
+                                    peptide_sp_vec,
+                                    std::vector<sequence>&
+                                    peptides,
+                                    std::size_t k
+                                  )
+{
+    peptide_sp_vec.reserve( peptides.size() );
+
+    std::size_t index = 0;
+    for( index = 0; index < peptides.size(); ++index )
+        {
+            // get the kmers from this peptide
+            std::vector<std::string> kmers;
+            std::map<std::size_t,std::size_t> ids;
+
+            kmer_tools::get_kmers( kmers, peptides[ index ].seq, k );
+
+            peptide_sp_vec.insert( peptide_sp_vec.begin() + index, std::make_tuple( peptides[ index ].name, ids ) );
+
+            std::size_t kmer_index = 0;
+
+            auto& id_ref =
+                std::get<1>( peptide_sp_vec[ index ] );
+
+            // for each of this peptide's kmers grab the counts from kmer_sp_map
+            for( kmer_index = 0; kmer_index < kmers.size(); ++kmer_index )
+                {
+                    auto id_count = kmer_sp_map.find( kmers[ kmer_index ] );
+                    if( id_count != kmer_sp_map.end() )
+                        {
+                            for( auto it = id_count->second.begin(); it != id_count->second.end(); ++it )
+                                {
+                                    if( id_ref.find( it->first ) == id_ref.end() )
+                                        {
+                                            id_ref.insert( std::make_pair( it->first, 1 ) );
+                                        }
+                                    else
+                                        {
+                                            id_ref[ it->first ] += 1;
+                                        }
+                                }
+                        }
+                }
+            kmers.clear();
+        }
+}
+
+void module_deconv::write_outputs( std::string fname,
+                                   std::vector<std::tuple<std::string,std::map<std::size_t,std::size_t>>>&
+                                    peptide_sp_vec
+                                 )
+{
+    std::ofstream out_file( fname );
+
+    out_file << "Peptide Name\tLinked Species IDs with counts\n";
+
+    for( auto it = peptide_sp_vec.begin(); it != peptide_sp_vec.end(); ++it )
+        {
+            out_file << std::get<0>( *it ) << "\t";
+
+            auto in_vec = std::get<1>( *it );
+            std::size_t in_index = 0;
+            for( auto it = in_vec.begin(); it != in_vec.end(); ++it )
+                {
+                    out_file << std::get<0>( *it )
+                             << ":" << std::get<1>( *it );
+
+                    if( in_index != in_vec.size() - 1 )
+                        {
+                            out_file << ",";
+                        }
+                    ++in_index;
+                }
+            out_file << "\n";
+        }
+}
+

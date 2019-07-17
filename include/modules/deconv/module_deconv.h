@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <set>
 #include <memory>
 
 #include "module.h"
@@ -160,10 +161,26 @@ class module_deconv : public module
      * @param sequences The sequences to analyze.
      **/
     void create_prot_map( sequential_map<std::string,
-                         sequential_map<std::size_t,std::size_t>>&
+                          std::map<std::size_t,std::size_t>>&
                          map,
-                         std::vector<sequence>& sequences
+                          std::vector<sequence>& sequences,
+                          std::size_t k
                        );
+void create_pep_map( sequential_map<std::string,
+                     std::map<std::size_t,std::size_t>>&
+                     kmer_sp_map,
+                     std::vector<std::tuple<std::string,std::map<std::size_t,std::size_t>>>&
+                     peptide_sp_vec,
+                     std::vector<sequence>&
+                     peptides,
+                     std::size_t k
+                   );
+ void write_outputs( std::string fname,
+                     std::vector<std::tuple<std::string,std::map<std::size_t,std::size_t>>>&
+                     peptide_sp_vec
+                   );
+
+
 
 /**
  * Filter counts that do not have a high enough score out of the id_counts vector.
