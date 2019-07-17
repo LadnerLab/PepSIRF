@@ -129,7 +129,6 @@ class module_deconv : public module
      * @param id_counts vector in which the counts will be stored.
      * @param id_count_map input map containing id->peptides mapping.
      **/
-
     void count_species( std::vector<std::pair<std::size_t, double>>&
                         id_counts,
                         sequential_map<std::size_t,std::vector<std::string>>&
@@ -144,6 +143,12 @@ class module_deconv : public module
      **/
     void choose_kmers( options_deconv *opts );
 
+
+    /**
+     * Get the species ID from a name that matches
+     * the pattern 'OXX=([0-9]+),([0-9]*),([0-9]*),([0-9])',
+     * i.e. 'OXX=' followed by some ids.
+     **/
     std::size_t get_id( std::string name );
 
     /**
@@ -161,24 +166,51 @@ class module_deconv : public module
      * @param sequences The sequences to analyze.
      **/
     void create_prot_map( sequential_map<std::string,
-                          std::map<std::size_t,std::size_t>>&
+                          sequential_map<std::size_t,std::size_t>>&
                          map,
                           std::vector<sequence>& sequences,
                           std::size_t k
                        );
-void create_pep_map( sequential_map<std::string,
-                     std::map<std::size_t,std::size_t>>&
-                     kmer_sp_map,
-                     std::vector<std::tuple<std::string,std::map<std::size_t,std::size_t>>>&
-                     peptide_sp_vec,
-                     std::vector<sequence>&
-                     peptides,
-                     std::size_t k
-                   );
- void write_outputs( std::string fname,
-                     std::vector<std::tuple<std::string,std::map<std::size_t,std::size_t>>>&
-                     peptide_sp_vec
-                   );
+
+    /**
+     * Create a map that maps peptides to the 
+     * number of times that peptide shares a kmer with
+     * a certain species.
+     * @param kmer_sp_map Map populated by module_deconv::create_prot_map,
+     *        mapping kmers to species identifiers.
+     * @param peptide_sp_vec vector to which output will be 
+     *        written.
+     * @param peptides Vector containing peptides to 
+     *        analyze.
+     * @param k The kmer size to use. Each peptide in the 
+     *        peptides vector will be broken down into its 
+     *        component kmers.
+     **/
+    void create_pep_map( sequential_map<std::string,
+                         sequential_map<std::size_t,std::size_t>>&
+                         kmer_sp_map,
+                         std::vector<std::tuple<std::string,sequential_map<std::size_t,std::size_t>>>&
+                         peptide_sp_vec,
+                         std::vector<sequence>&
+                         peptides,
+                         std::size_t k
+                       );
+    /**
+     * Write outputs for the linkage file generation. 
+     * @param fname The name of the file to write output to.
+     * @param peptide_sp_vec vector containing the information to write 
+     *        file output to. Each item in the vector is a tuple with 
+     *        the first entry being a string identifying the peptide.
+     *        The second maps peptides to a score.
+     * @note Writes a header to the file.
+     * @note Each peptide will get a line in the file. Each line follows
+     *       this format: 
+     *       pep_name\tid:score,id:score,id:score
+     **/
+    void write_outputs( std::string fname,
+                        std::vector<std::tuple<std::string,sequential_map<std::size_t,std::size_t>>>&
+                        peptide_sp_vec
+                      );
 
 
 
