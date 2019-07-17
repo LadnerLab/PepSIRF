@@ -52,7 +52,7 @@ void module_deconv::choose_kmers( options_deconv *opts )
 
     // filter out the peptides that are not enriched
     auto it = std::remove_if( pep_species_vec.begin(), pep_species_vec.end(),
-                              [&]( std::pair<std::string,std::vector<std::size_t>>& i) -> bool 
+                              [&]( std::pair<std::string,std::vector<std::pair<std::size_t,std::size_t>>>& i) -> bool 
                               { return enriched_species.find( std::get<0>( i ) )
                                       == enriched_species.end();
                               }
@@ -64,7 +64,8 @@ void module_deconv::choose_kmers( options_deconv *opts )
     omp_set_num_threads( d_opts->single_threaded ? 1 : 2 );
 
     sequential_map<std::size_t, std::vector<std::string>> id_pep_map;
-    sequential_map<std::string, std::vector<std::size_t>> pep_id_map;
+    sequential_map<std::string, std::vector<std::pair<std::size_t,std::size_t>>>
+        pep_id_map;
 
     // vector holding the species ids with the highest count
     std::vector<std::pair<std::size_t, double>> id_counts;
@@ -155,10 +156,10 @@ void module_deconv::create_linkage( options_deconv *opts )
     // std::cout << "Peptides: " << peptides.size() << "\n";
 
     sequential_map<std::string,
-                   std::map<std::size_t,std::size_t>>
+                   sequential_map<std::size_t,std::size_t>>
     kmer_sp_map;
 
-    std::vector<std::tuple<std::string,std::map<std::size_t,std::size_t>>>
+    std::vector<std::tuple<std::string,sequential_map<std::size_t,std::size_t>>>
         peptide_sp_map;
 
     create_prot_map( kmer_sp_map, proteins, d_opts->k );
@@ -167,18 +168,20 @@ void module_deconv::create_linkage( options_deconv *opts )
 
 }
 
-std::vector<std::pair<std::string,std::vector<std::size_t>>>
+std::vector<std::pair<std::string,std::vector<std::pair<std::size_t,std::size_t>>>>
 module_deconv::parse_linked_file( std::string fname )
 {
     std::ifstream in_stream( fname );
 
-    
-    std::vector<std::pair<std::string,std::vector<std::size_t>>>
+    std::vector<std::pair<std::string,std::vector<std::pair<std::size_t,std::size_t>>>>
         ret_vec;
 
     std::string line;
 
     int lineno = 0;
+    const boost::regex id_count_re{ "([0-9]+):{0,1}([0-9]*)" };
+
+    boost::smatch match;
 
     while( std::getline( in_stream, line ) )
         {
@@ -198,14 +201,37 @@ module_deconv::parse_linked_file( std::string fname )
                                           boost::is_any_of( "," )
                                         );
 
-                            std::vector<std::size_t> id_ints;
-                            std::for_each( comma_delimited.begin(), comma_delimited.end(),
-                                           [&]( const std::string& item )
-                                           { id_ints.push_back(
-                                             boost::lexical_cast<std::size_t>( item )
-                                                               );
-                                           }
-                                         );
+                            std::vector<std::pair<std::size_t,std::size_t>> id_ints;
+
+                            for( auto& item : comma_delimited )
+                                {
+                                    boost::regex_search( item, match, id_count_re );
+
+                                    // matched 'id', no count found
+                                    if( match.length() == 2 )
+                                        {
+                                            id_ints.emplace_back(
+                                                                 std::make_pair(
+                                                                 boost::lexical_cast<std::size_t>
+                                                                 ( match[ 1 ] ),
+                                                                 boost::lexical_cast<std::size_t>
+                                                                 ( 1 )
+                                                                                )
+                                                                );
+                                        }
+                                    // matched 'id:count'
+                                    else if( match.length() == 3 ) 
+                                        {
+                                            id_ints.emplace_back(
+                                                                 std::make_pair(
+                                                                 boost::lexical_cast<std::size_t>
+                                                                 ( match[ 1 ] ),
+                                                                 boost::lexical_cast<std::size_t>
+                                                                 ( match[ 2 ] )
+                                                                                )
+                                                                );
+                                        }
+                                }
                             ret_vec.emplace_back( split_line[ 0 ], id_ints );
 
                         }
@@ -218,7 +244,7 @@ module_deconv::parse_linked_file( std::string fname )
 
 void module_deconv::id_to_pep( sequential_map<std::size_t, std::vector<std::string>>&
                                id_pep_map,
-                               std::vector<std::pair<std::string, std::vector<std::size_t>>>&
+                               std::vector<std::pair<std::string, std::vector<std::pair<std::size_t,std::size_t>>>>&
                                pep_species_vec )
 {
     for( auto it = pep_species_vec.begin(); it != pep_species_vec.end(); ++it )
@@ -230,11 +256,11 @@ void module_deconv::id_to_pep( sequential_map<std::size_t, std::vector<std::stri
                  ++inner
                )
                 {
-                    auto find = id_pep_map.find( *inner );
+                    auto find = id_pep_map.find( std::get<0>( *inner ) );
                     if( find == id_pep_map.end() )
                         {
                             find = std::get<0>(
-                                   id_pep_map.emplace( *inner, std::vector<std::string>() )
+                                               id_pep_map.emplace( std::get<0>( *inner ), std::vector<std::string>() )
                                               );
                         }
                     find->second.push_back( pep );
@@ -242,7 +268,7 @@ void module_deconv::id_to_pep( sequential_map<std::size_t, std::vector<std::stri
         }
 }
 
-double module_deconv::get_score( sequential_map<std::string,std::vector<std::size_t>>&
+double module_deconv::get_score( sequential_map<std::string,std::vector<std::pair<std::size_t,std::size_t>>>&
                                  spec_count_map,
                                  std::vector<std::string>& peptides,
                                  score_method::score_strategy strat
@@ -266,15 +292,17 @@ double module_deconv::get_score( sequential_map<std::string,std::vector<std::siz
     return score;
 }
 
-void module_deconv::pep_to_id( sequential_map<std::string, std::vector<std::size_t>>&
+void module_deconv::pep_to_id( sequential_map<std::string, std::vector<std::pair<std::size_t,std::size_t>>>&
                                pep_id_map,
-                               std::vector<std::pair<std::string, std::vector<std::size_t>>>&
+                               std::vector<std::pair<std::string, std::vector<std::pair<std::size_t,std::size_t>>>>&
                                pep_species_vec
                              )
 {
     for( auto it = pep_species_vec.begin(); it != pep_species_vec.end(); ++it )
         {
-            pep_id_map.emplace( std::get<0>( *it ), std::get<1>( *it ) );
+            pep_id_map.emplace( std::get<0>( *it ),
+                                std::get<1>( *it )
+                              );
         }
 }
 
@@ -282,10 +310,11 @@ void module_deconv::count_species( std::vector<std::pair<std::size_t, double>>&
                                    id_counts,
                                    sequential_map<std::size_t,std::vector<std::string>>&
                                    id_count_map,
-                                   sequential_map<std::string,std::vector<std::size_t>>&
+                                   sequential_map<std::string,std::vector<std::pair<std::size_t,std::size_t>>>&
                                    spec_count_map,
                                    score_method::score_strategy strat
-                                 )
+                                )
+
 {
     id_counts.reserve( id_count_map.size() );
 
@@ -364,7 +393,7 @@ std::size_t module_deconv::get_id( std::string name )
 }
 
 void module_deconv::create_prot_map( sequential_map<std::string,
-                                     std::map<std::size_t,std::size_t>>&
+                                     sequential_map<std::size_t,std::size_t>>&
                                     map,
                                      std::vector<sequence>& sequences,
                                      std::size_t k
@@ -383,7 +412,7 @@ void module_deconv::create_prot_map( sequential_map<std::string,
 
             spec_id = get_id( sequences[ index ].name );
             kmer_tools::get_kmers( kmers, sequences[ index ].seq, k );
-            std::map<std::size_t,std::size_t> val_map;
+            sequential_map<std::size_t,std::size_t> val_map;
 
             for( auto it = kmers.begin(); it != kmers.end(); ++it )
                 {
@@ -409,9 +438,9 @@ void module_deconv::create_prot_map( sequential_map<std::string,
 }
 
 void module_deconv::create_pep_map( sequential_map<std::string,
-                                    std::map<std::size_t,std::size_t>>&
+                                    sequential_map<std::size_t,std::size_t>>&
                                     kmer_sp_map,
-                                    std::vector<std::tuple<std::string,std::map<std::size_t,std::size_t>>>&
+                                    std::vector<std::tuple<std::string,sequential_map<std::size_t,std::size_t>>>&
                                     peptide_sp_vec,
                                     std::vector<sequence>&
                                     peptides,
@@ -425,7 +454,7 @@ void module_deconv::create_pep_map( sequential_map<std::string,
         {
             // get the kmers from this peptide
             std::vector<std::string> kmers;
-            std::map<std::size_t,std::size_t> ids;
+            sequential_map<std::size_t,std::size_t> ids;
 
             kmer_tools::get_kmers( kmers, peptides[ index ].seq, k );
 
@@ -460,7 +489,7 @@ void module_deconv::create_pep_map( sequential_map<std::string,
 }
 
 void module_deconv::write_outputs( std::string fname,
-                                   std::vector<std::tuple<std::string,std::map<std::size_t,std::size_t>>>&
+                                   std::vector<std::tuple<std::string,sequential_map<std::size_t,std::size_t>>>&
                                     peptide_sp_vec
                                  )
 {

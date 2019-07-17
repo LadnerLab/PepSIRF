@@ -53,21 +53,21 @@ class module_deconv : public module
      * @param fname Name of file to parse.
      * @returns vector of pairs, where the first entry is the name 
      *          of the peptide, and the second a vector of size_t ids 
-     *          that represent the id of the species that share a 7mer 
+     *          that represent the id of the species that share a kmer 
      *          with the peptide.
      **/
-    std::vector<std::pair<std::string,std::vector<std::size_t>>>
+    std::vector<std::pair<std::string,std::vector<std::pair<std::size_t,std::size_t>>>>
         parse_linked_file( std::string fname );
+
 
     /**
      *
      **/
-    double get_score( sequential_map<std::string,std::vector<std::size_t>>&
+    double get_score( sequential_map<std::string,std::vector<std::pair<std::size_t,std::size_t>>>&
                       spec_count_map,
                       std::vector<std::string>& peptides,
                       score_method::score_strategy strat
                     );
-
 
     /**
      * Write output to a file that will be named 'out_name'
@@ -105,8 +105,9 @@ class module_deconv : public module
      **/
     void id_to_pep( sequential_map<std::size_t, std::vector<std::string>>&
                     id_pep_map,
-                    std::vector<std::pair<std::string, std::vector<std::size_t>>>&
-                    pep_species_vec );
+                    std::vector<std::pair<std::string, std::vector<std::pair<std::size_t,std::size_t>>>>&
+                    pep_species_vec
+                  );
 
     /**
      * Populate a map with pairings of <peptide name, vector of species ids>
@@ -117,9 +118,10 @@ class module_deconv : public module
      * @param pep_species_vec a vector containing pairs with the first entry 
      *        a species id, and the second a vector of string peptide names.
      **/
-    void pep_to_id( sequential_map<std::string, std::vector<std::size_t>>&
+
+    void pep_to_id( sequential_map<std::string, std::vector<std::pair<std::size_t,std::size_t>>>&
                     pep_id_map,
-                    std::vector<std::pair<std::string, std::vector<std::size_t>>>&
+                    std::vector<std::pair<std::string, std::vector<std::pair<std::size_t,std::size_t>>>>&
                     pep_species_vec
                   );
 
@@ -133,7 +135,7 @@ class module_deconv : public module
                         id_counts,
                         sequential_map<std::size_t,std::vector<std::string>>&
                         id_count_map,
-                        sequential_map<std::string,std::vector<std::size_t>>&
+                        sequential_map<std::string,std::vector<std::pair<std::size_t,std::size_t>>>&
                         spec_count_map,
                         score_method::score_strategy strat
                       );
