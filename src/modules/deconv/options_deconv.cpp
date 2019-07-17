@@ -28,6 +28,7 @@ std::string options_deconv::get_arguments()
                           " --protein_file        " << prot_file_fname <<  "\n"
                           " --peptide_file        " << peptide_file_fname <<  "\n"
                           " --output              " << output_fname <<  "\n"
+                          " --kmer_size           " << k <<  "\n"
                 ;
         }
     str_stream << "\n";
