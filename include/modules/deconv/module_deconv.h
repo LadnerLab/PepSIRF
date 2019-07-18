@@ -100,8 +100,12 @@ class module_deconv : public module
     void write_outputs( std::string out_name,
                         std::map<std::size_t,std::string>*
                         id_name_map,
-                        std::vector<std::pair<std::size_t,double>>& out_counts
+                        std::vector<
+                        std::tuple<std::size_t,std::size_t,double>
+                        >&
+                        out_counts
                       );
+
 
     /**
      * Reads the list of enriched peptides from a file.
@@ -249,17 +253,17 @@ class module_deconv : public module
      * @note This method has the side effect of removing items from id_counts
      **/
     template<class K, class V>
-        void filter_counts( std::vector<std::pair<K,V>>& id_counts,
+        void filter_counts( sequential_map<K,V>& id_counts,
                             V thresh
                           )
     {
-        auto it = std::remove_if( id_counts.begin(), id_counts.end(),
-                                  [&]( std::pair<K, V> i )
-                                  {
-                                      return std::get<1>( i ) < thresh;
-                                  } 
-                                  );
-        id_counts.erase( it, id_counts.end() );
+        for( auto& item : id_counts )
+            {
+                if( item.second < thresh )
+                    {
+                        id_counts.erase( item.first );
+                    }
+            }
     }
     
     /**
@@ -274,12 +278,11 @@ class module_deconv : public module
     /**
      * @TODO
      **/
-    void 
+    void
         get_species_counts_per_peptide( sequential_map<std::size_t, std::vector<std::string>>&
                                         id_pep_map,
-                                        std::vector<std::pair<std::size_t,std::size_t>>& pep_counts
+                                        sequential_map<std::size_t,std::size_t>& pep_counts
                                       );
-
 
 };
 

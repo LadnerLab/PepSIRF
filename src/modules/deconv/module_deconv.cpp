@@ -67,9 +67,9 @@ void module_deconv::choose_kmers( options_deconv *opts )
 
     // vector holding the species ids with the highest count
     std::vector<std::pair<std::size_t, double>> species_scores;
-    std::vector<std::pair<std::size_t, std::size_t>> species_peptide_counts;
+    sequential_map<std::size_t, std::size_t> species_peptide_counts;
 
-    std::vector<std::pair<std::size_t, double>> output_counts;
+    std::vector<std::tuple<std::size_t, std::size_t, double>> output_counts;
 
     #pragma omp parallel
     {
@@ -118,7 +118,13 @@ void module_deconv::choose_kmers( options_deconv *opts )
             auto max = species_scores.begin();
             std::size_t max_id = std::get<0>( *max );
 
-            output_counts.emplace_back( max_id, std::get<1>( *max ) );
+            output_counts.emplace_back( std::make_tuple(
+                                                        max_id,
+                                                        species_peptide_counts
+                                                        .find( max_id )->second, // count for speices
+                                                        std::get<1>( *max )
+                                                       )
+                                      );
 
             auto max_peptides = id_pep_map.find( max_id )->second;
 
@@ -415,7 +421,10 @@ void module_deconv::score_species( std::vector<std::pair<std::size_t, double>>&
 void module_deconv::write_outputs( std::string out_name,
                                    std::map<std::size_t,std::string>*
                                    id_name_map,
-                                   std::vector<std::pair<std::size_t,double>>& out_counts
+                                   std::vector<
+                                   std::tuple<std::size_t,std::size_t,double>
+                                   >&
+                                   out_counts
                                  )
 
 {
@@ -427,7 +436,7 @@ void module_deconv::write_outputs( std::string out_name,
         }
 
 
-    out_file << "Species ID\tScore\n";
+    out_file << "Species ID\tCount\tScore\n";
 
 
     for( auto& elem : out_counts )
@@ -444,7 +453,8 @@ void module_deconv::write_outputs( std::string out_name,
                 }
 
             out_file << std::get<0>( elem ) << "\t" <<
-                std::get<1>( elem ) << "\n";
+                std::get<1>( elem ) << "\t" << 
+                std::get<2>( elem ) << "\n";
         }
 
 }
@@ -663,19 +673,16 @@ module_deconv::parse_name_map( std::string fname,
 void module_deconv::
 get_species_counts_per_peptide( sequential_map<std::size_t, std::vector<std::string>>&
                                 id_pep_map,
-                                std::vector<std::pair<std::size_t,std::size_t>>& pep_counts
+                                sequential_map<std::size_t,std::size_t>& pep_counts
                               )
 {
-    pep_counts.reserve( id_pep_map.size() );
-
     for( auto count = id_pep_map.begin();
          count != id_pep_map.end();
          ++count
        )
         {
-            pep_counts.emplace_back( std::make_pair( count->first,
-                                                     count->second.size()
-                                                   )
-                                   );
+            pep_counts.emplace( count->first,
+                                count->second.size()
+                              );
         }
 }
