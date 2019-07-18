@@ -73,21 +73,21 @@ class module_deconv : public module
      * @param strat The scoring strategy to use for scoring peptides.
      * @returns The score of the species
      **/
-double get_score( sequential_map<std::string,std::vector<std::pair<std::size_t,std::size_t>>>&
-                  spec_count_map,
-                  std::size_t id,
-                  std::vector<std::string>& peptides,
-                  score_method::score_strategy strat
-                );
+    double get_score( sequential_map<std::string,std::vector<std::pair<std::size_t,std::size_t>>>&
+                      spec_count_map,
+                      std::size_t id,
+                      std::vector<std::string>& peptides,
+                      score_method::score_strategy strat
+                    );
 
-void
     /**
      * Parse a map that will provide name->tax id mappings. This map should be formatted 
      * in the same manner as that of 'lineage.dmp' from NCBI. 
      * @param fname The name fo the file to parse
      * @param name_map the destination map that will store the mappings of id->name
      **/
-    parse_name_map( std::string fname, std::map<std::size_t,std::string>& name_map );
+    void
+        parse_name_map( std::string fname, std::map<std::size_t,std::string>& name_map );
 
 
     /**
