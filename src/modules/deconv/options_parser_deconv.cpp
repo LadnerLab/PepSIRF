@@ -62,7 +62,11 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "Name of fasta file containing aa peptides that have been designed as part "
           "of a library.\n"
         )
-        ( "k_size,k", po::value<std::size_t>( &opts_deconv->k ), "Kmer size to use.\n" );
+        ( "k_size,k", po::value<std::size_t>( &opts_deconv->k ), "Kmer size to use.\n" )
+        ( "id_name_map", po::value<std::string>( &opts_deconv->id_name_map_fname )->default_value( "" ),
+          "Map with tab-delimited lines, where the first item in each line is a species and the second is the name "
+          "of the species.\n"
+          );
 
     po::store( po::command_line_parser( argc, *argv ).options( desc ).allow_unregistered().run(), vm);
 
