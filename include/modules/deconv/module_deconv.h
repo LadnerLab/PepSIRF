@@ -19,6 +19,12 @@ namespace score_method
         FRACTIONAL_SCORING,
         SUMMATION_SCORING
     };
+
+    enum filter_strategy
+    {
+        SCORING_FILTER = 0,
+        COUNT_FILTER
+    };
 }; //namespace score_method
 
 class module_deconv : public module
