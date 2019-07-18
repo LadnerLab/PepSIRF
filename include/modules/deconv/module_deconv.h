@@ -71,6 +71,10 @@ double get_score( sequential_map<std::string,std::vector<std::pair<std::size_t,s
                   score_method::score_strategy strat
                 );
 
+void
+    parse_name_map( std::string fname, std::map<std::size_t,std::string>& name_map );
+
+
     /**
      * Write output to a file that will be named 'out_name'
      * @param out_name Name of file that output will be written to.
@@ -79,6 +83,8 @@ double get_score( sequential_map<std::string,std::vector<std::pair<std::size_t,s
      *        species. 
      **/
     void write_outputs( std::string out_name,
+                        std::map<std::size_t,std::string>*
+                        id_name_map,
                         std::vector<std::pair<std::size_t,double>>& out_counts
                       );
 

@@ -139,7 +139,15 @@ void module_deconv::choose_kmers( options_deconv *opts )
             filter_counts( id_counts, thresh );
         }
 
-    write_outputs( d_opts->output_fname, output_counts );
+    std::string id_name_map_fname;
+    std::map<std::size_t,std::string> name_id_map;
+    std::map<std::size_t,std::string>* name_id_map_ptr = nullptr;
+    if( d_opts->id_name_map_fname.compare( "" ) )
+        {
+            parse_name_map( d_opts->id_name_map_fname, name_id_map );
+            name_id_map_ptr = &name_id_map;
+        }
+    write_outputs( d_opts->output_fname, name_id_map_ptr, output_counts );
 
 }
 
@@ -376,20 +384,39 @@ void module_deconv::filter_counts( std::vector<std::pair<std::size_t, double>>& 
 }
 
 void module_deconv::write_outputs( std::string out_name,
+                                   std::map<std::size_t,std::string>*
+                                   id_name_map,
                                    std::vector<std::pair<std::size_t,double>>& out_counts
                                  )
+
 {
     std::ofstream out_file( out_name );
 
+    if( id_name_map != nullptr )
+        {
+            out_file << "Species Name\t";
+        }
+
+
     out_file << "Species ID\tCount\n";
 
-    std::for_each( out_counts.begin(), out_counts.end(),
-                   [&]( std::pair<std::size_t,double> elem )
-                   {
-                       out_file << std::get<0>( elem ) << "\t" <<
-                           std::get<1>( elem ) << "\n";
-                   }
-                 );
+
+    for( auto& elem : out_counts )
+        {
+            if( id_name_map != nullptr
+                && id_name_map->find( std::get<0>( elem ) ) != id_name_map->end() )
+                {
+                    out_file << id_name_map->find( std::get<0>( elem ) )->second << "\t";
+                }
+            else if( id_name_map != nullptr
+                     && id_name_map->find( std::get<0>( elem ) ) == id_name_map->end() )
+                {
+                    out_file << "\t";
+                }
+
+            out_file << std::get<0>( elem ) << "\t" <<
+                std::get<1>( elem ) << "\n";
+        }
 
 }
 
@@ -562,4 +589,35 @@ module_deconv::get_score_method( options_deconv *opts )
     return  opts->fractional_scoring ?
              score_method::score_strategy::FRACTIONAL_SCORING :
              score_method::score_strategy::SUMMATION_SCORING;
+}
+
+
+void
+module_deconv::parse_name_map( std::string fname,
+                               std::map<std::size_t,std::string>& name_map
+                             )
+{
+    std::ifstream in_stream( fname );
+    std::size_t lineno = 0;
+
+    std::string line;
+
+    while( std::getline( in_stream, line ) )
+        {
+            std::vector<std::string> split_line;
+            if( lineno )
+                {
+                    boost::trim_right( line );
+                    boost::split( split_line, line,
+                                  boost::is_any_of( "\t" )
+                                );
+
+                    std::size_t id = boost::lexical_cast<std::size_t>
+                        ( split_line[ 0 ] );
+                    std::string second = split_line[ 1 ];
+                    name_map.insert( std::make_pair( id, second ) );
+                }
+
+            ++lineno;
+        }
 }
