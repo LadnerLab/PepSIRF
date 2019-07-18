@@ -280,20 +280,38 @@ double module_deconv::get_score( sequential_map<std::string,std::vector<std::pai
                                  score_method::score_strategy strat
                                )
 {
+    double score = 0;
+
     if( strat == score_method::score_strategy::INTEGER_SCORING )
         {
             return (double) peptides.size();
         }
-
-    double score = 0;
-
-    std::size_t index = 0;
-
-    #pragma omp parallel for private( index ) \
-            shared( spec_count_map ) reduction( +:score )
-    for( index = 0; index < peptides.size(); ++index )
+    else if( strat == score_method::score_strategy::FRACTIONAL_SCORING )
         {
-            score += 1.0 / (double) spec_count_map[ peptides[ index ] ].size();
+            std::size_t index = 0;
+
+            #pragma omp parallel for private( index )           \
+             shared( spec_count_map ) reduction( +:score )
+            for( index = 0; index < peptides.size(); ++index )
+                {
+                    score += 1.0 / (double) spec_count_map[ peptides[ index ] ].size();
+                }
+
+
+        }
+    else if( strat == score_method::score_strategy::SUMMATION_SCORING )
+        {
+            std::size_t index = 0;
+
+            #pragma omp parallel for private( index )           \
+             shared( spec_count_map ) reduction( +:score )
+            for( index = 0; index < peptides.size(); ++index )
+                {
+                    for( auto& iter : spec_count_map[ peptides[ index ] ] )
+                        {
+                            score += std::get<1>( iter );
+                        }
+                }
         }
     return score;
 }
