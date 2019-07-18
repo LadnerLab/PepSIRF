@@ -276,7 +276,12 @@ class module_deconv : public module
         get_score_method( options_deconv *opts );
 
     /**
-     * @TODO
+     * Get the number of peptides each species shares a 7mer with.
+     * @param id_pep_map The map to scan, contains mappings of species id 
+     *        to a vector of peptides containing shared kmers. 
+     * @param pep_counts Destination map that will contain the counts for each species.
+     *        The map will contain one entry per species. The key is the species id
+     *        and the value will be the the count.
      **/
     void
         get_species_counts_per_peptide( sequential_map<std::size_t, std::vector<std::string>>&
