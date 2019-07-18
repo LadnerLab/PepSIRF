@@ -153,7 +153,7 @@ class module_deconv : public module
      * @param id_counts vector in which the counts will be stored.
      * @param id_count_map input map containing id->peptides mapping.
      **/
-    void count_species( std::vector<std::pair<std::size_t, double>>&
+    void score_species( std::vector<std::pair<std::size_t, double>>&
                         id_counts,
                         sequential_map<std::size_t,std::vector<std::string>>&
                         id_count_map,

@@ -84,7 +84,7 @@ void module_deconv::choose_kmers( options_deconv *opts )
     }
 
 
-    count_species( id_counts, id_pep_map, pep_id_map,
+    score_species( id_counts, id_pep_map, pep_id_map,
                    strat
                  );
     filter_counts( id_counts, thresh );
@@ -131,7 +131,7 @@ void module_deconv::choose_kmers( options_deconv *opts )
             }
 
 
-            count_species( id_counts, id_pep_map, pep_id_map,
+            score_species( id_counts, id_pep_map, pep_id_map,
                            strat
                          );
 
@@ -343,7 +343,7 @@ void module_deconv::pep_to_id( sequential_map<std::string, std::vector<std::pair
         }
 }
 
-void module_deconv::count_species( std::vector<std::pair<std::size_t, double>>&
+void module_deconv::score_species( std::vector<std::pair<std::size_t, double>>&
                                    id_counts,
                                    sequential_map<std::size_t,std::vector<std::string>>&
                                    id_count_map,
