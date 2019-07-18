@@ -126,43 +126,46 @@ void module_deconv::choose_kmers( options_deconv *opts )
             species_scores.clear();
             species_peptide_counts.clear();
 
-
-            #pragma omp parallel sections
+            #pragma omp parallel
             {
-                #pragma omp section
+                #pragma omp sections
                 {
-                    id_to_pep( id_pep_map, pep_species_vec );
+                    #pragma omp section
+                    {
+                        id_to_pep( id_pep_map, pep_species_vec );
+                    }
+
+                    #pragma omp section
+                    {
+                        pep_to_id( pep_id_map, pep_species_vec );
+                    }
                 }
 
-                #pragma omp section
+                // implicit barrier
+                #pragma omp sections
                 {
-                    pep_to_id( pep_id_map, pep_species_vec );
+                    #pragma omp section
+                    {
+                        score_species( species_scores, id_pep_map, pep_id_map,
+                                       strat
+                                     );
+                    }
+
+                    #pragma omp section
+                    {
+                        get_species_counts_per_peptide( id_pep_map,
+                                                        species_peptide_counts
+                                                        );
+
+                        // recreate species_scores
+                        filter_counts<std::size_t,std::size_t>
+                            ( species_peptide_counts, thresh );
+
+                    }
                 }
 
             }
-            // implicit barrier
 
-            #pragma omp parallel sections
-            {
-                #pragma omp section
-                {
-                    score_species( species_scores, id_pep_map, pep_id_map,
-                                   strat
-                                 );
-                }
-
-                #pragma omp section
-                {
-                    get_species_counts_per_peptide( id_pep_map,
-                                                    species_peptide_counts
-                                                    );
-
-                    // recreate species_scores
-                    filter_counts<std::size_t,std::size_t>
-                        ( species_peptide_counts, thresh );
-
-                }
-            }
         }
 
     std::string id_name_map_fname;
