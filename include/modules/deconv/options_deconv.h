@@ -50,6 +50,8 @@ class options_deconv : public options
      **/
     bool fractional_scoring;
 
+    bool summation_scoring;
+
     /**
      * Bool to determine whether to 
      * create linkage.

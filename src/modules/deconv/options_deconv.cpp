@@ -18,6 +18,7 @@ std::string options_deconv::get_arguments()
                           " --enriched            " << enriched_fname <<  "\n" << 
                           " --single_threaded     " <<  bool_str( single_threaded ) <<  "\n" << 
                           " --fractional_scoring  " <<  bool_str( fractional_scoring ) <<  "\n" << 
+                          " --summation_scoring   " <<  bool_str( summation_scoring ) <<  "\n" << 
                           " --output              " << output_fname <<  "\n"
                   ;
         }

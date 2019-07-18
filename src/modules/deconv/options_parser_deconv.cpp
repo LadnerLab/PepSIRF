@@ -41,6 +41,9 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "a peptide shares a 7mer with. In this method of scoring "
           "peptides with fewer species are worth more.\n" 
         )
+        ( "summation_scoring", po::bool_switch( &opts_deconv->fractional_scoring )->default_value( false ),
+          ""
+        )
         ( "enriched,e", po::value<std::string>( &opts_deconv->enriched_fname ),
           "File containing the names of enriched peptides, one per line. "
           "Each file in this file should have a corresponding entry in the "
