@@ -62,7 +62,16 @@ class module_deconv : public module
 
 
     /**
-     *
+     * The the score for a certain spec_count map. 
+     * This means that spec_count_map contains the peptides that share a 
+     * kmer with a certain species. 
+     * @param spec_count_map Map that maps peptides to the species that 
+     *        a peptides shares an ID with.
+     * @param id the species id that is being searched. Note that this is only 
+     *        used in summation scoring.
+     * @param peptides A list of enriched peptides.
+     * @param strat The scoring strategy to use for scoring peptides.
+     * @returns The score of the species
      **/
 double get_score( sequential_map<std::string,std::vector<std::pair<std::size_t,std::size_t>>>&
                   spec_count_map,
@@ -72,6 +81,12 @@ double get_score( sequential_map<std::string,std::vector<std::pair<std::size_t,s
                 );
 
 void
+    /**
+     * Parse a map that will provide name->tax id mappings. This map should be formatted 
+     * in the same manner as that of 'lineage.dmp' from NCBI. 
+     * @param fname The name fo the file to parse
+     * @param name_map the destination map that will store the mappings of id->name
+     **/
     parse_name_map( std::string fname, std::map<std::size_t,std::string>& name_map );
 
 
@@ -126,7 +141,6 @@ void
      * @param pep_species_vec a vector containing pairs with the first entry 
      *        a species id, and the second a vector of string peptide names.
      **/
-
     void pep_to_id( sequential_map<std::string, std::vector<std::pair<std::size_t,std::size_t>>>&
                     pep_id_map,
                     std::vector<std::pair<std::string, std::vector<std::pair<std::size_t,std::size_t>>>>&
@@ -158,6 +172,9 @@ void
      * Get the species ID from a name that matches
      * the pattern 'OXX=([0-9]+),([0-9]*),([0-9]*),([0-9])',
      * i.e. 'OXX=' followed by some ids.
+     * @param name The name from which to grab the id. 
+     * @note The species id is the second group of the 
+     *       above regex.
      **/
     std::size_t get_id( std::string name );
 
@@ -224,18 +241,25 @@ void
 
 
 
-/**
- * Filter counts that do not have a high enough score out of the id_counts vector.
- * @param id_counts Vector containing <species_id, score> pairs.
- * @param thresh The threshold value. Any pairs in id_counts whose second 
- *        entry is strictly less than this value will be removed.
- * @note This method has the side effect of removing items from id_counts
- **/
+    /**
+     * Filter counts that do not have a high enough score out of the id_counts vector.
+     * @param id_counts Vector containing <species_id, score> pairs.
+     * @param thresh The threshold value. Any pairs in id_counts whose second 
+     *        entry is strictly less than this value will be removed.
+     * @note This method has the side effect of removing items from id_counts
+     **/
     void filter_counts( std::vector<std::pair<std::size_t, double>>&
                         id_counts,
                         double thresh
-                      );
+                        );
 
+
+    /**
+     * The the score strategy to use for scoring.
+     * Determines which to used based on the values of 
+     * fractional_scoring and summation_scoring
+     * @param opts A pointer to 'options_deconv' object.
+     **/
     score_method::score_strategy
         get_score_method( options_deconv *opts );
 
