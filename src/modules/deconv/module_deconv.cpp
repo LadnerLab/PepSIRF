@@ -607,10 +607,18 @@ module_deconv::parse_name_map( std::string fname,
             std::vector<std::string> split_line;
             if( lineno )
                 {
+
                     boost::trim_right( line );
                     boost::split( split_line, line,
-                                  boost::is_any_of( "\t" )
+                                  boost::is_any_of( "|" )
                                 );
+
+                    // if this is a species-level ID,
+                    // then this will provide the mapping.
+                    // Otherwise some space is wasted, but that's not
+                    // a major concern.
+                    boost::trim( split_line[ 0 ] );
+                    boost::trim( split_line[ 1 ] );
 
                     std::size_t id = boost::lexical_cast<std::size_t>
                         ( split_line[ 0 ] );
