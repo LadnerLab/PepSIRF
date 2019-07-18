@@ -37,7 +37,7 @@ class options_deconv : public options
     /**
      * Threshold value for a peptide to not be filtered out.
      **/
-    float threshold;
+    std::size_t threshold;
 
     /**
      * If this value is true only one thread will be used for 
