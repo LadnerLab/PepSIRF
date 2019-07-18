@@ -64,11 +64,12 @@ class module_deconv : public module
     /**
      *
      **/
-    double get_score( sequential_map<std::string,std::vector<std::pair<std::size_t,std::size_t>>>&
-                      spec_count_map,
-                      std::vector<std::string>& peptides,
-                      score_method::score_strategy strat
-                    );
+double get_score( sequential_map<std::string,std::vector<std::pair<std::size_t,std::size_t>>>&
+                  spec_count_map,
+                  std::size_t id,
+                  std::vector<std::string>& peptides,
+                  score_method::score_strategy strat
+                );
 
     /**
      * Write output to a file that will be named 'out_name'

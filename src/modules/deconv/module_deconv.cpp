@@ -276,6 +276,7 @@ void module_deconv::id_to_pep( sequential_map<std::size_t, std::vector<std::stri
 
 double module_deconv::get_score( sequential_map<std::string,std::vector<std::pair<std::size_t,std::size_t>>>&
                                  spec_count_map,
+                                 std::size_t id,
                                  std::vector<std::string>& peptides,
                                  score_method::score_strategy strat
                                )
@@ -286,6 +287,7 @@ double module_deconv::get_score( sequential_map<std::string,std::vector<std::pai
         {
             return (double) peptides.size();
         }
+
     else if( strat == score_method::score_strategy::FRACTIONAL_SCORING )
         {
             std::size_t index = 0;
@@ -296,9 +298,8 @@ double module_deconv::get_score( sequential_map<std::string,std::vector<std::pai
                 {
                     score += 1.0 / (double) spec_count_map[ peptides[ index ] ].size();
                 }
-
-
         }
+
     else if( strat == score_method::score_strategy::SUMMATION_SCORING )
         {
             std::size_t index = 0;
@@ -309,10 +310,14 @@ double module_deconv::get_score( sequential_map<std::string,std::vector<std::pai
                 {
                     for( auto& iter : spec_count_map[ peptides[ index ] ] )
                         {
-                            score += std::get<1>( iter );
+                            if( std::get<0>( iter ) == id )
+                                {
+                                    score += std::get<1>( iter );
+                                }
                         }
                 }
         }
+    
     return score;
 }
 
@@ -345,6 +350,7 @@ void module_deconv::count_species( std::vector<std::pair<std::size_t, double>>&
     for( auto it = id_count_map.begin(); it != id_count_map.end(); ++it )
         {
             double score = get_score( spec_count_map,
+                                      it->first,
                                       it->second,
                                       strat
                                     );
