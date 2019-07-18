@@ -57,7 +57,7 @@ void module_deconv::choose_kmers( options_deconv *opts )
                             );
     pep_species_vec.erase( it, pep_species_vec.end() );
 
-    double thresh = d_opts->threshold;
+    std::size_t thresh = d_opts->threshold;
 
     omp_set_num_threads( d_opts->single_threaded ? 1 : 2 );
 
@@ -66,7 +66,8 @@ void module_deconv::choose_kmers( options_deconv *opts )
         pep_id_map;
 
     // vector holding the species ids with the highest count
-    std::vector<std::pair<std::size_t, double>> id_counts;
+    std::vector<std::pair<std::size_t, double>> species_scores;
+    std::vector<std::pair<std::size_t, std::size_t>> species_peptide_counts;
 
     std::vector<std::pair<std::size_t, double>> output_counts;
 
@@ -83,17 +84,25 @@ void module_deconv::choose_kmers( options_deconv *opts )
         }
     }
 
+    get_species_counts_per_peptide( id_pep_map,
+                                    species_peptide_counts
+                                  );
+        
+    filter_counts<std::size_t,std::size_t>
+        ( species_peptide_counts, thresh );
 
-    score_species( id_counts, id_pep_map, pep_id_map,
+    score_species( species_scores, id_pep_map, pep_id_map,
                    strat
                  );
-    filter_counts( id_counts, thresh );
 
-    while( id_counts.size() )
+
+    // count_peptides( );
+
+    while( species_peptide_counts.size() )
         {
             pep_species_vec.clear();
 
-            auto max = id_counts.begin();
+            auto max = species_scores.begin();
             std::size_t max_id = std::get<0>( *max );
 
             output_counts.emplace_back( max_id, std::get<1>( *max ) );
@@ -114,7 +123,8 @@ void module_deconv::choose_kmers( options_deconv *opts )
 
             id_pep_map.clear();
             pep_id_map.clear();
-            id_counts.clear();
+            species_scores.clear();
+            species_peptide_counts.clear();
 
 
             #pragma omp parallel sections
@@ -128,15 +138,31 @@ void module_deconv::choose_kmers( options_deconv *opts )
                 {
                     pep_to_id( pep_id_map, pep_species_vec );
                 }
+
             }
+            // implicit barrier
 
+            #pragma omp parallel sections
+            {
+                #pragma omp section
+                {
+                    score_species( species_scores, id_pep_map, pep_id_map,
+                                   strat
+                                 );
+                }
 
-            score_species( id_counts, id_pep_map, pep_id_map,
-                           strat
-                         );
+                #pragma omp section
+                {
+                    get_species_counts_per_peptide( id_pep_map,
+                                                    species_peptide_counts
+                                                    );
 
-            // recreate id_counts
-            filter_counts( id_counts, thresh );
+                    // recreate species_scores
+                    filter_counts<std::size_t,std::size_t>
+                        ( species_peptide_counts, thresh );
+
+                }
+            }
         }
 
     std::string id_name_map_fname;
@@ -368,19 +394,6 @@ void module_deconv::score_species( std::vector<std::pair<std::size_t, double>>&
                compare_pair<std::size_t, double>()
              );
 
-}
-
-void module_deconv::filter_counts( std::vector<std::pair<std::size_t, double>>& id_counts,
-                                   double thresh
-                                 )
-{
-    auto it = std::remove_if( id_counts.begin(), id_counts.end(),
-                              [&]( std::pair<std::size_t, double> i )
-                              {
-                                  return std::get<1>( i ) < thresh;
-                              } 
-                            );
-    id_counts.erase( it, id_counts.end() );
 }
 
 void module_deconv::write_outputs( std::string out_name,
@@ -627,5 +640,26 @@ module_deconv::parse_name_map( std::string fname,
                 }
 
             ++lineno;
+        }
+}
+
+
+void module_deconv::
+get_species_counts_per_peptide( sequential_map<std::size_t, std::vector<std::string>>&
+                                id_pep_map,
+                                std::vector<std::pair<std::size_t,std::size_t>>& pep_counts
+                              )
+{
+    pep_counts.reserve( id_pep_map.size() );
+
+    for( auto count = id_pep_map.begin();
+         count != id_pep_map.end();
+         ++count
+       )
+        {
+            pep_counts.emplace_back( std::make_pair( count->first,
+                                                     count->second.size()
+                                                   )
+                                   );
         }
 }
