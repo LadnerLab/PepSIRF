@@ -81,6 +81,9 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "file 'rankedlineage.dmp' from NCBI. It is recommended to either use this file or a subset of this file "
           "that at least contains the species ids of the designed peptides. If included, the output will contain "
           "a column denoting the name of the species as well as the id.\n"
+        )
+        ( "count_filtering", po::bool_switch( &opts_deconv->count_filtering )->default_value( false ),
+          ""
         );
 
     po::store( po::command_line_parser( argc, *argv ).options( desc ).allow_unregistered().run(), vm);
