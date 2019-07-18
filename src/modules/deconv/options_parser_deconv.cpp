@@ -78,7 +78,7 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
         ( "k_size,k", po::value<std::size_t>( &opts_deconv->k ), "Kmer size to use.\n" )
         ( "id_name_map", po::value<std::string>( &opts_deconv->id_name_map_fname )->default_value( "" ),
           "File containing mappings from taxonomic id to name. This file should be formatted like the "
-          "file 'taxidlineage.dmp' from NCBI. It is recommended to either use this file or a subset of this file "
+          "file 'rankedlineage.dmp' from NCBI. It is recommended to either use this file or a subset of this file "
           "that at least contains the species ids of the designed peptides. If included, the output will contain "
           "a column denoting the name of the species as well as the id.\n"
         );
