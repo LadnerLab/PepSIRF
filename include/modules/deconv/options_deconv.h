@@ -72,6 +72,8 @@ class options_deconv : public options
 
     std::size_t k;
 
+    std::string id_name_map_fname;
+
 };
 
 #endif // OPTIONS_DECONV_HH_INCLUDED
