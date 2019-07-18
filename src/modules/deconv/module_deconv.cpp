@@ -111,9 +111,6 @@ void module_deconv::choose_kmers( options_deconv *opts )
 
     }
 
-
-    // count_peptides( );
-
     while( species_peptide_counts.size() )
         {
             pep_species_vec.clear();
