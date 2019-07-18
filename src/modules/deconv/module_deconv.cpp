@@ -398,7 +398,7 @@ void module_deconv::write_outputs( std::string out_name,
         }
 
 
-    out_file << "Species ID\tCount\n";
+    out_file << "Species ID\tScore\n";
 
 
     for( auto& elem : out_counts )
