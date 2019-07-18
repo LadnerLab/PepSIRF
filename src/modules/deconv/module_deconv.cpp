@@ -46,7 +46,8 @@ void module_deconv::choose_kmers( options_deconv *opts )
     auto enriched_species = parse_enriched_file( d_opts->enriched_fname );
     auto pep_species_vec  = parse_linked_file( d_opts->linked_fname );
 
-    score_method::score_strategy strat = get_score_method( d_opts );
+    score_method::score_strategy score_strat   = get_score_method( d_opts );
+    score_method::filter_strategy filter_strat = get_filter_method( d_opts );
 
     // filter out the peptides that are not enriched
     auto it = std::remove_if( pep_species_vec.begin(), pep_species_vec.end(),
@@ -92,7 +93,7 @@ void module_deconv::choose_kmers( options_deconv *opts )
             #pragma omp section
             {
                 score_species( species_scores, id_pep_map, pep_id_map,
-                               strat
+                               score_strat
                              );
             }
 
@@ -166,7 +167,7 @@ void module_deconv::choose_kmers( options_deconv *opts )
                     #pragma omp section
                     {
                         score_species( species_scores, id_pep_map, pep_id_map,
-                                       strat
+                                       score_strat
                                      );
                     }
 
@@ -206,8 +207,6 @@ void module_deconv::create_linkage( options_deconv *opts )
     fasta_parser fp;
     std::vector<sequence> peptides = fp.parse( d_opts->peptide_file_fname );
     std::vector<sequence> proteins = fp.parse( d_opts->prot_file_fname    );
-
-    // std::cout << "Peptides: " << peptides.size() << "\n";
 
     sequential_map<std::string,
                    sequential_map<std::size_t,std::size_t>>
@@ -612,6 +611,17 @@ void module_deconv::write_outputs( std::string fname,
                 }
             out_file << "\n";
         }
+}
+
+
+score_method::filter_strategy
+module_deconv::get_filter_method( options_deconv *opts )
+{
+    if( opts->count_filtering )
+        {
+            return score_method::filter_strategy::COUNT_FILTER;
+        }
+    return score_method::filter_strategy::SCORE_FILTER;
 }
 
 score_method::score_strategy

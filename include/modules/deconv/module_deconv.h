@@ -22,7 +22,7 @@ namespace score_method
 
     enum filter_strategy
     {
-        SCORING_FILTER = 0,
+        SCORE_FILTER = 0,
         COUNT_FILTER
     };
 }; //namespace score_method
@@ -280,6 +280,10 @@ class module_deconv : public module
      **/
     score_method::score_strategy
         get_score_method( options_deconv *opts );
+
+    score_method::filter_strategy
+        get_filter_method( options_deconv *opts );
+
 
     /**
      * Get the number of peptides each species shares a 7mer with.
