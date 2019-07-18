@@ -46,9 +46,7 @@ void module_deconv::choose_kmers( options_deconv *opts )
     auto enriched_species = parse_enriched_file( d_opts->enriched_fname );
     auto pep_species_vec  = parse_linked_file( d_opts->linked_fname );
 
-    score_method::score_strategy strat = d_opts->fractional_scoring ?
-             score_method::score_strategy::FRACTIONAL_SCORING :
-             score_method::score_strategy::INTEGER_SCORING;
+    score_method::score_strategy strat = get_score_method( d_opts );
 
     // filter out the peptides that are not enriched
     auto it = std::remove_if( pep_species_vec.begin(), pep_species_vec.end(),
@@ -526,3 +524,18 @@ void module_deconv::write_outputs( std::string fname,
         }
 }
 
+score_method::score_strategy
+module_deconv::get_score_method( options_deconv *opts )
+{
+    if( !( opts->fractional_scoring
+           || opts->summation_scoring
+          )
+      )
+        {
+            return score_method::score_strategy::INTEGER_SCORING;
+        }
+
+    return  opts->fractional_scoring ?
+             score_method::score_strategy::FRACTIONAL_SCORING :
+             score_method::score_strategy::SUMMATION_SCORING;
+}

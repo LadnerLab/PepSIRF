@@ -16,7 +16,8 @@ namespace score_method
     enum score_strategy
     {
         INTEGER_SCORING = 0,
-        FRACTIONAL_SCORING
+        FRACTIONAL_SCORING,
+        SUMMATION_SCORING
     };
 }; //namespace score_method
 
@@ -227,6 +228,10 @@ class module_deconv : public module
                         id_counts,
                         double thresh
                       );
+
+    score_method::score_strategy
+        get_score_method( options_deconv *opts );
+
 };
 
 template <class K, class V>
