@@ -19,6 +19,7 @@ std::string options_deconv::get_arguments()
                           " --single_threaded     " <<  bool_str( single_threaded ) <<  "\n" << 
                           " --fractional_scoring  " <<  bool_str( fractional_scoring ) <<  "\n" << 
                           " --summation_scoring   " <<  bool_str( summation_scoring ) <<  "\n" << 
+                          " --score_filtering     " <<  bool_str( score_filtering ) <<  "\n" << 
                           " --id_name_map         " << id_name_map_fname << "\n" << 
                           " --output              " << output_fname <<  "\n"
                   ;

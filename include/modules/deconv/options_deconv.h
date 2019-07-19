@@ -52,7 +52,7 @@ class options_deconv : public options
 
     bool summation_scoring;
 
-    bool count_filtering;
+    bool score_filtering;
 
     /**
      * Bool to determine whether to 
