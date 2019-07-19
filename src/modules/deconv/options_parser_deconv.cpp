@@ -82,7 +82,7 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "that at least contains the species ids of the designed peptides. If included, the output will contain "
           "a column denoting the name of the species as well as the id.\n"
         )
-        ( "count_filtering", po::bool_switch( &opts_deconv->count_filtering )->default_value( false ),
+        ( "score_filtering", po::bool_switch( &opts_deconv->score_filtering )->default_value( false ),
           ""
         );
 
