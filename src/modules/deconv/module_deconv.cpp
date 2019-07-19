@@ -95,6 +95,13 @@ void module_deconv::choose_kmers( options_deconv *opts )
                 score_species( species_scores, id_pep_map, pep_id_map,
                                score_strat
                              );
+
+                if( filter_strat
+                    == score_method::filter_strategy::SCORE_FILTER )
+                    {
+                        filter_counts<std::size_t,double>
+                            ( species_scores, thresh );
+                    }
             }
 
             #pragma omp section
@@ -103,9 +110,13 @@ void module_deconv::choose_kmers( options_deconv *opts )
                                                 species_peptide_counts
                                                 );
 
-                // recreate species_scores
-                filter_counts<std::size_t,std::size_t>
-                    ( species_peptide_counts, thresh );
+                if( filter_strat
+                    == score_method::filter_strategy::COUNT_FILTER )
+                    {
+                        // recreate species_scores
+                        filter_counts<sequential_map,std::size_t,std::size_t>
+                            ( species_peptide_counts, thresh );
+                    }
 
             }
         }
@@ -169,18 +180,31 @@ void module_deconv::choose_kmers( options_deconv *opts )
                         score_species( species_scores, id_pep_map, pep_id_map,
                                        score_strat
                                      );
+
+
+                        if( filter_strat
+                            == score_method::filter_strategy::SCORE_FILTER )
+                            {
+                                filter_counts<std::size_t,double>
+                                    ( species_scores, thresh );
+                            }
                     }
 
                     #pragma omp section
                     {
                         get_species_counts_per_peptide( id_pep_map,
                                                         species_peptide_counts
-                                                        );
+                                                      );
 
-                        // recreate species_scores
-                        filter_counts<std::size_t,std::size_t>
-                            ( species_peptide_counts, thresh );
+                        if( filter_strat
+                            == score_method::filter_strategy::COUNT_FILTER
+                          )
+                            {
 
+                                // recreate species_scores
+                                filter_counts<sequential_map,std::size_t,std::size_t>
+                                    ( species_peptide_counts, thresh );
+                            }
                     }
                 }
 
@@ -613,15 +637,14 @@ void module_deconv::write_outputs( std::string fname,
         }
 }
 
-
 score_method::filter_strategy
 module_deconv::get_filter_method( options_deconv *opts )
 {
-    if( opts->count_filtering )
+    if( opts->score_filtering )
         {
-            return score_method::filter_strategy::COUNT_FILTER;
+            return score_method::filter_strategy::SCORE_FILTER;
         }
-    return score_method::filter_strategy::SCORE_FILTER;
+    return score_method::filter_strategy::COUNT_FILTER;
 }
 
 score_method::score_strategy

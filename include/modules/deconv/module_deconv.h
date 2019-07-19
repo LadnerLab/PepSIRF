@@ -258,8 +258,8 @@ class module_deconv : public module
      *        entry is strictly less than this value will be removed.
      * @note This method has the side effect of removing items from id_counts
      **/
-    template<class K, class V>
-        void filter_counts( sequential_map<K,V>& id_counts,
+    template<template<class,class> class T, class K, class V>
+        void filter_counts( T<K,V>& id_counts,
                             V thresh
                           )
     {
@@ -271,6 +271,23 @@ class module_deconv : public module
                     }
             }
     }
+
+    template<class K, class V>
+        void filter_counts( std::vector<std::pair<K,V>> in_vec,
+                       V thresh
+                    )
+    {
+        auto it = std::remove_if( in_vec.begin(),
+                                  in_vec.end(),
+                                  [&]( const std::pair<K,V>& p ) -> bool
+                                  {
+                                      return p.second < thresh;
+                                  }
+                                );
+
+        in_vec.erase( it, in_vec.end() );
+    }
+
     
     /**
      * The the score strategy to use for scoring.
