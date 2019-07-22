@@ -56,7 +56,16 @@ class module_deconv : public module
      * and the second column contains comma-separated values.
      * Each value in the comma-separated column should be 
      * the species id of a species that shares a kmer with the 
-     * peptide in the first tab-delimited column.
+     * peptide in the first tab-delimited column. 
+     * Additionally, each item in the comma-separated column
+     * may contain a key-value pair separated by a colon, 
+     * where the first item is the id of the species, and the second
+     * is the number of 7mers this peptide shares with the species.
+     * An example is: peptide_1 TAB 134:22,54:1
+     * This means that 22 of peptide_1's kmers are found in species
+     * 134, and only one is found in species 4. 
+     * If the line is in the form peptide_1 TAB 134,54
+     * then each species is assigned a score of 1.
      * @param fname Name of file to parse.
      * @returns vector of pairs, where the first entry is the name 
      *          of the peptide, and the second a vector of size_t ids 
