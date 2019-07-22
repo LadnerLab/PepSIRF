@@ -72,92 +72,8 @@ void module_deconv::choose_kmers( options_deconv *opts )
 
     std::vector<std::tuple<std::size_t, std::size_t, double>> output_counts;
 
-    #pragma omp parallel
-    {
-        #pragma omp sections
-        {
-            #pragma omp section
-            {
-                id_to_pep( id_pep_map, pep_species_vec );
-            }
-
-            #pragma omp section
-            {
-                pep_to_id( pep_id_map, pep_species_vec );
-            }
-        }
-
-        // implicit barrier
-        #pragma omp sections
-        {
-            #pragma omp section
-            {
-                score_species( species_scores, id_pep_map, pep_id_map,
-                               score_strat
-                             );
-
-                if( filter_strat
-                    == score_method::filter_strategy::SCORE_FILTER )
-                    {
-                        filter_counts<std::size_t,double>
-                            ( species_scores, thresh );
-                    }
-            }
-
-            #pragma omp section
-            {
-                get_species_counts_per_peptide( id_pep_map,
-                                                species_peptide_counts
-                                                );
-
-                if( filter_strat
-                    == score_method::filter_strategy::COUNT_FILTER )
-                    {
-                        // recreate species_scores
-                        filter_counts<sequential_map,std::size_t,std::size_t>
-                            ( species_peptide_counts, thresh );
-                    }
-
-            }
-        }
-
-    }
-
-    while( species_peptide_counts.size() )
-        {
-            pep_species_vec.clear();
-
-            auto max = species_scores.begin();
-            std::size_t max_id = std::get<0>( *max );
-
-            output_counts.emplace_back( std::make_tuple(
-                                                        max_id,
-                                                        species_peptide_counts
-                                                        .find( max_id )->second, // count for speices
-                                                        std::get<1>( *max )
-                                                       )
-                                      );
-
-            auto max_peptides = id_pep_map.find( max_id )->second;
-
-            for( auto pep_id = max_peptides.begin();
-                 pep_id != max_peptides.end();
-                 ++pep_id )
-                {
-                    pep_id_map.erase( *pep_id );
-                }
-
-            for( auto it = pep_id_map.begin(); it != pep_id_map.end(); ++it )
-                {
-                    pep_species_vec.emplace_back( it->first, it->second );
-                }
-
-            id_pep_map.clear();
-            pep_id_map.clear();
-            species_scores.clear();
-            species_peptide_counts.clear();
-
-            #pragma omp parallel
+    auto make_map_and_filter = [&]() {
+        #pragma omp parallel
             {
                 #pragma omp sections
                 {
@@ -209,6 +125,45 @@ void module_deconv::choose_kmers( options_deconv *opts )
                 }
 
             }
+    };
+
+    make_map_and_filter();
+
+    while( species_peptide_counts.size() )
+        {
+            pep_species_vec.clear();
+
+            auto max = species_scores.begin();
+            std::size_t max_id = std::get<0>( *max );
+
+            output_counts.emplace_back( std::make_tuple(
+                                                        max_id,
+                                                        species_peptide_counts
+                                                        .find( max_id )->second, // count for speices
+                                                        std::get<1>( *max )
+                                                       )
+                                      );
+
+            auto max_peptides = id_pep_map.find( max_id )->second;
+
+            for( auto pep_id = max_peptides.begin();
+                 pep_id != max_peptides.end();
+                 ++pep_id )
+                {
+                    pep_id_map.erase( *pep_id );
+                }
+
+            for( auto it = pep_id_map.begin(); it != pep_id_map.end(); ++it )
+                {
+                    pep_species_vec.emplace_back( it->first, it->second );
+                }
+
+            id_pep_map.clear();
+            pep_id_map.clear();
+            species_scores.clear();
+            species_peptide_counts.clear();
+
+            make_map_and_filter();
 
         }
 
