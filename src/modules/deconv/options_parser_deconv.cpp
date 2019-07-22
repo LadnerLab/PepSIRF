@@ -75,7 +75,11 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "Name of fasta file containing aa peptides that have been designed as part "
           "of a library.\n"
         )
-        ( "k_size,k", po::value<std::size_t>( &opts_deconv->k ), "Kmer size to use.\n" )
+        ( "kmer_size,k", po::value<std::size_t>( &opts_deconv->k ), "Kmer size to use when creating "
+          "the linkage map. Entries in the linkage file will contain peptides and the species ids of "
+          "species that share a kmer with this peptide. For example, if k is 7 and there exists a line "
+          "in the linkage file of the form: \n 'peptide_1 TAB 455:12,423:10'\n then peptide_1 "
+          "shares 12 7-mers with the species with id '455', and 10 7-mers with the species that has id 423.\n" )
         ( "id_name_map", po::value<std::string>( &opts_deconv->id_name_map_fname )->default_value( "" ),
           "File containing mappings from taxonomic id to name. This file should be formatted like the "
           "file 'rankedlineage.dmp' from NCBI. It is recommended to either use this file or a subset of this file "
@@ -83,7 +87,12 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "a column denoting the name of the species as well as the id.\n"
         )
         ( "score_filtering", po::bool_switch( &opts_deconv->score_filtering )->default_value( false ),
-          ""
+          "Include this flag if you want filtering to be done by the score of each species. Note that score is "
+          "determined by the different flags specifying how a species should be scored. This means "
+          "that any species whose score falls below --threshold "
+          "will be removed from consideration. Note that for integer scoring, both score filtering and count filtering "
+          "are the same. If this flag is not included, then any species whose count falls below --threshold will "
+          "be removed from consideration. Score filtering is best suited for the summation scoring algorithm.\n"
         );
 
     po::store( po::command_line_parser( argc, *argv ).options( desc ).allow_unregistered().run(), vm);
