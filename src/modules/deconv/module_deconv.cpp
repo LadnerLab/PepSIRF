@@ -146,11 +146,9 @@ void module_deconv::choose_kmers( options_deconv *opts )
 
             auto max_peptides = id_pep_map.find( max_id )->second;
 
-            for( auto pep_id = max_peptides.begin();
-                 pep_id != max_peptides.end();
-                 ++pep_id )
+            for( auto& pep_id : max_peptides )
                 {
-                    pep_id_map.erase( *pep_id );
+                    pep_id_map.erase( pep_id );
                 }
 
             for( auto it = pep_id_map.begin(); it != pep_id_map.end(); ++it )
