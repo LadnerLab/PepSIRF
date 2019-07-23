@@ -11,7 +11,7 @@
 #include "sequence.h"
 #include "maps.h"
 
-namespace score_method
+namespace evaluation_strategy
 {
     enum score_strategy
     {
@@ -25,7 +25,7 @@ namespace score_method
         SCORE_FILTER = 0,
         COUNT_FILTER
     };
-}; //namespace score_method
+}; //namespace evaluation_strategy
 
 class module_deconv : public module
 {
@@ -92,7 +92,7 @@ class module_deconv : public module
                       spec_count_map,
                       std::size_t id,
                       std::vector<std::string>& peptides,
-                      score_method::score_strategy strat
+                      evaluation_strategy::score_strategy strat
                     );
 
     /**
@@ -178,7 +178,7 @@ class module_deconv : public module
                         id_count_map,
                         sequential_map<std::string,std::vector<std::pair<std::size_t,std::size_t>>>&
                         spec_count_map,
-                        score_method::score_strategy strat
+                        evaluation_strategy::score_strategy strat
                       );
 
     /**
@@ -304,10 +304,10 @@ class module_deconv : public module
      * fractional_scoring and summation_scoring
      * @param opts A pointer to 'options_deconv' object.
      **/
-    score_method::score_strategy
-        get_score_method( options_deconv *opts );
+    evaluation_strategy::score_strategy
+        get_evaluation_strategy( options_deconv *opts );
 
-    score_method::filter_strategy
+    evaluation_strategy::filter_strategy
         get_filter_method( options_deconv *opts );
 
 

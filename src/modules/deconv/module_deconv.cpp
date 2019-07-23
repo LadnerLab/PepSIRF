@@ -46,8 +46,8 @@ void module_deconv::choose_kmers( options_deconv *opts )
     auto enriched_species = parse_enriched_file( d_opts->enriched_fname );
     auto pep_species_vec  = parse_linked_file( d_opts->linked_fname );
 
-    score_method::score_strategy score_strat   = get_score_method( d_opts );
-    score_method::filter_strategy filter_strat = get_filter_method( d_opts );
+    evaluation_strategy::score_strategy score_strat   = get_evaluation_strategy( d_opts );
+    evaluation_strategy::filter_strategy filter_strat = get_filter_method( d_opts );
 
     // filter out the peptides that are not enriched
     auto it = std::remove_if( pep_species_vec.begin(), pep_species_vec.end(),
@@ -99,7 +99,7 @@ void module_deconv::choose_kmers( options_deconv *opts )
 
 
                         if( filter_strat
-                            == score_method::filter_strategy::SCORE_FILTER )
+                            == evaluation_strategy::filter_strategy::SCORE_FILTER )
                             {
                                 filter_counts<std::size_t,double>
                                     ( species_scores, thresh );
@@ -113,7 +113,7 @@ void module_deconv::choose_kmers( options_deconv *opts )
                                                       );
 
                         if( filter_strat
-                            == score_method::filter_strategy::COUNT_FILTER
+                            == evaluation_strategy::filter_strategy::COUNT_FILTER
                           )
                             {
 
@@ -132,6 +132,9 @@ void module_deconv::choose_kmers( options_deconv *opts )
     while( species_peptide_counts.size() )
         {
             pep_species_vec.clear();
+            std::vector<std::pair<std::size_t, double>> ties;
+
+            get_ties( );
 
             auto max = species_scores.begin();
             std::size_t max_id = std::get<0>( *max );
@@ -310,17 +313,17 @@ double module_deconv::get_score( sequential_map<std::string,std::vector<std::pai
                                  spec_count_map,
                                  std::size_t id,
                                  std::vector<std::string>& peptides,
-                                 score_method::score_strategy strat
+                                 evaluation_strategy::score_strategy strat
                                )
 {
     double score = 0;
 
-    if( strat == score_method::score_strategy::INTEGER_SCORING )
+    if( strat == evaluation_strategy::score_strategy::INTEGER_SCORING )
         {
             return (double) peptides.size();
         }
 
-    else if( strat == score_method::score_strategy::FRACTIONAL_SCORING )
+    else if( strat == evaluation_strategy::score_strategy::FRACTIONAL_SCORING )
         {
             std::size_t index = 0;
 
@@ -332,7 +335,7 @@ double module_deconv::get_score( sequential_map<std::string,std::vector<std::pai
                 }
         }
 
-    else if( strat == score_method::score_strategy::SUMMATION_SCORING )
+    else if( strat == evaluation_strategy::score_strategy::SUMMATION_SCORING )
         {
             std::size_t index = 0;
 
@@ -373,7 +376,7 @@ void module_deconv::score_species( std::vector<std::pair<std::size_t, double>>&
                                    id_count_map,
                                    sequential_map<std::string,std::vector<std::pair<std::size_t,std::size_t>>>&
                                    spec_count_map,
-                                   score_method::score_strategy strat
+                                   evaluation_strategy::score_strategy strat
                                 )
 
 {
@@ -590,30 +593,30 @@ void module_deconv::write_outputs( std::string fname,
         }
 }
 
-score_method::filter_strategy
+evaluation_strategy::filter_strategy
 module_deconv::get_filter_method( options_deconv *opts )
 {
     if( opts->score_filtering )
         {
-            return score_method::filter_strategy::SCORE_FILTER;
+            return evaluation_strategy::filter_strategy::SCORE_FILTER;
         }
-    return score_method::filter_strategy::COUNT_FILTER;
+    return evaluation_strategy::filter_strategy::COUNT_FILTER;
 }
 
-score_method::score_strategy
-module_deconv::get_score_method( options_deconv *opts )
+evaluation_strategy::score_strategy
+module_deconv::get_evaluation_strategy( options_deconv *opts )
 {
     if( !( opts->fractional_scoring
            || opts->summation_scoring
           )
       )
         {
-            return score_method::score_strategy::INTEGER_SCORING;
+            return evaluation_strategy::score_strategy::INTEGER_SCORING;
         }
 
     return  opts->fractional_scoring ?
-             score_method::score_strategy::FRACTIONAL_SCORING :
-             score_method::score_strategy::SUMMATION_SCORING;
+             evaluation_strategy::score_strategy::FRACTIONAL_SCORING :
+             evaluation_strategy::score_strategy::SUMMATION_SCORING;
 }
 
 
