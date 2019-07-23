@@ -144,22 +144,26 @@ void module_deconv::choose_kmers( options_deconv *opts )
                                       6.0
                                    );
 
-            auto max = species_scores.begin();
-            std::size_t max_id = std::get<0>( *max );
-
-            output_counts.emplace_back( std::make_tuple(
-                                                        max_id,
-                                                        species_peptide_counts
-                                                        .find( max_id )->second, // count for speices
-                                                        std::get<1>( *max )
-                                                       )
-                                      );
-
-            auto max_peptides = id_pep_map.find( max_id )->second;
-
-            for( auto& pep_id : max_peptides )
+            for( auto& tied_peptide : tied_species )
                 {
-                    pep_id_map.erase( pep_id );
+                    std::size_t id = tied_peptide.first;
+                    double score   = tied_peptide.second;
+
+                    output_counts.emplace_back( std::make_tuple(
+                                                                id,
+                                                                species_peptide_counts
+                                                                .find( id )->second, // count for species
+                                                                score
+                                                                )
+                                                );
+
+
+                    auto current_peptides = id_pep_map.find( id )->second;
+
+                    for( auto& pep_id : current_peptides )
+                        {
+                            pep_id_map.erase( pep_id );
+                        }
                 }
 
             for( auto it = pep_id_map.begin(); it != pep_id_map.end(); ++it )
@@ -719,7 +723,6 @@ module_deconv::get_ties( std::vector<std::pair<std::size_t,double>>&
             // if the overlap between the two is high,
             // report them together. Otherwise, report the first
             // item. High is defined by the overlap_threshold
-
             if( get_overlap_amt(
                                  id_pep_map,
                                  tie_candidates[ 0 ],
