@@ -132,9 +132,17 @@ void module_deconv::choose_kmers( options_deconv *opts )
     while( species_peptide_counts.size() )
         {
             pep_species_vec.clear();
-            std::vector<std::pair<std::size_t, double>> ties;
+            std::vector<std::pair<std::size_t, double>> tied_species;
 
-            get_ties( );
+            auto num_ties = get_ties( tied_species,
+                                      id_pep_map,
+                                      species_scores,
+                                      evaluation_strategy::
+                                      tie_eval_strategy::
+                                      INTEGER_TIE_EVAL,
+                                      4.0,
+                                      6.0
+                                   );
 
             auto max = species_scores.begin();
             std::size_t max_id = std::get<0>( *max );
@@ -675,3 +683,104 @@ get_species_counts_per_peptide( sequential_map<std::size_t, std::vector<std::str
                               );
         }
 }
+
+tie_data::tie_type
+module_deconv::get_ties( std::vector<std::pair<std::size_t,double>>&
+                         dest_vec,
+                         sequential_map<std::size_t, std::vector<std::string>>&
+                         id_pep_map,
+                         std::vector<std::pair<std::size_t,double>>&
+                         species_scores,
+                         evaluation_strategy::tie_eval_strategy
+                         tie_evaluation_strategy,
+                         double score_threshold,
+                         double overlap_threshold
+                       )
+{
+
+    std::vector<std::pair<std::size_t,double>>
+        tie_candidates;
+
+    get_tie_candidates( tie_candidates,
+                        species_scores,
+                        score_threshold
+                      );
+
+    // '1-way tie': there is a single candidate
+    if( tie_candidates.size() == 1 )
+        {
+            dest_vec.push_back( species_scores[ 0 ] );
+            return tie_data::tie_type::SINGLE_WAY_TIE;
+        }
+
+    // two more cases: 2-way tie and k-way tie
+    else if( tie_candidates.size() == 2 )
+        {
+            // if the overlap between the two is high,
+            // report them together. Otherwise, report the first
+            // item. High is defined by the overlap_threshold
+
+            return tie_data::tie_type::TWO_WAY_TIE;
+        }
+    else
+        {
+
+            return tie_data::tie_type::K_WAY_TIE;
+        }
+
+    if( tie_evaluation_strategy
+          == evaluation_strategy::tie_eval_strategy::
+            INTEGER_TIE_EVAL
+      )
+        {
+
+        }
+    else if( tie_evaluation_strategy
+             == evaluation_strategy::tie_eval_strategy::
+             PERCENT_TIE_EVAL
+           )
+
+        {
+
+        }
+
+    return tie_data::tie_type::SINGLE_WAY_TIE;
+}
+
+void
+module_deconv::get_tie_candidates( std::vector<std::pair<std::size_t,double>>&
+                                   candidates,
+                                   std::vector<std::pair<std::size_t,double>>&
+                                   scores,
+                                   double threshold
+                                 )
+{
+    double curr_score = 0;
+    std::size_t index = 0;
+
+    auto score_diff = []( const std::pair<std::size_t, double>& first,
+                          const std::pair<std::size_t, double>& second
+                        ) -> double 
+        {
+            return first.first - second.first;
+        };
+
+    // D( a, a ) = 0
+    candidates.push_back( scores[ index ] );
+
+    for( index = 1;
+         index < scores.size() && curr_score <= threshold;
+         ++index
+       )
+        {
+            curr_score = score_diff( scores[ 0 ], scores[ index ] );
+
+            // the score of these two species is close
+            // enough to warrant a further check
+            if( curr_score <= threshold )
+                {
+                    candidates.push_back( scores[ index ] );
+                }
+        }
+}
+
