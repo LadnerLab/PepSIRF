@@ -11,6 +11,17 @@
 #include "sequence.h"
 #include "maps.h"
 
+
+namespace tie_data
+{
+    enum tie_type
+    {
+        SINGLE_WAY_TIE = 0,
+        TWO_WAY_TIE,
+        K_WAY_TIE
+    };
+
+};
 namespace evaluation_strategy
 {
     enum score_strategy
@@ -24,6 +35,12 @@ namespace evaluation_strategy
     {
         SCORE_FILTER = 0,
         COUNT_FILTER
+    };
+
+    enum tie_eval_strategy
+    {
+        PERCENT_TIE_EVAL = 0,
+        INTEGER_TIE_EVAL
     };
 }; //namespace evaluation_strategy
 
@@ -133,6 +150,28 @@ class module_deconv : public module
      **/
     sequential_set<std::string>
         parse_enriched_file( std::string f_name );
+
+
+
+    tie_data::tie_type
+        get_ties( std::vector<std::pair<std::size_t,double>>&
+                  dest_vec,
+                  sequential_map<std::size_t, std::vector<std::string>>&
+                  id_pep_map,
+                  std::vector<std::pair<std::size_t,double>>&
+                  species_scores,
+                  evaluation_strategy::tie_eval_strategy
+                  tie_evaluation_strategy,
+                  double score_threshold,
+                  double overlap_threshold
+                );
+
+    void get_tie_candidates( std::vector<std::pair<std::size_t,double>>&
+                             candidates,
+                             std::vector<std::pair<std::size_t,double>>&
+                             scores,
+                             double threshold
+                           );
 
  private:
 
