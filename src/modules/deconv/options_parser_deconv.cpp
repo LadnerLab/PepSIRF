@@ -76,6 +76,21 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "are the same. If this flag is not included, then any species whose count falls below --threshold will "
           "be removed from consideration. Score filtering is best suited for the summation scoring algorithm. [scoring_species]\n"
         )
+        ( "score_tie_threshold", po::value<double>( &opts_deconv->score_tie_threshold )->default_value( 0.00 ),
+          "Threshold for two species to be evaluated as a tie. For example, if this value is "
+          "set to 4, and species_1 has a count of 5, species_2 has count 4 then their "
+          "distance is '1', which is less than 4. And so these species are considered "
+          "for evaluating whether tye are tied."
+          "Note that this does not necessarily mean that these species are tied, "
+          "in order for them to be considered tied they must also share a certain percentage of "
+          "their peptides.\n"
+        )
+        ( "score_overlap_threshold", po::value<double>( &opts_deconv->score_overlap_threshold ),
+          "Once two species have been found to be within 'score_tie_threshold' number of peptides "
+          "of one another, they are then evaluated as a tie. For a two-way tie, if the species share "
+          "more than score_overlap_threshold number of peptides, then they are both reported. An example value "
+          "is 10.\n" 
+        )
         ( "create_linkage", po::bool_switch( &opts_deconv->create_linkage )->default_value( false ),
           "Boolean switch to create the linkage file that is used as input for "
           "the species deconvolution process. If this option is included "

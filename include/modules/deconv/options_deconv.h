@@ -39,6 +39,9 @@ class options_deconv : public options
      **/
     std::size_t threshold;
 
+    double score_tie_threshold;
+    double score_overlap_threshold;
+
     /**
      * If this value is true only one thread will be used for 
      * operations. Otherwise, two will be used.
