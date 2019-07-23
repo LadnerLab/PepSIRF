@@ -153,6 +153,15 @@ class module_deconv : public module
 
 
 
+    double
+        get_overlap_amt(  sequential_map<std::size_t,std::vector<std::string>>&
+                          id_peptide_map,
+                          std::pair<std::size_t,double>& first,
+                          std::pair<std::size_t,double>& second,
+                          evaluation_strategy::tie_eval_strategy
+                          ev_strat
+                       );
+
     tie_data::tie_type
         get_ties( std::vector<std::pair<std::size_t,double>>&
                   dest_vec,

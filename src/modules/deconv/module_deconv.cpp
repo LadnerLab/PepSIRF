@@ -720,6 +720,29 @@ module_deconv::get_ties( std::vector<std::pair<std::size_t,double>>&
             // report them together. Otherwise, report the first
             // item. High is defined by the overlap_threshold
 
+            if( get_overlap_amt(
+                                 id_pep_map,
+                                 tie_candidates[ 0 ],
+                                 tie_candidates[ 1 ],
+                                 tie_evaluation_strategy
+                                )
+                >= overlap_threshold
+              )
+                {
+                    dest_vec.insert( dest_vec.end(),
+                                     tie_candidates.begin(),
+                                     tie_candidates.end()
+                                   );
+                }
+            else
+                {
+                    // if there is not significant overlap,
+                    // we only consider the first item.
+                    dest_vec.emplace_back( tie_candidates.at( 0 ) );
+
+                    return tie_data::tie_type::SINGLE_WAY_TIE;
+                }
+
             return tie_data::tie_type::TWO_WAY_TIE;
         }
     else
@@ -784,3 +807,50 @@ module_deconv::get_tie_candidates( std::vector<std::pair<std::size_t,double>>&
         }
 }
 
+double module_deconv
+::get_overlap_amt(  sequential_map<std::size_t,std::vector<std::string>>&
+                    id_peptide_map,
+                    std::pair<std::size_t,double>& first,
+                    std::pair<std::size_t,double>& second,
+                    evaluation_strategy::tie_eval_strategy
+                    ev_strat
+                 )
+{
+    auto& first_peptides  = id_peptide_map.find( first.first )->second;
+    auto& second_peptides = id_peptide_map.find( second.first )->second;
+    // reserve max( map[ first ].size, map[ second ].size ) in
+    std::size_t intersection_size = 0;
+
+    // add the elements of map[ first ] to a set
+    sequential_set<std::string> first_peptides_set;
+
+    first_peptides_set.insert( first_peptides.begin(),
+                               first_peptides.end()
+                             );
+
+    for( auto& query : second_peptides )
+        {
+            if( first_peptides_set.find( query )
+                != first_peptides_set.end()
+              )
+                {
+                    ++intersection_size;
+                }
+
+        }
+
+
+    if( ev_strat
+        == evaluation_strategy::tie_eval_strategy::INTEGER_TIE_EVAL
+      )
+        {
+            return (double) intersection_size;
+        }
+
+    // return the size of the intersection
+    // over the minimum size of both
+    double denom = std::min( id_peptide_map.find( first.first  )->second.size(),
+                             id_peptide_map.find( second.first )->second.size()
+                           );
+    return (double) intersection_size / denom;
+}
