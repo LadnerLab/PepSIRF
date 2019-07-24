@@ -739,8 +739,8 @@ module_deconv::get_ties( std::vector<std::pair<std::size_t,double>>&
             // item. High is defined by the overlap_threshold
             if( get_overlap_amt(
                                  id_pep_map,
-                                 tie_candidates[ 0 ],
-                                 tie_candidates[ 1 ],
+                                 tie_candidates[ 0 ].first,
+                                 tie_candidates[ 1 ].first,
                                  tie_evaluation_strategy
                                 )
                 >= overlap_threshold
@@ -827,14 +827,14 @@ module_deconv::get_tie_candidates( std::vector<std::pair<std::size_t,double>>&
 double module_deconv
 ::get_overlap_amt(  sequential_map<std::size_t,std::vector<std::string>>&
                     id_peptide_map,
-                    std::pair<std::size_t,double>& first,
-                    std::pair<std::size_t,double>& second,
+                    std::size_t first,
+                    std::size_t second,
                     evaluation_strategy::tie_eval_strategy
                     ev_strat
                  )
 {
-    auto& first_peptides  = id_peptide_map.find( first.first )->second;
-    auto& second_peptides = id_peptide_map.find( second.first )->second;
+    auto& first_peptides  = id_peptide_map.find( first )->second;
+    auto& second_peptides = id_peptide_map.find( second )->second;
     // reserve max( map[ first ].size, map[ second ].size ) in
     std::size_t intersection_size = 0;
 
@@ -866,8 +866,8 @@ double module_deconv
 
     // return the size of the intersection
     // over the minimum size of both
-    double denom = std::min( id_peptide_map.find( first.first  )->second.size(),
-                             id_peptide_map.find( second.first )->second.size()
+    double denom = std::min( id_peptide_map.find( first  )->second.size(),
+                             id_peptide_map.find( second )->second.size()
                            );
     return (double) intersection_size / denom;
 }
