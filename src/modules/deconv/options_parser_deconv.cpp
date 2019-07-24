@@ -85,6 +85,13 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "in order for them to be considered tied they must also share a certain percentage of "
           "their peptides.\n"
         )
+        ( "peptide_assignment_map", po::value<std::string>( &opts_deconv->species_peptides_out ),
+          "If specified, a map detailing which peptides were assigned to which species will be "
+          "written. This map will be a tab-delimited file with the first column peptide names, "
+          "and the second column is a comma-separated list of species the peptide was assigned to. "
+          "Note that this comma-separated list will only contain multiple values in the event of "
+          "a tie.\n"
+        )
         ( "score_overlap_threshold", po::value<double>( &opts_deconv->score_overlap_threshold ),
           "Once two species have been found to be within 'score_tie_threshold' number of peptides "
           "of one another, they are then evaluated as a tie. For a two-way tie, if the species share "
