@@ -39,8 +39,28 @@ class options_deconv : public options
      **/
     std::size_t threshold;
 
+    /**
+     * Score threshold to determine 
+     * when two species are tied. 
+     **/
     double score_tie_threshold;
+
+    /**
+     * Threshold to determine when 
+     * two species have 'significant' 
+     * overlap. Note that significant is not 
+     * in the statistical sense, but is defined 
+     * by either number or percentage of shared 
+     * peptides.
+     **/
     double score_overlap_threshold;
+
+    /**
+     * Name of the file to write a 
+     * map of what peptides were assigned 
+     * to what species to.
+     **/
+    std::string species_peptides_out;
 
     /**
      * If this value is true only one thread will be used for 
@@ -53,8 +73,17 @@ class options_deconv : public options
      **/
     bool fractional_scoring;
 
+    /**
+     * Flag whether to use 
+     * summation scoring.
+     **/
     bool summation_scoring;
 
+    /**
+     * Flag designating whether to use
+     * score filtering instead of 
+     * count filtering.
+     **/
     bool score_filtering;
 
     /**
@@ -75,8 +104,16 @@ class options_deconv : public options
      **/
     std::string peptide_file_fname;
 
+    /**
+     * The kmer size to use 
+     * when mapping peptides.
+     **/
     std::size_t k;
 
+    /**
+     * The name of the file to 
+     * write the id name map to.
+     **/
     std::string id_name_map_fname;
 
 };
