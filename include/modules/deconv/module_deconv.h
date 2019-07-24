@@ -137,6 +137,18 @@ class module_deconv : public module
                         >&
                         out_counts
                       );
+
+    /**
+     * Write the map detailing which peptides were assigned 
+     * to which species. This map is formatted as a tab-delimited file
+     * where the first entry in a column is the peptide name, and the second
+     * is a comma-delimited list of species this peptide was assigned to.
+     * @note The comma-delimited list will only have more than one 
+     *       entry in the event of a tie.
+     * @param fname The name of the file to write output to
+     * @param out_map The map that specifies which peptides were assigned 
+     *        to each species. 
+     **/
     void
         write_species_assign_map( std::string fname,
                                   sequential_map<std::string,std::vector<std::size_t>>&
@@ -159,15 +171,36 @@ class module_deconv : public module
 
 
 
+    /**
+     * Determine how 'overlapped' two species are.
+     * Here for species a and b, we define overlap in one 
+     * of two was. We can define overlap by the number of shared 
+     * peptides by each species or by the percentage of 
+     * peptides shared between species.
+     * @param id_peptide_map Map relating species ids to the 
+     *        peptides that share a kmer with that species.
+     * @param first The id of the first species to check. 
+     * @param second The id of the second species to check.
+     * @param ev_strat Tie evaluation strategy to use. 
+     * @pre Both first and second should be a key in id_peptide_map
+     * @returns The overlap amount, expressed as either a ratio or 
+     *          a count as determined by ev_strat.
+     **/
     double
         get_overlap_amt(  sequential_map<std::size_t,std::vector<std::string>>&
                           id_peptide_map,
-                          std::pair<std::size_t,double>& first,
-                          std::pair<std::size_t,double>& second,
+                          std::size_t first,
+                          std::size_t second,
                           evaluation_strategy::tie_eval_strategy
                           ev_strat
                        );
 
+    /**
+     * Get and report any potential species that may be tied.
+     * For two species to be tied, their scores must be within 
+     * score_threshold of each other. 
+     * Once two species have been 
+     **/
     tie_data::tie_type
         get_ties( std::vector<std::pair<std::size_t,double>>&
                   dest_vec,
@@ -187,8 +220,6 @@ class module_deconv : public module
                              scores,
                              double threshold
                            );
-
- private:
 
     /**
      * Populate a map with pairings of <species_id, vector of peptide names> 
