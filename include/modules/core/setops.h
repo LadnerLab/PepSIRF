@@ -7,10 +7,10 @@ namespace setops
 {
 
     template<class I, class K>
-        void intersection( I& dest,
-                           const K& first,
-                           const K& second
-                         )
+        void set_intersection( I& dest,
+                               const K& first,
+                               const K& second
+                             )
         {
             for( const auto& elem : first )
                 {
@@ -22,12 +22,11 @@ namespace setops
 
         }
 
-
     template<class I, class K>
-        void intersection( I& dest,
-                           const std::vector<K>& first,
-                           const std::vector<K>& second
-                         )
+        void set_intersection( I& dest,
+                               const std::vector<K>& first,
+                               const std::vector<K>& second
+                             )
         {
             sequential_set<K> intersection;
 
@@ -46,6 +45,29 @@ namespace setops
 
 
         }
+
+    template<class I, class K>
+        void set_union( I& dest,
+                        const K& first,
+                        const K& second
+                      )
+    {
+        sequential_set<K> union_set;
+
+        for( const auto& f : first )
+            {
+                union_set.insert( f );
+            }
+        for( const auto& s : second )
+            {
+                union_set.insert( s );
+            }
+
+        for( const auto& u : union_set )
+            {
+                dest.insert( u );
+            }
+    }
         
 
 
