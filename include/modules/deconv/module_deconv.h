@@ -137,6 +137,12 @@ class module_deconv : public module
                         >&
                         out_counts
                       );
+    void
+        write_species_assign_map( std::string fname,
+                                  sequential_map<std::string,std::vector<std::size_t>>&
+                                  out_map
+                                );
+
 
 
     /**

@@ -129,6 +129,8 @@ void module_deconv::choose_kmers( options_deconv *opts )
 
     make_map_and_filter();
 
+    sequential_map<std::string,std::vector<std::size_t>> peptide_assignment_map;
+
     while( species_peptide_counts.size() )
         {
             pep_species_vec.clear();
@@ -140,10 +142,9 @@ void module_deconv::choose_kmers( options_deconv *opts )
                                       evaluation_strategy::
                                       tie_eval_strategy::
                                       INTEGER_TIE_EVAL,
-                                      4.0,
-                                      6.0
+                                      d_opts->score_tie_threshold,
+                                      d_opts->score_overlap_threshold
                                    );
-
             for( auto& tied_peptide : tied_species )
                 {
                     std::size_t id = tied_peptide.first;
@@ -162,6 +163,12 @@ void module_deconv::choose_kmers( options_deconv *opts )
 
                     for( auto& pep_id : current_peptides )
                         {
+                            peptide_assignment_map
+                                .emplace( pep_id, std::vector<std::size_t>() );
+
+                            peptide_assignment_map
+                                .find( pep_id )->second.push_back( id );
+
                             pep_id_map.erase( pep_id );
                         }
                 }
@@ -188,8 +195,15 @@ void module_deconv::choose_kmers( options_deconv *opts )
             parse_name_map( d_opts->id_name_map_fname, name_id_map );
             name_id_map_ptr = &name_id_map;
         }
+
     write_outputs( d_opts->output_fname, name_id_map_ptr, output_counts );
 
+    if( d_opts->species_peptides_out.compare( "" ) )
+        {
+            write_species_assign_map( d_opts->species_peptides_out,
+                                      peptide_assignment_map
+                                    );
+        }
 }
 
 void module_deconv::create_linkage( options_deconv *opts )
@@ -856,4 +870,33 @@ double module_deconv
                              id_peptide_map.find( second.first )->second.size()
                            );
     return (double) intersection_size / denom;
+}
+
+void
+module_deconv
+::write_species_assign_map( std::string fname,
+                            sequential_map<std::string,std::vector<std::size_t>>&
+                            out_map
+                          )
+
+{
+                                          
+    std::ofstream ofs( fname, std::ofstream::out );
+    ofs << "Peptide\tSpecies IDs\n";
+    
+    for( auto curr = out_map.begin(); curr != out_map.end(); ++curr )
+        {
+            ofs << curr->first << "\t";
+            for( std::size_t index = 0; index < curr->second.size(); ++index )
+                {
+                    ofs << curr->second.at( index );
+                    if( index < curr->second.size() - 1 )
+                        {
+                            ofs << ",";
+
+                        }
+                }
+            ofs << "\n";
+        }
+    ofs << "\n";
 }
