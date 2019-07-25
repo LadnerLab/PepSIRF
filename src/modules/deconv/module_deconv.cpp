@@ -135,19 +135,27 @@ void module_deconv::choose_kmers( options_deconv *opts )
     while( species_peptide_counts.size() )
         {
             pep_species_vec.clear();
+            std::vector<std::pair<std::size_t,double>>
+                tie_candidates;
+
             std::vector<std::pair<std::size_t, double>> tied_species;
 
-            auto num_ties = get_ties( tied_species,
-                                      id_pep_map,
-                                      species_scores,
-                                      evaluation_strategy::
-                                      tie_eval_strategy::
-                                      INTEGER_TIE_EVAL,
-                                      // d_opts->score_tie_threshold,
-                                      10000000,
-                                      // d_opts->score_overlap_threshold
-                                      10000000
-                                   );
+
+            tie_data::tie_type
+                tie = get_tie_candidates( tie_candidates,
+                                          species_scores,
+                                          d_opts->score_tie_threshold
+                                        );
+
+            handle_ties( tied_species,
+                      id_pep_map,
+                      tie_candidates,
+                      evaluation_strategy::
+                      tie_eval_strategy::
+                      INTEGER_TIE_EVAL,
+                      tie,
+                      d_opts->score_overlap_threshold
+                    );
 
             for( auto& tied_peptide : tied_species )
                 {
@@ -707,36 +715,28 @@ get_species_counts_per_peptide( sequential_map<std::size_t, std::vector<std::str
         }
 }
 
-tie_data::tie_type
-module_deconv::get_ties( std::vector<std::pair<std::size_t,double>>&
-                         dest_vec,
-                         sequential_map<std::size_t, std::vector<std::string>>&
-                         id_pep_map,
-                         std::vector<std::pair<std::size_t,double>>&
-                         species_scores,
-                         evaluation_strategy::tie_eval_strategy
-                         tie_evaluation_strategy,
-                         double score_threshold,
-                         double overlap_threshold
+void
+module_deconv::handle_ties( std::vector<std::pair<std::size_t,double>>&
+                            dest_vec,
+                            sequential_map<std::size_t, std::vector<std::string>>&
+                            id_pep_map,
+                            std::vector<std::pair<std::size_t,double>>&
+                            tie_candidates,
+                            evaluation_strategy::tie_eval_strategy
+                            tie_evaluation_strategy,
+                            tie_data::tie_type tie_type,
+                            double overlap_threshold
                        )
 {
-    std::vector<std::pair<std::size_t,double>>
-        tie_candidates;
-
-    get_tie_candidates( tie_candidates,
-                        species_scores,
-                        score_threshold
-                      );
 
     // '1-way tie': there is a single candidate
-    if( tie_candidates.size() == 1 )
+    if( tie_type == tie_data::tie_type::SINGLE_WAY_TIE )
         {
-            dest_vec.push_back( species_scores[ 0 ] );
-            return tie_data::tie_type::SINGLE_WAY_TIE;
+            dest_vec.push_back( tie_candidates[ 0 ] );
         }
 
     // two more cases: 2-way tie and k-way tie
-    else if( tie_candidates.size() == 2 )
+    else if( tie_type == tie_data::tie_type::TWO_WAY_TIE )
         {
             // if the overlap between the two is high,
             // report them together. Otherwise, report the first
@@ -760,11 +760,7 @@ module_deconv::get_ties( std::vector<std::pair<std::size_t,double>>&
                     // if there is not significant overlap,
                     // we only consider the first item.
                     dest_vec.emplace_back( tie_candidates.at( 0 ) );
-
-                    return tie_data::tie_type::SINGLE_WAY_TIE;
                 }
-
-            return tie_data::tie_type::TWO_WAY_TIE;
         }
     else
         {
@@ -773,13 +769,10 @@ module_deconv::get_ties( std::vector<std::pair<std::size_t,double>>&
                              tie_evaluation_strategy
                            );
             dest_vec.push_back( tie_candidates[ 0 ] );
-            return tie_data::tie_type::K_WAY_TIE;
         }
-
-    return tie_data::tie_type::SINGLE_WAY_TIE;
 }
 
-void
+tie_data::tie_type
 module_deconv::get_tie_candidates( std::vector<std::pair<std::size_t,double>>&
                                    candidates,
                                    std::vector<std::pair<std::size_t,double>>&
@@ -814,6 +807,30 @@ module_deconv::get_tie_candidates( std::vector<std::pair<std::size_t,double>>&
                     candidates.push_back( scores[ index ] );
                 }
         }
+    return get_tie_type( candidates.size() );
+}
+
+tie_data::tie_type
+module_deconv::get_tie_type( std::size_t to_convert )
+{
+    tie_data::tie_type ret_val;
+
+    switch( to_convert )
+        {
+        case 0:
+            throw std::runtime_error( "to_convert must be > 0" );
+            break; 
+        case 1:
+            ret_val =  tie_data::tie_type::SINGLE_WAY_TIE;
+            break;
+        case 2:
+            ret_val = tie_data::tie_type::TWO_WAY_TIE;
+            break;
+        default:
+            ret_val = tie_data::tie_type::K_WAY_TIE;
+            break;
+        }
+    return ret_val;
 }
 
 double module_deconv

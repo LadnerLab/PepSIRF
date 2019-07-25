@@ -202,25 +202,29 @@ class module_deconv : public module
      * Once two species have been determined to be tied, a tie evaluation 
      * strategy is considered.
      **/
-    tie_data::tie_type
-        get_ties( std::vector<std::pair<std::size_t,double>>&
-                  dest_vec,
-                  sequential_map<std::size_t, std::vector<std::string>>&
-                  id_pep_map,
-                  std::vector<std::pair<std::size_t,double>>&
-                  species_scores,
-                  evaluation_strategy::tie_eval_strategy
-                  tie_evaluation_strategy,
-                  double score_threshold,
-                  double overlap_threshold
-                );
+    void
+        handle_ties( std::vector<std::pair<std::size_t,double>>&
+                     dest_vec,
+                     sequential_map<std::size_t, std::vector<std::string>>&
+                     id_pep_map,
+                     std::vector<std::pair<std::size_t,double>>&
+                     species_scores,
+                     evaluation_strategy::tie_eval_strategy
+                     tie_evaluation_strategy,
+                     tie_data::tie_type tie_type,
+                     double overlap_threshold
+                   );
 
-    void get_tie_candidates( std::vector<std::pair<std::size_t,double>>&
-                             candidates,
-                             std::vector<std::pair<std::size_t,double>>&
-                             scores,
-                             double threshold
-                           );
+    tie_data::tie_type
+        get_tie_candidates( std::vector<std::pair<std::size_t,double>>&
+                            candidates,
+                            std::vector<std::pair<std::size_t,double>>&
+                            scores,
+                            double threshold
+                          );
+    tie_data::tie_type
+        get_tie_type( std::size_t to_convert );
+
 
     /**
      * Populate a map with pairings of <species_id, vector of peptide names> 
