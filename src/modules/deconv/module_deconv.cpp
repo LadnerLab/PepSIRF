@@ -148,14 +148,14 @@ void module_deconv::choose_kmers( options_deconv *opts )
                                         );
 
             handle_ties( tied_species,
-                      id_pep_map,
-                      tie_candidates,
-                      evaluation_strategy::
-                      tie_eval_strategy::
-                      INTEGER_TIE_EVAL,
-                      tie,
-                      d_opts->score_overlap_threshold
-                    );
+                         id_pep_map,
+                         tie_candidates,
+                         evaluation_strategy::
+                         tie_eval_strategy::
+                         INTEGER_TIE_EVAL,
+                         tie,
+                         d_opts->score_overlap_threshold
+                       );
 
             for( auto& tied_peptide : tied_species )
                 {
