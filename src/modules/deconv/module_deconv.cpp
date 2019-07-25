@@ -11,6 +11,7 @@
 #include "time_keep.h"
 #include "fasta_parser.h"
 #include "setops.h"
+#include "util.h"
 
 module_deconv::module_deconv() = default;
 
@@ -132,6 +133,37 @@ void module_deconv::choose_kmers( options_deconv *opts )
 
     sequential_map<std::string,std::vector<std::size_t>> peptide_assignment_map;
 
+    sequential_map<std::string,sequential_map<std::size_t,std::size_t>>
+        pep_spec_map_w_counts;
+
+    auto tie_eval_strat
+        = evaluation_strategy::tie_eval_strategy::PERCENT_TIE_EVAL;
+    if( tie_eval_strat
+        == evaluation_strategy
+           ::tie_eval_strategy
+             ::PERCENT_TIE_EVAL
+        )
+        {
+            for( const auto& pep : pep_id_map )
+                {
+
+                    sequential_map<std::size_t,std::size_t>
+                        val_map;
+
+                    util::pairs_to_map
+                        ( val_map,
+                          pep.second.begin(),
+                          pep.second.end()
+                        );
+
+                    pep_spec_map_w_counts
+                        .insert( std::make_pair( pep.first,
+                                                 val_map
+                                               )
+                               );
+                }
+        }
+
     while( species_peptide_counts.size() )
         {
             pep_species_vec.clear();
@@ -149,6 +181,7 @@ void module_deconv::choose_kmers( options_deconv *opts )
 
             handle_ties( tied_species,
                          id_pep_map,
+                         pep_spec_map_w_counts,
                          tie_candidates,
                          evaluation_strategy::
                          tie_eval_strategy::
@@ -720,13 +753,16 @@ module_deconv::handle_ties( std::vector<std::pair<std::size_t,double>>&
                             dest_vec,
                             sequential_map<std::size_t, std::vector<std::string>>&
                             id_pep_map,
+                            sequential_map<std::string,sequential_map<std::size_t,std::size_t>>
+                            pep_species_map_wcounts,
                             std::vector<std::pair<std::size_t,double>>&
                             tie_candidates,
                             evaluation_strategy::tie_eval_strategy
                             tie_evaluation_strategy,
                             tie_data::tie_type tie_type,
                             double overlap_threshold
-                       )
+                          )
+
 {
 
     // '1-way tie': there is a single candidate
@@ -746,7 +782,7 @@ module_deconv::handle_ties( std::vector<std::pair<std::size_t,double>>&
                                  tie_candidates[ 0 ].first,
                                  tie_candidates[ 1 ].first,
                                  tie_evaluation_strategy
-                                )
+                               )
                 >= overlap_threshold
               )
                 {

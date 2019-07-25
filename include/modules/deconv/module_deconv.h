@@ -207,8 +207,10 @@ class module_deconv : public module
                      dest_vec,
                      sequential_map<std::size_t, std::vector<std::string>>&
                      id_pep_map,
+                     sequential_map<std::string,sequential_map<std::size_t,std::size_t>>
+                     pep_species_map_wcounts,
                      std::vector<std::pair<std::size_t,double>>&
-                     species_scores,
+                     tie_candidates,
                      evaluation_strategy::tie_eval_strategy
                      tie_evaluation_strategy,
                      tie_data::tie_type tie_type,
