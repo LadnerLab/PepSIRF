@@ -199,7 +199,8 @@ class module_deconv : public module
      * Get and report any potential species that may be tied.
      * For two species to be tied, their scores must be within 
      * score_threshold of each other. 
-     * Once two species have been 
+     * Once two species have been determined to be tied, a tie evaluation 
+     * strategy is considered.
      **/
     tie_data::tie_type
         get_ties( std::vector<std::pair<std::size_t,double>>&
@@ -410,6 +411,13 @@ class module_deconv : public module
                                         sequential_map<std::size_t,std::size_t>& pep_counts
                                       );
 
+
+void
+handle_kway_tie( std::vector<std::pair<std::size_t,double>>& tie_candidates,
+                   sequential_map<std::size_t, std::vector<std::string>>& id_pep_map,
+                   evaluation_strategy::tie_eval_strategy
+                   eval_strat
+                 );
 };
 
 template <class K, class V>
@@ -433,6 +441,5 @@ struct compare_pair_non_decreasing
         return std::get<1>( first ) < std::get<1>( second );
     }
 };
-
 
 #endif // MODULE_DECONV_HH_INCLUDED 

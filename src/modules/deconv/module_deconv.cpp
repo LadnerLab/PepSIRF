@@ -10,6 +10,7 @@
 #include "kmer_tools.h"
 #include "time_keep.h"
 #include "fasta_parser.h"
+#include "setops.h"
 
 module_deconv::module_deconv() = default;
 
@@ -142,9 +143,12 @@ void module_deconv::choose_kmers( options_deconv *opts )
                                       evaluation_strategy::
                                       tie_eval_strategy::
                                       INTEGER_TIE_EVAL,
-                                      d_opts->score_tie_threshold,
-                                      d_opts->score_overlap_threshold
+                                      // d_opts->score_tie_threshold,
+                                      10000000,
+                                      // d_opts->score_overlap_threshold
+                                      10000000
                                    );
+
             for( auto& tied_peptide : tied_species )
                 {
                     std::size_t id = tied_peptide.first;
@@ -172,6 +176,7 @@ void module_deconv::choose_kmers( options_deconv *opts )
                             pep_id_map.erase( pep_id );
                         }
                 }
+            tied_species.clear();
 
             for( auto it = pep_id_map.begin(); it != pep_id_map.end(); ++it )
                 {
@@ -715,7 +720,6 @@ module_deconv::get_ties( std::vector<std::pair<std::size_t,double>>&
                          double overlap_threshold
                        )
 {
-
     std::vector<std::pair<std::size_t,double>>
         tie_candidates;
 
@@ -764,24 +768,12 @@ module_deconv::get_ties( std::vector<std::pair<std::size_t,double>>&
         }
     else
         {
-
+            handle_kway_tie( tie_candidates,
+                             id_pep_map,
+                             tie_evaluation_strategy
+                           );
+            dest_vec.push_back( tie_candidates[ 0 ] );
             return tie_data::tie_type::K_WAY_TIE;
-        }
-
-    if( tie_evaluation_strategy
-          == evaluation_strategy::tie_eval_strategy::
-            INTEGER_TIE_EVAL
-      )
-        {
-
-        }
-    else if( tie_evaluation_strategy
-             == evaluation_strategy::tie_eval_strategy::
-             PERCENT_TIE_EVAL
-           )
-
-        {
-
         }
 
     return tie_data::tie_type::SINGLE_WAY_TIE;
@@ -899,4 +891,56 @@ module_deconv
             ofs << "\n";
         }
     ofs << "\n";
+}
+
+void
+module_deconv
+::handle_kway_tie( std::vector<std::pair<std::size_t,double>>& tie_candidates,
+                   sequential_map<std::size_t, std::vector<std::string>>& id_pep_map,
+                   evaluation_strategy::tie_eval_strategy
+                   eval_strat
+                 )
+{
+    std::vector<double> scores( tie_candidates.size(), 0.0 );
+
+    std::vector<std::string> intersection;
+
+    // precondition: tie_candidates does not have 1 elemtn 1
+    double count = ( (double) tie_candidates.size() ) - 1;
+    // unsigned double intersection_size = 0;
+
+    // set count to candidate size - 1
+    std::size_t outer_index = 0;
+
+    for( const auto& cand : tie_candidates )
+        {
+        
+            for( const auto& other_cand : tie_candidates )
+                {
+                    if( cand != other_cand )
+                        {
+                            setops::set_intersection( intersection,
+                                                      id_pep_map.find( cand.first )->second,
+                                                      id_pep_map.find( other_cand.first )->second
+                                                    );
+                            scores[ outer_index ] += intersection.size();
+
+                            intersection.clear();
+                        }
+                }
+            auto size = id_pep_map.find( cand.first )->second.size();
+            scores[ outer_index ] /= size * count;
+            ++outer_index;
+        }
+
+    auto min_element_idx = std::min_element(
+                                            scores.begin(),
+                                            scores.end()
+                                           ) - scores.begin();
+
+    auto min_overlap = tie_candidates[ min_element_idx ];
+
+    tie_candidates.clear();
+    tie_candidates.push_back( min_overlap );
+
 }
