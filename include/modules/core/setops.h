@@ -16,7 +16,7 @@ namespace setops
                 {
                     if( second.find( elem ) != second.end() )
                         {
-                            dest.insert( elem );
+                            dest.insert( dest.end(), elem );
                         }
                 }
 
@@ -39,7 +39,7 @@ namespace setops
                 {
                     if( intersection.find( it ) != intersection.end() )
                         {
-                            dest.push_back( it );
+                            dest.insert( dest.end(), it );
                         }
                 }
 
