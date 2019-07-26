@@ -40,7 +40,8 @@ namespace evaluation_strategy
     enum tie_eval_strategy
     {
         PERCENT_TIE_EVAL = 0,
-        INTEGER_TIE_EVAL
+        INTEGER_TIE_EVAL,
+        SUMMATION_SCORING_TIE_EVAL
     };
 }; //namespace evaluation_strategy
 
