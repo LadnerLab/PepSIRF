@@ -103,6 +103,8 @@ void module_deconv::choose_kmers( options_deconv *opts )
                             {
                                 filter_counts<std::size_t,double>
                                     ( species_scores, thresh );
+
+
                             }
                     }
 
@@ -124,12 +126,16 @@ void module_deconv::choose_kmers( options_deconv *opts )
                     }
                 }
 
+
+
             }
     };
 
     make_map_and_filter();
 
-    while( species_peptide_counts.size() )
+
+    while( species_peptide_counts.size()
+           && species_scores[ 0 ].second > thresh )
         {
             pep_species_vec.clear();
 
