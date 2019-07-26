@@ -136,4 +136,3 @@ This module has two different modes: scoring species and creating a linkage file
                                         id. [create_linkage]
                                         
 ```                        
-
