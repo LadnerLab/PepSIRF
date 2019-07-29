@@ -93,7 +93,7 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "their peptides, as defined by the score_overlap_threshold and tie evaluation strategy "
           "specified. [scoring_species] \n"
         )
-        ( "score_overlap_threshold", po::value<double>( &opts_deconv->score_overlap_threshold ),
+        ( "score_overlap_threshold", po::value<double>( &opts_deconv->score_overlap_threshold )->default_value( 1.0 ),
           "Once two species have been found to be within 'score_tie_threshold' number of peptides "
           "of one another, they are then evaluated as a tie. For a two-way tie where integer tie evaluation is used, "
           "if the species share "
