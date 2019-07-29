@@ -50,6 +50,8 @@ void module_deconv::choose_kmers( options_deconv *opts )
 
     evaluation_strategy::score_strategy score_strat   = get_evaluation_strategy( d_opts );
     evaluation_strategy::filter_strategy filter_strat = get_filter_method( d_opts );
+    evaluation_strategy::tie_eval_strategy tie_eval_strat = get_tie_eval_strategy( d_opts );
+
 
     // filter out the peptides that are not enriched
     auto it = std::remove_if( pep_species_vec.begin(), pep_species_vec.end(),
@@ -141,8 +143,6 @@ void module_deconv::choose_kmers( options_deconv *opts )
         pep_spec_map_w_counts;
 
     // TODO: Update this to be dependent on d_otps
-    auto tie_eval_strat
-        = evaluation_strategy::tie_eval_strategy::PERCENT_TIE_EVAL;
     
     if( tie_eval_strat
         == evaluation_strategy
@@ -696,6 +696,19 @@ module_deconv::get_evaluation_strategy( options_deconv *opts )
     return  opts->fractional_scoring ?
              evaluation_strategy::score_strategy::FRACTIONAL_SCORING :
              evaluation_strategy::score_strategy::SUMMATION_SCORING;
+}
+
+evaluation_strategy::tie_eval_strategy
+module_deconv::get_tie_eval_strategy( options_deconv *opts )
+{
+    if( opts->summation_scoring )
+        {
+            return evaluation_strategy::tie_eval_strategy::SUMMATION_SCORING_TIE_EVAL;
+        }
+
+    return opts->ratio_tie_eval ?
+        evaluation_strategy::tie_eval_strategy::PERCENT_TIE_EVAL :
+        evaluation_strategy::tie_eval_strategy::INTEGER_TIE_EVAL;
 }
 
 

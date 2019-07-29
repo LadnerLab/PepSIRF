@@ -405,6 +405,9 @@ class module_deconv : public module
     evaluation_strategy::filter_strategy
         get_filter_method( options_deconv *opts );
 
+    evaluation_strategy::tie_eval_strategy
+        get_tie_eval_strategy( options_deconv *opts );
+
 
     /**
      * Get the number of peptides each species shares a 7mer with.
