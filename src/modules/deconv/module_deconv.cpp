@@ -959,10 +959,6 @@ bool module_deconv
         }
 
     // percent tie evaluation strategy 
-
-    // return the size of the intersection
-    // over the minimum size of both
-
     double a_denom = id_peptide_map.find( first )->second.size();
     double b_denom = id_peptide_map.find( second )->second.size();
     double i_size = static_cast<double>( intersection_size );
@@ -1034,8 +1030,6 @@ module_deconv
                             intersection.clear();
                         }
                 }
-            auto size = id_pep_map.find( cand.first )->second.size();
-            scores[ outer_index ] /= size * count;
             ++outer_index;
         }
 
@@ -1046,6 +1040,7 @@ module_deconv
 
     auto min_overlap = tie_candidates[ min_element_idx ];
 
+    // remove all but the peptide with minimum overlap
     tie_candidates.clear();
     tie_candidates.push_back( min_overlap );
 
