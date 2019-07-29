@@ -355,8 +355,6 @@ class module_deconv : public module
                         peptide_sp_vec
                       );
 
-
-
     /**
      * Filter counts that do not have a high enough score out of the id_counts vector.
      * @param id_counts Vector containing <species_id, score> pairs.
