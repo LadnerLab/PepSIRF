@@ -949,8 +949,13 @@ bool module_deconv
                     b_denom += b_score;
                 }
 
-            return util::divide( a_num, a_denom ) >= threshold
-                && util::divide( b_num, b_denom ) >= threshold;
+            // don't try to divide by zero, but if threshold is
+            // zero then we need to return true without trying to divide.
+            return ( threshold == 0 )
+                  || ( a_denom > 0 && b_denom > 0
+                       && util::divide( a_num, a_denom ) >= threshold
+                        && util::divide( b_num, b_denom ) >= threshold
+                     );
         }
 
     // return the size of the intersection
