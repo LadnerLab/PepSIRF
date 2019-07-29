@@ -425,10 +425,8 @@ class module_deconv : public module
 
 void
 handle_kway_tie( std::vector<std::pair<std::size_t,double>>& tie_candidates,
-                   sequential_map<std::size_t, std::vector<std::string>>& id_pep_map,
-                   evaluation_strategy::tie_eval_strategy
-                   eval_strat
-                 );
+                   sequential_map<std::size_t, std::vector<std::string>>& id_pep_map
+               );
 };
 
 template <class K, class V>

@@ -5,7 +5,6 @@
 #include <omp.h>
 #include <boost/lexical_cast.hpp>
 #include <boost/regex.hpp>
-#include <functional>
 
 #include "module_deconv.h"
 #include "kmer_tools.h"
@@ -141,8 +140,10 @@ void module_deconv::choose_kmers( options_deconv *opts )
     sequential_map<std::string,sequential_map<std::size_t,std::size_t>>
         pep_spec_map_w_counts;
 
+    // TODO: Update this to be dependent on d_otps
     auto tie_eval_strat
         = evaluation_strategy::tie_eval_strategy::PERCENT_TIE_EVAL;
+    
     if( tie_eval_strat
         == evaluation_strategy
            ::tie_eval_strategy
@@ -805,11 +806,10 @@ module_deconv::handle_ties( std::vector<std::pair<std::size_t,double>>&
                     dest_vec.emplace_back( tie_candidates.at( 0 ) );
                 }
         }
-    else
+    else // k-way tie
         {
             handle_kway_tie( tie_candidates,
-                             id_pep_map,
-                             tie_evaluation_strategy
+                             id_pep_map
                            );
             dest_vec.push_back( tie_candidates[ 0 ] );
         }
@@ -958,8 +958,11 @@ bool module_deconv
                      );
         }
 
+    // percent tie evaluation strategy 
+
     // return the size of the intersection
     // over the minimum size of both
+
     double denom = std::min( id_peptide_map.find( first  )->second.size(),
                              id_peptide_map.find( second )->second.size()
                            );
@@ -998,16 +1001,14 @@ module_deconv
 void
 module_deconv
 ::handle_kway_tie( std::vector<std::pair<std::size_t,double>>& tie_candidates,
-                   sequential_map<std::size_t, std::vector<std::string>>& id_pep_map,
-                   evaluation_strategy::tie_eval_strategy
-                   eval_strat
+                   sequential_map<std::size_t, std::vector<std::string>>& id_pep_map
                  )
 {
     std::vector<double> scores( tie_candidates.size(), 0.0 );
 
     std::vector<std::string> intersection;
 
-    // precondition: tie_candidates does not have 1 elemtn 1
+    // precondition: tie_candidates does not have 1 element 1
     double count = ( (double) tie_candidates.size() ) - 1;
     // unsigned double intersection_size = 0;
 
