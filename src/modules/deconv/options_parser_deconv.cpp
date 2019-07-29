@@ -76,27 +76,47 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "are the same. If this flag is not included, then any species whose count falls below --threshold will "
           "be removed from consideration. Score filtering is best suited for the summation scoring algorithm. [scoring_species]\n"
         )
+        ( "peptide_assignment_map", po::value<std::string>( &opts_deconv->species_peptides_out ),
+          "If specified, a map detailing which peptides were assigned to which species will be "
+          "written. This map will be a tab-delimited file with the first column peptide names, "
+          "and the second column is a comma-separated list of species the peptide was assigned to. "
+          "Note that this comma-separated list will only contain multiple values in the event of "
+          "a tie. [scoring_species]\n"
+        )
         ( "score_tie_threshold", po::value<double>( &opts_deconv->score_tie_threshold )->default_value( 0.00 ),
           "Threshold for two species to be evaluated as a tie. For example, if this value is "
           "set to 4, and species_1 has a count of 5, species_2 has count 4 then their "
           "distance is '1', which is less than 4. And so these species are considered "
           "for evaluating whether tye are tied."
           "Note that this does not necessarily mean that these species are tied, "
-          "in order for them to be considered tied they must also share a certain percentage of "
-          "their peptides.\n"
-        )
-        ( "peptide_assignment_map", po::value<std::string>( &opts_deconv->species_peptides_out ),
-          "If specified, a map detailing which peptides were assigned to which species will be "
-          "written. This map will be a tab-delimited file with the first column peptide names, "
-          "and the second column is a comma-separated list of species the peptide was assigned to. "
-          "Note that this comma-separated list will only contain multiple values in the event of "
-          "a tie.\n"
+          "in order for them to be considered tied they must also share a certain percentage or number of "
+          "their peptides, as defined by the score_overlap_threshold and tie evaluation strategy "
+          "specified. [scoring_species] \n"
         )
         ( "score_overlap_threshold", po::value<double>( &opts_deconv->score_overlap_threshold ),
           "Once two species have been found to be within 'score_tie_threshold' number of peptides "
-          "of one another, they are then evaluated as a tie. For a two-way tie, if the species share "
+          "of one another, they are then evaluated as a tie. For a two-way tie where integer tie evaluation is used, "
+          "if the species share "
           "more than score_overlap_threshold number of peptides, then they are both reported. An example value "
-          "is 10.\n" 
+          "is 10. For ratio tie evaluation, two species must share at leat this amount of peptides with each other. "
+          "For example, suppose species 1 shares 0.5 of its peptides with species 2, but species 2 only shares 0.1 "
+          "of its peptides with species 1. These two will only be reported together if score_overlap_threshold "
+          "<= 0.1. [scoring_species] \n" 
+        )
+        ( "integer_tie_eval", po::bool_switch( &opts_deconv->integer_tie_eval )->default_value( false ),
+          "Include this flag if tie evaluation should be done by comparing integer overlap of peptides. "
+          "For example, if this flag is included and --score_overlap_threshold is set to 10, then if two "
+          "species are tied and share at least 10 peptides then they will be reported together. "
+          "Important note: if summation_scoring is used then a special tie-breaking strategy is used. [scoring_species]\n"
+        )
+        ( "ratio_tie_eval", po::bool_switch( &opts_deconv->ratio_tie_eval )->default_value( false ),
+          "Include this flag if tie evaluation should be done by comparing the ratio of a species "
+          "peptides it shares with another. Note that two species must share at least --overlap_tie_threshold "
+          "with eachother to be considered tied. "
+          "For example, suppose species 1 shares 0.5 of its peptides with species 2, but species 2 only shares 0.1 "
+          "of its peptides with species 1. These two will only be reported together if score_overlap_threshold "
+          "<= 0.1. "
+          "Important note: if summation_scoring is used then a special tie-breaking strategy is used. [scoring_species]\n"
         )
         ( "create_linkage", po::bool_switch( &opts_deconv->create_linkage )->default_value( false ),
           "Boolean switch to create the linkage file that is used as input for "
