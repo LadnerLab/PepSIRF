@@ -1,7 +1,12 @@
 #### Module Deconv
 ```
 PepSIRF: Peptide-based Serological Immune Response Framework species deconvolution module. 
-This module has two different modes: scoring species and creating a linkage file. Each of these modes has its own set of arguments and parameters. The description of each module is followed by the mode for which this command is, in brackets. For example, if the description is followed by [scoring_species], then this argument is for the scoring species mode. Similarly, [create_linkage] is followed by linkage creation arguments. Arguments pertinent to both modes are followed by [scoring_species,create_linkage].
+This module has two different modes: scoring species and creating a linkage file. Each of 
+these modes has its own set of arguments and parameters. The description of each module is 
+followed by the mode for which this command is, in brackets. For example, if the description is 
+followed by [scoring_species], then this argument is for the scoring species mode. Similarly, 
+[create_linkage] is followed by linkage creation arguments. Arguments pertinent to both 
+modes are followed by [scoring_species,create_linkage].
 :
   -h [ --help ]                         Produce help message
                                         
@@ -95,6 +100,81 @@ This module has two different modes: scoring species and creating a linkage file
                                         summation scoring algorithm. 
                                         [scoring_species]
                                         
+  --peptide_assignment_map arg          If specified, a map detailing which 
+                                        peptides were assigned to which species
+                                        will be written. This map will be a 
+                                        tab-delimited file with the first 
+                                        column peptide names, and the second 
+                                        column is a comma-separated list of 
+                                        species the peptide was assigned to. 
+                                        Note that this comma-separated list 
+                                        will only contain multiple values in 
+                                        the event of a tie. [scoring_species]
+                                        
+  --score_tie_threshold arg (=0)        Threshold for two species to be 
+                                        evaluated as a tie. For example, if 
+                                        this value is set to 4, and species_1 
+                                        has a count of 5, species_2 has count 4
+                                        then their distance is '1', which is 
+                                        less than 4. And so these species are 
+                                        considered for evaluating whether tye 
+                                        are tied.Note that this does not 
+                                        necessarily mean that these species are
+                                        tied, in order for them to be 
+                                        considered tied they must also share a 
+                                        certain percentage or number of their 
+                                        peptides, as defined by the 
+                                        score_overlap_threshold and tie 
+                                        evaluation strategy specified. 
+                                        [scoring_species] 
+                                        
+  --score_overlap_threshold arg (=1)    Once two species have been found to be 
+                                        within 'score_tie_threshold' number of 
+                                        peptides of one another, they are then 
+                                        evaluated as a tie. For a two-way tie 
+                                        where integer tie evaluation is used, 
+                                        if the species share more than 
+                                        score_overlap_threshold number of 
+                                        peptides, then they are both reported. 
+                                        An example value is 10. For ratio tie 
+                                        evaluation, two species must share at 
+                                        leat this amount of peptides with each 
+                                        other. For example, suppose species 1 
+                                        shares 0.5 of its peptides with species
+                                        2, but species 2 only shares 0.1 of its
+                                        peptides with species 1. These two will
+                                        only be reported together if 
+                                        score_overlap_threshold <= 0.1. 
+                                        [scoring_species] 
+                                        
+  --integer_tie_eval                    Include this flag if tie evaluation 
+                                        should be done by comparing integer 
+                                        overlap of peptides. For example, if 
+                                        this flag is included and 
+                                        --score_overlap_threshold is set to 10,
+                                        then if two species are tied and share 
+                                        at least 10 peptides then they will be 
+                                        reported together. Important note: if 
+                                        summation_scoring is used then a 
+                                        special tie-breaking strategy is used. 
+                                        [scoring_species]
+                                        
+  --ratio_tie_eval                      Include this flag if tie evaluation 
+                                        should be done by comparing the ratio 
+                                        of a species peptides it shares with 
+                                        another. Note that two species must 
+                                        share at least --overlap_tie_threshold 
+                                        with eachother to be considered tied. 
+                                        For example, suppose species 1 shares 
+                                        0.5 of its peptides with species 2, but
+                                        species 2 only shares 0.1 of its 
+                                        peptides with species 1. These two will
+                                        only be reported together if 
+                                        score_overlap_threshold <= 0.1. 
+                                        Important note: if summation_scoring is
+                                        used then a special tie-breaking 
+                                        strategy is used. [scoring_species]
+                                        
   --create_linkage                      Boolean switch to create the linkage 
                                         file that is used as input for the 
                                         species deconvolution process. If this 
@@ -134,5 +214,4 @@ This module has two different modes: scoring species and creating a linkage file
                                         output will contain a column denoting 
                                         the name of the species as well as the 
                                         id. [create_linkage]
-                                        
 ```                        
