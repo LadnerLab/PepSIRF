@@ -5,6 +5,7 @@
 #include <omp.h>
 #include <boost/lexical_cast.hpp>
 #include <boost/regex.hpp>
+#include <functional>
 
 #include "module_deconv.h"
 #include "kmer_tools.h"
@@ -758,7 +759,7 @@ module_deconv::handle_ties( std::vector<std::pair<std::size_t,double>>&
                             dest_vec,
                             sequential_map<std::size_t, std::vector<std::string>>&
                             id_pep_map,
-                            sequential_map<std::string,sequential_map<std::size_t,std::size_t>>
+                            sequential_map<std::string,sequential_map<std::size_t,std::size_t>>&
                             pep_species_map_wcounts,
                             std::vector<std::pair<std::size_t,double>>&
                             tie_candidates,
@@ -782,13 +783,14 @@ module_deconv::handle_ties( std::vector<std::pair<std::size_t,double>>&
             // if the overlap between the two is high,
             // report them together. Otherwise, report the first
             // item. High is defined by the overlap_threshold
-            if( get_overlap_amt(
-                                 id_pep_map,
-                                 tie_candidates[ 0 ].first,
-                                 tie_candidates[ 1 ].first,
-                                 tie_evaluation_strategy
-                               )
-                >= overlap_threshold
+            if( sufficient_overlap(  
+                                   id_pep_map,
+                                   pep_species_map_wcounts,
+                                   tie_candidates[ 0 ].first,
+                                   tie_candidates[ 1 ].first,
+                                   tie_evaluation_strategy,
+                                   overlap_threshold
+                                  )
               )
                 {
                     dest_vec.insert( dest_vec.end(),
@@ -874,44 +876,81 @@ module_deconv::get_tie_type( std::size_t to_convert )
     return ret_val;
 }
 
-double module_deconv
-::get_overlap_amt(  sequential_map<std::size_t,std::vector<std::string>>&
-                    id_peptide_map,
-                    std::size_t first,
-                    std::size_t second,
-                    evaluation_strategy::tie_eval_strategy
-                    ev_strat
-                 )
+bool module_deconv
+::sufficient_overlap(  sequential_map<std::size_t,std::vector<std::string>>&
+                       id_peptide_map,
+                       sequential_map<std::string,sequential_map<std::size_t,std::size_t>>&
+                       pep_species_map_wcounts,
+                       std::size_t first,
+                       std::size_t second,
+                       evaluation_strategy::tie_eval_strategy
+                       ev_strat,
+                       double threshold
+                    )
 {
     auto& first_peptides  = id_peptide_map.find( first )->second;
     auto& second_peptides = id_peptide_map.find( second )->second;
     // reserve max( map[ first ].size, map[ second ].size ) in
     std::size_t intersection_size = 0;
 
-    // add the elements of map[ first ] to a set
-    sequential_set<std::string> first_peptides_set;
+    sequential_set<std::string> intersection;
+    intersection.reserve( std::max( first_peptides.size(),
+                                    second_peptides.size()
+                                  )
+                        );
 
-    first_peptides_set.insert( first_peptides.begin(),
-                               first_peptides.end()
-                             );
-
-    for( auto& query : second_peptides )
-        {
-            if( first_peptides_set.find( query )
-                != first_peptides_set.end()
-              )
-                {
-                    ++intersection_size;
-                }
-
-        }
-
+    setops::set_intersection( intersection,
+                              first_peptides,
+                              second_peptides
+                            );
+    intersection_size = intersection.size();
 
     if( ev_strat
-        == evaluation_strategy::tie_eval_strategy::INTEGER_TIE_EVAL
+        == evaluation_strategy
+           ::tie_eval_strategy
+           ::INTEGER_TIE_EVAL
       )
         {
-            return (double) intersection_size;
+            return (double) intersection_size >= threshold;
+        }
+
+    else if( ev_strat
+               == evaluation_strategy
+                  ::tie_eval_strategy
+                  ::SUMMATION_SCORING_TIE_EVAL
+           )
+        {
+            // where 'a' and 'b' are for species first and
+            // species second
+            double a_score, b_score, a_num, a_denom,
+                b_num, b_denom;
+            a_score = b_score = a_num = a_denom =
+                b_num = b_denom = 0;
+
+            for( const auto& peptide : intersection )
+                {
+                    a_score = pep_species_map_wcounts
+                        .find( peptide )->second
+                        .find( first )->second;
+
+                    b_score = pep_species_map_wcounts
+                        .find( peptide )->second
+                        .find( second )->second;
+
+                    if( b_score > 0 )
+                        {
+                            a_num += a_score;
+                        }
+                    if( a_score > 0 )
+                        {
+                            b_num += b_score;
+                        }
+                    a_denom += a_score;
+                    b_denom += b_score;
+                }
+
+            return util::divide( a_num, a_denom ) >= threshold
+                && util::divide( b_num, b_denom ) >= threshold;
         }
 
     // return the size of the intersection
@@ -919,7 +958,7 @@ double module_deconv
     double denom = std::min( id_peptide_map.find( first  )->second.size(),
                              id_peptide_map.find( second )->second.size()
                            );
-    return (double) intersection_size / denom;
+    return (double) ( intersection_size / denom ) >= threshold;
 }
 
 void

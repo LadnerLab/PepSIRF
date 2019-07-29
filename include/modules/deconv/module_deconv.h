@@ -187,14 +187,18 @@ class module_deconv : public module
      * @returns The overlap amount, expressed as either a ratio or 
      *          a count as determined by ev_strat.
      **/
-    double
-        get_overlap_amt(  sequential_map<std::size_t,std::vector<std::string>>&
-                          id_peptide_map,
-                          std::size_t first,
-                          std::size_t second,
-                          evaluation_strategy::tie_eval_strategy
-                          ev_strat
-                       );
+    bool 
+        sufficient_overlap( sequential_map<std::size_t,std::vector<std::string>>&
+                            id_peptide_map,
+                            sequential_map<std::string,sequential_map<std::size_t,std::size_t>>&
+                            pep_species_map_wcounts,
+                            std::size_t first,
+                            std::size_t second,
+                            evaluation_strategy::tie_eval_strategy
+                            ev_strat,
+                            double threshold
+                          );
+
 
     /**
      * Get and report any potential species that may be tied.
@@ -208,7 +212,7 @@ class module_deconv : public module
                      dest_vec,
                      sequential_map<std::size_t, std::vector<std::string>>&
                      id_pep_map,
-                     sequential_map<std::string,sequential_map<std::size_t,std::size_t>>
+                     sequential_map<std::string,sequential_map<std::size_t,std::size_t>>&
                      pep_species_map_wcounts,
                      std::vector<std::pair<std::size_t,double>>&
                      tie_candidates,
