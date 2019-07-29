@@ -13,15 +13,20 @@ std::string options_deconv::get_arguments()
 
     if( !create_linkage )
         {
-            str_stream << "--linked              " << linked_fname  << "\n" << 
-                          " --threshold           " << threshold <<  "\n" << 
-                          " --enriched            " << enriched_fname <<  "\n" << 
-                          " --single_threaded     " <<  bool_str( single_threaded ) <<  "\n" << 
-                          " --fractional_scoring  " <<  bool_str( fractional_scoring ) <<  "\n" << 
-                          " --summation_scoring   " <<  bool_str( summation_scoring ) <<  "\n" << 
-                          " --score_filtering     " <<  bool_str( score_filtering ) <<  "\n" << 
-                          " --id_name_map         " << id_name_map_fname << "\n" << 
-                          " --output              " << output_fname <<  "\n"
+            str_stream << "--linked                  " << linked_fname  << "\n" <<  // not sure why but this one needs one space fewer
+                          " --threshold               " << threshold <<  "\n" << 
+                          " --enriched                " << enriched_fname <<  "\n" << 
+                          " --single_threaded         " <<  bool_str( single_threaded ) <<  "\n" << 
+                          " --fractional_scoring      " <<  bool_str( fractional_scoring ) <<  "\n" << 
+                          " --summation_scoring       " <<  bool_str( summation_scoring ) <<  "\n" << 
+                          " --score_filtering         " <<  bool_str( score_filtering ) <<  "\n" << 
+                          " --id_name_map             " << id_name_map_fname << "\n" << 
+                          " --score_tie_threshold     " << score_tie_threshold << "\n" << 
+                          " --score_overlap_threshold " << score_overlap_threshold << "\n" << 
+                          " --integer_tie_eval        " << bool_str( integer_tie_eval )<< "\n" << 
+                          " --ratio_tie_eval          " << bool_str( ratio_tie_eval )<< "\n" << 
+                          " --output                  " << output_fname <<  "\n"
+                          " --peptide_assignment_map  " << species_peptides_out <<  "\n"
                   ;
         }
 
