@@ -963,10 +963,13 @@ bool module_deconv
     // return the size of the intersection
     // over the minimum size of both
 
-    double denom = std::min( id_peptide_map.find( first  )->second.size(),
-                             id_peptide_map.find( second )->second.size()
-                           );
-    return (double) ( intersection_size / denom ) >= threshold;
+    double a_denom = id_peptide_map.find( first )->second.size();
+    double b_denom = id_peptide_map.find( second )->second.size();
+    double i_size = static_cast<double>( intersection_size );
+
+    return ( util::divide( a_denom, i_size ) >= threshold
+             && util::divide( b_denom, i_size ) >= threshold
+           );
 }
 
 void
