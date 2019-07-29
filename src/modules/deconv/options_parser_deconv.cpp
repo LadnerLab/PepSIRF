@@ -16,11 +16,11 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
     po::variables_map vm;
 
     po::options_description desc( "PepSIRF: Peptide-based Serological Immune Response Framework species deconvolution module. \n"
-                                  "This module has two different modes: scoring species and creating a linkage file. Each of "
-                                  "these modes has its own set of arguments and parameters. The description of each module is "
-                                  "followed by the mode for which this command is, in brackets. For example, if the description is "
-                                  "followed by [scoring_species], then this argument is for the scoring species mode. Similarly, "
-                                  "[create_linkage] is followed by linkage creation arguments. Arguments pertinent to both "
+                                  "This module has two different modes: scoring species and creating a linkage file. Each of \n"
+                                  "these modes has its own set of arguments and parameters. The description of each module is \n"
+                                  "followed by the mode for which this command is, in brackets. For example, if the description is \n"
+                                  "followed by [scoring_species], then this argument is for the scoring species mode. Similarly, \n"
+                                  "[create_linkage] is followed by linkage creation arguments. Arguments pertinent to both \n"
                                   "modes are followed by [scoring_species,create_linkage].\n"
                                 );
     desc.add_options()
