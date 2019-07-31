@@ -6,6 +6,7 @@
 namespace setops
 {
 
+    // A - B
     template<class I, class K>
         void set_intersection( I& dest,
                                const K& first,
@@ -22,6 +23,7 @@ namespace setops
 
         }
 
+    // A - B
     template<class I, class K>
         void set_intersection( I& dest,
                                const std::vector<K>& first,
@@ -46,6 +48,7 @@ namespace setops
 
         }
 
+    // A u B
     template<class I, class K>
         void set_union( I& dest,
                         const K& first,
@@ -68,7 +71,48 @@ namespace setops
                 dest.insert( u );
             }
     }
-        
+
+    // A - B
+    template<class I, class K>
+        void set_difference( I& dest,
+                             const K& first,
+                             const K& second
+                           )
+        {
+            for( const auto& it : first )
+                {
+                    if( second.find( it ) == second.end() )
+                        {
+                            dest.insert( it );
+                        }
+                }
+        }
+
+    // ( A - B ) u ( B - A )
+    template<class I, class K>
+        void set_symmetric_difference(
+                                      I& dest,
+                                      const K& first,
+                                      const K& second
+                                     )
+    {
+        sequential_set<K> a_minus_b;
+        sequential_set<K> b_minus_a;
+
+        set_difference<I,K>( a_minus_b,
+                             first,
+                             second
+                           );
+        set_difference<I,K>( b_minus_a,
+                             second,
+                             first
+                           );
+
+        set_union<I,K>( dest,
+                        a_minus_b,
+                        b_minus_a
+                      );
+    }
 
 
 }; // namespace setops
