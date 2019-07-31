@@ -471,7 +471,7 @@ void module_deconv::score_species( std::vector<std::pair<std::size_t, double>>&
             id_counts.emplace_back( it->first, score );
         }
     std::sort( id_counts.begin(), id_counts.end(),
-               compare_pair<std::size_t, double>()
+               compare_pair_non_increasing<std::size_t, double>()
              );
 
 }
