@@ -12,39 +12,146 @@
 #include "maps.h"
 
 
+/**
+ * Used for data that is relevant to determining and 
+ * communicating data about ties.
+ **/
 namespace tie_data
 {
+    /**
+     * Enum declaring the types of ties that 
+     * can be considered. Here we consider 
+     * 3 types.
+     **/
     enum tie_type
     {
+        /**
+         * A single-way tie happens when only one species 
+         * meets the criteria that considers ties.
+         **/
         SINGLE_WAY_TIE = 0,
+
+        /**
+         * A two-way tie happens when exactly two species
+         * meet the criteria that considers ties.
+         **/
         TWO_WAY_TIE,
+
+        /**
+         * A k-way tie happens when at least three species
+         * meet the criteria that considers ties.
+         **/
         K_WAY_TIE
     };
 
 };
+
+/**
+ * Defines certain evaluation strategies for
+ * handling different situations. 
+ * If we need to score or filter species 
+ * we have different ways we can do that. 
+ **/
 namespace evaluation_strategy
 {
+    /**
+     * Strategy for scoring species. 
+     **/
     enum score_strategy
     {
+        /**
+         * For integer scoring, the score of 
+         * each species is the number of peptides 
+         * that species shares a kmer with.
+         **/
         INTEGER_SCORING = 0,
+
+        /**
+         * For fractional scoring,
+         * each species is given a score based 
+         * on the ratio of species its shared peptides
+         * share a kmer with. So a peptide that shares a kmer
+         * with 3 species is given a score of 1/3, and a peptide
+         * who only shares a kmer with a given species is given a 
+         * score of 1/1. In this way peptides that are more unique to
+         * a species are given a higher score.
+         **/
         FRACTIONAL_SCORING,
+
+        /**
+         * Summation scoring is used in conjuction 
+         * with peptides that have count information.
+         * So if species1 shares 7 kmers with a peptide,
+         * then that species is given a score of 7. 
+         * Note that this is done for each peptide a species 
+         * shares kmers with and the species is given the score
+         * of the sum of these scores.
+         **/
         SUMMATION_SCORING
     };
 
+    /**
+     * Strategies for filtering peptides, 
+     * i.e. if either a species' score or 
+     * count falls below a threshold that 
+     * species is removed from consideration.
+     **/
     enum filter_strategy
     {
+        /**
+         * Species whose scores fall below
+         * a certain threshold will be removed.
+         **/
         SCORE_FILTER = 0,
+
+        /**
+         * Species whose count falls 
+         * below a certain threshold will be 
+         * removed.
+         **/
         COUNT_FILTER
     };
 
+    /**
+     * Strategies specifying how to break ties between species. 
+     * Generally one of two outcomes will result from a tie:
+     * -Two species are tied and have enough overlapped peptides to be reported 
+     *  together. 
+     * -Two or more species are tied and the species that shares 
+     * the smallest overlap with others is reported.
+     **/
     enum tie_eval_strategy
     {
+        /**
+         * Species that share a certain percentage
+         * of their kmers are reported together, or 
+         * if they do not meet a given threshold they are reported
+         * separately.
+         **/
         PERCENT_TIE_EVAL = 0,
+
+        /**
+         * Species that share a certain number of 
+         * peptides are considered tied.
+         **/
         INTEGER_TIE_EVAL,
+
+        /**
+         * Species must have a number of 
+         * unique shared peptides
+         **/
         SUMMATION_SCORING_TIE_EVAL
     };
+
 }; //namespace evaluation_strategy
 
+/**
+ * The species deconvolution module of the 
+ * PepSIRF package. This module is used to 
+ * reduce ambiguities when there are 
+ * multiple similar species whose probes 
+ * are considered enriched. 
+ **/
 class module_deconv : public module
 {
  public:
@@ -78,7 +185,7 @@ class module_deconv : public module
      * Additionally, each item in the comma-separated column
      * may contain a key-value pair separated by a colon, 
      * where the first item is the id of the species, and the second
-     * is the number of 7mers this peptide shares with the species.
+     * is the number of kmers this peptide shares with the species.
      * An example is: peptide_1 TAB 134:22,54:1
      * This means that 22 of peptide_1's kmers are found in species
      * 134, and only one is found in species 4. 
@@ -156,8 +263,6 @@ class module_deconv : public module
                                   out_map
                                 );
 
-
-
     /**
      * Reads the list of enriched peptides from a file.
      * @param f_name string filename to read
@@ -180,9 +285,17 @@ class module_deconv : public module
      * peptides shared between species.
      * @param id_peptide_map Map relating species ids to the 
      *        peptides that share a kmer with that species.
+     * @param pep_species_map_wcounts Reference to a map that 
+     *        maps string peptide names to a map of species that 
+     *        share a kmer with that peptide. Each species is also
+     *        linked to its score. In summary, we have a mapping 
+     *        that looks like this:
+     *        peptide->species->score
      * @param first The id of the first species to check. 
      * @param second The id of the second species to check.
      * @param ev_strat Tie evaluation strategy to use. 
+     * @param threshold The threshold that is set to determine
+     *        whether the overlap between species is sufficient. 
      * @pre Both first and second should be a key in id_peptide_map
      * @returns The overlap amount, expressed as either a ratio or 
      *          a count as determined by ev_strat.
@@ -206,6 +319,27 @@ class module_deconv : public module
      * score_threshold of each other. 
      * Once two species have been determined to be tied, a tie evaluation 
      * strategy is considered.
+     * @param dest_vec The vector to write tied species to. 
+     * @param id_pep_map A map that associates species ids with 
+     *        the peptides that it shares a kmer with.
+     * @param pep_species_map_wcounts Reference to a map that 
+     *        maps string peptide names to a map of species that 
+     *        share a kmer with that peptide. Each species is also
+     *        linked to its score. In summary, we have a mapping 
+     *        that looks like this:
+     *        peptide->species->score
+     * @param tie_candidates The species whose scores fall within 
+     *        a certain threshold of one another. This method 
+     *        determines how these species should be handled.
+     * @param tie_eval_strategy Strategy to use when evaluating ties.
+     *        See evaluation_strategy::tie_eval_strategy for more information.
+     * @param tie_type The type of tie, either one, two or k-way ties are 
+     *        supported. See tie_data::tie_type for more
+     * @param overlap_threshold Threshold that is either an integer number 
+     *        or percentage of 
+     *        shared kmers for ties to be reported together.
+     * @post dest_vec contains one or two species ids that 
+     *       are tied. 
      **/
     void
         handle_ties( std::vector<std::pair<std::size_t,double>>&
@@ -222,6 +356,29 @@ class module_deconv : public module
                      double overlap_threshold
                    );
 
+    /**
+     * Determine which species may be tied. 
+     * Two species may be tied if their scores are within 
+     * threshold of eachother. N species are considered tied 
+     * if all of their scores are within threshold of eachother.
+     * For example, if threshold is 
+     * 0.0, then species are considered tied only if their 
+     * scores are exactly the same. 
+     * @param candidates The vector to which the candidates will be output.
+     *        After this method candidates will contain all species whose  
+     *        scores are within threshold of eachother. 
+     * @param scores The vector of species and scores to search 
+     *        for ties. This vector must be sorted in non-increasing order
+     *        of the scores.
+     * @param threshold The score threshold species scores must be within 
+     *        for them to considered tied. For example, if this threshold 
+     *        is 4.0, then for two species to be tied, 
+     *        score( species A ) - score( species B ) <= 4.0  
+     *        MUST be true.
+     * @note scores MUST be sorted in non-increasing order.
+     * @returns The 'type' of tie that is a result. There are three 
+     *          types of tie defined by tie_data::tie_type.
+     **/
     tie_data::tie_type
         get_tie_candidates( std::vector<std::pair<std::size_t,double>>&
                             candidates,
@@ -229,6 +386,15 @@ class module_deconv : public module
                             scores,
                             double threshold
                           );
+
+    /**
+     * Determine the way in which 
+     * species. There are three types of ties:
+     * one-way, two-way and k-way ties. See 
+     * tie_data::tie_type for more information
+     * @param to_convert The number of species that 
+     *        appear to be tied. 
+     **/
     tie_data::tie_type
         get_tie_type( std::size_t to_convert );
 
@@ -238,7 +404,7 @@ class module_deconv : public module
      * entries.
      * @param id_pep_map sequential_map to populate. Each entry in the map will 
      *        have a key id and a value vector containing the names of the peptides 
-     *        this species shares a 7mer with.
+     *        this species shares a kmer with.
      * @param pep_species_vec a vector containing pairs with the first entry 
      *        a species id, and the second a vector of string peptide names.
      **/
@@ -253,7 +419,7 @@ class module_deconv : public module
      * entries. 
      * @param pep_id_map Map to populate with entries. This each key in this map
      *        is a peptide name, and each value is the species that this 
-     *        peptide shares a 7mer with.
+     *        peptide shares a kmer with.
      * @param pep_species_vec a vector containing pairs with the first entry 
      *        a species id, and the second a vector of string peptide names.
      **/
@@ -264,10 +430,12 @@ class module_deconv : public module
                   );
 
     /**
-     * Count the number of peptides that share a 7mer with 
+     * Count the number of peptides that share a kmer with 
      * a peptide.
      * @param id_counts vector in which the counts will be stored.
      * @param id_count_map input map containing id->peptides mapping.
+     * @param spec_count_map Map that associates peptides with the species 
+     *        that share a kmer with the peptide.
      **/
     void score_species( std::vector<std::pair<std::size_t, double>>&
                         id_counts,
@@ -307,10 +475,13 @@ class module_deconv : public module
      *       mappings of the form: 'kmer' -> 'species_id' -> 'count'
      * @param map The map that will store mappings of kmer -> species -> count.
      * @param sequences The sequences to analyze.
+     * @param k The kmer size to use when creating the map. 
+     *        A species will be linked to a peptide if a peptide shares a
+     *        kmer with that species.
      **/
     void create_prot_map( sequential_map<std::string,
                           sequential_map<std::size_t,std::size_t>>&
-                         map,
+                          map,
                           std::vector<sequence>& sequences,
                           std::size_t k
                        );
@@ -356,8 +527,8 @@ class module_deconv : public module
                       );
 
     /**
-     * Filter counts that do not have a high enough score out of the id_counts vector.
-     * @param id_counts Vector containing <species_id, score> pairs.
+     * Filter counts that do not have a high enough score out of the id_counts structure.
+     * @param id_counts Structure containing <species_id, score> pairs.
      * @param thresh The threshold value. Any pairs in id_counts whose second 
      *        entry is strictly less than this value will be removed.
      * @note This method has the side effect of removing items from id_counts
@@ -376,6 +547,14 @@ class module_deconv : public module
             }
     }
 
+    /**
+     * Filter counts that do not have a high enough score out of the id_counts structure.
+     * This is a partial specialization for filter_counts.
+     * @param id_counts Structure containing <species_id, score> pairs.
+     * @param thresh The threshold value. Any pairs in id_counts whose second 
+     *        entry is strictly less than this value will be removed.
+     * @note This method has the side effect of removing items from id_counts
+     **/
     template<class K, class V>
         void filter_counts( std::vector<std::pair<K,V>> in_vec,
                        V thresh
@@ -394,23 +573,39 @@ class module_deconv : public module
 
     
     /**
-     * The the score strategy to use for scoring.
+     * The strategy to use for scoring.
      * Determines which to used based on the values of 
      * fractional_scoring and summation_scoring
      * @param opts A pointer to 'options_deconv' object.
+     * @returns The evaluation strategy to use.
      **/
     evaluation_strategy::score_strategy
         get_evaluation_strategy( options_deconv *opts );
 
+    /**
+     * Get the filter method to use based upon the 
+     * options the program was started with.
+     * @param opts The options object that 
+     *        has been initialized.
+     * @returns the Filter method to use.
+     **/
     evaluation_strategy::filter_strategy
         get_filter_method( options_deconv *opts );
 
+
+    /**
+     * Determine how ties should be evaluated 
+     * based upon the options provided by the user.
+     * @param opts Options that have been set by the 
+     *        user
+     * @returns The strategy to use when evaluating ties.
+     **/
     evaluation_strategy::tie_eval_strategy
         get_tie_eval_strategy( options_deconv *opts );
 
 
     /**
-     * Get the number of peptides each species shares a 7mer with.
+     * Get the number of peptides each species shares a kmer with.
      * @param id_pep_map The map to scan, contains mappings of species id 
      *        to a vector of peptides containing shared kmers. 
      * @param pep_counts Destination map that will contain the counts for each species.
@@ -424,14 +619,24 @@ class module_deconv : public module
                                       );
 
 
-void
-handle_kway_tie( std::vector<std::pair<std::size_t,double>>& tie_candidates,
-                   sequential_map<std::size_t, std::vector<std::string>>& id_pep_map
-               );
+    /**
+     * Handle a k-way tie, where k >= 3. This method will
+     * remove all but one item from tie_candidates. 
+     * The remaining item is that which has the least integer overlap
+     * with the other item in tie_candidates.
+     * @param tie_candidates A vector containing 
+     *        pairs of species_id:count items. 
+     * @param id_pep_map Map that associates species with the 
+     *        peptides they share a kmer with.
+     **/
+    void
+        handle_kway_tie( std::vector<std::pair<std::size_t,double>>& tie_candidates,
+                         sequential_map<std::size_t, std::vector<std::string>>& id_pep_map
+                       );
 };
 
 template <class K, class V>
-struct compare_pair
+struct compare_pair_non_increasing
 {
     bool operator()( const std::pair<K,V>& first,
                      const std::pair<K,V>& second
