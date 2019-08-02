@@ -945,7 +945,8 @@ bool module_deconv
 
     sequential_set<std::string> intersection;
 
-    // get a reference in the event that we want union
+    // we do either union or intersection, alias
+    // the intersection set for clear naming 
     sequential_set<std::string>& set_union = intersection;
 
     intersection.reserve( std::max( first_peptides.size(),
@@ -1027,7 +1028,7 @@ bool module_deconv
                     // reset the scores
                     a_score = b_score = 0;
                 }
-                   
+
             // don't try to divide by zero, but if threshold is
             // zero then we need to return true without trying to divide.
             return ( threshold == 0 )
