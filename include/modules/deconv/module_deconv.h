@@ -373,7 +373,7 @@ class module_deconv : public module
      * Determine which species may be tied. 
      * Two species may be tied if their scores are within 
      * threshold of eachother. N species are considered tied 
-     * if all of their scores are within threshold of eachother.
+     * if all of their distances are within threshold of eachother.
      * For example, if threshold is 
      * 0.0, then species are considered tied only if their 
      * scores are exactly the same. 
@@ -388,6 +388,9 @@ class module_deconv : public module
      *        is 4.0, then for two species to be tied, 
      *        score( species A ) - score( species B ) <= 4.0  
      *        MUST be true.
+     * @param distance A struct or class that calculates distance 
+     *        between scores. For example, it may be good to 
+     *        calculate ratios of scores vs. the scores themselves.
      * @note scores MUST be sorted in non-increasing order.
      * @returns The 'type' of tie that is a result. There are three 
      *          types of tie defined by tie_data::tie_type.
@@ -827,6 +830,16 @@ class module_deconv : public module
 
 };
 
+/**
+ * Compare pairs in non-decreasing order,
+ * i.e. for x[ i ], x[ j ] when i < j, then 
+ * x[ i ].second >= x[ j ].second
+ * 
+ * @param first the first pair to check
+ * @param second the second pair to check
+ * @note operator '>' must be defined for type V
+ * @returns true if first.second > second.first
+ **/
 template <class K, class V>
 struct compare_pair_non_increasing
 {
@@ -837,6 +850,18 @@ struct compare_pair_non_increasing
         return std::get<1>( first ) > std::get<1>( second );
     }
 };
+
+/**
+ * Compare pairs in non-increasing order,
+ * i.e. for x[ i ], x[ j ] when i < j, then 
+ * x[ i ] <= x[ j ]
+ * @param first the first pair to check
+ * @param second the second pair to check
+ * @note operator '<' must be defined for type V
+ * @returns true if first.second < second.first
+ **/
+
+ **/
 
 template <class K, class V>
 struct compare_pair_non_decreasing
@@ -849,6 +874,13 @@ struct compare_pair_non_decreasing
     }
 };
 
+/**
+ * Returns euclidean distance between 
+ * 1-dimensional points a and b, i.e. a - b.
+ * @param a Item of type V
+ * @param b Item of type V
+ * @returns a - b
+ **/
 template<class V>
 struct difference
 {
@@ -858,6 +890,10 @@ struct difference
     }
 };
 
+/**
+ * Returns a / b if a < b,
+ * b / a otherwise.
+ **/
 template<class V>
 struct ratio
 {
