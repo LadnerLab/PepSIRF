@@ -236,6 +236,10 @@ class module_deconv : public module
      * @param out_counts vector of pairs, where the first item in each pair 
      *        is the id of the species, and the second is the count of that 
      *        species. 
+     * @param original_scores Mapping of id->( original_count, original_score ) pairs,
+     *        used for outputting what the original count/score of each enriched species is.
+     *        This is useful for seeing how the scores and counts have changed for each 
+     *        of the enriched species.
      **/
     void write_outputs( std::string out_name,
                         std::map<std::size_t,std::string>*
@@ -638,6 +642,15 @@ class module_deconv : public module
                        );
 
 
+    /**
+     * Combine the count and the score for species.
+     * Creates a mapping of id->( species_count, species_score ) pairs.
+     * @param map A map to which output will be written.
+     * @param c_map A mapping of species_id->species_count pairs.
+     * @param scores A vector of pairs, each of the form (species_id, species_score)
+     * @pre The set of keys in c_map must equal the set of 
+     *      first items in the pairs of scores.
+     **/
     template<template<class, class, class...> class Mtype>
         void combine_count_and_score( Mtype<std::size_t,std::pair<std::size_t,double>>& map,
                                       Mtype<std::size_t,std::size_t>& c_map,
@@ -658,6 +671,16 @@ class module_deconv : public module
 
         }
 
+
+    /**
+     * Either find an item in a map, or return a default-constructed
+     * value from that map. This useful if you want to print the value 
+     * if it is found in the map, or an empty string otherwise.
+     * @param map A map of type I that maps K->V
+     * @param search The item to search for in map.
+     * @returns Either the value of search in the map, or 
+     *          a default-constructed value if not found. 
+     **/
     template<template<class, class, class...> class I, class K, class V>
         V get_map_value( const I<K,V>& map,
                          const K& search
@@ -672,22 +695,33 @@ class module_deconv : public module
         return V();
     }
 
-    // template that takes pointer to the map type
+    /**
+     * Same function as module_deconv::get_map_value, 
+     * but this one takes a Pointer to the map instead of 
+     * map itself.
+     * @note This is equivalent to calling:
+     *       get_map_value( *map, search )
+     **/
     template<template<class, class, class...> class I, typename K, typename V>
         V get_map_value( const I<K,V>* map,
                          const K& search
                          )
     {
-        if( map->find( search ) != map->end() )
-            {
-                // return the found value
-                return map->find( search )->second;
-            }
-        // default-construct a value
-        return V();
+        // just dereference it and pass along to
+        // the other template function
+        return get_map_value( *map, search );
     }
 
 
+    /**
+     * The base case for to_stream_if.
+     * @param stream The stream to write output to (if cond is true)
+     * @param arg The argument to output to the stream.
+     * @note If recursion has gone past the first call then 
+     *       cond is true by the nature of to_stream_if. 
+     *       However, we still check because otherwise we have 
+     *       an unused parameter.
+     **/
     template<typename T>
         void to_stream_if( std::ostream& stream,
                            bool cond,
@@ -700,6 +734,21 @@ class module_deconv : public module
                 }
         }
 
+    /**
+     * Recursive template function that writes a set of 
+     * arguments to a stream if cond is true.
+     * @param T the type of the current arg.
+     * @param Args the typenames of the remaining
+     *        arguments
+     * @param stream The stream to write to if cond is true
+     * @param cond The condition to check for truth value.
+     *        if cond is true, then arg and args will be output
+     *        to the stream. Otherwise, nothing will be output.
+     * @param arg The current arg to output
+     * @param args The remaining args to output,
+     *        one will be output at each recursive call of 
+     *        this function.
+     **/
     template<typename T, typename... Args>
         void to_stream_if( std::ostream& stream,
                            bool cond,
