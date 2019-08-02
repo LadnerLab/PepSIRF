@@ -860,9 +860,6 @@ struct compare_pair_non_increasing
  * @note operator '<' must be defined for type V
  * @returns true if first.second < second.first
  **/
-
- **/
-
 template <class K, class V>
 struct compare_pair_non_decreasing
 {
