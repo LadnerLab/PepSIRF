@@ -635,6 +635,27 @@ class module_deconv : public module
                          sequential_map<std::size_t, std::vector<std::string>>& id_pep_map
                        );
 
+
+    template<template<class, class, class...> class Mtype>
+        void combine_count_and_score( Mtype<std::size_t,std::pair<std::size_t,double>>& map,
+                                      Mtype<std::size_t,std::size_t>& c_map,
+                                      std::vector<std::pair<std::size_t,double>>& scores
+                                    )
+        {
+
+            for( const auto& score : scores )
+                {
+                    const auto count = c_map.find( score.first );
+
+                    map.emplace( score.first,
+                                 std::make_pair
+                                 ( count->second, score.second )
+                               );
+
+                }
+
+        }
+
     template<template<class, class, class...> class I, class K, class V>
         V get_map_value( const I<K,V>& map,
                          const K& search
