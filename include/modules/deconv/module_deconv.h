@@ -243,7 +243,9 @@ class module_deconv : public module
                         std::vector<
                         std::tuple<std::size_t,std::size_t,double,bool>
                         >&
-                        out_counts
+                        out_counts,
+                        sequential_map<std::size_t,std::pair<std::size_t,double>>&
+                        original_scores
                       );
 
     /**
