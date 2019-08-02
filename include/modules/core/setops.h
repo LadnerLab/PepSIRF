@@ -51,6 +51,30 @@ namespace setops
     // A u B
     template<class I, class K>
         void set_union( I& dest,
+                        const std::vector<K>& first,
+                        const std::vector<K>& second
+                      )
+    {
+        sequential_set<K> union_set;
+
+        for( const auto& f : first )
+            {
+                union_set.insert( f );
+            }
+        for( const auto& s : second )
+            {
+                union_set.insert( s );
+            }
+
+        for( const auto& u : union_set )
+            {
+                dest.insert( u );
+            }
+    }
+
+    // A u B
+    template<class I, class K>
+        void set_union( I& dest,
                         const K& first,
                         const K& second
                       )
