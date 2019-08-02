@@ -11,7 +11,6 @@
 #include "time_keep.h"
 #include "fasta_parser.h"
 #include "setops.h"
-#include "util.h"
 
 module_deconv::module_deconv() = default;
 
@@ -188,13 +187,27 @@ void module_deconv::choose_kmers( options_deconv *opts )
 
             std::vector<std::pair<std::size_t, double>> tied_species;
 
+            tie_data::tie_type tie = tie_data::tie_type::SINGLE_WAY_TIE;
 
-            tie_data::tie_type
-                tie = get_tie_candidates( tie_candidates,
-                                          species_scores,
-                                          thresh,
-                                          d_opts->score_tie_threshold
-                                        );
+            if( !use_ratio_score_tie_thresh( d_opts->score_tie_threshold ) )
+                {
+                        tie = get_tie_candidates( tie_candidates,
+                                                  species_scores,
+                                                  thresh,
+                                                  d_opts->score_tie_threshold,
+                                                  difference<double>()
+                                                );
+                }
+            else
+                {
+                        tie = get_tie_candidates( tie_candidates,
+                                                  species_scores,
+                                                  thresh,
+                                                  d_opts->score_tie_threshold,
+                                                  ratio<double>()
+                                                );
+                }
+
             handle_ties( tied_species,
                          id_pep_map,
                          pep_spec_map_w_counts,
@@ -890,46 +903,46 @@ module_deconv::handle_ties( std::vector<std::pair<std::size_t,double>>&
         }
 }
 
-tie_data::tie_type
-module_deconv::get_tie_candidates( std::vector<std::pair<std::size_t,double>>&
-                                   candidates,
-                                   std::vector<std::pair<std::size_t,double>>&
-                                   scores,
-                                   double threshold,
-                                   double ovlp_threshold
-                                 )
-{
-    double curr_score = 0;
-    std::size_t index = 0;
+// tie_data::tie_type
+// module_deconv::get_tie_candidates( std::vector<std::pair<std::size_t,double>>&
+//                                    candidates,
+//                                    std::vector<std::pair<std::size_t,double>>&
+//                                    scores,
+//                                    double threshold,
+//                                    double ovlp_threshold
+//                                  )
+// {
+//     double curr_score = 0;
+//     std::size_t index = 0;
 
-    auto score_diff = []( const std::pair<std::size_t, double>& first,
-                          const std::pair<std::size_t, double>& second
-                        ) -> double 
-        {
-            return first.second - second.second;
-        };
+//     auto score_diff = []( const std::pair<std::size_t, double>& first,
+//                           const std::pair<std::size_t, double>& second
+//                         ) -> double 
+//         {
+//             return first.second - second.second;
+//         };
 
-    // D( a, a ) = 0
-    candidates.push_back( scores[ index ] );
+//     // D( a, a ) = 0
+//     candidates.push_back( scores[ index ] );
 
-    for( index = 1;
-         index < scores.size()
-             && scores[ index ].second >= threshold
-               && curr_score <= ovlp_threshold;
-         ++index
-       )
-        {
-            curr_score = score_diff( scores[ 0 ], scores[ index ] );
+//     for( index = 1;
+//          index < scores.size()
+//              && scores[ index ].second >= threshold
+//                && curr_score <= ovlp_threshold;
+//          ++index
+//        )
+//         {
+//             curr_score = score_diff( scores[ 0 ], scores[ index ] );
 
-            // the score of these two species is close
-            // enough to warrant a further check
-            if( curr_score <= ovlp_threshold )
-                {
-                    candidates.push_back( scores[ index ] );
-                }
-        }
-    return get_tie_type( candidates.size() );
-}
+//             // the score of these two species is close
+//             // enough to warrant a further check
+//             if( curr_score <= ovlp_threshold )
+//                 {
+//                     candidates.push_back( scores[ index ] );
+//                 }
+//         }
+//     return get_tie_type( candidates.size() );
+// }
 
 tie_data::tie_type
 module_deconv::get_tie_type( std::size_t to_convert )
@@ -1152,4 +1165,10 @@ module_deconv
     tie_candidates.clear();
     tie_candidates.push_back( min_overlap );
 
+}
+
+bool module_deconv              
+::use_ratio_score_tie_thresh( double threshold )
+{
+    return !util::is_integer( threshold );
 }

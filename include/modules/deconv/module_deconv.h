@@ -10,6 +10,7 @@
 #include "options_deconv.h"
 #include "sequence.h"
 #include "maps.h"
+#include "util.h"
 
 
 /**
@@ -141,6 +142,12 @@ namespace evaluation_strategy
          * unique shared peptides
          **/
         SUMMATION_SCORING_TIE_EVAL
+    };
+
+    enum tie_distance_strategy
+    {
+        INTEGER_DISTANCE = 0,
+        RATIO_DISTANCE
     };
 
 }; //namespace evaluation_strategy
@@ -385,14 +392,58 @@ class module_deconv : public module
      * @returns The 'type' of tie that is a result. There are three 
      *          types of tie defined by tie_data::tie_type.
      **/
-    tie_data::tie_type
+    template<class DistanceCalc>
+        tie_data::tie_type
         get_tie_candidates( std::vector<std::pair<std::size_t,double>>&
                             candidates,
                             std::vector<std::pair<std::size_t,double>>&
                             scores,
                             double threshold,
-                            double ovlp_threshold
-                          );
+                            double ovlp_threshold,
+                            DistanceCalc distance
+                          )
+        {
+            double curr_score = 0;
+            std::size_t index = 0;
+
+            auto score_diff = [&]( const std::pair<std::size_t, double>& first,
+                                   const std::pair<std::size_t, double>& second
+                                   ) -> double 
+                {
+                    return distance( first.second, second.second );
+                };
+
+            // D( a, a ) = 0
+            candidates.push_back( scores[ index ] );
+
+            for( index = 1;
+                 index < scores.size()
+                     && scores[ index ].second >= threshold
+                     && curr_score <= ovlp_threshold;
+                 ++index
+                 )
+                {
+                    // remember scores[ 0 ] >= scores[ index ]
+                    curr_score = score_diff( scores[ 0 ], scores[ index ] );
+
+                    if( !util::is_integer( ovlp_threshold ) )
+                        {
+                            // we want to determine the ratio of 
+                            // b : a instead of the ratio of a : b
+                            // because we check if curr_score <= ovlp_threshold
+                            curr_score = 1 - curr_score;
+                        }
+
+                    // the score of these two species is close
+                    // enough to warrant a further check
+                    if( curr_score <= ovlp_threshold )
+                        {
+                            candidates.push_back( scores[ index ] );
+                        }
+                }
+
+            return get_tie_type( candidates.size() );
+        }
 
     /**
      * Determine the way in which 
@@ -763,6 +814,17 @@ class module_deconv : public module
             }
     }
 
+    /**
+     * Used to determine whether the tie threshold should be 
+     * treated as a ratio. 
+     * @param threshold The threshold to treat as a ratio.
+     * @note this is equivalent to calling "!util::is_integer( threshold )"
+     * @returns boolean true if threshold should be treated as an integer,
+     *          false otherwise
+     **/
+    bool use_ratio_score_tie_thresh( double threshold );
+
+
 };
 
 template <class K, class V>
@@ -784,6 +846,27 @@ struct compare_pair_non_decreasing
                    )
     {
         return std::get<1>( first ) < std::get<1>( second );
+    }
+};
+
+template<class V>
+struct difference
+{
+    V operator()( const V a, const V b )
+    {
+        return a - b;
+    }
+};
+
+template<class V>
+struct ratio
+{
+    V operator()( const V a, const V b )
+    {
+        // we return something <= 1.0, so
+        // want to make sure the larger is in the
+        // denominator
+        return a > b ? b / a : a / b;
     }
 };
 
