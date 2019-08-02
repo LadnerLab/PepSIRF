@@ -74,7 +74,7 @@ void module_deconv::choose_kmers( options_deconv *opts )
     std::vector<std::pair<std::size_t, double>> species_scores;
     sequential_map<std::size_t, std::size_t> species_peptide_counts;
 
-    std::vector<std::tuple<std::size_t, std::size_t, double>> output_counts;
+    std::vector<std::tuple<std::size_t, std::size_t, double, bool>> output_counts;
 
     auto make_map_and_filter = [&]() {
         #pragma omp parallel
@@ -148,6 +148,10 @@ void module_deconv::choose_kmers( options_deconv *opts )
         == evaluation_strategy
            ::tie_eval_strategy
              ::PERCENT_TIE_EVAL
+        || tie_eval_strat
+          == evaluation_strategy
+        ::tie_eval_strategy
+        ::SUMMATION_SCORING_TIE_EVAL
         )
         {
             for( const auto& pep : pep_id_map )
@@ -183,19 +187,19 @@ void module_deconv::choose_kmers( options_deconv *opts )
             tie_data::tie_type
                 tie = get_tie_candidates( tie_candidates,
                                           species_scores,
+                                          thresh,
                                           d_opts->score_tie_threshold
                                         );
-
             handle_ties( tied_species,
                          id_pep_map,
                          pep_spec_map_w_counts,
                          tie_candidates,
-                         evaluation_strategy::
-                         tie_eval_strategy::
-                         INTEGER_TIE_EVAL,
+                         tie_eval_strat,
                          tie,
                          d_opts->score_overlap_threshold
                        );
+
+            bool is_tie = tied_species.size() > 1;
 
             for( auto& tied_peptide : tied_species )
                 {
@@ -206,10 +210,16 @@ void module_deconv::choose_kmers( options_deconv *opts )
                                                                 id,
                                                                 species_peptide_counts
                                                                 .find( id )->second, // count for species
-                                                                score
+                                                                score,
+                                                                is_tie
                                                                 )
                                                 );
 
+
+                    // if there was a tie
+                    // we only report it for the first
+                    // item 
+                    is_tie = false;
 
                     auto current_peptides = id_pep_map.find( id )->second;
 
@@ -480,7 +490,7 @@ void module_deconv::write_outputs( std::string out_name,
                                    std::map<std::size_t,std::string>*
                                    id_name_map,
                                    std::vector<
-                                   std::tuple<std::size_t,std::size_t,double>
+                                   std::tuple<std::size_t,std::size_t,double,bool>
                                    >&
                                    out_counts
                                  )
@@ -496,23 +506,47 @@ void module_deconv::write_outputs( std::string out_name,
 
     out_file << "Species ID\tCount\tScore\n";
 
+    bool tied = false;
+    auto tied_item = out_counts.begin();
 
-    for( auto& elem : out_counts )
+        for( auto it = out_counts.begin(); it != out_counts.end(); ++it )
         {
-            if( id_name_map != nullptr
-                && id_name_map->find( std::get<0>( elem ) ) != id_name_map->end() )
+            if( std::get<3>( *it ) ) // *it and the next species are tied, report together
                 {
-                    out_file << id_name_map->find( std::get<0>( elem ) )->second << "\t";
+                    tied_item = std::next( it, 1 );
+                    tied = true;
                 }
-            else if( id_name_map != nullptr
-                     && id_name_map->find( std::get<0>( elem ) ) == id_name_map->end() )
+            if( id_name_map != nullptr )
+                {
+                    to_stream_if( out_file, tied, 
+                                  get_map_value( id_name_map, std::get<0>( *tied_item ) ),
+                                  ","
+                                );
+                    out_file << get_map_value( id_name_map, std::get<0>( *it ) ) << "\t";
+                }
+
+            else
                 {
                     out_file << "\t";
                 }
 
-            out_file << std::get<0>( elem ) << "\t" <<
-                std::get<1>( elem ) << "\t" << 
-                std::get<2>( elem ) << "\n";
+            to_stream_if( out_file, tied, std::get<0>( *tied_item ), "," );
+
+            out_file << std::get<0>( *it ) << "\t";
+
+            to_stream_if( out_file, tied, std::get<1>( *tied_item ), "," );
+
+            out_file << std::get<1>( *it ) << "\t";
+
+            to_stream_if( out_file, tied, std::get<2>( *tied_item ), "," );
+
+            out_file << std::get<2>( *it ) << "\n";
+
+            if( tied )
+                {
+                    ++it;
+                    tied = false;
+                }
         }
 
 }
@@ -833,7 +867,8 @@ module_deconv::get_tie_candidates( std::vector<std::pair<std::size_t,double>>&
                                    candidates,
                                    std::vector<std::pair<std::size_t,double>>&
                                    scores,
-                                   double threshold
+                                   double threshold,
+                                   double ovlp_threshold
                                  )
 {
     double curr_score = 0;
@@ -843,14 +878,16 @@ module_deconv::get_tie_candidates( std::vector<std::pair<std::size_t,double>>&
                           const std::pair<std::size_t, double>& second
                         ) -> double 
         {
-            return first.first - second.first;
+            return first.second - second.second;
         };
 
     // D( a, a ) = 0
     candidates.push_back( scores[ index ] );
 
     for( index = 1;
-         index < scores.size() && curr_score <= threshold;
+         index < scores.size()
+             && scores[ index ].second >= threshold
+               && curr_score <= ovlp_threshold;
          ++index
        )
         {
@@ -858,7 +895,7 @@ module_deconv::get_tie_candidates( std::vector<std::pair<std::size_t,double>>&
 
             // the score of these two species is close
             // enough to warrant a further check
-            if( curr_score <= threshold )
+            if( curr_score <= ovlp_threshold )
                 {
                     candidates.push_back( scores[ index ] );
                 }
@@ -907,16 +944,28 @@ bool module_deconv
     std::size_t intersection_size = 0;
 
     sequential_set<std::string> intersection;
+
+    // get a reference in the event that we want union
+    sequential_set<std::string>& set_union = intersection;
+
     intersection.reserve( std::max( first_peptides.size(),
                                     second_peptides.size()
                                   )
                         );
 
-    setops::set_intersection( intersection,
-                              first_peptides,
-                              second_peptides
-                            );
-    intersection_size = intersection.size();
+
+    if(  ev_strat
+         != evaluation_strategy
+         ::tie_eval_strategy
+         ::SUMMATION_SCORING_TIE_EVAL
+      )
+        {
+            setops::set_intersection( intersection,
+                                      first_peptides,
+                                      second_peptides
+                                      );
+            intersection_size = intersection.size();
+        }
 
     if( ev_strat
         == evaluation_strategy
@@ -933,6 +982,11 @@ bool module_deconv
                   ::SUMMATION_SCORING_TIE_EVAL
            )
         {
+            setops::set_union( set_union,
+                               first_peptides,
+                               second_peptides
+                             );
+
             // where 'a' and 'b' are for species first and
             // species second
             double a_score, b_score, a_num, a_denom,
@@ -940,15 +994,24 @@ bool module_deconv
             a_score = b_score = a_num = a_denom =
                 b_num = b_denom = 0;
 
-            for( const auto& peptide : intersection )
+            for( const auto& peptide : set_union )
                 {
-                    a_score = pep_species_map_wcounts
-                        .find( peptide )->second
-                        .find( first )->second;
+                    
+                    auto pep_species_map = pep_species_map_wcounts
+                                           .find( peptide )->second;
 
-                    b_score = pep_species_map_wcounts
-                        .find( peptide )->second
-                        .find( second )->second;
+                    if( pep_species_map.find( first ) != pep_species_map.end() )
+                        {
+                            a_score = pep_species_map
+                                .find( first )->second;
+                        }
+
+                    if( pep_species_map.find( second ) != pep_species_map.end() )
+                        {
+
+                            b_score = pep_species_map
+                                .find( second )->second;
+                        }
 
                     if( b_score > 0 )
                         {
@@ -960,8 +1023,11 @@ bool module_deconv
                         }
                     a_denom += a_score;
                     b_denom += b_score;
-                }
 
+                    // reset the scores
+                    a_score = b_score = 0;
+                }
+                   
             // don't try to divide by zero, but if threshold is
             // zero then we need to return true without trying to divide.
             return ( threshold == 0 )
