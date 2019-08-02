@@ -137,13 +137,18 @@ void module_deconv::choose_kmers( options_deconv *opts )
 
     make_map_and_filter();
 
+    sequential_map<std::size_t,std::pair<std::size_t,double>> original_scores;
+
+    combine_count_and_score<sequential_map>( original_scores,
+                             species_peptide_counts,
+                             species_scores
+                           );
+
     sequential_map<std::string,std::vector<std::size_t>> peptide_assignment_map;
 
     sequential_map<std::string,sequential_map<std::size_t,std::size_t>>
         pep_spec_map_w_counts;
 
-    // TODO: Update this to be dependent on d_otps
-    
     if( tie_eval_strat
         == evaluation_strategy
            ::tie_eval_strategy
