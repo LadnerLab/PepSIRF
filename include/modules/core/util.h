@@ -40,6 +40,7 @@ namespace util
         {
             return a * b;
         }
+
 };
 
 
