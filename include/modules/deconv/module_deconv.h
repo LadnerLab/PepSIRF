@@ -241,7 +241,7 @@ class module_deconv : public module
                         std::map<std::size_t,std::string>*
                         id_name_map,
                         std::vector<
-                        std::tuple<std::size_t,std::size_t,double>
+                        std::tuple<std::size_t,std::size_t,double,bool>
                         >&
                         out_counts
                       );
@@ -384,7 +384,8 @@ class module_deconv : public module
                             candidates,
                             std::vector<std::pair<std::size_t,double>>&
                             scores,
-                            double threshold
+                            double threshold,
+                            double ovlp_threshold
                           );
 
     /**
@@ -633,6 +634,63 @@ class module_deconv : public module
         handle_kway_tie( std::vector<std::pair<std::size_t,double>>& tie_candidates,
                          sequential_map<std::size_t, std::vector<std::string>>& id_pep_map
                        );
+
+    template<template<class, class, class...> class I, class K, class V>
+        V get_map_value( const I<K,V>& map,
+                         const K& search
+                         )
+    {
+        if( map.find( search ) != map.end() )
+            {
+                // return the found value
+                return map.find( search )->second;
+            }
+        // default-construct a value
+        return V();
+    }
+
+    // template that takes pointer to the map type
+    template<template<class, class, class...> class I, typename K, typename V>
+        V get_map_value( const I<K,V>* map,
+                         const K& search
+                         )
+    {
+        if( map->find( search ) != map->end() )
+            {
+                // return the found value
+                return map->find( search )->second;
+            }
+        // default-construct a value
+        return V();
+    }
+
+
+    template<typename T>
+        void to_stream_if( std::ostream& stream,
+                           bool cond,
+                           T arg
+                         )
+        {
+            if( cond )
+                {
+                    stream << arg;
+                }
+        }
+
+    template<typename T, typename... Args>
+        void to_stream_if( std::ostream& stream,
+                           bool cond,
+                           T arg,
+                           Args... args
+                         )
+    {
+        if( cond )
+            {
+                stream << arg;
+                to_stream_if( stream, cond, args... );
+            }
+    }
+
 };
 
 template <class K, class V>
