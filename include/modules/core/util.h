@@ -1,6 +1,8 @@
 #ifndef UTIL_HH_INCLUDED
 #define UTIL_HH_INCLUDED
 
+#include <cmath>
+
 namespace util
 {
     template<class M, class InputIt>
@@ -40,6 +42,13 @@ namespace util
         {
             return a * b;
         }
+
+    template< class N>
+    bool is_integer( N check )
+    {
+        return std::floor( check )
+               == std::ceil( check );
+    }
 
 };
 
