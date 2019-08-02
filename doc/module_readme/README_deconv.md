@@ -112,20 +112,39 @@ modes are followed by [scoring_species,create_linkage].
                                         the event of a tie. [scoring_species]
                                         
   --score_tie_threshold arg (=0)        Threshold for two species to be 
-                                        evaluated as a tie. For example, if 
-                                        this value is set to 4, and species_1 
-                                        has a count of 5, species_2 has count 4
-                                        then their distance is '1', which is 
-                                        less than 4. And so these species are 
-                                        considered for evaluating whether tye 
-                                        are tied.Note that this does not 
-                                        necessarily mean that these species are
-                                        tied, in order for them to be 
-                                        considered tied they must also share a 
-                                        certain percentage or number of their 
-                                        peptides, as defined by the 
-                                        score_overlap_threshold and tie 
-                                        evaluation strategy specified. 
+                                        evaluated as a tie. Note that this 
+                                        value can be either an integer or a 
+                                        ratio that is in (0,1). When provided 
+                                        as an integer this value dictates the 
+                                        difference in score that is allowed for
+                                        two species to be considered. For 
+                                        example, if this flag is provided with 
+                                        the value 0, then two or more species 
+                                        must have the exact same score to be 
+                                        tied. If this flag is provided with the
+                                        value 4, then the scores of species 
+                                        must be no greater than 4 to be 
+                                        considered tied. So if species 1has a 
+                                        score of 5, and species has a score 
+                                        anywhere between the integer values in 
+                                        [1,9], then these species will be 
+                                        considered tied, and their tie will be 
+                                        evaluated as dicated by the tie 
+                                        evaluation strategy provided.If the 
+                                        argument provided to this flag is in 
+                                        (0, 1), then a species must have at 
+                                        least this percentage of the species 
+                                        with the maximum score to be tied. So 
+                                        if species 1 has the highest score with
+                                        a score of 9, and species 2 has a score
+                                        of 5, then this flag must be provided 
+                                        with value >= 4/5 = 0.8 for the species
+                                        to be considered tied. Note that any 
+                                        values provided to this flag that are 
+                                        in the set { x: x >= 1 } - Z, where Z 
+                                        is the set of integers, will result in 
+                                        an error. So 4.45 is not a valid value,
+                                        but both 4 and 0.45 are. 
                                         [scoring_species] 
                                         
   --score_overlap_threshold arg (=1)    Once two species have been found to be 
