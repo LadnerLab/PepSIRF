@@ -156,43 +156,22 @@ modes are followed by [scoring_species,create_linkage].
                                         score_overlap_threshold number of 
                                         peptides, then they are both reported. 
                                         An example value is 10. For ratio tie 
-                                        evaluation, two species must share at 
-                                        leat this amount of peptides with each 
-                                        other. For example, suppose species 1 
-                                        shares 0.5 of its peptides with species
-                                        2, but species 2 only shares 0.1 of its
-                                        peptides with species 1. These two will
-                                        only be reported together if 
+                                        evaluation, which is used when this 
+                                        argument is provided with a value in 
+                                        the interval (0,1), two species must 
+                                        share at leat this amount of peptides 
+                                        with each other. For example, suppose 
+                                        species 1 shares 0.5 of its peptides 
+                                        with species 2, but species 2 only 
+                                        shares 0.1 of its peptides with species
+                                        1. To use integer tie evaluation, where
+                                        species must share an integer number of
+                                        peptides, not a ratio of their total 
+                                        peptides, provide this argument with a 
+                                        value in the interval [1, inf). These 
+                                        two will only be reported together if 
                                         score_overlap_threshold <= 0.1. 
                                         [scoring_species] 
-                                        
-  --integer_tie_eval                    Include this flag if tie evaluation 
-                                        should be done by comparing integer 
-                                        overlap of peptides. For example, if 
-                                        this flag is included and 
-                                        --score_overlap_threshold is set to 10,
-                                        then if two species are tied and share 
-                                        at least 10 peptides then they will be 
-                                        reported together. Important note: if 
-                                        summation_scoring is used then a 
-                                        special tie-breaking strategy is used. 
-                                        [scoring_species]
-                                        
-  --ratio_tie_eval                      Include this flag if tie evaluation 
-                                        should be done by comparing the ratio 
-                                        of a species peptides it shares with 
-                                        another. Note that two species must 
-                                        share at least --overlap_tie_threshold 
-                                        with eachother to be considered tied. 
-                                        For example, suppose species 1 shares 
-                                        0.5 of its peptides with species 2, but
-                                        species 2 only shares 0.1 of its 
-                                        peptides with species 1. These two will
-                                        only be reported together if 
-                                        score_overlap_threshold <= 0.1. 
-                                        Important note: if summation_scoring is
-                                        used then a special tie-breaking 
-                                        strategy is used. [scoring_species]
                                         
   --create_linkage                      Boolean switch to create the linkage 
                                         file that is used as input for the 
@@ -233,4 +212,5 @@ modes are followed by [scoring_species,create_linkage].
                                         output will contain a column denoting 
                                         the name of the species as well as the 
                                         id. [create_linkage]
+
 ```                        
