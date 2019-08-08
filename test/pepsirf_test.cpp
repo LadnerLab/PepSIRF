@@ -547,3 +547,13 @@ TEST_CASE( "test_ratio", "[struct_ratio]" )
     REQUIRE( ratio<double>()( 0, 1.0 ) == 0.0 );
 
 }
+
+TEST_CASE( "test_difference", "[struct_difference]" )
+{
+
+    REQUIRE( difference<double>()( 0.4, 1.0 ) == -0.6 );
+    REQUIRE( difference<double>()( 1.0, 0.4 ) == 0.6 );
+    REQUIRE( difference<double>()( 1.0, 1.0 ) == 0.0 );
+    REQUIRE( difference<double>()( 0, 1.0 ) == -1.0 );
+
+}
