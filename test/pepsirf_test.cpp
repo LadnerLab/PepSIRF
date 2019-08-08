@@ -792,3 +792,18 @@ TEST_CASE( "test_threshold_type", "[module_deconv]" )
     REQUIRE( !mod.use_ratio_overlap_threshold( 1.0 ) );
 
 }
+
+TEST_CASE( "get_map_value", "[module_deconv]" )
+{
+    auto mod = module_deconv();
+
+    sequential_map<int,int> map;
+    map.emplace( 1, 1 );
+    map.emplace( 2, 2 );
+    map.emplace( 3, 3 );
+
+    REQUIRE( get_map_value<sequential_map,int,int>( map, 1 ) == 1 );
+    REQUIRE( get_map_value<sequential_map,int,int>( map, 2 ) == 2 );
+    REQUIRE( get_map_value<sequential_map,int,int>( map, 3 ) == 3 );
+    REQUIRE( get_map_value<sequential_map,int,int>( map, 4 ) == 0 );
+}
