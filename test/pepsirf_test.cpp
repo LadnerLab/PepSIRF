@@ -14,6 +14,7 @@
 #include "maps.h"
 #include "fastq_parser.h"
 #include "module_demux.h"
+#include "module_deconv.h"
 #include "samplelist_parser.h"
 #include "sample.h"
 #include "fastq_score.h"
@@ -365,4 +366,93 @@ TEST_CASE( "get_kmers", "[kmer_scores]" )
         }
                                                     
                                                   
+}
+
+
+TEST_CASE( "get_tie_candidates_integer", "[module_deconv]" )
+{
+    auto mod = module_deconv();
+
+    std::vector<std::pair<std::size_t, double>> candidates;
+    std::vector<std::pair<std::size_t, double>> scores;
+    double threshold      = 4.0;
+    double ovlp_threshold = 4.0;
+
+    scores.emplace_back( 100, 245.0 );
+    scores.emplace_back( 101, 105.0 );
+    scores.emplace_back( 102, 5.0 );
+    scores.emplace_back( 103, 245.0 );
+    scores.emplace_back( 104, 135.0 );
+    scores.emplace_back( 105, 249.0 );
+    std::sort( scores.begin(),
+               scores.end(),
+               compare_pair_non_increasing
+               <std::size_t, double>()
+            );
+
+    auto t_type = mod.get_tie_candidates( candidates,
+                                          scores,
+                                          threshold,
+                                          ovlp_threshold,
+                                          difference<double>()
+                                        );
+                           
+    REQUIRE( candidates.size() == 3 );
+    REQUIRE( t_type == tie_data::tie_type::K_WAY_TIE );
+
+    candidates.clear();
+    ovlp_threshold = 500;
+
+    t_type = mod.get_tie_candidates( candidates,
+                                     scores,
+                                     threshold,
+                                     ovlp_threshold,
+                                     difference<double>()
+                                   );
+
+    REQUIRE( candidates.size() == scores.size() );
+    REQUIRE( t_type == tie_data::tie_type::K_WAY_TIE );
+
+    candidates.clear();
+    threshold = 6;
+
+    t_type = mod.get_tie_candidates( candidates,
+                                     scores,
+                                     threshold,
+                                     ovlp_threshold,
+                                     difference<double>()
+                                   );
+
+    REQUIRE( candidates.size() == scores.size() - 1 );
+    REQUIRE( t_type == tie_data::tie_type::K_WAY_TIE );
+
+    candidates.clear();
+
+    scores.erase( scores.begin(), scores.begin() + 1 );
+
+    ovlp_threshold = 0;
+
+    t_type = mod.get_tie_candidates( candidates,
+                                     scores,
+                                     threshold,
+                                     ovlp_threshold,
+                                     difference<double>()
+                                   );
+
+    REQUIRE( candidates.size() == 2 );
+    REQUIRE( t_type == tie_data::tie_type::TWO_WAY_TIE );
+
+    candidates.clear();
+    scores.erase( scores.begin(), scores.begin() + 1 );
+
+    t_type = mod.get_tie_candidates( candidates,
+                                     scores,
+                                     threshold,
+                                     ovlp_threshold,
+                                     difference<double>()
+                                   );
+
+    REQUIRE( candidates.size() == 1 );
+    REQUIRE( t_type == tie_data::tie_type::SINGLE_WAY_TIE );
+
 }
