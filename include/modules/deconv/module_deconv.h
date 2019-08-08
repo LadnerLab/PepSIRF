@@ -421,27 +421,38 @@ class module_deconv : public module
 
             for( index = 1;
                  index < scores.size()
-                     && scores[ index ].second >= threshold
-                     && curr_score <= ovlp_threshold;
+                     && scores[ index ].second >= threshold;
                  ++index
                  )
                 {
                     // remember scores[ 0 ] >= scores[ index ]
                     curr_score = score_diff( scores[ 0 ], scores[ index ] );
 
+
                     if( !util::is_integer( ovlp_threshold ) )
                         {
-                            // we want to determine the ratio of 
-                            // b : a instead of the ratio of a : b
-                            // because we check if curr_score <= ovlp_threshold
-                            curr_score = 1 - curr_score;
+                            if( curr_score >= ovlp_threshold )
+                                {
+                                    candidates.push_back( scores[ index ] );
+                                }
+                            else
+                                {
+                                    break;
+                                }
                         }
-
-                    // the score of these two species is close
-                    // enough to warrant a further check
-                    if( curr_score <= ovlp_threshold )
+                    else
                         {
-                            candidates.push_back( scores[ index ] );
+
+                            // the score of these two species is close
+                            // enough to warrant a further check
+                            if( curr_score <= ovlp_threshold )
+                                {
+                                    candidates.push_back( scores[ index ] );
+                                }
+                            else
+                                {
+                                    break;
+                                }
                         }
                 }
 
@@ -855,7 +866,7 @@ struct compare_pair_non_increasing
                      const std::pair<K,V>& second
                    )
     {
-        return std::get<1>( first ) > std::get<1>( second );
+        return first.second > second.second;
     }
 };
 
