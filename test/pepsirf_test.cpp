@@ -536,6 +536,14 @@ TEST_CASE( "get_tie_candidates_ratio", "[module_deconv]" )
     REQUIRE( candidates.size() == scores.size() - 1 );
     REQUIRE( t_type == tie_data::tie_type::K_WAY_TIE );
 
+}
 
+TEST_CASE( "test_ratio", "[struct_ratio]" )
+{
+
+    REQUIRE( ratio<double>()( 0.4, 1.0 ) == 0.4 );
+    REQUIRE( ratio<double>()( 1.0, 0.4 ) == 0.4 );
+    REQUIRE( ratio<double>()( 1.0, 1.0 ) == 1.0 );
+    REQUIRE( ratio<double>()( 0, 1.0 ) == 0.0 );
 
 }
