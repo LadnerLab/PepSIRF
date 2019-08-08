@@ -2,6 +2,7 @@
 #include "catch.hpp"
 
 #include <iostream>
+#include <stdexcept>
 #include <fstream>
 #include <omp.h>
 #include <algorithm>
@@ -752,4 +753,27 @@ TEST_CASE( "sufficient_overlap_summation", "[module_deconv]" )
 
 
 
+}
+
+TEST_CASE( "get_tie_type", "[module_deconv]" )
+{
+    auto mod = module_deconv();
+
+    REQUIRE_THROWS( mod.get_tie_type( 0 ), std::runtime_error( "" ) );
+    REQUIRE( mod.get_tie_type( 1 ) == tie_data::tie_type::SINGLE_WAY_TIE );
+    REQUIRE( mod.get_tie_type( 2 ) == tie_data::tie_type::TWO_WAY_TIE );
+    REQUIRE( mod.get_tie_type( 3 ) == tie_data::tie_type::K_WAY_TIE );
+    REQUIRE( mod.get_tie_type( 4 ) == tie_data::tie_type::K_WAY_TIE );
+}
+
+TEST_CASE( "compare_pair", "[module_deconv]" )
+{
+    std::pair<int, int> p1{ 1, 4 };
+    std::pair<int, int> p2{ 1, 5 };
+
+    REQUIRE( !compare_pair_non_increasing<int,int>()( p1, p2 ) );
+    REQUIRE( compare_pair_non_decreasing<int,int>()( p1, p2 ) );
+
+    REQUIRE( compare_pair_non_increasing<int,int>()( p2, p1 ) );
+    REQUIRE( !compare_pair_non_decreasing<int,int>()( p2, p1 ) );
 }
