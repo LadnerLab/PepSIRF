@@ -428,7 +428,6 @@ class module_deconv : public module
                     // remember scores[ 0 ] >= scores[ index ]
                     curr_score = score_diff( scores[ 0 ], scores[ index ] );
 
-
                     if( !util::is_integer( ovlp_threshold ) )
                         {
                             if( curr_score >= ovlp_threshold )
