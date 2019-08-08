@@ -50,6 +50,24 @@ namespace util
                == std::ceil( check );
     }
 
+    template<typename T, typename U>
+        std::ostream& operator<<( std::ostream& out, const std::pair<T, U>& p )
+    {
+        out << "[" << p.first << ", " << p.second << "]";
+        return out;
+    }
+
+    template<template<typename, typename...> class ContainerType,
+             typename ValueType,
+             typename ... Args>
+        void print_structure( std::ostream& stream, const ContainerType<ValueType, Args...>& structure )
+        {
+            for( const auto& item : structure )
+                {
+                    stream << item << " ";
+                }
+            stream << "\n";
+        }
 };
 
 
