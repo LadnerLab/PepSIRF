@@ -4,7 +4,8 @@
 namespace kmer_tools
 {
 
-    int get_kmers( std::vector<std::string>& kmers,
+    template<template<class, class...> class Dtype>
+        int get_kmers( Dtype<std::string>& kmers,
                    std::string seq,
                    int k
                  )
@@ -14,9 +15,7 @@ namespace kmer_tools
 
         for( std::size_t index = 0; index < num_kmers; ++index )
             {
-                kmers.emplace_back(
-                                   seq.substr( index, k )
-                                  );
+                kmers.insert( kmers.end(), seq.substr( index, k ) );
             }
 
         return kmers.size();
