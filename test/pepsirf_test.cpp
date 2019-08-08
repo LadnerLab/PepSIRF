@@ -777,3 +777,18 @@ TEST_CASE( "compare_pair", "[module_deconv]" )
     REQUIRE( compare_pair_non_increasing<int,int>()( p2, p1 ) );
     REQUIRE( !compare_pair_non_decreasing<int,int>()( p2, p1 ) );
 }
+
+
+TEST_CASE( "test_threshold_type", "[module_deconv]" )
+{
+    auto mod = module_deconv();
+
+    REQUIRE( mod.use_ratio_score_tie_thresh( 0.5 ) );
+    REQUIRE( !mod.use_ratio_score_tie_thresh( 0.0 ) );
+    REQUIRE( !mod.use_ratio_score_tie_thresh( 1.0 ) );
+
+    REQUIRE( mod.use_ratio_overlap_threshold( 0.5 ) );
+    REQUIRE( !mod.use_ratio_overlap_threshold( 0.0 ) );
+    REQUIRE( !mod.use_ratio_overlap_threshold( 1.0 ) );
+
+}
