@@ -100,7 +100,6 @@ void module_deconv::choose_kmers( options_deconv *opts )
                                        score_strat
                                      );
 
-
                         if( filter_strat
                             == evaluation_strategy::filter_strategy::SCORE_FILTER )
                             {
@@ -1084,8 +1083,8 @@ bool module_deconv
     double b_denom = id_peptide_map.find( second )->second.size();
     double i_size = static_cast<double>( intersection_size );
 
-    return ( util::divide( a_denom, i_size ) >= threshold
-             && util::divide( b_denom, i_size ) >= threshold
+    return ( util::divide( i_size, a_denom ) >= threshold
+             && util::divide( i_size, b_denom ) >= threshold
            );
 }
 
