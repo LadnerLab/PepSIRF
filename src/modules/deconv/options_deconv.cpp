@@ -23,8 +23,6 @@ std::string options_deconv::get_arguments()
                           " --id_name_map             " << id_name_map_fname << "\n" << 
                           " --score_tie_threshold     " << score_tie_threshold << "\n" << 
                           " --score_overlap_threshold " << score_overlap_threshold << "\n" << 
-                          " --integer_tie_eval        " << bool_str( integer_tie_eval )<< "\n" << 
-                          " --ratio_tie_eval          " << bool_str( ratio_tie_eval )<< "\n" << 
                           " --output                  " << output_fname <<  "\n"
                           " --peptide_assignment_map  " << species_peptides_out <<  "\n"
                   ;

@@ -92,9 +92,6 @@ class options_deconv : public options
      **/
     bool create_linkage;
 
-    bool integer_tie_eval;
-    bool ratio_tie_eval;
-
     /**
      * Name of the fasta file containing 
      * protein sequences
