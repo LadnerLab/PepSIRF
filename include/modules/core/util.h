@@ -60,7 +60,7 @@ namespace util
     template<template<typename, typename...> class ContainerType,
              typename ValueType,
              typename ... Args>
-        void print_structure( std::ostream& stream, const ContainerType<ValueType, Args...>& structure )
+        void print_container( std::ostream& stream, const ContainerType<ValueType, Args...>& structure )
         {
             for( const auto& item : structure )
                 {
