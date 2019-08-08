@@ -383,11 +383,11 @@ class module_deconv : public module
      * @param scores The vector of species and scores to search 
      *        for ties. This vector must be sorted in non-increasing order
      *        of the scores.
-     * @param threshold The score threshold species scores must be within 
-     *        for them to considered tied. For example, if this threshold 
-     *        is 4.0, then for two species to be tied, 
-     *        score( species A ) - score( species B ) <= 4.0  
-     *        MUST be true.
+     * @param threshold The threshold for species to be enriched.
+     *        This method terminates if if reaches a species whose score does 
+     *        not reach this threshold.
+     * @param ovlp_threshold The score threshold species scores must be within 
+     *        for them to considered tied. 
      * @param distance A struct or class that calculates distance 
      *        between scores. For example, it may be good to 
      *        calculate ratios of scores vs. the scores themselves.
