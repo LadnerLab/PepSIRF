@@ -902,47 +902,6 @@ module_deconv::handle_ties( std::vector<std::pair<std::size_t,double>>&
         }
 }
 
-// tie_data::tie_type
-// module_deconv::get_tie_candidates( std::vector<std::pair<std::size_t,double>>&
-//                                    candidates,
-//                                    std::vector<std::pair<std::size_t,double>>&
-//                                    scores,
-//                                    double threshold,
-//                                    double ovlp_threshold
-//                                  )
-// {
-//     double curr_score = 0;
-//     std::size_t index = 0;
-
-//     auto score_diff = []( const std::pair<std::size_t, double>& first,
-//                           const std::pair<std::size_t, double>& second
-//                         ) -> double 
-//         {
-//             return first.second - second.second;
-//         };
-
-//     // D( a, a ) = 0
-//     candidates.push_back( scores[ index ] );
-
-//     for( index = 1;
-//          index < scores.size()
-//              && scores[ index ].second >= threshold
-//                && curr_score <= ovlp_threshold;
-//          ++index
-//        )
-//         {
-//             curr_score = score_diff( scores[ 0 ], scores[ index ] );
-
-//             // the score of these two species is close
-//             // enough to warrant a further check
-//             if( curr_score <= ovlp_threshold )
-//                 {
-//                     candidates.push_back( scores[ index ] );
-//                 }
-//         }
-//     return get_tie_type( candidates.size() );
-// }
-
 tie_data::tie_type
 module_deconv::get_tie_type( std::size_t to_convert )
 {
