@@ -781,8 +781,8 @@ module_deconv::get_tie_eval_strategy( options_deconv *opts )
             return evaluation_strategy::tie_eval_strategy::SUMMATION_SCORING_TIE_EVAL;
         }
 
-    return opts->ratio_tie_eval ?
-        evaluation_strategy::tie_eval_strategy::PERCENT_TIE_EVAL :
+    return use_ratio_overlap_threshold( opts->score_overlap_threshold ) ?
+        evaluation_strategy::tie_eval_strategy::PERCENT_TIE_EVAL        :
         evaluation_strategy::tie_eval_strategy::INTEGER_TIE_EVAL;
 }
 
@@ -1169,6 +1169,13 @@ module_deconv
 
 bool module_deconv              
 ::use_ratio_score_tie_thresh( double threshold )
+{
+    return !util::is_integer( threshold );
+}
+
+
+bool module_deconv
+::use_ratio_overlap_threshold( double threshold )
 {
     return !util::is_integer( threshold );
 }

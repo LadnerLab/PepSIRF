@@ -822,12 +822,20 @@ class module_deconv : public module
      * treated as a ratio. 
      * @param threshold The threshold to treat as a ratio.
      * @note this is equivalent to calling "!util::is_integer( threshold )"
-     * @returns boolean true if threshold should be treated as an integer,
+     * @returns boolean true if threshold should be treated as an ratio,
      *          false otherwise
      **/
     bool use_ratio_score_tie_thresh( double threshold );
 
-
+    /**
+     * Used to determine whether the tie overlap threshold should 
+     * be treated as a ratio.
+     * @param threshold the overlap threshold to consider
+     * @note this is equivalent to calling "!util::is_integer( threshold )"
+     * @returns boolean true if the value should be treated as a ratio,
+     *          false otherwise
+     **/
+    bool use_ratio_overlap_threshold( double threshold );
 };
 
 /**
