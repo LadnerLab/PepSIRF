@@ -108,6 +108,12 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "integers, will result in an error. So 4.45 is not a valid value, but both 4 and 0.45 are. "
           "[scoring_species] \n"
         )
+        ( "id_name_map", po::value<std::string>( &opts_deconv->id_name_map_fname )->default_value( "" ),
+          "File containing mappings from taxonomic id to name. This file should be formatted like the "
+          "file 'rankedlineage.dmp' from NCBI. It is recommended to either use this file or a subset of this file "
+          "that at least contains the species ids of the designed peptides. If included, the output will contain "
+          "a column denoting the name of the species as well as the id. [scoring_species]\n"
+        )
         ( "score_overlap_threshold", po::value<double>( &opts_deconv->score_overlap_threshold )->default_value( 1.0 )
           ->notifier( [&]( const double val ) {
                   if( val > 1 && !util::is_integer( val ) )
@@ -149,12 +155,6 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "species that share a kmer with this peptide. For example, if k is 7 and there exists a line "
           "in the linkage file of the form: \n 'peptide_1 TAB 455:12,423:10'\n then peptide_1 "
           "shares 12 7-mers with the species with id '455', and 10 7-mers with the species that has id 423. [create_linkage]\n"
-        )
-        ( "id_name_map", po::value<std::string>( &opts_deconv->id_name_map_fname )->default_value( "" ),
-          "File containing mappings from taxonomic id to name. This file should be formatted like the "
-          "file 'rankedlineage.dmp' from NCBI. It is recommended to either use this file or a subset of this file "
-          "that at least contains the species ids of the designed peptides. If included, the output will contain "
-          "a column denoting the name of the species as well as the id. [create_linkage]\n"
         );
 
     po::store( po::command_line_parser( argc, *argv ).options( desc ).allow_unregistered().run(), vm);
