@@ -12,6 +12,8 @@ class options_normalize : public options
 
     std::string get_arguments();
 
+    std::string peptide_scores_fname;
+
 
 };
 

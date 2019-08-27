@@ -3,6 +3,7 @@
 #include <iterator>
 #include <exception>
 #include <stdexcept>
+#include <string>
 
 #include "options_parser_normalize.h"
 #include "options_normalize.h"
@@ -22,7 +23,13 @@ bool options_parser_normalize::parse( int argc, char ***argv, options *opts )
                                 );
 
     desc.add_options()
-        ( "help,h", "Produce help message\n" );
+        ( "help,h", "Produce help message\n" )
+        ( "peptide_scores", po::value<std::string>( &opts_normalize->peptide_scores_fname ),
+          "Name of file containing peptide scores. This file should be tab-delimited "
+          "with the first column being peptide names, and every next column should be \n"
+          "the peptide's score within a given sample (the first item in the column). "
+          "This is exactly the format output by the deconv module.\n"
+        );
 
     po::store( po::command_line_parser( argc, *argv ).options( desc ).allow_unregistered().run(), vm);
 
