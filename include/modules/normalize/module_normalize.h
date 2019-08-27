@@ -4,8 +4,7 @@
 #include <string>
 
 #include "module.h"
-#include "options_normalize.h"
-
+#include "options.h"
 
 class module_normalize : public module
 {
@@ -17,6 +16,7 @@ class module_normalize : public module
 
     std::string get_name();
 
+    void run( options *opts );
 
 };
 
