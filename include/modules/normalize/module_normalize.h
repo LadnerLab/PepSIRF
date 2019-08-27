@@ -6,6 +6,9 @@
 #include "module.h"
 #include "options.h"
 
+/**
+ * Class for the PepSIRF normalization module.
+ **/
 class module_normalize : public module
 {
 
