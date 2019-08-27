@@ -10,6 +10,7 @@ find_package(OpenMP REQUIRED)
 find_package(Boost REQUIRED COMPONENTS program_options regex )
 
 include_directories(include/modules/core)
+include_directories(include/modules/normalize)
 include_directories(include/modules/parsers)
 include_directories(include/modules/demux)
 include_directories(include/modules/deconv)
@@ -52,7 +53,12 @@ add_library( modules_deconv STATIC src/modules/deconv/options_deconv.cpp src/mod
 				src/modules/core/options.cpp src/modules/core/options_parser_factory.cpp
 				src/modules/core/module_factory.cpp
 				src/modules/core/module.cpp src/modules/deconv/module_deconv.cpp
-		)
+		   )
+
+add_library( modules_normalize STATIC src/modules/normalize/options_normalize.cpp src/modules/normalize/options_parser_normalize.cpp
+			 src/modules/core/options.cpp src/modules/core/options_parser_factory.cpp
+			 src/modules/core/module.cpp src/modules/normalize/module_normalize.cpp
+		   )
 
 
 option( BUILD_TESTS "Determines whether to build tests." ON )
@@ -64,4 +70,4 @@ if(BUILD_TESTS)
   add_test( NAME test COMMAND pepsirf_test ) 
 endif()
 
-target_link_libraries(pep_sirf PUBLIC OpenMP::OpenMP_CXX pepsirf_common modules_demux modules_deconv ${Boost_LIBRARIES} )
+target_link_libraries(pep_sirf PUBLIC OpenMP::OpenMP_CXX pepsirf_common modules_demux modules_deconv modules_normalize ${Boost_LIBRARIES} )
