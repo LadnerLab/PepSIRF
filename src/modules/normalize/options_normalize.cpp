@@ -8,7 +8,8 @@ std::string options_normalize::get_arguments()
 {
     std::ostringstream str_stream;
 
-    str_stream << "\n";
+    str_stream << "--peptide_scores " << peptide_scores_fname << "\n" <<
+        "\n";
 
     return str_stream.str();
 }
