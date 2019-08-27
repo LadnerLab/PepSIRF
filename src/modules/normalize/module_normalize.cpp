@@ -11,7 +11,7 @@ std::string module_normalize::get_name()
     return name;
 }
 
-void run( options *opts )
+void module_normalize::run( options *opts )
 {
     options_normalize *n_opts = (options_normalize*) opts;
 
