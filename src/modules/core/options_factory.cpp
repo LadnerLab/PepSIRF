@@ -1,6 +1,8 @@
+#include <algorithm>
 #include "options_factory.h"
 #include "options_deconv.h"
-#include <algorithm>
+#include "options_normalize.h"
+
 
 options *options_factory::create( int argc, char ***argv )
 {
@@ -21,7 +23,10 @@ options *options_factory::create( int argc, char ***argv )
                 {
                     return new options_deconv();
                 }
-
+            else if( !mod_name.compare( "normalize" ) )
+                {
+                    return new options_normalize();
+                }
         }
 
     return nullptr;
