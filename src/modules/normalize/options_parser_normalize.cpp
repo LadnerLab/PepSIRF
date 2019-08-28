@@ -24,6 +24,10 @@ bool options_parser_normalize::parse( int argc, char ***argv, options *opts )
 
     desc.add_options()
         ( "help,h", "Produce help message\n" )
+        ( "threads,t", po::value<int>( &opts_normalize->num_threads )
+          ->default_value( opts_normalize->DEFAULT_NUM_THREADS ),
+          "The number of threads to use when performing analyses.\n"
+        )
         ( "peptide_scores", po::value<std::string>( &opts_normalize->peptide_scores_fname ),
           "Name of file containing peptide scores. This file should be tab-delimited "
           "with the first column being peptide names, and every next column should be \n"
