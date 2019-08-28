@@ -35,6 +35,21 @@ class module_normalize : public module
 
     void run( options *opts );
 
+    /**
+     * Parse the scores of peptides from a file. 
+     * Data (scores, peptide names, and sample names) will all 
+     * be stored in the appropriate members of dest.
+     * @param dest The destination for scores. 
+     * @param ifname The name of the input file to parse. This file should be 
+     *        in the format output by the 'demux' module. 
+     * @note to reduce resource usage and improve efficiency of 
+     *       iteration items are stored in dest in sample-major order,
+     *       so accessing dest.scores[ x ][ y ] returns the score for 
+     *       the y'th peptide in sample x.
+     **/
+    void parse_peptide_scores( peptide_score_data_sample_major& dest,
+                               std::string ifname
+                             );
 
 };
 

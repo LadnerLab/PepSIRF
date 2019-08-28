@@ -1,5 +1,7 @@
 #include <iostream>
 #include <omp.h>
+#include <algorithm>
+#include <fstream>
 
 #include "module_normalize.h"
 #include "options_normalize.h"
@@ -22,4 +24,14 @@ void module_normalize::run( options *opts )
 
     omp_set_num_threads( n_opts->num_threads );
 
+    peptide_score_data_sample_major original_scores;
+
 }
+
+void module_normalize::parse_peptide_scores( peptide_score_data_sample_major& dest,
+                                             std::string ifname
+                                           )
+{
+
+}
+
