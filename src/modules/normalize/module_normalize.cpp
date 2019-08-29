@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <fstream>
 #include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/join.hpp>
+#include <boost/range/adaptor/transformed.hpp>
 #include <cstdlib>
 
 #include "module_normalize.h"
@@ -29,6 +31,8 @@ void module_normalize::run( options *opts )
     peptide_score_data_sample_major original_scores;
 
     parse_peptide_scores( original_scores, scores_fname );
+
+    write_peptide_scores( "pep_out.tsv", original_scores );
 
 }
 
@@ -70,3 +74,25 @@ void module_normalize::parse_peptide_scores( peptide_score_data_sample_major& de
         }
 }
 
+
+void module_normalize::write_peptide_scores( std::string dest_fname,
+                                             peptide_score_data_sample_major& data
+                                           )
+{
+    std::ofstream out_file( dest_fname, std::ios_base::out );
+
+    out_file << "Sequence name\t";
+
+    out_file << boost::algorithm::join( data.sample_names, "\t" ) << "\n";
+
+    for( std::size_t index = 0; index < data.pep_names.size(); ++index )
+        {
+            out_file << data.pep_names[ index ] << "\t" <<
+                boost::algorithm::join( data.scores[ index ] |
+                                        boost::adaptors::transformed(
+                                                                     []( std::size_t s )
+                                                                     { return std::to_string( s ); }
+                                                                     ),
+                                         "\t" ) << "\n";
+        }
+}

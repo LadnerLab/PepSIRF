@@ -51,6 +51,19 @@ class module_normalize : public module
                                std::string ifname
                              );
 
+    /**
+     * Write peptide scores from data to a file. 
+     * Output will be written in a score matrix where an entry 
+     * (x, y) in the score matrix is the the score of peptide x 
+     * in sample y.
+     * @param dest_fname The name of file to write output to
+     * @param data the peptide score data to write output to
+     **/
+    void write_peptide_scores( std::string dest_fname,
+                               peptide_score_data_sample_major& data
+                             );
+
+
 };
 
 /**
