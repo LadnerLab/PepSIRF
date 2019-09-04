@@ -267,6 +267,10 @@ class module_deconv : public module
      * @note The comma-delimited list will only have more than one 
      *       entry in the event of a tie.
      * @param fname The name of the file to write output to
+     * @param peptide_assign_original Map that relates peptide names to 
+     *        the species it originally shared kmers with. Also included 
+     *        are the counts that indicate how many kmers that peptide 
+     *        shared with the species.
      * @param out_map The map that specifies which peptides were assigned 
      *        to each species. 
      **/
