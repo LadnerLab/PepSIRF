@@ -262,19 +262,27 @@ class module_deconv : public module
     /**
      * Write the map detailing which peptides were assigned 
      * to which species. This map is formatted as a tab-delimited file
-     * where the first entry in a column is the peptide name, and the second
-     * is a comma-delimited list of species this peptide was assigned to.
+     * where the first entry in a column is the peptide name, the second
+     * is a comma-delimited list of species this peptide was assigned to,
+     * and the third is the species the peptide originally shared a peptide 
+     * with (including that which it was assigned to).
      * @note The comma-delimited list will only have more than one 
      *       entry in the event of a tie.
      * @param fname The name of the file to write output to
+     * @param peptide_assign_original Map that relates peptide names to 
+     *        the species it originally shared kmers with. Also included 
+     *        are the counts that indicate how many kmers that peptide 
+     *        shared with the species.
      * @param out_map The map that specifies which peptides were assigned 
      *        to each species. 
      **/
     void
         write_species_assign_map( std::string fname,
+                                  sequential_map<std::string,std::vector<std::pair<std::size_t,std::size_t>>>& peptide_assign_original,
                                   sequential_map<std::string,std::vector<std::size_t>>&
                                   out_map
                                 );
+
 
     /**
      * Reads the list of enriched peptides from a file.
