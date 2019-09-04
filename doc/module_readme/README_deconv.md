@@ -147,6 +147,18 @@ modes are followed by [scoring_species,create_linkage].
                                         but both 4 and 0.45 are. 
                                         [scoring_species] 
                                         
+  --id_name_map arg                     File containing mappings from taxonomic
+                                        id to name. This file should be 
+                                        formatted like the file 
+                                        'rankedlineage.dmp' from NCBI. It is 
+                                        recommended to either use this file or 
+                                        a subset of this file that at least 
+                                        contains the species ids of the 
+                                        designed peptides. If included, the 
+                                        output will contain a column denoting 
+                                        the name of the species as well as the 
+                                        id. [scoring_species]
+                                        
   --score_overlap_threshold arg (=1)    Once two species have been found to be 
                                         within 'score_tie_threshold' number of 
                                         peptides of one another, they are then 
@@ -201,16 +213,4 @@ modes are followed by [scoring_species,create_linkage].
                                         7-mers with the species that has id 
                                         423. [create_linkage]
                                         
-  --id_name_map arg                     File containing mappings from taxonomic
-                                        id to name. This file should be 
-                                        formatted like the file 
-                                        'rankedlineage.dmp' from NCBI. It is 
-                                        recommended to either use this file or 
-                                        a subset of this file that at least 
-                                        contains the species ids of the 
-                                        designed peptides. If included, the 
-                                        output will contain a column denoting 
-                                        the name of the species as well as the 
-                                        id. [create_linkage]
-
-```                        
+```
