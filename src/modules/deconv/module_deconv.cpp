@@ -63,16 +63,17 @@ void module_deconv::choose_kmers( options_deconv *opts )
                             );
     pep_species_vec.erase( it, pep_species_vec.end() );
 
-    sequential_map<std::string,std::vector<std::size_t>> peptide_assignment_global;
+    sequential_map<std::string,std::vector<std::pair<std::size_t,std::size_t>>>
+        peptide_assignment_global;
 
     // add what species were originally shown to "hit" which peptides
     for( const auto& x : pep_species_vec )
         {
             auto ref = peptide_assignment_global
-                       .emplace( x.first, std::vector<std::size_t>() ).first;
+                .emplace( x.first, std::vector<std::pair<std::size_t,std::size_t>>() ).first;
             for( const auto& i : x.second )
                 {
-                    ref->second.emplace_back( i.first );
+                    ref->second.emplace_back( i );
                 }
         }
 
@@ -1066,7 +1067,8 @@ bool module_deconv
 void
 module_deconv
 ::write_species_assign_map( std::string fname,
-                            sequential_map<std::string,std::vector<std::size_t>>& peptide_assign_original,
+                            sequential_map<std::string,std::vector<std::pair<std::size_t,std::size_t>>>&
+                            peptide_assign_original,
                             sequential_map<std::string,std::vector<std::size_t>>&
                             out_map
                           )
@@ -1089,11 +1091,23 @@ module_deconv
 
             ofs << "\t";
 
+            std::vector<std::string> id_count_pairs;
+            const auto& species_wcounts = peptide_assign_original.find( curr->first )->second;
+
+            for( const auto& x : species_wcounts )
+                {
+                    std::string curr_str;
+
+                    curr_str.append( static_cast<std::string(*)(std::size_t)>(std::to_string)( x.first ) );
+                    curr_str.append( ":" );
+                    curr_str.append( static_cast<std::string(*)(std::size_t)>(std::to_string)( x.second ) );
+
+                    id_count_pairs.push_back( curr_str );
+                }
+
+
             ofs << boost::algorithm::join(
-                                          peptide_assign_original.find( curr->first )->second
-                                          | boost::adaptors::transformed(
-                                                                         static_cast<std::string(*)(std::size_t)>(std::to_string)
-                                                                        ),
+                                          id_count_pairs,
                                           ","
                                          );
             ofs << "\n";
