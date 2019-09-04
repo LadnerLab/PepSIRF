@@ -272,9 +272,11 @@ class module_deconv : public module
      **/
     void
         write_species_assign_map( std::string fname,
+                                  sequential_map<std::string,std::vector<std::pair<std::size_t,std::size_t>>>& peptide_assign_original,
                                   sequential_map<std::string,std::vector<std::size_t>>&
                                   out_map
                                 );
+
 
     /**
      * Reads the list of enriched peptides from a file.
