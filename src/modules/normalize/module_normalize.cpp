@@ -6,6 +6,8 @@
 #include <boost/algorithm/string/join.hpp>
 #include <boost/range/adaptor/transformed.hpp>
 #include <cstdlib>
+#include <functional>
+#include <numeric>
 
 #include "module_normalize.h"
 #include "options_normalize.h"
@@ -32,6 +34,10 @@ void module_normalize::run( options *opts )
 
     parse_peptide_scores( original_scores, scores_fname );
 
+    std::vector<std::size_t> col_sums( original_scores.sample_names.size() );
+    // get_sum( col_sums, original_scores.scores );
+    
+
     write_peptide_scores( "pep_out.tsv", original_scores );
 
 }
@@ -56,7 +62,9 @@ void module_normalize::parse_peptide_scores( peptide_score_data_sample_major& de
                     // copy all but the header (Sequence name) to the destination
                     std::for_each( split_line.begin() + 1, split_line.end(),
                                    [&]( const std::string &item )
-                                   {  dest.sample_names.push_back( item ); }
+                                   {
+                                      dest.sample_names.push_back( item );
+                                   }
                                  );
 
                     is_header = false;
@@ -65,11 +73,13 @@ void module_normalize::parse_peptide_scores( peptide_score_data_sample_major& de
                 {
                     dest.pep_names.push_back( split_line[ 0 ] );
                     dest.scores.emplace_back( std::vector<std::size_t>() );
+                    std::size_t index = 0;
 
-                    std::for_each( split_line.begin() + 1, split_line.end(),
-                                   [&]( const std::string& item )
-                                   { ( dest.scores.end() - 1)->push_back( std::atol( item.c_str() ) ); }
-                                 );
+                    for( index = 1; index < split_line.size(); ++index )
+                        {
+                            unsigned long score = std::atol( split_line[ index ].c_str() );
+                            dest.scores.back().emplace_back( score );
+                        }
                 }
         }
 }
@@ -87,12 +97,36 @@ void module_normalize::write_peptide_scores( std::string dest_fname,
 
     for( std::size_t index = 0; index < data.pep_names.size(); ++index )
         {
-            out_file << data.pep_names[ index ] << "\t" <<
-                boost::algorithm::join( data.scores[ index ] |
-                                        boost::adaptors::transformed(
-                                                                     []( std::size_t s )
-                                                                     { return std::to_string( s ); }
-                                                                     ),
-                                         "\t" ) << "\n";
+            out_file << data.pep_names[ index ] << "\t";
+                        
+            std::size_t inner_index = 0;
+
+            for( inner_index = 0; inner_index < data.sample_names.size(); ++inner_index )
+                {
+                    out_file << data.scores[ index ][ inner_index ];
+
+                    if( inner_index < data.sample_names.size() - 1 )
+                        {
+                            out_file << "\t";
+                        }
+                }
+            out_file << "\n";
+        }
+}
+
+    void module_normalize::get_sum( std::vector<std::size_t>& dest,
+                                    std::vector<std::vector<std::size_t>>& src
+                                  )
+{
+    std::size_t index = 0;
+
+    std::cout << dest.size() << " " << src.size() << "\n";
+    #pragma omp parallel for private( index ) shared( src, dest )
+    for( index = 0; index < src.size(); ++index )
+        {
+            dest[ index % dest.size() ] = std::accumulate( src[ index ].begin(),
+                                             src[ index ].end(),
+                                             0
+                                           );
         }
 }
