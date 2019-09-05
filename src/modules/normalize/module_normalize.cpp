@@ -34,8 +34,8 @@ void module_normalize::run( options *opts )
 
     parse_peptide_scores( original_scores, scores_fname );
 
-    std::vector<double> col_sums( original_scores.sample_names.size() );
-    // get_sum( col_sums, original_scores.scores );
+    std::vector<double> col_sums( original_scores.sample_names.size(), 0 );
+    get_sum( col_sums, original_scores.scores );
     
 
     write_peptide_scores( "pep_out.tsv", original_scores );
@@ -120,13 +120,13 @@ void module_normalize::write_peptide_scores( std::string dest_fname,
 {
     std::size_t index = 0;
 
-    std::cout << dest.size() << " " << src.size() << "\n";
-    #pragma omp parallel for private( index ) shared( src, dest )
     for( index = 0; index < src.size(); ++index )
         {
-            dest[ index % dest.size() ] = std::accumulate( src[ index ].begin(),
-                                             src[ index ].end(),
-                                             0
-                                           );
+            std::size_t inner_index = 0;
+            for( inner_index = 0; inner_index < src[ index ].size(); ++inner_index )
+                {
+                    dest[ inner_index ] += src[ index ][ inner_index ];
+                }
+            
         }
 }
