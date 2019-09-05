@@ -34,7 +34,7 @@ void module_normalize::run( options *opts )
 
     parse_peptide_scores( original_scores, scores_fname );
 
-    std::vector<std::size_t> col_sums( original_scores.sample_names.size() );
+    std::vector<double> col_sums( original_scores.sample_names.size() );
     // get_sum( col_sums, original_scores.scores );
     
 
@@ -72,7 +72,7 @@ void module_normalize::parse_peptide_scores( peptide_score_data_sample_major& de
             else
                 {
                     dest.pep_names.push_back( split_line[ 0 ] );
-                    dest.scores.emplace_back( std::vector<std::size_t>() );
+                    dest.scores.emplace_back( std::vector<double>() );
                     std::size_t index = 0;
 
                     for( index = 1; index < split_line.size(); ++index )
@@ -114,8 +114,8 @@ void module_normalize::write_peptide_scores( std::string dest_fname,
         }
 }
 
-    void module_normalize::get_sum( std::vector<std::size_t>& dest,
-                                    std::vector<std::vector<std::size_t>>& src
+    void module_normalize::get_sum( std::vector<double>& dest,
+                                    std::vector<std::vector<double>>& src
                                   )
 {
     std::size_t index = 0;

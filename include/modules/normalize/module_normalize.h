@@ -62,6 +62,10 @@ class module_normalize : public module
     void write_peptide_scores( std::string dest_fname,
                                peptide_score_data_sample_major& data
                              );
+    void get_sum( std::vector<double>& dest,
+                  std::vector<std::vector<double>>& src
+                );
+
 
 
 };
@@ -79,7 +83,7 @@ struct peptide_score_data
      * If this struct is peptide-major, scores[ x ][ y ] will 
      * return the score of peptide x in sample y.
      **/
-    std::vector<std::vector<std::size_t>> scores;
+    std::vector<std::vector<double>> scores;
 
     /**
      * The names of the peptides, in order in which they were
