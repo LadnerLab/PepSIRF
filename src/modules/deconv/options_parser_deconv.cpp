@@ -80,8 +80,10 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
         ( "peptide_assignment_map", po::value<std::string>( &opts_deconv->species_peptides_out ),
           "If specified, a map detailing which peptides were assigned to which species will be "
           "written. This map will be a tab-delimited file with the first column peptide names, "
-          "and the second column is a comma-separated list of species the peptide was assigned to. "
-          "Note that this comma-separated list will only contain multiple values in the event of "
+          "the second column is a comma-separated list of species the peptide was assigned to. "
+          "The third column will be a list of the species the peptide originally shared "
+          "a kmer with. \n"
+          "Note that the second column will only contain multiple values in the event of "
           "a tie. [scoring_species]\n"
         )
         ( "score_tie_threshold", po::value<double>( &opts_deconv->score_tie_threshold )->default_value( 0.00 )
