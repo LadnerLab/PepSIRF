@@ -108,7 +108,9 @@ def kmersByTaxon(refD, opts):
 def kmers(seq,k, step=1):
     out=[]
     for i in range(0, len(seq)-k+1, step):
-        out.append(seq[i:i+k])
+        thisK = seq[i:i+k]
+        if "X" not in thisK.upper():
+            out.append(thisK)
     return set(out)
 
 def parseTax(name, category):
