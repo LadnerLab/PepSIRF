@@ -152,6 +152,12 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "Name of fasta file containing aa peptides that have been designed as part "
           "of a library. [create_linkage]\n"
         )
+        ( "tax_id_index", po::value<std::size_t>( &opts_deconv->id_index )->default_value( 1 ),
+          "The index (0-based, valid values include 0-3) of the tax id to use for "
+          "linking peptides and species. For example, if this argument is passed with the value 1, \n"
+          "the species ID will be used. (2 for genus, 3 for family. 0 can vary depending upon the \n"
+          "method used for assigning the 0'th ID. [create_linkage]\n"
+        )
         ( "kmer_size,k", po::value<std::size_t>( &opts_deconv->k ), "Kmer size to use when creating "
           "the linkage map. Entries in the linkage file will contain peptides and the species ids of "
           "species that share a kmer with this peptide. For example, if k is 7 and there exists a line "
