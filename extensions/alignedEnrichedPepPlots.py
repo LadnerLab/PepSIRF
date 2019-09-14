@@ -3,6 +3,7 @@
 import matplotlib as mpl
 mpl.rcParams['pdf.fonttype'] = 42
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 
 import optparse, re
 import numpy as np
@@ -18,6 +19,7 @@ def main():
     p.add_option('-m', '--map', default="/Volumes/GoogleDrive/Shared drives/MyImmunity/PanviralDesign/PV1/encoding/unrepSW_9_30_70_design_combined_wControls.csv_map",  help='Probe name map. [/Volumes/GoogleDrive/Shared drives/MyImmunity/PanviralDesign/PV1/encoding/unrepSW_9_30_70_design_combined_wControls.csv_map]')
     p.add_option('-t', '--taxa', default="/Volumes/GoogleDrive/Shared drives/LadnerLab/Manuscripts/PV-PepSeq_Design-Testing/Tables/speciesIDs_2019-06-21.txt", help='Taxa info to link IDs to names [/Volumes/GoogleDrive/Shared drives/LadnerLab/Manuscripts/PV-PepSeq_Design-Testing/Tables/speciesIDs_2019-06-21.txt]')
     p.add_option('-a', '--alignInfo', default="/Volumes/GoogleDrive/Shared drives/LadnerLab/Projects/panviral_pepseq/analysis/alignments/AlignmentInfo.txt", help='Contains info for species-level seq alignments. [/Volumes/GoogleDrive/Shared drives/LadnerLab/Projects/panviral_pepseq/analysis/alignments/AlignmentInfo.txt]')
+    p.add_option('--annots', help='File with annotation info. If provided, a graphical representation of the different proteins with also be plotted. [None, OPT]')
     p.add_option('-n', '--minDepth', type='float', default=100, help='Minimum count to be included in plot. [100]')
     p.add_option('--readDepthToo', action='store_true', default=False, help='Use this flag to also generate a plot showing combined read depth at each position. This is most appropriate with normalized read count data. [False]')
     opts, args = p.parse_args()
@@ -54,22 +56,54 @@ def main():
                 cols = line.rstrip("\n").split("\t")
                 alInfo[cols[0]] = ["%s/%s" % (cols[1], x) for x in cols[2:]]
 
+    #Read in annotation info, if provided
+    annotD = {}
+    if opts.annots:
+        with open(opts.annots, "r") as fin:
+            lc=0
+            for line in fin:
+                lc+=1
+                if lc>1:
+                    cols = line.rstrip("\n").split("\t")
+                    if cols[0] not in annotD:
+                        annotD[cols[0]] = {}
+                    annotD[cols[0]][cols[1]] = [x.split(",") for x in cols[2].split("~")]
     
     #Make probe count plots
     #By default, any sample that starts with "Super" is excluded. These are expected to be negative controls
     for each in opts.speciesIDs.split(","):
-        plotAlignHits([x for x in list(data.keys()) if not x.startswith("Super")], each, alInfo, data, mapDict, id2name, opts.minDepth)
+        plotAlignHits([x for x in list(data.keys()) if not x.startswith("Super")], each, alInfo, data, mapDict, id2name, opts.minDepth, annotD)
     
 
     #Make read count depth plots (will be most appropriate with normalized read counts)
     #By default, any sample that starts with "Super" is excluded. These are expected to be negative controls
     if opts.readDepthToo:
         for each in opts.speciesIDs.split(","):
-            plotAlignDepth([x for x in list(data.keys()) if not x.startswith("Super")], each, alInfo, data, mapDict, id2name, opts.minDepth)
+            plotAlignDepth([x for x in list(data.keys()) if not x.startswith("Super")], each, alInfo, data, mapDict, id2name, opts.minDepth, annotD)
 
 #----------------------End of main()
 
-def plotAlignDepth(samps, spID, alInfo, data, mapDict, id2name, minDepth, alFasta=False):
+def plotAnnots(aD, ax):
+    prevY=0
+    prevStop=0
+    for name, genes in aD.items():
+        for start, end, g in genes:
+            if int(start)<prevStop:
+                y = prevY+0.5
+            else:
+                y= 0
+
+            p = patches.Rectangle((int(start), y), int(end)-int(start)+1, 1,fill=False, clip_on=False)
+            ax.add_patch(p)
+            
+            ax.text(0.5*(int(start)+int(end)), 0.5*(y+y+1), g,
+            horizontalalignment='center',
+            verticalalignment='center',
+            fontsize=15, color='black')
+        
+        ax.set_axis_off()
+
+def plotAlignDepth(samps, spID, alInfo, data, mapDict, id2name, minDepth, annotD, alFasta=False):
     proNames = speciesProbes(mapDict, spID)
     thisInfo = parseAlInfo(alInfo[spID])
 
@@ -79,27 +113,52 @@ def plotAlignDepth(samps, spID, alInfo, data, mapDict, id2name, minDepth, alFast
 
     #If there is only one alignment
     if len(thisInfo) == 1:
-        fig, ax = plt.subplots(figsize=(20,4))
-        #Get info for plot
-        x,y,z = plotInfoDepth(thisInfo[0], samps, mapDict, data, proNames, minDepth)
+        if spID not in annotD:
+            fig, ax = plt.subplots(figsize=(20,4))
+            #Get info for plot
+            x,y,z = plotInfoDepth(thisInfo[0], samps, mapDict, data, proNames, minDepth)
         
-        #Plot pcolormesh
-        pcm = ax.pcolormesh(x, y, z, cmap=palatte, vmin=0.01)
-        #pcm.set_edgecolor('face')
+            #Plot pcolormesh
+            pcm = ax.pcolormesh(x, y, z, cmap=palatte, vmin=0.01)
+            #pcm.set_edgecolor('face')
 
-        yticks = [0.5+x for x in list(range(1, len(samps)+1))]
-        ax.set_yticks(yticks)
-        ax.set_ylim(1,len(samps)+1)
-        ax.set_yticklabels([""]*len(yticks))
-        for item in (ax.get_xticklabels() + ax.get_yticklabels()):
-            item.set_fontsize(18)
-        cbar = fig.colorbar(pcm, extend='max')
-        cbar.ax.set_ylabel('Normalized Read Count\n(min=%d)' % minDepth, fontsize=18)
+            yticks = [0.5+x for x in list(range(1, len(samps)+1))]
+            ax.set_yticks(yticks)
+            ax.set_ylim(1,len(samps)+1)
+            ax.set_yticklabels([""]*len(yticks))
+            for item in (ax.get_xticklabels() + ax.get_yticklabels()):
+                item.set_fontsize(18)
+            cbar = fig.colorbar(pcm, extend='max')
+            cbar.ax.set_ylabel('Normalized Read Count\n(min=%d)' % minDepth, fontsize=18)
 
-        #ax.set_xlabel("Generation Time\n(days between infection of index and secondary cases)", fontsize=18)
-        ax.set_xlabel("%s%s" % (thisInfo[0][0][0].upper(), thisInfo[0][0][1:]), fontsize=24)
-        ax.set_ylabel("Individuals", fontsize=24)
+            #ax.set_xlabel("Generation Time\n(days between infection of index and secondary cases)", fontsize=18)
+            ax.set_xlabel("%s%s" % (thisInfo[0][0][0].upper(), thisInfo[0][0][1:]), fontsize=24)
+            ax.set_ylabel("Individuals", fontsize=24)
+
+        else:
+            fig, ax = plt.subplots(2,1, figsize=(20,4), sharex=True, gridspec_kw={'height_ratios': [1,5], 'hspace':0.1})
+            plotAnnots(annotD[spID], ax[0])
+            #Get info for plot
+            x,y,z = plotInfoDepth(thisInfo[0], samps, mapDict, data, proNames, minDepth)
         
+            #Plot pcolormesh
+            pcm = ax[1].pcolormesh(x, y, z, cmap=palatte, vmin=0.01)
+            #pcm.set_edgecolor('face')
+
+            yticks = [0.5+x for x in list(range(1, len(samps)+1))]
+            ax[1].set_yticks(yticks)
+            ax[1].set_ylim(1,len(samps)+1)
+            ax[1].set_yticklabels([""]*len(yticks))
+            plt.xlim(0,len(x[0]))
+            for item in (ax[1].get_xticklabels() + ax[1].get_yticklabels()):
+                item.set_fontsize(18)
+            cbar = fig.colorbar(pcm, extend='max', ax=ax)
+            cbar.ax.set_ylabel('Normalized Read Count\n(min=%d)' % minDepth, fontsize=18)
+
+            #ax.set_xlabel("Generation Time\n(days between infection of index and secondary cases)", fontsize=18)
+            ax[1].set_xlabel("%s%s" % (thisInfo[0][0][0].upper(), thisInfo[0][0][1:]), fontsize=24)
+            ax[1].set_ylabel("Individuals", fontsize=24)
+            
         #Write out data used to make plot
         writeData(samps, z, x[0][:-1], spID, id2name[spID], thisInfo[0][0], minDepth, "depthData")
 
@@ -153,7 +212,7 @@ def plotAlignDepth(samps, spID, alInfo, data, mapDict, id2name, minDepth, alFast
     plt.savefig('%s_%s_min%d_Depth.png' % (spID, id2name[spID].replace(" ", "-"), minDepth),dpi=200,bbox_inches='tight')
 
 
-def plotAlignHits(samps, spID, alInfo, data, mapDict, id2name, minDepth, alFasta=False):
+def plotAlignHits(samps, spID, alInfo, data, mapDict, id2name, minDepth, annotD, alFasta=False):
     proNames = speciesProbes(mapDict, spID)
     thisInfo = parseAlInfo(alInfo[spID])
 
@@ -163,27 +222,52 @@ def plotAlignHits(samps, spID, alInfo, data, mapDict, id2name, minDepth, alFasta
 
     #If there is only one alignment
     if len(thisInfo) == 1:
-        fig, ax = plt.subplots(figsize=(20,4))
-        #Get info for plot
-        x,y,z = plotInfo(thisInfo[0], samps, mapDict, data, proNames, minDepth)
+        if spID not in annotD:
+            fig, ax = plt.subplots(figsize=(20,4))
+            #Get info for plot
+            x,y,z = plotInfo(thisInfo[0], samps, mapDict, data, proNames, minDepth)
         
-        #Plot pcolormesh
-        pcm = ax.pcolormesh(x, y, z, cmap=palatte, vmin=0.01)
-        #pcm.set_edgecolor('face')
+            #Plot pcolormesh
+            pcm = ax.pcolormesh(x, y, z, cmap=palatte, vmin=0.01)
+            #pcm.set_edgecolor('face')
 
-        yticks = [0.5+x for x in list(range(1, len(samps)+1))]
-        ax.set_yticks(yticks)
-        ax.set_ylim(1,len(samps)+1)
-        ax.set_yticklabels([""]*len(yticks))
-        for item in (ax.get_xticklabels() + ax.get_yticklabels()):
-            item.set_fontsize(18)
-        cbar = fig.colorbar(pcm, extend='max')
-        cbar.ax.set_ylabel('# Enriched Probes\n(min=%d)' % minDepth, fontsize=18)
+            yticks = [0.5+x for x in list(range(1, len(samps)+1))]
+            ax.set_yticks(yticks)
+            ax.set_ylim(1,len(samps)+1)
+            ax.set_yticklabels([""]*len(yticks))
+            for item in (ax.get_xticklabels() + ax.get_yticklabels()):
+                item.set_fontsize(18)
+            cbar = fig.colorbar(pcm, extend='max')
+            cbar.ax.set_ylabel('# Enriched Probes\n(min=%d)' % minDepth, fontsize=18)
 
-        #ax.set_xlabel("Generation Time\n(days between infection of index and secondary cases)", fontsize=18)
-        ax.set_xlabel("%s%s" % (thisInfo[0][0][0].upper(), thisInfo[0][0][1:]), fontsize=24)
-        ax.set_ylabel("Individuals", fontsize=24)
+            #ax.set_xlabel("Generation Time\n(days between infection of index and secondary cases)", fontsize=18)
+            ax.set_xlabel("%s%s" % (thisInfo[0][0][0].upper(), thisInfo[0][0][1:]), fontsize=24)
+            ax.set_ylabel("Individuals", fontsize=24)
         
+        else:
+            fig, ax = plt.subplots(2,1, figsize=(20,4), sharex=True, gridspec_kw={'height_ratios': [1,5], 'hspace':0.1})
+            plotAnnots(annotD[spID], ax[0])
+            #Get info for plot
+            x,y,z = plotInfo(thisInfo[0], samps, mapDict, data, proNames, minDepth)
+        
+            #Plot pcolormesh
+            pcm = ax[1].pcolormesh(x, y, z, cmap=palatte, vmin=0.01)
+            #pcm.set_edgecolor('face')
+
+            yticks = [0.5+x for x in list(range(1, len(samps)+1))]
+            ax[1].set_yticks(yticks)
+            ax[1].set_ylim(1,len(samps)+1)
+            ax[1].set_yticklabels([""]*len(yticks))
+            plt.xlim(0,len(x[0]))
+            for item in (ax[1].get_xticklabels() + ax[1].get_yticklabels()):
+                item.set_fontsize(18)
+            cbar = fig.colorbar(pcm, extend='max', ax=ax)
+            cbar.ax.set_ylabel('# Enriched Probes\n(min=%d)' % minDepth, fontsize=18)
+
+            #ax.set_xlabel("Generation Time\n(days between infection of index and secondary cases)", fontsize=18)
+            ax[1].set_xlabel("%s%s" % (thisInfo[0][0][0].upper(), thisInfo[0][0][1:]), fontsize=24)
+            ax[1].set_ylabel("Individuals", fontsize=24)
+
         #Write out data used to make plot
         writeData(samps, z, x[0][:-1], spID, id2name[spID], thisInfo[0][0], minDepth, "data")
 

@@ -17,7 +17,8 @@ def main():
     for fasta in args:
         if not opts.skipMafft:
             alFasta = "%s_mafft-maxiter%d.fasta" % (".".join(fasta.split(".")[:-1]), opts.iter)
-            subprocess.run([opts.mafft, "--quiet", "--maxiterate", opts.iter, fasta, ">", alFasta])
+            subprocess.run("%s --quiet --maxiterate %d %s > %s" % (opts.mafft, opts.iter, fasta, alFasta), shell=True)
+
         else:
             alFasta = fasta
         
