@@ -322,7 +322,7 @@ void module_deconv::create_linkage( options_deconv *opts )
     std::vector<std::tuple<std::string,sequential_map<std::size_t,std::size_t>>>
         peptide_sp_map;
 
-    create_prot_map( kmer_sp_map, proteins, d_opts->k );
+    create_prot_map( kmer_sp_map, proteins, d_opts->k, d_opts->id_index );
     create_pep_map( kmer_sp_map, peptide_sp_map, peptides, d_opts->k );
     write_outputs( d_opts->output_fname, peptide_sp_map );
 
@@ -625,14 +625,14 @@ module_deconv::parse_enriched_file( std::string f_name )
     return return_val;
 }
 
-std::size_t module_deconv::get_id( std::string name )
+std::size_t module_deconv::get_id( std::string name, std::size_t id_index )
 {
     static const boost::regex id_re{ "OXX=([0-9]+),([0-9]*),([0-9]*),([0-9])" };
     boost::smatch match;
 
     if( boost::regex_search( name, match, id_re ) )
         {
-            return boost::lexical_cast<std::size_t>( match[ 2 ] );
+            return boost::lexical_cast<std::size_t>( match[ id_index + 1 ] );
         }
     return 0;
 }
@@ -641,7 +641,8 @@ void module_deconv::create_prot_map( sequential_map<std::string,
                                      sequential_map<std::size_t,std::size_t>>&
                                     map,
                                      std::vector<sequence>& sequences,
-                                     std::size_t k
+                                     std::size_t k,
+                                     std::size_t id_index
                                    )
 {
     std::size_t index   = 0;
@@ -655,7 +656,7 @@ void module_deconv::create_prot_map( sequential_map<std::string,
             ++num_prot;
             std::vector<std::string> kmers;
 
-            spec_id = get_id( sequences[ index ].name );
+            spec_id = get_id( sequences[ index ].name, id_index );
             kmer_tools::get_kmers( kmers, sequences[ index ].seq, k );
             sequential_map<std::size_t,std::size_t> val_map;
 

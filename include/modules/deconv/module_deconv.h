@@ -12,6 +12,8 @@
 #include "maps.h"
 #include "util.h"
 
+// TODO: Remove magic numbers for id index
+
 
 /**
  * Used for data that is relevant to determining and 
@@ -538,8 +540,9 @@ class module_deconv : public module
      * @param name The name from which to grab the id. 
      * @note The species id is the second group of the 
      *       above regex.
+     * @TODO Document id_index
      **/
-    std::size_t get_id( std::string name );
+    std::size_t get_id( std::string name, std::size_t id_index );
 
     /**
      * Create the linkage file to be used by 'choose_kmers' method.
@@ -557,13 +560,16 @@ class module_deconv : public module
      * @param k The kmer size to use when creating the map. 
      *        A species will be linked to a peptide if a peptide shares a
      *        kmer with that species.
+     * @TODO: Document id_index
      **/
     void create_prot_map( sequential_map<std::string,
                           sequential_map<std::size_t,std::size_t>>&
                           map,
                           std::vector<sequence>& sequences,
-                          std::size_t k
-                       );
+                          std::size_t k,
+                          std::size_t id_index
+                        );
+
 
     /**
      * Create a map that maps peptides to the 
