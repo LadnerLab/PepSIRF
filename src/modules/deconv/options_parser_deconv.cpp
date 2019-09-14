@@ -152,7 +152,16 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "Name of fasta file containing aa peptides that have been designed as part "
           "of a library. [create_linkage]\n"
         )
-        ( "tax_id_index", po::value<std::size_t>( &opts_deconv->id_index )->default_value( 1 ),
+        ( "tax_id_index", po::value<std::size_t>( &opts_deconv->id_index )->default_value( 1 )
+          ->notifier( [&]( const std::size_t val ) {
+                  if( val > 3 )
+                      {
+                          throw boost::program_options::invalid_option_value( "tax_id_index must be one of either 0, "
+                                                                             "1, 2, or 3."
+                                                                           );
+
+                      }
+              } ),
           "The index (0-based, valid values include 0-3) of the tax id to use for "
           "linking peptides and species. For example, if this argument is passed with the value 1, \n"
           "the species ID will be used. (2 for genus, 3 for family. 0 can vary depending upon the \n"
