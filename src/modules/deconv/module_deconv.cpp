@@ -319,11 +319,9 @@ void module_deconv::create_linkage( options_deconv *opts )
                    sequential_map<std::string,std::size_t>>
     kmer_sp_map;
 
-    std::cout << "intializing pep map " << std::endl;
     std::vector<std::tuple<std::string,sequential_map<std::string,std::size_t>>>
         peptide_sp_map;
 
-    std::cout << "Creating prot map " << std::endl;
     create_prot_map( kmer_sp_map, proteins, d_opts->k, d_opts->id_index );
     create_pep_map( kmer_sp_map, peptide_sp_map, peptides, d_opts->k );
     write_outputs( d_opts->output_fname, peptide_sp_map );
