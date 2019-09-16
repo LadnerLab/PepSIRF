@@ -542,7 +542,7 @@ class module_deconv : public module
      *       above regex.
      * @TODO Document id_index
      **/
-    std::size_t get_id( std::string name, std::size_t id_index );
+    std::string get_id( std::string name, std::size_t id_index );
 
     /**
      * Create the linkage file to be used by 'choose_kmers' method.
@@ -563,7 +563,7 @@ class module_deconv : public module
      * @TODO: Document id_index
      **/
     void create_prot_map( sequential_map<std::string,
-                          sequential_map<std::size_t,std::size_t>>&
+                          sequential_map<std::string,std::size_t>>&
                           map,
                           std::vector<sequence>& sequences,
                           std::size_t k,
@@ -586,9 +586,9 @@ class module_deconv : public module
      *        component kmers.
      **/
     void create_pep_map( sequential_map<std::string,
-                         sequential_map<std::size_t,std::size_t>>&
+                         sequential_map<std::string,std::size_t>>&
                          kmer_sp_map,
-                         std::vector<std::tuple<std::string,sequential_map<std::size_t,std::size_t>>>&
+                         std::vector<std::tuple<std::string,sequential_map<std::string,std::size_t>>>&
                          peptide_sp_vec,
                          std::vector<sequence>&
                          peptides,
@@ -607,7 +607,7 @@ class module_deconv : public module
      *       pep_name\tid:score,id:score,id:score
      **/
     void write_outputs( std::string fname,
-                        std::vector<std::tuple<std::string,sequential_map<std::size_t,std::size_t>>>&
+                        std::vector<std::tuple<std::string,sequential_map<std::string,std::size_t>>>&
                         peptide_sp_vec
                       );
 

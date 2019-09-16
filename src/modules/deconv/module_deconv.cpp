@@ -316,12 +316,14 @@ void module_deconv::create_linkage( options_deconv *opts )
     std::vector<sequence> proteins = fp.parse( d_opts->prot_file_fname    );
 
     sequential_map<std::string,
-                   sequential_map<std::size_t,std::size_t>>
+                   sequential_map<std::string,std::size_t>>
     kmer_sp_map;
 
-    std::vector<std::tuple<std::string,sequential_map<std::size_t,std::size_t>>>
+    std::cout << "intializing pep map " << std::endl;
+    std::vector<std::tuple<std::string,sequential_map<std::string,std::size_t>>>
         peptide_sp_map;
 
+    std::cout << "Creating prot map " << std::endl;
     create_prot_map( kmer_sp_map, proteins, d_opts->k, d_opts->id_index );
     create_pep_map( kmer_sp_map, peptide_sp_map, peptides, d_opts->k );
     write_outputs( d_opts->output_fname, peptide_sp_map );
@@ -625,20 +627,21 @@ module_deconv::parse_enriched_file( std::string f_name )
     return return_val;
 }
 
-std::size_t module_deconv::get_id( std::string name, std::size_t id_index )
+std::string module_deconv::get_id( std::string name, std::size_t id_index )
 {
-    static const boost::regex id_re{ "OXX=([0-9]+),([0-9]*),([0-9]*),([0-9])" };
+    static const boost::regex id_re{ "OXX=(\\S*),(\\S*),(\\S*),(\\S*)" };
+
     boost::smatch match;
 
     if( boost::regex_search( name, match, id_re ) )
         {
-            return boost::lexical_cast<std::size_t>( match[ id_index + 1 ] );
+            return match[ id_index + 1 ];
         }
     return 0;
 }
 
 void module_deconv::create_prot_map( sequential_map<std::string,
-                                     sequential_map<std::size_t,std::size_t>>&
+                                     sequential_map<std::string,std::size_t>>&
                                     map,
                                      std::vector<sequence>& sequences,
                                      std::size_t k,
@@ -646,7 +649,7 @@ void module_deconv::create_prot_map( sequential_map<std::string,
                                    )
 {
     std::size_t index   = 0;
-    std::size_t spec_id = 0;
+    std::string spec_id = "";
 
     double t_start = omp_get_wtime();
     double num_prot = 0;
@@ -658,7 +661,7 @@ void module_deconv::create_prot_map( sequential_map<std::string,
 
             spec_id = get_id( sequences[ index ].name, id_index );
             kmer_tools::get_kmers( kmers, sequences[ index ].seq, k );
-            sequential_map<std::size_t,std::size_t> val_map;
+            sequential_map<std::string,std::size_t> val_map;
 
             for( auto it = kmers.begin(); it != kmers.end(); ++it )
                 {
@@ -669,9 +672,11 @@ void module_deconv::create_prot_map( sequential_map<std::string,
                                                                       )
                                                        )
                                             );
+
                     auto pair_s = std::get<0>(
                                               pair->second.insert( std::make_pair( spec_id, 0 ) )
                                              );
+
                     ++(pair_s->second);
                 }
 
@@ -684,14 +689,15 @@ void module_deconv::create_prot_map( sequential_map<std::string,
 }
 
 void module_deconv::create_pep_map( sequential_map<std::string,
-                                    sequential_map<std::size_t,std::size_t>>&
+                                    sequential_map<std::string,std::size_t>>&
                                     kmer_sp_map,
-                                    std::vector<std::tuple<std::string,sequential_map<std::size_t,std::size_t>>>&
+                                    std::vector<std::tuple<std::string,sequential_map<std::string,std::size_t>>>&
                                     peptide_sp_vec,
                                     std::vector<sequence>&
                                     peptides,
                                     std::size_t k
                                   )
+
 {
     peptide_sp_vec.reserve( peptides.size() );
 
@@ -700,7 +706,7 @@ void module_deconv::create_pep_map( sequential_map<std::string,
         {
             // get the kmers from this peptide
             std::vector<std::string> kmers;
-            sequential_map<std::size_t,std::size_t> ids;
+            sequential_map<std::string,std::size_t> ids;
 
             kmer_tools::get_kmers( kmers, peptides[ index ].seq, k );
 
@@ -735,7 +741,7 @@ void module_deconv::create_pep_map( sequential_map<std::string,
 }
 
 void module_deconv::write_outputs( std::string fname,
-                                   std::vector<std::tuple<std::string,sequential_map<std::size_t,std::size_t>>>&
+                                   std::vector<std::tuple<std::string,sequential_map<std::string,std::size_t>>>&
                                     peptide_sp_vec
                                  )
 {
