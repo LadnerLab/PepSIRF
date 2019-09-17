@@ -13,9 +13,6 @@
 #include "maps.h"
 #include "util.h"
 
-// TODO: Remove magic numbers for id index
-
-
 /**
  * Used for data that is relevant to determining and 
  * communicating data about ties.
@@ -206,7 +203,6 @@ class module_deconv : public module
      *          of the peptide, and the second a vector of size_t ids 
      *          that represent the id of the species that share a kmer 
      *          with the peptide.
-     * @TODO: Document type changes
      **/
     std::vector<std::pair<std::string,std::vector<std::pair<std::string,std::size_t>>>>
         parse_linked_file( std::string fname );
@@ -492,7 +488,6 @@ class module_deconv : public module
      *        this species shares a kmer with.
      * @param pep_species_vec a vector containing pairs with the first entry 
      *        a species id, and the second a vector of string peptide names.
-     * @TODO: Document argument changes
      **/
     void id_to_pep( std::unordered_map<std::string, std::vector<std::string>>&
                     id_pep_map,
@@ -509,7 +504,6 @@ class module_deconv : public module
      *        peptide shares a kmer with.
      * @param pep_species_vec a vector containing pairs with the first entry 
      *        a species id, and the second a vector of string peptide names.
-     * @TODO  Document argument changes
      **/
     void pep_to_id( std::unordered_map<std::string, std::vector<std::pair<std::string,std::size_t>>>&
                     pep_id_map,
@@ -546,9 +540,9 @@ class module_deconv : public module
      * the pattern 'OXX=([0-9]+),([0-9]*),([0-9]*),([0-9])',
      * i.e. 'OXX=' followed by some ids.
      * @param name The name from which to grab the id. 
+     * @param id_index The index (0-based) of id to choose.
      * @note The species id is the second group of the 
      *       above regex.
-     * @TODO Document id_index
      **/
     std::string get_id( std::string name, std::size_t id_index );
 
@@ -565,10 +559,10 @@ class module_deconv : public module
      *       mappings of the form: 'kmer' -> 'species_id' -> 'count'
      * @param map The map that will store mappings of kmer -> species -> count.
      * @param sequences The sequences to analyze.
+     * @param id_index The index (0-based) of id to choose.
      * @param k The kmer size to use when creating the map. 
      *        A species will be linked to a peptide if a peptide shares a
      *        kmer with that species.
-     * @TODO: Document id_index
      **/
     void create_prot_map( std::unordered_map<std::string,
                           std::unordered_map<std::string,std::size_t>>&
