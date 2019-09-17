@@ -53,7 +53,6 @@ void module_deconv::choose_kmers( options_deconv *opts )
     evaluation_strategy::filter_strategy filter_strat = get_filter_method( d_opts );
     evaluation_strategy::tie_eval_strategy tie_eval_strat = get_tie_eval_strategy( d_opts );
 
-
     // filter out the peptides that are not enriched
     auto it = std::remove_if( pep_species_vec.begin(), pep_species_vec.end(),
                               [&]( std::pair<std::string,std::vector<std::pair<std::string,std::size_t>>>& i) -> bool 
