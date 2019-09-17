@@ -205,8 +205,9 @@ class module_deconv : public module
      *          of the peptide, and the second a vector of size_t ids 
      *          that represent the id of the species that share a kmer 
      *          with the peptide.
+     * @TODO: Document type changes
      **/
-    std::vector<std::pair<std::string,std::vector<std::pair<std::size_t,std::size_t>>>>
+    std::vector<std::pair<std::string,std::vector<std::pair<std::string,std::size_t>>>>
         parse_linked_file( std::string fname );
 
 
@@ -222,12 +223,14 @@ class module_deconv : public module
      * @param strat The scoring strategy to use for scoring peptides.
      * @returns The score of the species
      **/
-    double get_score( sequential_map<std::string,std::vector<std::pair<std::size_t,std::size_t>>>&
+
+    double get_score( sequential_map<std::string,std::vector<std::pair<std::string,std::size_t>>>&
                       spec_count_map,
-                      std::size_t id,
+                      std::string id,
                       std::vector<std::string>& peptides,
                       evaluation_strategy::score_strategy strat
                     );
+
 
     /**
      * Parse a map that will provide name->tax id mappings. This map should be formatted 
@@ -236,7 +239,7 @@ class module_deconv : public module
      * @param name_map the destination map that will store the mappings of id->name
      **/
     void
-        parse_name_map( std::string fname, std::map<std::size_t,std::string>& name_map );
+        parse_name_map( std::string fname, std::map<std::string,std::string>& name_map );
 
 
     /**
@@ -251,13 +254,13 @@ class module_deconv : public module
      *        of the enriched species.
      **/
     void write_outputs( std::string out_name,
-                        std::map<std::size_t,std::string>*
+                        std::map<std::string,std::string>*
                         id_name_map,
                         std::vector<
-                        std::tuple<std::size_t,std::size_t,double,bool>
+                        std::tuple<std::string,std::size_t,double,bool>
                         >&
                         out_counts,
-                        sequential_map<std::size_t,std::pair<std::size_t,double>>&
+                        sequential_map<std::string,std::pair<std::size_t,double>>&
                         original_scores
                       );
 
@@ -280,11 +283,11 @@ class module_deconv : public module
      **/
     void
         write_species_assign_map( std::string fname,
-                                  sequential_map<std::string,std::vector<std::pair<std::size_t,std::size_t>>>& peptide_assign_original,
-                                  sequential_map<std::string,std::vector<std::size_t>>&
+                                  sequential_map<std::string,std::vector<std::pair<std::string,std::size_t>>>&
+                                  peptide_assign_original,
+                                  sequential_map<std::string,std::vector<std::string>>&
                                   out_map
                                 );
-
 
     /**
      * Reads the list of enriched peptides from a file.
@@ -324,17 +327,16 @@ class module_deconv : public module
      *          a count as determined by ev_strat.
      **/
     bool 
-        sufficient_overlap( sequential_map<std::size_t,std::vector<std::string>>&
-                            id_peptide_map,
-                            sequential_map<std::string,sequential_map<std::size_t,std::size_t>>&
-                            pep_species_map_wcounts,
-                            std::size_t first,
-                            std::size_t second,
-                            evaluation_strategy::tie_eval_strategy
-                            ev_strat,
-                            double threshold
-                          );
-
+        sufficient_overlap(  sequential_map<std::string,std::vector<std::string>>&
+                             id_peptide_map,
+                             sequential_map<std::string,sequential_map<std::string,std::size_t>>&
+                             pep_species_map_wcounts,
+                             std::string first,
+                             std::string second,
+                             evaluation_strategy::tie_eval_strategy
+                             ev_strat,
+                             double threshold
+                           );
 
     /**
      * Get and report any potential species that may be tied.
@@ -365,13 +367,13 @@ class module_deconv : public module
      *       are tied. 
      **/
     void
-        handle_ties( std::vector<std::pair<std::size_t,double>>&
+        handle_ties( std::vector<std::pair<std::string,double>>&
                      dest_vec,
-                     sequential_map<std::size_t, std::vector<std::string>>&
+                     sequential_map<std::string, std::vector<std::string>>&
                      id_pep_map,
-                     sequential_map<std::string,sequential_map<std::size_t,std::size_t>>&
+                     sequential_map<std::string,sequential_map<std::string,std::size_t>>&
                      pep_species_map_wcounts,
-                     std::vector<std::pair<std::size_t,double>>&
+                     std::vector<std::pair<std::string,double>>&
                      tie_candidates,
                      evaluation_strategy::tie_eval_strategy
                      tie_evaluation_strategy,
@@ -407,9 +409,9 @@ class module_deconv : public module
      **/
     template<class DistanceCalc>
         tie_data::tie_type
-        get_tie_candidates( std::vector<std::pair<std::size_t,double>>&
+        get_tie_candidates( std::vector<std::pair<std::string,double>>&
                             candidates,
-                            std::vector<std::pair<std::size_t,double>>&
+                            std::vector<std::pair<std::string,double>>&
                             scores,
                             double threshold,
                             double ovlp_threshold,
@@ -419,8 +421,8 @@ class module_deconv : public module
             double curr_score = 0;
             std::size_t index = 0;
 
-            auto score_diff = [&]( const std::pair<std::size_t, double>& first,
-                                   const std::pair<std::size_t, double>& second
+            auto score_diff = [&]( const std::pair<std::string, double>& first,
+                                   const std::pair<std::string, double>& second
                                    ) -> double 
                 {
                     return distance( first.second, second.second );
@@ -488,12 +490,14 @@ class module_deconv : public module
      *        this species shares a kmer with.
      * @param pep_species_vec a vector containing pairs with the first entry 
      *        a species id, and the second a vector of string peptide names.
+     * @TODO: Document argument changes
      **/
-    void id_to_pep( sequential_map<std::size_t, std::vector<std::string>>&
+    void id_to_pep( sequential_map<std::string, std::vector<std::string>>&
                     id_pep_map,
-                    std::vector<std::pair<std::string, std::vector<std::pair<std::size_t,std::size_t>>>>&
+                    std::vector<std::pair<std::string, std::vector<std::pair<std::string,std::size_t>>>>&
                     pep_species_vec
                   );
+
 
     /**
      * Populate a map with pairings of <peptide name, vector of species ids>
@@ -503,10 +507,11 @@ class module_deconv : public module
      *        peptide shares a kmer with.
      * @param pep_species_vec a vector containing pairs with the first entry 
      *        a species id, and the second a vector of string peptide names.
+     * @TODO  Document argument changes
      **/
-    void pep_to_id( sequential_map<std::string, std::vector<std::pair<std::size_t,std::size_t>>>&
+    void pep_to_id( sequential_map<std::string, std::vector<std::pair<std::string,std::size_t>>>&
                     pep_id_map,
-                    std::vector<std::pair<std::string, std::vector<std::pair<std::size_t,std::size_t>>>>&
+                    std::vector<std::pair<std::string, std::vector<std::pair<std::string,std::size_t>>>>&
                     pep_species_vec
                   );
 
@@ -518,14 +523,15 @@ class module_deconv : public module
      * @param spec_count_map Map that associates peptides with the species 
      *        that share a kmer with the peptide.
      **/
-    void score_species( std::vector<std::pair<std::size_t, double>>&
+    void score_species( std::vector<std::pair<std::string, double>>&
                         id_counts,
-                        sequential_map<std::size_t,std::vector<std::string>>&
+                        sequential_map<std::string,std::vector<std::string>>&
                         id_count_map,
-                        sequential_map<std::string,std::vector<std::pair<std::size_t,std::size_t>>>&
+                        sequential_map<std::string,std::vector<std::pair<std::string,std::size_t>>>&
                         spec_count_map,
                         evaluation_strategy::score_strategy strat
                       );
+
 
     /**
      * Choose the 'best' kmers as defined by the scoring options passed to the program.
@@ -698,10 +704,11 @@ class module_deconv : public module
      *        and the value will be the the count.
      **/
     void
-        get_species_counts_per_peptide( sequential_map<std::size_t, std::vector<std::string>>&
-                                        id_pep_map,
-                                        sequential_map<std::size_t,std::size_t>& pep_counts
-                                      );
+        get_species_counts_per_peptide( sequential_map<std::string, std::vector<std::string>>&
+                                         id_pep_map,
+                                         sequential_map<std::string,std::size_t>& pep_counts
+                                       );
+
 
 
     /**
@@ -715,8 +722,8 @@ class module_deconv : public module
      *        peptides they share a kmer with.
      **/
     void
-        handle_kway_tie( std::vector<std::pair<std::size_t,double>>& tie_candidates,
-                         sequential_map<std::size_t, std::vector<std::string>>& id_pep_map
+        handle_kway_tie( std::vector<std::pair<std::string,double>>& tie_candidates,
+                         sequential_map<std::string, std::vector<std::string>>& id_pep_map
                        );
 
 
@@ -730,9 +737,9 @@ class module_deconv : public module
      *      first items in the pairs of scores.
      **/
     template<template<class, class, class...> class Mtype>
-        void combine_count_and_score( Mtype<std::size_t,std::pair<std::size_t,double>>& map,
-                                      Mtype<std::size_t,std::size_t>& c_map,
-                                      std::vector<std::pair<std::size_t,double>>& scores
+        void combine_count_and_score( Mtype<std::string,std::pair<std::size_t,double>>& map,
+                                      Mtype<std::string,std::size_t>& c_map,
+                                      std::vector<std::pair<std::string,double>>& scores
                                     )
         {
 
