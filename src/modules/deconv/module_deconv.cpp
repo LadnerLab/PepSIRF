@@ -556,11 +556,19 @@ void module_deconv::write_outputs( std::string out_name,
                 }
             if( id_name_map != nullptr )
                 {
+                    auto thing = std::get<0>( *tied_item );
+
                     to_stream_if( out_file, tied, 
-                                  get_map_value( id_name_map, std::get<0>( *tied_item ) ),
+                                  get_map_value( id_name_map,
+                                                 std::get<0>( *tied_item ),
+                                                 std::get<0>( *tied_item )
+                                               ),
                                   ","
                                 );
-                    out_file << get_map_value( id_name_map, std::get<0>( *it ) ) << "\t";
+                    out_file << get_map_value( id_name_map,
+                                               std::get<0>( *it ),
+                                               std::get<0>( *tied_item )
+                                             ) << "\t";
                 }
 
             else

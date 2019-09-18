@@ -756,15 +756,19 @@ class module_deconv : public module
     /**
      * Either find an item in a map, or return a default-constructed
      * value from that map. This useful if you want to print the value 
-     * if it is found in the map, or an empty string otherwise.
+     * if it is found in the map, or a default string otherwise.
      * @param map A map of type I that maps K->V
      * @param search The item to search for in map.
+     * @param default_return The value to return if search
+     *        is not found in map. This defaults to a default-constructed
+     *        V.
      * @returns Either the value of search in the map, or 
-     *          a default-constructed value if not found. 
+     *          the item provided in default_return value if not found. 
      **/
-    template<template<class, class, class...> class I, class K, class V>
+    template<template<class...> class I, class K, class V>
         V get_map_value( const I<K,V>& map,
-                         const K& search
+                         const K& search,
+                         V default_return = V()
                          )
     {
         if( map.find( search ) != map.end() )
@@ -773,7 +777,7 @@ class module_deconv : public module
                 return map.find( search )->second;
             }
         // default-construct a value
-        return V();
+        return default_return;
     }
 
     /**
@@ -785,12 +789,13 @@ class module_deconv : public module
      **/
     template<template<class, class, class...> class I, typename K, typename V>
         V get_map_value( const I<K,V>* map,
-                         const K& search
+                         const K& search,
+                         V default_return = V()
                          )
     {
         // just dereference it and pass along to
         // the other template function
-        return get_map_value( *map, search );
+        return get_map_value( *map, search, default_return );
     }
 
 
