@@ -187,7 +187,7 @@ TEST_CASE( "Test samplelist_parser and sample", "[samplelist_parser]" )
 
 
     unsigned int index = 0;
-    sequential_map<sample, int> s_map( vec.size() );
+    std::unordered_map<sample, int> s_map( vec.size() );
     for( index = 0 ; index < vec.size(); ++index )
         {
             s_map[ vec[ index ] ] = vec[ index ].id;
@@ -374,21 +374,21 @@ TEST_CASE( "get_tie_candidates_integer", "[module_deconv]" )
 {
     auto mod = module_deconv();
 
-    std::vector<std::pair<std::size_t, double>> candidates;
-    std::vector<std::pair<std::size_t, double>> scores;
+    std::vector<std::pair<std::string, double>> candidates;
+    std::vector<std::pair<std::string, double>> scores;
     double threshold      = 4.0;
     double ovlp_threshold = 4.0;
 
-    scores.emplace_back( 100, 245.0 );
-    scores.emplace_back( 101, 105.0 );
-    scores.emplace_back( 102, 5.0 );
-    scores.emplace_back( 103, 245.0 );
-    scores.emplace_back( 104, 135.0 );
-    scores.emplace_back( 105, 249.0 );
+    scores.emplace_back( "100", 245.0 );
+    scores.emplace_back( "101", 105.0 );
+    scores.emplace_back( "102", 5.0 );
+    scores.emplace_back( "103", 245.0 );
+    scores.emplace_back( "104", 135.0 );
+    scores.emplace_back( "105", 249.0 );
     std::sort( scores.begin(),
                scores.end(),
                compare_pair_non_increasing
-               <std::size_t, double>()
+               <std::string, double>()
             );
 
     auto t_type = mod.get_tie_candidates( candidates,
@@ -462,8 +462,8 @@ TEST_CASE( "get_tie_candidates_ratio", "[module_deconv]" )
 {
     auto mod = module_deconv();
 
-    std::vector<std::pair<std::size_t, double>> candidates;
-    std::vector<std::pair<std::size_t, double>> scores;
+    std::vector<std::pair<std::string, double>> candidates;
+    std::vector<std::pair<std::string, double>> scores;
     double threshold      = 4.0;
     double ovlp_threshold = 0;
 
@@ -564,10 +564,10 @@ TEST_CASE( "sufficient_overlap", "[module_deconv]" )
 
     auto mod = module_deconv();
 
-    sequential_map<std::size_t,std::vector<std::string>> id_p_map;
-    sequential_map<std::string,sequential_map<std::size_t,std::size_t>> counts_map;
-    std::size_t first = 100;
-    std::size_t second = 200;
+    std::unordered_map<std::string,std::vector<std::string>> id_p_map;
+    std::unordered_map<std::string,std::unordered_map<std::string,std::size_t>> counts_map;
+    std::string first = "100";
+    std::string second = "200";
 
 
     std::vector<std::string> f_vec { "pep1", "pep2", "pep3", "pep4" };
@@ -578,7 +578,7 @@ TEST_CASE( "sufficient_overlap", "[module_deconv]" )
 
     for( const auto& pep : f_vec )
         {
-            counts_map[ pep ] = sequential_map<std::size_t,std::size_t>();
+            counts_map[ pep ] = std::unordered_map<std::string,std::size_t>();
             counts_map[ pep ].emplace( first, 1 );
             counts_map[ pep ].emplace( second, 1 );
         }
@@ -626,10 +626,10 @@ TEST_CASE( "sufficient_overlap_ratio", "[module_deconv]" )
 
     auto mod = module_deconv();
 
-    sequential_map<std::size_t,std::vector<std::string>> id_p_map;
-    sequential_map<std::string,sequential_map<std::size_t,std::size_t>> counts_map;
-    std::size_t first = 100;
-    std::size_t second = 200;
+    std::unordered_map<std::string,std::vector<std::string>> id_p_map;
+    std::unordered_map<std::string,std::unordered_map<std::string,std::size_t>> counts_map;
+    std::string first = "100";
+    std::string second = "200";
 
 
     std::vector<std::string> f_vec { "pep1", "pep3", "pep4" };
@@ -640,14 +640,14 @@ TEST_CASE( "sufficient_overlap_ratio", "[module_deconv]" )
 
     for( const auto& pep : f_vec )
         {
-            counts_map[ pep ] = sequential_map<std::size_t,std::size_t>();
+            counts_map[ pep ] = std::unordered_map<std::string,std::size_t>();
             counts_map[ pep ].emplace( first, 1 );
         }
     for( const auto& pep : s_vec )
         {
             if( counts_map.find( pep ) == counts_map.end() )
                 {
-                    counts_map[ pep ] = sequential_map<std::size_t,std::size_t>();
+                    counts_map[ pep ] = std::unordered_map<std::string,std::size_t>();
                 }
             counts_map[ pep ].emplace( second, 1 );
         }
@@ -697,10 +697,10 @@ TEST_CASE( "sufficient_overlap_summation", "[module_deconv]" )
 
     auto mod = module_deconv();
 
-    sequential_map<std::size_t,std::vector<std::string>> id_p_map;
-    sequential_map<std::string,sequential_map<std::size_t,std::size_t>> counts_map;
-    std::size_t first = 100;
-    std::size_t second = 200;
+    std::unordered_map<std::string,std::vector<std::string>> id_p_map;
+    std::unordered_map<std::string,std::unordered_map<std::string,std::size_t>> counts_map;
+    std::string first = "100";
+    std::string second = "200";
 
 
     std::vector<std::string> f_vec { "pep1", "pep3", "pep4" };
@@ -711,14 +711,14 @@ TEST_CASE( "sufficient_overlap_summation", "[module_deconv]" )
 
     for( const auto& pep : f_vec )
         {
-            counts_map[ pep ] = sequential_map<std::size_t,std::size_t>();
+            counts_map[ pep ] = std::unordered_map<std::string,std::size_t>();
             counts_map[ pep ].emplace( first, 1 );
         }
     for( const auto& pep : s_vec )
         {
             if( counts_map.find( pep ) == counts_map.end() )
                 {
-                    counts_map[ pep ] = sequential_map<std::size_t,std::size_t>();
+                    counts_map[ pep ] = std::unordered_map<std::,std::size_t>();
                 }
             counts_map[ pep ].emplace( second, 1 );
         }
@@ -797,13 +797,14 @@ TEST_CASE( "get_map_value", "[module_deconv]" )
 {
     auto mod = module_deconv();
 
-    sequential_map<int,int> map;
+    std::unordered_map<int,int> map;
     map.emplace( 1, 1 );
     map.emplace( 2, 2 );
     map.emplace( 3, 3 );
 
-    REQUIRE( get_map_value<sequential_map,int,int>( map, 1 ) == 1 );
-    REQUIRE( get_map_value<sequential_map,int,int>( map, 2 ) == 2 );
-    REQUIRE( get_map_value<sequential_map,int,int>( map, 3 ) == 3 );
-    REQUIRE( get_map_value<sequential_map,int,int>( map, 4 ) == 0 );
+    REQUIRE( mod.get_map_value( map, 1 ) == 1 );
+    REQUIRE( mod.get_map_value( map, 2 ) == 2 );
+    REQUIRE( mod.get_map_value( map, 3 ) == 3 );
+    REQUIRE( mod.get_map_value( map, 4 ) == 0 );
+    REQUIRE( mod.get_map_value( map, 5, 9 ) == 9 );
 }
