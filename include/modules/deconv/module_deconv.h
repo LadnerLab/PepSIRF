@@ -575,7 +575,6 @@ class module_deconv : public module
                                     break;
                                 }
                         }
-                    std::cout << scores[ index ].first << " " << scores[ index ].second << "\n";
                 }
 
             return get_tie_type( candidates.size() );
