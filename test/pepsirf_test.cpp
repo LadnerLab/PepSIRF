@@ -467,17 +467,17 @@ TEST_CASE( "get_tie_candidates_ratio", "[module_deconv]" )
     double threshold      = 4.0;
     double ovlp_threshold = 0;
 
-    scores.emplace_back( 100, 245.0 );
-    scores.emplace_back( 101, 105.0 );
-    scores.emplace_back( 102, 5.0 );
-    scores.emplace_back( 103, 245.0 );
-    scores.emplace_back( 104, 135.0 );
-    scores.emplace_back( 105, 249.0 );
+    scores.emplace_back( "100", 245.0 );
+    scores.emplace_back( "101", 105.0 );
+    scores.emplace_back( "102", 5.0 );
+    scores.emplace_back( "103", 245.0 );
+    scores.emplace_back( "104", 135.0 );
+    scores.emplace_back( "105", 249.0 );
 
     std::sort( scores.begin(),
                scores.end(),
                compare_pair_non_increasing
-               <std::size_t, double>()
+               <std::string, double>()
             );
 
     auto t_type = mod.get_tie_candidates( candidates,
@@ -655,7 +655,6 @@ TEST_CASE( "sufficient_overlap_ratio", "[module_deconv]" )
 
 
     bool so = false;
-    double threshold = 1;
 
     so = mod.sufficient_overlap( id_p_map,
                                  counts_map,
@@ -718,14 +717,13 @@ TEST_CASE( "sufficient_overlap_summation", "[module_deconv]" )
         {
             if( counts_map.find( pep ) == counts_map.end() )
                 {
-                    counts_map[ pep ] = std::unordered_map<std::,std::size_t>();
+                    counts_map[ pep ] = std::unordered_map<std::string,std::size_t>();
                 }
             counts_map[ pep ].emplace( second, 1 );
         }
 
 
     bool so = false;
-    double threshold = 1;
 
     so = mod.sufficient_overlap( id_p_map,
                                  counts_map,
