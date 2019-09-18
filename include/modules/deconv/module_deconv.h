@@ -12,6 +12,7 @@
 #include "sequence.h"
 #include "maps.h"
 #include "util.h"
+#include "setops.h"
 
 /**
  * Used for data that is relevant to determining and 
@@ -323,17 +324,129 @@ class module_deconv : public module
      * @returns The overlap amount, expressed as either a ratio or 
      *          a count as determined by ev_strat.
      **/
-    bool 
-        sufficient_overlap(  std::unordered_map<std::string,std::vector<std::string>>&
+    template<template<typename...> class MapType>
+        bool 
+        sufficient_overlap(  MapType<std::string,std::vector<std::string>>&
                              id_peptide_map,
-                             std::unordered_map<std::string,std::unordered_map<std::string,std::size_t>>&
+                             MapType<std::string,MapType<std::string,std::size_t>>&
                              pep_species_map_wcounts,
                              std::string first,
                              std::string second,
                              evaluation_strategy::tie_eval_strategy
                              ev_strat,
                              double threshold
-                           );
+                    )
+        {
+            auto& first_peptides  = id_peptide_map.find( first )->second;
+            auto& second_peptides = id_peptide_map.find( second )->second;
+            // reserve max( map[ first ].size, map[ second ].size ) in
+            std::size_t intersection_size = 0;
+
+            sequential_set<std::string> intersection;
+
+            // we do either union or intersection, alias
+            // the intersection set for clear naming 
+            sequential_set<std::string>& set_union = intersection;
+
+            intersection.reserve( std::max( first_peptides.size(),
+                                            second_peptides.size()
+                                            )
+                                  );
+
+
+            if(  ev_strat
+                 != evaluation_strategy
+                 ::tie_eval_strategy
+                 ::SUMMATION_SCORING_TIE_EVAL
+                 )
+                {
+                    setops::set_intersection( intersection,
+                                              first_peptides,
+                                              second_peptides
+                                              );
+                    intersection_size = intersection.size();
+                }
+
+            if( ev_strat
+                == evaluation_strategy
+                ::tie_eval_strategy
+                ::INTEGER_TIE_EVAL
+                )
+                {
+                    return (double) intersection_size >= threshold;
+                }
+
+            else if( ev_strat
+                     == evaluation_strategy
+                     ::tie_eval_strategy
+                     ::SUMMATION_SCORING_TIE_EVAL
+                     )
+                {
+                    setops::set_union( set_union,
+                                       first_peptides,
+                                       second_peptides
+                                       );
+
+                    // where 'a' and 'b' are for species first and
+                    // species second
+                    double a_score, b_score, a_num, a_denom,
+                        b_num, b_denom;
+                    a_score = b_score = a_num = a_denom =
+                        b_num = b_denom = 0;
+
+                    for( const auto& peptide : set_union )
+                        {
+                    
+                            auto pep_species_map = pep_species_map_wcounts
+                                .find( peptide )->second;
+
+                            if( pep_species_map.find( first ) != pep_species_map.end() )
+                                {
+                                    a_score = pep_species_map
+                                        .find( first )->second;
+                                }
+
+                            if( pep_species_map.find( second ) != pep_species_map.end() )
+                                {
+
+                                    b_score = pep_species_map
+                                        .find( second )->second;
+                                }
+
+                            if( b_score > 0 )
+                                {
+                                    a_num += a_score;
+                                }
+                            if( a_score > 0 )
+                                {
+                                    b_num += b_score;
+                                }
+                            a_denom += a_score;
+                            b_denom += b_score;
+
+                            // reset the scores
+                            a_score = b_score = 0;
+                        }
+
+                    // don't try to divide by zero, but if threshold is
+                    // zero then we need to return true without trying to divide.
+                    return ( threshold == 0 )
+                        || ( a_denom > 0 && b_denom > 0
+                             && util::divide( a_num, a_denom ) >= threshold
+                             && util::divide( b_num, b_denom ) >= threshold
+                             );
+                }
+
+            // percent tie evaluation strategy 
+            double a_denom = id_peptide_map.find( first )->second.size();
+            double b_denom = id_peptide_map.find( second )->second.size();
+            double i_size = static_cast<double>( intersection_size );
+
+            return ( util::divide( i_size, a_denom ) >= threshold
+                     && util::divide( i_size, b_denom ) >= threshold
+                     );
+        }
+
 
     /**
      * Get and report any potential species that may be tied.
