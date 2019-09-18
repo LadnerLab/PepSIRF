@@ -567,7 +567,7 @@ void module_deconv::write_outputs( std::string out_name,
                                 );
                     out_file << get_map_value( id_name_map,
                                                std::get<0>( *it ),
-                                               std::get<0>( *tied_item )
+                                               std::get<0>( *it )
                                              ) << "\t";
                 }
 
