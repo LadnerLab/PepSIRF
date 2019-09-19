@@ -95,7 +95,7 @@ namespace util
         void
         all_distances( DestType<DistanceType>& dest,
                        InputIt begin, InputIt end,
-                       T compare,
+                       T& compare,
                        Distance d
                      )
         {
