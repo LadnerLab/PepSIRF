@@ -831,7 +831,8 @@ class module_deconv : public module
      **/
     void
         handle_kway_tie( std::vector<std::pair<std::string,double>>& tie_candidates,
-                         std::unordered_map<std::string, std::vector<std::string>>& id_pep_map
+                         std::unordered_map<std::string, std::vector<std::string>>& id_pep_map,
+                         const double ovlp_threshold
                        );
 
 

@@ -924,7 +924,8 @@ module_deconv::handle_ties( std::vector<std::pair<std::string,double>>&
     else // k-way tie
         {
             handle_kway_tie( tie_candidates,
-                             id_pep_map
+                             id_pep_map,
+                             overlap_threshold
                            );
             dest_vec.push_back( tie_candidates[ 0 ] );
         }
@@ -1000,7 +1001,8 @@ module_deconv
 void
 module_deconv
 ::handle_kway_tie( std::vector<std::pair<std::string,double>>& tie_candidates,
-                   std::unordered_map<std::string, std::vector<std::string>>& id_pep_map
+                   std::unordered_map<std::string, std::vector<std::string>>& id_pep_map,
+                   const double ovlp_threshold
                  )
 {
     // std::vector<double> scores( tie_candidates.size(), 0.0 );
@@ -1026,9 +1028,57 @@ module_deconv
             std::size_t size = intersection.size();
 
             intersection.clear();
-            return (double) (size / id_pep_map.find( first.first )->second.size() );
+            return (double) size / (double) id_pep_map.find( first.first )->second.size();
         };
 
+    // compute pairwise distances for each of the species
+    for( const auto& cand : tie_candidates )
+        {
+            util::all_distances( pairwise_distances[ outer_index ],
+                                 tie_candidates.begin(),
+                                 tie_candidates.end(),
+                                 tie_candidates[ outer_index ],
+                                 distance
+                               );
+            ++outer_index;
+        }
+
+    std::tuple<std::size_t, std::size_t, double> max_match{ 0, 0, 0.0 };
+
+    for( std::size_t index = 0; index < pairwise_distances.size(); ++index )
+        {
+            for( std::size_t inner_index = 0; inner_index < pairwise_distances[ index ].size(); ++inner_index )
+                {
+                    if( index != inner_index )
+                        {
+                            if( pairwise_distances[ index ][ inner_index ] >= ovlp_threshold
+                                && pairwise_distances[ inner_index ][ index ] >= ovlp_threshold
+                              )
+                                {
+                                    double sum = pairwise_distances[ index ][ inner_index ]
+                                                 + pairwise_distances[ inner_index ][ index ];
+                                    if( sum > std::get<2>( max_match ) )
+                                        {
+                                            std::get<0>( max_match ) = index;
+                                            std::get<1>( max_match ) = inner_index;
+                                            std::get<2>( max_match ) = sum;
+                                        }
+                                }
+                        }
+                }
+        }
+
+
+    // auto min_element_idx = std::min_element(
+    //                                         scores.begin(),
+    //                                         scores.end()
+    //                                        ) - scores.begin();
+
+    // auto min_overlap = tie_candidates[ min_element_idx ];
+
+    // // remove all but the peptide with minimum overlap
+    // tie_candidates.clear();
+    // tie_candidates.push_back( min_overlap );
 
 }
 
