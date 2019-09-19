@@ -60,13 +60,14 @@ namespace util
     template<template<typename, typename...> class ContainerType,
              typename ValueType,
              typename ... Args>
-        void print_container( std::ostream& stream, const ContainerType<ValueType, Args...>& structure )
+        void print_container( std::ostream& stream, const ContainerType<ValueType, Args...>& structure,
+                              std::string delim = " "
+                            )
         {
             for( const auto& item : structure )
                 {
-                    stream << item << " ";
+                    stream << item << delim;
                 }
-            stream << "\n";
         }
 
     /**
