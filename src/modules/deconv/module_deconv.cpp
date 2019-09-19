@@ -1003,7 +1003,8 @@ module_deconv
                    std::unordered_map<std::string, std::vector<std::string>>& id_pep_map
                  )
 {
-    std::vector<double> scores( tie_candidates.size(), 0.0 );
+    // std::vector<double> scores( tie_candidates.size(), 0.0 );
+    std::vector<std::vector<double>> pairwise_distances( tie_candidates.size() );
 
     std::vector<std::string> intersection;
 
@@ -1014,35 +1015,20 @@ module_deconv
     // set count to candidate size - 1
     std::size_t outer_index = 0;
 
-    for( const auto& cand : tie_candidates )
+    auto distance = [&]( const std::pair<std::string, double>& first,
+                         const std::pair<std::string, double>& second
+                       )
         {
-        
-            for( const auto& other_cand : tie_candidates )
-                {
-                    if( cand != other_cand )
-                        {
-                            setops::set_intersection( intersection,
-                                                      id_pep_map.find( cand.first )->second,
-                                                      id_pep_map.find( other_cand.first )->second
-                                                    );
-                            scores[ outer_index ] += intersection.size();
+            setops::set_intersection( intersection,
+                                      id_pep_map.find( first.first )->second,
+                                      id_pep_map.find( second.first )->second
+                                    );
+            std::size_t size = intersection.size();
 
-                            intersection.clear();
-                        }
-                }
-            ++outer_index;
-        }
+            intersection.clear();
+            return (double) (size / id_pep_map.find( first.first )->second.size() );
+        };
 
-    auto min_element_idx = std::min_element(
-                                            scores.begin(),
-                                            scores.end()
-                                           ) - scores.begin();
-
-    auto min_overlap = tie_candidates[ min_element_idx ];
-
-    // remove all but the peptide with minimum overlap
-    tie_candidates.clear();
-    tie_candidates.push_back( min_overlap );
 
 }
 
