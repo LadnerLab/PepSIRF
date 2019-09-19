@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <vector>
 #include <unordered_map>
+#include <cmath>
 
 #include "sequence_indexer.h"
 #include "sequence.h"
@@ -805,4 +806,25 @@ TEST_CASE( "get_map_value", "[module_deconv]" )
     REQUIRE( mod.get_map_value( map, 3 ) == 3 );
     REQUIRE( mod.get_map_value( map, 4 ) == 0 );
     REQUIRE( mod.get_map_value( map, 5, 9 ) == 9 );
+}
+
+TEST_CASE( "all_distances", "[util]" )
+{
+    std::vector<int> data{ 1, 2, 3, 4, 5 };
+    std::vector<int> distances;
+    int target = 1;
+
+    auto distance = [&]( const int a, const int b ){ return std::abs( a - b ); };
+
+    util::all_distances( distances, data.begin(), data.end(), target, distance );
+
+    REQUIRE( distances.size() == data.size() );
+
+    for( std::size_t index = 0; index < distances.size(); ++index )
+        {
+            REQUIRE(
+                    distances[ index ] == std::abs( data[ index ] - target  )
+                   );
+        }
+
 }
