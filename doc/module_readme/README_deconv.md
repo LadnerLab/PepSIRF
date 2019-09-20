@@ -203,6 +203,17 @@ modes are followed by [scoring_species,create_linkage].
                                         peptides that have been designed as 
                                         part of a library. [create_linkage]
                                         
+  --tax_id_index arg (=1)               The index (0-based, valid values 
+                                        include 0-3) of the tax id to use for 
+                                        linking peptides and species. For 
+                                        example, if this argument is passed 
+                                        with the value 1, 
+                                        the species ID will be used. (2 for 
+                                        genus, 3 for family. 0 can vary 
+                                        depending upon the 
+                                        method used for assigning the 0'th ID. 
+                                        [create_linkage]
+                                        
   -k [ --kmer_size ] arg                Kmer size to use when creating the 
                                         linkage map. Entries in the linkage 
                                         file will contain peptides and the 

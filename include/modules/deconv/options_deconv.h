@@ -23,6 +23,8 @@ class options_deconv : public options
      **/
     std::string linked_fname;
 
+    std::size_t id_index;
+
     /**
      * Name of the file to write output to.
      **/

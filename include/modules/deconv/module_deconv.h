@@ -5,13 +5,14 @@
 #include <algorithm>
 #include <set>
 #include <memory>
+#include <unordered_map>
 
 #include "module.h"
 #include "options_deconv.h"
 #include "sequence.h"
 #include "maps.h"
 #include "util.h"
-
+#include "setops.h"
 
 /**
  * Used for data that is relevant to determining and 
@@ -204,7 +205,7 @@ class module_deconv : public module
      *          that represent the id of the species that share a kmer 
      *          with the peptide.
      **/
-    std::vector<std::pair<std::string,std::vector<std::pair<std::size_t,std::size_t>>>>
+    std::vector<std::pair<std::string,std::vector<std::pair<std::string,std::size_t>>>>
         parse_linked_file( std::string fname );
 
 
@@ -220,12 +221,14 @@ class module_deconv : public module
      * @param strat The scoring strategy to use for scoring peptides.
      * @returns The score of the species
      **/
-    double get_score( sequential_map<std::string,std::vector<std::pair<std::size_t,std::size_t>>>&
+
+    double get_score( std::unordered_map<std::string,std::vector<std::pair<std::string,std::size_t>>>&
                       spec_count_map,
-                      std::size_t id,
+                      std::string id,
                       std::vector<std::string>& peptides,
                       evaluation_strategy::score_strategy strat
                     );
+
 
     /**
      * Parse a map that will provide name->tax id mappings. This map should be formatted 
@@ -234,7 +237,7 @@ class module_deconv : public module
      * @param name_map the destination map that will store the mappings of id->name
      **/
     void
-        parse_name_map( std::string fname, std::map<std::size_t,std::string>& name_map );
+        parse_name_map( std::string fname, std::map<std::string,std::string>& name_map );
 
 
     /**
@@ -249,13 +252,13 @@ class module_deconv : public module
      *        of the enriched species.
      **/
     void write_outputs( std::string out_name,
-                        std::map<std::size_t,std::string>*
+                        std::map<std::string,std::string>*
                         id_name_map,
                         std::vector<
-                        std::tuple<std::size_t,std::size_t,double,bool>
+                        std::tuple<std::string,std::size_t,double,bool>
                         >&
                         out_counts,
-                        sequential_map<std::size_t,std::pair<std::size_t,double>>&
+                        std::unordered_map<std::string,std::pair<std::size_t,double>>&
                         original_scores
                       );
 
@@ -278,11 +281,11 @@ class module_deconv : public module
      **/
     void
         write_species_assign_map( std::string fname,
-                                  sequential_map<std::string,std::vector<std::pair<std::size_t,std::size_t>>>& peptide_assign_original,
-                                  sequential_map<std::string,std::vector<std::size_t>>&
+                                  std::unordered_map<std::string,std::vector<std::pair<std::string,std::size_t>>>&
+                                  peptide_assign_original,
+                                  std::unordered_map<std::string,std::vector<std::string>>&
                                   out_map
                                 );
-
 
     /**
      * Reads the list of enriched peptides from a file.
@@ -321,17 +324,128 @@ class module_deconv : public module
      * @returns The overlap amount, expressed as either a ratio or 
      *          a count as determined by ev_strat.
      **/
-    bool 
-        sufficient_overlap( sequential_map<std::size_t,std::vector<std::string>>&
-                            id_peptide_map,
-                            sequential_map<std::string,sequential_map<std::size_t,std::size_t>>&
-                            pep_species_map_wcounts,
-                            std::size_t first,
-                            std::size_t second,
-                            evaluation_strategy::tie_eval_strategy
-                            ev_strat,
-                            double threshold
-                          );
+    template<template<typename...> class MapType>
+        bool 
+        sufficient_overlap(  MapType<std::string,std::vector<std::string>>&
+                             id_peptide_map,
+                             MapType<std::string,MapType<std::string,std::size_t>>&
+                             pep_species_map_wcounts,
+                             std::string first,
+                             std::string second,
+                             evaluation_strategy::tie_eval_strategy
+                             ev_strat,
+                             double threshold
+                    )
+        {
+            auto& first_peptides  = id_peptide_map.find( first )->second;
+            auto& second_peptides = id_peptide_map.find( second )->second;
+            // reserve max( map[ first ].size, map[ second ].size ) in
+            std::size_t intersection_size = 0;
+
+            sequential_set<std::string> intersection;
+
+            // we do either union or intersection, alias
+            // the intersection set for clear naming 
+            sequential_set<std::string>& set_union = intersection;
+
+            intersection.reserve( std::max( first_peptides.size(),
+                                            second_peptides.size()
+                                            )
+                                  );
+
+
+            if(  ev_strat
+                 != evaluation_strategy
+                 ::tie_eval_strategy
+                 ::SUMMATION_SCORING_TIE_EVAL
+                 )
+                {
+                    setops::set_intersection( intersection,
+                                              first_peptides,
+                                              second_peptides
+                                              );
+                    intersection_size = intersection.size();
+                }
+
+            if( ev_strat
+                == evaluation_strategy
+                ::tie_eval_strategy
+                ::INTEGER_TIE_EVAL
+                )
+                {
+                    return (double) intersection_size >= threshold;
+                }
+
+            else if( ev_strat
+                     == evaluation_strategy
+                     ::tie_eval_strategy
+                     ::SUMMATION_SCORING_TIE_EVAL
+                     )
+                {
+                    setops::set_union( set_union,
+                                       first_peptides,
+                                       second_peptides
+                                       );
+
+                    // where 'a' and 'b' are for species first and
+                    // species second
+                    double a_score, b_score, a_num, a_denom,
+                        b_num, b_denom;
+                    a_score = b_score = a_num = a_denom =
+                        b_num = b_denom = 0;
+
+                    for( const auto& peptide : set_union )
+                        {
+                    
+                            auto pep_species_map = pep_species_map_wcounts
+                                .find( peptide )->second;
+
+                            if( pep_species_map.find( first ) != pep_species_map.end() )
+                                {
+                                    a_score = pep_species_map
+                                        .find( first )->second;
+                                }
+
+                            if( pep_species_map.find( second ) != pep_species_map.end() )
+                                {
+
+                                    b_score = pep_species_map
+                                        .find( second )->second;
+                                }
+
+                            if( b_score > 0 )
+                                {
+                                    a_num += a_score;
+                                }
+                            if( a_score > 0 )
+                                {
+                                    b_num += b_score;
+                                }
+                            a_denom += a_score;
+                            b_denom += b_score;
+
+                            // reset the scores
+                            a_score = b_score = 0;
+                        }
+
+                    // don't try to divide by zero, but if threshold is
+                    // zero then we need to return true without trying to divide.
+                    return ( threshold == 0 )
+                        || ( a_denom > 0 && b_denom > 0
+                             && util::divide( a_num, a_denom ) >= threshold
+                             && util::divide( b_num, b_denom ) >= threshold
+                             );
+                }
+
+            // percent tie evaluation strategy 
+            double a_denom = id_peptide_map.find( first )->second.size();
+            double b_denom = id_peptide_map.find( second )->second.size();
+            double i_size = static_cast<double>( intersection_size );
+
+            return ( util::divide( i_size, a_denom ) >= threshold
+                     && util::divide( i_size, b_denom ) >= threshold
+                     );
+        }
 
 
     /**
@@ -363,13 +477,13 @@ class module_deconv : public module
      *       are tied. 
      **/
     void
-        handle_ties( std::vector<std::pair<std::size_t,double>>&
+        handle_ties( std::vector<std::pair<std::string,double>>&
                      dest_vec,
-                     sequential_map<std::size_t, std::vector<std::string>>&
+                     std::unordered_map<std::string, std::vector<std::string>>&
                      id_pep_map,
-                     sequential_map<std::string,sequential_map<std::size_t,std::size_t>>&
+                     std::unordered_map<std::string,std::unordered_map<std::string,std::size_t>>&
                      pep_species_map_wcounts,
-                     std::vector<std::pair<std::size_t,double>>&
+                     std::vector<std::pair<std::string,double>>&
                      tie_candidates,
                      evaluation_strategy::tie_eval_strategy
                      tie_evaluation_strategy,
@@ -405,9 +519,9 @@ class module_deconv : public module
      **/
     template<class DistanceCalc>
         tie_data::tie_type
-        get_tie_candidates( std::vector<std::pair<std::size_t,double>>&
+        get_tie_candidates( std::vector<std::pair<std::string,double>>&
                             candidates,
-                            std::vector<std::pair<std::size_t,double>>&
+                            std::vector<std::pair<std::string,double>>&
                             scores,
                             double threshold,
                             double ovlp_threshold,
@@ -417,8 +531,8 @@ class module_deconv : public module
             double curr_score = 0;
             std::size_t index = 0;
 
-            auto score_diff = [&]( const std::pair<std::size_t, double>& first,
-                                   const std::pair<std::size_t, double>& second
+            auto score_diff = [&]( const std::pair<std::string, double>& first,
+                                   const std::pair<std::string, double>& second
                                    ) -> double 
                 {
                     return distance( first.second, second.second );
@@ -481,17 +595,18 @@ class module_deconv : public module
     /**
      * Populate a map with pairings of <species_id, vector of peptide names> 
      * entries.
-     * @param id_pep_map sequential_map to populate. Each entry in the map will 
+     * @param id_pep_map std::unordered_map to populate. Each entry in the map will 
      *        have a key id and a value vector containing the names of the peptides 
      *        this species shares a kmer with.
      * @param pep_species_vec a vector containing pairs with the first entry 
      *        a species id, and the second a vector of string peptide names.
      **/
-    void id_to_pep( sequential_map<std::size_t, std::vector<std::string>>&
+    void id_to_pep( std::unordered_map<std::string, std::vector<std::string>>&
                     id_pep_map,
-                    std::vector<std::pair<std::string, std::vector<std::pair<std::size_t,std::size_t>>>>&
+                    std::vector<std::pair<std::string, std::vector<std::pair<std::string,std::size_t>>>>&
                     pep_species_vec
                   );
+
 
     /**
      * Populate a map with pairings of <peptide name, vector of species ids>
@@ -502,9 +617,9 @@ class module_deconv : public module
      * @param pep_species_vec a vector containing pairs with the first entry 
      *        a species id, and the second a vector of string peptide names.
      **/
-    void pep_to_id( sequential_map<std::string, std::vector<std::pair<std::size_t,std::size_t>>>&
+    void pep_to_id( std::unordered_map<std::string, std::vector<std::pair<std::string,std::size_t>>>&
                     pep_id_map,
-                    std::vector<std::pair<std::string, std::vector<std::pair<std::size_t,std::size_t>>>>&
+                    std::vector<std::pair<std::string, std::vector<std::pair<std::string,std::size_t>>>>&
                     pep_species_vec
                   );
 
@@ -516,14 +631,15 @@ class module_deconv : public module
      * @param spec_count_map Map that associates peptides with the species 
      *        that share a kmer with the peptide.
      **/
-    void score_species( std::vector<std::pair<std::size_t, double>>&
+    void score_species( std::vector<std::pair<std::string, double>>&
                         id_counts,
-                        sequential_map<std::size_t,std::vector<std::string>>&
+                        std::unordered_map<std::string,std::vector<std::string>>&
                         id_count_map,
-                        sequential_map<std::string,std::vector<std::pair<std::size_t,std::size_t>>>&
+                        std::unordered_map<std::string,std::vector<std::pair<std::string,std::size_t>>>&
                         spec_count_map,
                         evaluation_strategy::score_strategy strat
                       );
+
 
     /**
      * Choose the 'best' kmers as defined by the scoring options passed to the program.
@@ -536,10 +652,11 @@ class module_deconv : public module
      * the pattern 'OXX=([0-9]+),([0-9]*),([0-9]*),([0-9])',
      * i.e. 'OXX=' followed by some ids.
      * @param name The name from which to grab the id. 
+     * @param id_index The index (0-based) of id to choose.
      * @note The species id is the second group of the 
      *       above regex.
      **/
-    std::size_t get_id( std::string name );
+    std::string get_id( std::string name, std::size_t id_index );
 
     /**
      * Create the linkage file to be used by 'choose_kmers' method.
@@ -554,16 +671,19 @@ class module_deconv : public module
      *       mappings of the form: 'kmer' -> 'species_id' -> 'count'
      * @param map The map that will store mappings of kmer -> species -> count.
      * @param sequences The sequences to analyze.
+     * @param id_index The index (0-based) of id to choose.
      * @param k The kmer size to use when creating the map. 
      *        A species will be linked to a peptide if a peptide shares a
      *        kmer with that species.
      **/
-    void create_prot_map( sequential_map<std::string,
-                          sequential_map<std::size_t,std::size_t>>&
+    void create_prot_map( std::unordered_map<std::string,
+                          std::unordered_map<std::string,std::size_t>>&
                           map,
                           std::vector<sequence>& sequences,
-                          std::size_t k
-                       );
+                          std::size_t k,
+                          std::size_t id_index
+                        );
+
 
     /**
      * Create a map that maps peptides to the 
@@ -579,10 +699,10 @@ class module_deconv : public module
      *        peptides vector will be broken down into its 
      *        component kmers.
      **/
-    void create_pep_map( sequential_map<std::string,
-                         sequential_map<std::size_t,std::size_t>>&
+    void create_pep_map( std::unordered_map<std::string,
+                         std::unordered_map<std::string,std::size_t>>&
                          kmer_sp_map,
-                         std::vector<std::tuple<std::string,sequential_map<std::size_t,std::size_t>>>&
+                         std::vector<std::tuple<std::string,std::unordered_map<std::string,std::size_t>>>&
                          peptide_sp_vec,
                          std::vector<sequence>&
                          peptides,
@@ -601,7 +721,7 @@ class module_deconv : public module
      *       pep_name\tid:score,id:score,id:score
      **/
     void write_outputs( std::string fname,
-                        std::vector<std::tuple<std::string,sequential_map<std::size_t,std::size_t>>>&
+                        std::vector<std::tuple<std::string,std::unordered_map<std::string,std::size_t>>>&
                         peptide_sp_vec
                       );
 
@@ -612,8 +732,8 @@ class module_deconv : public module
      *        entry is strictly less than this value will be removed.
      * @note This method has the side effect of removing items from id_counts
      **/
-    template<template<class,class> class T, class K, class V>
-        void filter_counts( T<K,V>& id_counts,
+    template<class K, class V>
+        void filter_counts( std::unordered_map<K,V>& id_counts,
                             V thresh
                           )
     {
@@ -692,10 +812,11 @@ class module_deconv : public module
      *        and the value will be the the count.
      **/
     void
-        get_species_counts_per_peptide( sequential_map<std::size_t, std::vector<std::string>>&
-                                        id_pep_map,
-                                        sequential_map<std::size_t,std::size_t>& pep_counts
-                                      );
+        get_species_counts_per_peptide( std::unordered_map<std::string, std::vector<std::string>>&
+                                         id_pep_map,
+                                         std::unordered_map<std::string,std::size_t>& pep_counts
+                                       );
+
 
 
     /**
@@ -709,8 +830,8 @@ class module_deconv : public module
      *        peptides they share a kmer with.
      **/
     void
-        handle_kway_tie( std::vector<std::pair<std::size_t,double>>& tie_candidates,
-                         sequential_map<std::size_t, std::vector<std::string>>& id_pep_map
+        handle_kway_tie( std::vector<std::pair<std::string,double>>& tie_candidates,
+                         std::unordered_map<std::string, std::vector<std::string>>& id_pep_map
                        );
 
 
@@ -724,9 +845,9 @@ class module_deconv : public module
      *      first items in the pairs of scores.
      **/
     template<template<class, class, class...> class Mtype>
-        void combine_count_and_score( Mtype<std::size_t,std::pair<std::size_t,double>>& map,
-                                      Mtype<std::size_t,std::size_t>& c_map,
-                                      std::vector<std::pair<std::size_t,double>>& scores
+        void combine_count_and_score( Mtype<std::string,std::pair<std::size_t,double>>& map,
+                                      Mtype<std::string,std::size_t>& c_map,
+                                      std::vector<std::pair<std::string,double>>& scores
                                     )
         {
 
@@ -747,15 +868,19 @@ class module_deconv : public module
     /**
      * Either find an item in a map, or return a default-constructed
      * value from that map. This useful if you want to print the value 
-     * if it is found in the map, or an empty string otherwise.
+     * if it is found in the map, or a default string otherwise.
      * @param map A map of type I that maps K->V
      * @param search The item to search for in map.
+     * @param default_return The value to return if search
+     *        is not found in map. This defaults to a default-constructed
+     *        V.
      * @returns Either the value of search in the map, or 
-     *          a default-constructed value if not found. 
+     *          the item provided in default_return value if not found. 
      **/
-    template<template<class, class, class...> class I, class K, class V>
+    template<template<class...> class I, class K, class V>
         V get_map_value( const I<K,V>& map,
-                         const K& search
+                         const K& search,
+                         V default_return = V()
                          )
     {
         if( map.find( search ) != map.end() )
@@ -764,7 +889,7 @@ class module_deconv : public module
                 return map.find( search )->second;
             }
         // default-construct a value
-        return V();
+        return default_return;
     }
 
     /**
@@ -776,12 +901,13 @@ class module_deconv : public module
      **/
     template<template<class, class, class...> class I, typename K, typename V>
         V get_map_value( const I<K,V>* map,
-                         const K& search
+                         const K& search,
+                         V default_return = V()
                          )
     {
         // just dereference it and pass along to
         // the other template function
-        return get_map_value( *map, search );
+        return get_map_value( *map, search, default_return );
     }
 
 
