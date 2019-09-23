@@ -685,17 +685,29 @@ class module_deconv : public module
      * remove all but one item from tie_candidates. 
      * The remaining item is that which has the least integer overlap
      * with the other item in tie_candidates.
+     * @param id_pep_map A map that associates species ids with 
+     *        the peptides that it shares a kmer with.
+     * @param pep_species_map_wcounts Reference to a map that 
+     *        maps string peptide names to a map of species that 
+     *        share a kmer with that peptide. Each species is also
+     *        linked to its score. In summary, we have a mapping 
+     *        that looks like this:
+     *        peptide->species->score
      * @param tie_candidates A vector containing 
      *        pairs of species_id:count items. 
-     * @param id_pep_map Map that associates species with the 
-     *        peptides they share a kmer with.
+     * @param tie_eval_strategy Strategy to use when evaluating ties.
+     *        See evaluation_strategy::tie_eval_strategy for more information.
+     * @param ovlp_threshold Overlap threshold for species to be considered tied.
+     *        The overlaps are calculated by module_deconv::calculate_overlap
      **/
     void
-        handle_kway_tie( std::vector<std::pair<std::string,double>>& tie_candidates,
-                         std::unordered_map<std::string, std::vector<std::string>>& id_pep_map,
+        handle_kway_tie( std::unordered_map<std::string, std::vector<std::string>>& id_pep_map,
+                         std::unordered_map<std::string,std::unordered_map<std::string,std::size_t>>
+                         pep_species_map_wcounts,
+                         std::vector<std::pair<std::string,double>>& tie_candidates,
+                         evaluation_strategy::tie_eval_strategy eval_strat,
                          const double ovlp_threshold
                        );
-
 
     /**
      * Combine the count and the score for species.

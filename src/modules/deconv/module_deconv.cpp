@@ -923,8 +923,10 @@ module_deconv::handle_ties( std::vector<std::pair<std::string,double>>&
         }
     else // k-way tie
         {
-            handle_kway_tie( tie_candidates,
-                             id_pep_map,
+            handle_kway_tie( id_pep_map,
+                             pep_species_map_wcounts,
+                             tie_candidates,
+                             tie_evaluation_strategy,
                              overlap_threshold
                            );
             dest_vec.push_back( tie_candidates[ 0 ] );
@@ -1000,8 +1002,12 @@ module_deconv
 
 void
 module_deconv
-::handle_kway_tie( std::vector<std::pair<std::string,double>>& tie_candidates,
+::handle_kway_tie( 
                    std::unordered_map<std::string, std::vector<std::string>>& id_pep_map,
+                   std::unordered_map<std::string,std::unordered_map<std::string,std::size_t>>
+                   pep_species_map_wcounts,
+                   std::vector<std::pair<std::string,double>>& tie_candidates,
+                   evaluation_strategy::tie_eval_strategy eval_strat,
                    const double ovlp_threshold
                  )
 {
