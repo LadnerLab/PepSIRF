@@ -1,31 +1,48 @@
 #ifndef OVERLAP_DATA_HH_INCLUDED
 #define OVERLAP_DATA_HH_INCLUDED
-#include "evaluation_strategy.h"
 
+/**
+ * Class for storing overlap data. Stores the overlap of 
+ * a with respect to b, and the overlap of b with respect to a.
+ **/
 template<typename T>
 class overlap_data
 {
 
  public:
+    /**
+     * Default constructor.
+     **/
     overlap_data() = default;
 
-    overlap_data( evaluation_strategy::tie_eval_strategy strat,
-                  T a_to_b, T b_to_a
-                  ) : eval_strat( strat ),
-                      a_to_b( a_to_b),
-                      b_to_a( b_to_a ) {}
+    /**
+     * Argument constructor, takes values for a's overlap with 
+     * b and b's overlap with a.
+     **/
+    overlap_data( T a_to_b, T b_to_a ) : a_to_b( a_to_b),
+                                         b_to_a( b_to_a ) {}
 
- overlap_data( evaluation_strategy::tie_eval_strategy strat ) : eval_strat( strat )
-    {}
+    /**
+     * Constructor for reflexive overlap.
+     * @param a_to_b The overlap of a with respect to b,
+     *        which in this instance is also recorded as the 
+     *        overlap of b with respect to a. 
+     **/
+    overlap_data( T a_to_b )
+        {
+            a_to_b = a_to_b;
+            b_to_a = a_to_b;
+        }
 
-
- overlap_data( T a_to_b, T b_to_a ) : a_to_b( a_to_b ), b_to_a( b_to_a )
-    {}
-
-
-    bool sufficient( evaluation_strategy::tie_eval_strategy strategy,
-                     T threshold
-                   )
+    /**
+     * Determines whether 
+     * the overlap is sufficient, 
+     * i.e. both a and b have more than 
+     * threshold overlap with eachother.
+     * @param threshold The threshold at which 
+     *        overlap will be considered sufficient.
+     **/
+    bool sufficient( T threshold )
     {
                 return ( threshold == T() )
                     || ( a_to_b >= threshold
@@ -33,15 +50,9 @@ class overlap_data
                        );
     }
 
-    bool sufficient( T threshold )
-    {
-        return sufficient( eval_strat, threshold );
-    }
-
  private:
     T a_to_b;
     T b_to_a;
-    evaluation_strategy::tie_eval_strategy eval_strat;
 };
 
 
