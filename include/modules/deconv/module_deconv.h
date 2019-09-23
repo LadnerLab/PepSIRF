@@ -237,8 +237,7 @@ class module_deconv : public module
                 ::INTEGER_TIE_EVAL
                 )
                 {
-                    return overlap_data<double>( ev_strat,
-                                                 (double) intersection_size,
+                    return overlap_data<double>( (double) intersection_size,
                                                  (double) intersection_size
                                                );
                 }
@@ -297,7 +296,7 @@ class module_deconv : public module
                     
                     return overlap_data<double>( util::divide( a_num, a_denom ),
                                                  util::divide( b_num, b_denom )
-                                                 );
+                                               );
                 }
 
             // percent tie evaluation strategy 
@@ -305,8 +304,7 @@ class module_deconv : public module
             double b_denom = id_peptide_map.find( second )->second.size();
             double i_size = static_cast<double>( intersection_size );
 
-            return overlap_data<double>( ev_strat,
-                                         util::divide( i_size, a_denom ),
+            return overlap_data<double>( util::divide( i_size, a_denom ),
                                          util::divide( i_size, b_denom )
                                        );
         }
