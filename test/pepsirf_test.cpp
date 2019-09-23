@@ -820,3 +820,30 @@ TEST_CASE( "all_distances", "[util]" )
         }
 
 }
+
+TEST_CASE( "overlap_data", "[module_deconv]" )
+{
+    overlap_data<double> ovlp{ 0.75, 0.5 };
+
+    REQUIRE( ovlp.get_a_to_b() == 0.75 );
+    REQUIRE( ovlp.get_b_to_a() == 0.5  );
+
+    REQUIRE( ovlp.sufficient( 0.49 ) );
+    REQUIRE( ovlp.sufficient( 0.5 ) );
+    REQUIRE( !ovlp.sufficient( 0.51 ) );
+    REQUIRE( ovlp.sufficient( 0 ) );
+
+
+    overlap_data<int> ovlp_int{ 75, 50 };
+    REQUIRE( ovlp_int.get_a_to_b() == 75 );
+    REQUIRE( ovlp_int.get_b_to_a() == 50  );
+
+    REQUIRE( ovlp_int.sufficient( 49 ) );
+    REQUIRE( ovlp_int.sufficient( 50 ) );
+    REQUIRE( !ovlp_int.sufficient( 51 ) );
+    REQUIRE( ovlp_int.sufficient( 0 ) );
+
+
+
+}
+
