@@ -10,6 +10,7 @@
 #include <unordered_map>
 #include <cmath>
 
+#include "overlap_data.h"
 #include "sequence_indexer.h"
 #include "sequence.h"
 #include "fastq_sequence.h"
@@ -560,7 +561,7 @@ TEST_CASE( "test_difference", "[struct_difference]" )
 
 }
 
-TEST_CASE( "sufficient_overlap", "[module_deconv]" )
+TEST_CASE( "calculate_overlap", "[module_deconv]" )
 {
 
     auto mod = module_deconv();
@@ -586,43 +587,40 @@ TEST_CASE( "sufficient_overlap", "[module_deconv]" )
 
     double threshold = 1;
 
-    bool so = mod.sufficient_overlap( id_p_map,
-                                      counts_map,
-                                      first, second,
-                                      evaluation_strategy::tie_eval_strategy::INTEGER_TIE_EVAL,
-                                      threshold
-                                    );
-    REQUIRE( so );
+    overlap_data<double> so = mod.calculate_overlap( id_p_map,
+                                                     counts_map,
+                                                     first, second,
+                                                     evaluation_strategy::tie_eval_strategy::INTEGER_TIE_EVAL
+                                                   );
+    REQUIRE( so.sufficient( threshold ) );
 
-    so = mod.sufficient_overlap( id_p_map,
+    so = mod.calculate_overlap( id_p_map,
                                  counts_map,
                                  first, second,
-                                 evaluation_strategy::tie_eval_strategy::INTEGER_TIE_EVAL,
-                                 4
+                                 evaluation_strategy::tie_eval_strategy::INTEGER_TIE_EVAL
                                );
-    REQUIRE( so );
 
-    so = mod.sufficient_overlap( id_p_map,
+    REQUIRE( so.sufficient( 4 ) );
+
+    so = mod.calculate_overlap( id_p_map,
                                  counts_map,
                                  first, second,
-                                 evaluation_strategy::tie_eval_strategy::INTEGER_TIE_EVAL,
-                                 5
+                                 evaluation_strategy::tie_eval_strategy::INTEGER_TIE_EVAL
                                );
-    REQUIRE( !so );
+    REQUIRE( !so.sufficient( 5 ) );
 
 
-    so = mod.sufficient_overlap( id_p_map,
+    so = mod.calculate_overlap( id_p_map,
                                  counts_map,
                                  first, second,
-                                 evaluation_strategy::tie_eval_strategy::PERCENT_TIE_EVAL,
-                                 0.5
+                                 evaluation_strategy::tie_eval_strategy::PERCENT_TIE_EVAL
                                );
-    REQUIRE( so );
+    REQUIRE( so.sufficient( 0.5 ) );
 
 
 }
 
-TEST_CASE( "sufficient_overlap_ratio", "[module_deconv]" )
+TEST_CASE( "calculate_overlap_ratio", "[module_deconv]" )
 {
 
     auto mod = module_deconv();
@@ -655,44 +653,41 @@ TEST_CASE( "sufficient_overlap_ratio", "[module_deconv]" )
 
 
 
-    bool so = false;
+    overlap_data<double> so;
 
-    so = mod.sufficient_overlap( id_p_map,
-                                 counts_map,
-                                 first, second,
-                                 evaluation_strategy::tie_eval_strategy::PERCENT_TIE_EVAL,
-                                 0.5
-                               );
-    REQUIRE( so );
+    so = mod.calculate_overlap( id_p_map,
+                                counts_map,
+                                first, second,
+                                evaluation_strategy::tie_eval_strategy::PERCENT_TIE_EVAL
+                              );
 
-    so = mod.sufficient_overlap( id_p_map,
-                                 counts_map,
-                                 first, second,
-                                 evaluation_strategy::tie_eval_strategy::PERCENT_TIE_EVAL,
-                                 0.8
-                               );
-    REQUIRE( !so );
+    REQUIRE( so.sufficient( 0.5 ) );
 
-    so = mod.sufficient_overlap( id_p_map,
-                                 counts_map,
-                                 first, second,
-                                 evaluation_strategy::tie_eval_strategy::PERCENT_TIE_EVAL,
-                                 0.76
-                               );
-    REQUIRE( !so );
+    so = mod.calculate_overlap( id_p_map,
+                                counts_map,
+                                first, second,
+                                evaluation_strategy::tie_eval_strategy::PERCENT_TIE_EVAL
+                              );
+    REQUIRE( !so.sufficient( 0.8 ) );
 
-    so = mod.sufficient_overlap( id_p_map,
-                                 counts_map,
-                                 first, second,
-                                 evaluation_strategy::tie_eval_strategy::PERCENT_TIE_EVAL,
-                                 0.75
-                               );
-    REQUIRE( so );
+    so = mod.calculate_overlap( id_p_map,
+                                counts_map,
+                                first, second,
+                                evaluation_strategy::tie_eval_strategy::PERCENT_TIE_EVAL
+                              );
+    REQUIRE( !so.sufficient( 0.76 ) );
+
+    so = mod.calculate_overlap( id_p_map,
+                                counts_map,
+                                first, second,
+                                evaluation_strategy::tie_eval_strategy::PERCENT_TIE_EVAL
+                              );
+    REQUIRE( so.sufficient( 0.75 ) );
 
 
 }
 
-TEST_CASE( "sufficient_overlap_summation", "[module_deconv]" )
+TEST_CASE( "calculate_overlap_summation", "[module_deconv]" )
 {
 
     auto mod = module_deconv();
@@ -724,31 +719,28 @@ TEST_CASE( "sufficient_overlap_summation", "[module_deconv]" )
         }
 
 
-    bool so = false;
+    overlap_data<double> so;
 
-    so = mod.sufficient_overlap( id_p_map,
+    so = mod.calculate_overlap( id_p_map,
                                  counts_map,
                                  first, second,
-                                 evaluation_strategy::tie_eval_strategy::SUMMATION_SCORING_TIE_EVAL,
-                                 0.5
+                                 evaluation_strategy::tie_eval_strategy::SUMMATION_SCORING_TIE_EVAL
                                );
-    REQUIRE( so );
+    REQUIRE( so.sufficient( 0.5 ) );
 
-    so = mod.sufficient_overlap( id_p_map,
+    so = mod.calculate_overlap( id_p_map,
+                                counts_map,
+                                first, second,
+                                evaluation_strategy::tie_eval_strategy::SUMMATION_SCORING_TIE_EVAL
+                               );
+    REQUIRE( so.sufficient( 0.75 ) );
+
+    so = mod.calculate_overlap( id_p_map,
                                  counts_map,
                                  first, second,
-                                 evaluation_strategy::tie_eval_strategy::SUMMATION_SCORING_TIE_EVAL,
-                                 0.75
+                                 evaluation_strategy::tie_eval_strategy::SUMMATION_SCORING_TIE_EVAL
                                );
-    REQUIRE( so );
-
-    so = mod.sufficient_overlap( id_p_map,
-                                 counts_map,
-                                 first, second,
-                                 evaluation_strategy::tie_eval_strategy::SUMMATION_SCORING_TIE_EVAL,
-                                 0.76
-                               );
-    REQUIRE( !so );
+    REQUIRE( !so.sufficient( 0.76 ) );
 
 
 
