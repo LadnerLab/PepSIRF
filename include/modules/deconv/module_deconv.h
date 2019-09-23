@@ -7,6 +7,7 @@
 #include <memory>
 #include <unordered_map>
 
+#include "overlap_data.h"
 #include "module.h"
 #include "options_deconv.h"
 #include "sequence.h"
@@ -188,7 +189,7 @@ class module_deconv : public module
      *          a count as determined by ev_strat.
      **/
     template<template<typename...> class MapType>
-        bool
+        overlap_data<double>
         sufficient_overlap(  MapType<std::string,std::vector<std::string>>&
                              id_peptide_map,
                              MapType<std::string,MapType<std::string,std::size_t>>&
@@ -236,7 +237,10 @@ class module_deconv : public module
                 ::INTEGER_TIE_EVAL
                 )
                 {
-                    return (double) intersection_size >= threshold;
+                    return overlap_data<double>( ev_strat,
+                                                 (double) intersection_size,
+                                                 (double) intersection_size
+                                               );
                 }
 
             else if( ev_strat
@@ -290,14 +294,10 @@ class module_deconv : public module
                             // reset the scores
                             a_score = b_score = 0;
                         }
-
-                    // don't try to divide by zero, but if threshold is
-                    // zero then we need to return true without trying to divide.
-                    return ( threshold == 0 )
-                        || ( a_denom > 0 && b_denom > 0
-                             && util::divide( a_num, a_denom ) >= threshold
-                             && util::divide( b_num, b_denom ) >= threshold
-                             );
+                    
+                    return overlap_data<double>( util::divide( a_num, a_denom ),
+                                                 util::divide( b_num, b_denom )
+                                                 );
                 }
 
             // percent tie evaluation strategy 
@@ -305,9 +305,10 @@ class module_deconv : public module
             double b_denom = id_peptide_map.find( second )->second.size();
             double i_size = static_cast<double>( intersection_size );
 
-            return ( util::divide( i_size, a_denom ) >= threshold
-                     && util::divide( i_size, b_denom ) >= threshold
-                     );
+            return overlap_data<double>( ev_strat,
+                                         util::divide( i_size, a_denom ),
+                                         util::divide( i_size, b_denom )
+                                       );
         }
 
 
