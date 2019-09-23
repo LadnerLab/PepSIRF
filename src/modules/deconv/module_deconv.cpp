@@ -13,6 +13,7 @@
 #include "time_keep.h"
 #include "fasta_parser.h"
 #include "setops.h"
+#include "overlap_data.h"
 
 module_deconv::module_deconv() = default;
 
@@ -906,7 +907,7 @@ module_deconv::handle_ties( std::vector<std::pair<std::string,double>>&
                                    tie_candidates[ 1 ].first,
                                    tie_evaluation_strategy,
                                    overlap_threshold
-                                  )
+                                  ).sufficient( overlap_threshold )
               )
                 {
                     dest_vec.insert( dest_vec.end(),
