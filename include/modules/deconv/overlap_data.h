@@ -50,6 +50,23 @@ class overlap_data
                        );
     }
 
+    /**
+     * Get the overlap of a with respect to b.
+     **/
+    T get_a_to_b()
+    {
+        return a_to_b;
+    }
+
+    /**
+     * Get the overlap of b with respect to a.
+     **/
+    T get_b_to_a()
+    {
+        return b_to_a;
+    }
+
+
  private:
     T a_to_b;
     T b_to_a;
