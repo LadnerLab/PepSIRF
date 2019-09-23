@@ -168,7 +168,7 @@ class module_deconv : public module
     /**
      * Determine how 'overlapped' two species are.
      * Here for species a and b, we define overlap in one 
-     * of two was. We can define overlap by the number of shared 
+     * of two ways. We can define overlap by the number of shared 
      * peptides by each species or by the percentage of 
      * peptides shared between species.
      * @param id_peptide_map Map relating species ids to the 
@@ -185,21 +185,20 @@ class module_deconv : public module
      * @param threshold The threshold that is set to determine
      *        whether the overlap between species is sufficient. 
      * @pre Both first and second should be a key in id_peptide_map
-     * @returns The overlap amount, expressed as either a ratio or 
-     *          a count as determined by ev_strat.
+     * @returns overlap_data<double>, class storing the overlap of first
+     *          and second, and the overlap of second and first.
      **/
     template<template<typename...> class MapType>
         overlap_data<double>
-        sufficient_overlap(  MapType<std::string,std::vector<std::string>>&
-                             id_peptide_map,
-                             MapType<std::string,MapType<std::string,std::size_t>>&
-                             pep_species_map_wcounts,
-                             std::string first,
-                             std::string second,
-                             evaluation_strategy::tie_eval_strategy
-                             ev_strat,
-                             double threshold
-                    )
+        calculate_overlap( MapType<std::string,std::vector<std::string>>&
+                           id_peptide_map,
+                           MapType<std::string,MapType<std::string,std::size_t>>&
+                           pep_species_map_wcounts,
+                           std::string first,
+                           std::string second,
+                           evaluation_strategy::tie_eval_strategy
+                           ev_strat
+                          )
         {
             auto& first_peptides  = id_peptide_map.find( first )->second;
             auto& second_peptides = id_peptide_map.find( second )->second;

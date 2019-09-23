@@ -900,14 +900,13 @@ module_deconv::handle_ties( std::vector<std::pair<std::string,double>>&
             // if the overlap between the two is high,
             // report them together. Otherwise, report the first
             // item. High is defined by the overlap_threshold
-            if( sufficient_overlap(  
+            if( calculate_overlap(  
                                    id_pep_map,
                                    pep_species_map_wcounts,
                                    tie_candidates[ 0 ].first,
                                    tie_candidates[ 1 ].first,
-                                   tie_evaluation_strategy,
-                                   overlap_threshold
-                                  ).sufficient( overlap_threshold )
+                                   tie_evaluation_strategy
+                                 ).sufficient( overlap_threshold )
               )
                 {
                     dest_vec.insert( dest_vec.end(),
@@ -1033,6 +1032,7 @@ module_deconv
         };
 
     // compute pairwise distances for each of the species
+    // TODO Figure out what this is
     for( const auto& cand : tie_candidates )
         {
             util::all_distances( pairwise_distances[ outer_index ],
