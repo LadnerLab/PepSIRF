@@ -23,6 +23,8 @@
 #include "fastq_score.h"
 #include "kmer_tools.h"
 
+using namespace util;
+
 static std::string fasta_ex = ">Example sequence 1\nDJFKDLFJSF\nDJFKDJFDJKFJKDF\n\nJDSKFLJFDKSFLJ\n>Example Sequence 2\n\n\nDJFKLSFJDKLSFJKSLFJSKDLFJDKSLFJKLDKDKDK\n\n\n";
 TEST_CASE( "Sequence", "[sequence]" )
 {
@@ -389,7 +391,7 @@ TEST_CASE( "get_tie_candidates_integer", "[module_deconv]" )
     scores.emplace_back( "105", 249.0 );
     std::sort( scores.begin(),
                scores.end(),
-               compare_pair_non_increasing
+               util::compare_pair_non_increasing
                <std::string, double>()
             );
 
@@ -478,7 +480,7 @@ TEST_CASE( "get_tie_candidates_ratio", "[module_deconv]" )
 
     std::sort( scores.begin(),
                scores.end(),
-               compare_pair_non_increasing
+               util::compare_pair_non_increasing
                <std::string, double>()
             );
 
@@ -486,7 +488,7 @@ TEST_CASE( "get_tie_candidates_ratio", "[module_deconv]" )
                                           scores,
                                           threshold,
                                           ovlp_threshold,
-                                          ratio<double>()
+                                          util::ratio<double>()
                                         );
 
     REQUIRE( candidates.size() == 1 );
@@ -500,7 +502,7 @@ TEST_CASE( "get_tie_candidates_ratio", "[module_deconv]" )
                                      scores,
                                      threshold,
                                      ovlp_threshold,
-                                     ratio<double>()
+                                     util::ratio<double>()
                                    );
 
 
@@ -847,3 +849,53 @@ TEST_CASE( "overlap_data", "[module_deconv]" )
 
 }
 
+
+TEST_CASE( "pair_compare" )
+{
+    std::pair<int,int> pair_1{ 1, 2 };
+    std::pair<int,int> pair_2{ 2, 3 };
+
+
+    auto gt = []( const int& a, const int& b ){ return a > b; };
+    REQUIRE( !util::pair_positional_compare( pair_1, pair_2,
+                                             gt,
+                                             gt
+                                           )
+           );
+
+    REQUIRE( util::pair_positional_compare( pair_2, pair_1,
+                                            gt,
+                                            gt
+                                          )
+           );
+
+    std::pair<double,std::size_t> p1{ 10.5, 11 };
+    std::pair<double,std::size_t> p2{ 11.5, 10 };
+
+    auto gt_d = []( const double& a, const double& b ){ return a > b; };
+    auto gt_s = []( const std::size_t& a, const std::size_t& b ){ return a > b; };
+
+    REQUIRE( !util::pair_positional_compare( p2, p1,
+                                             gt_d,
+                                             gt_s
+                                           )
+           );
+
+    p1.first = 100.2;
+    p1.second = 400;
+
+
+    REQUIRE( !util::pair_positional_compare( p2, p1,
+                                             gt_d,
+                                             gt_s
+                                           )
+           );
+    REQUIRE( util::pair_positional_compare( p1, p2,
+                                             gt_d,
+                                             gt_s
+                                           )
+           );
+
+
+
+}
