@@ -210,7 +210,7 @@ void module_deconv::choose_kmers( options_deconv *opts )
                                                   species_scores,
                                                   thresh,
                                                   d_opts->score_tie_threshold,
-                                                  difference<double>()
+                                                  util::difference<double>()
                                                 );
                 }
             else
@@ -219,7 +219,7 @@ void module_deconv::choose_kmers( options_deconv *opts )
                                                   species_scores,
                                                   thresh,
                                                   d_opts->score_tie_threshold,
-                                                  ratio<double>()
+                                                  util::ratio<double>()
                                                 );
                 }
 
@@ -518,7 +518,7 @@ void module_deconv::score_species( std::vector<std::pair<std::string, double>>&
             id_counts.emplace_back( it->first, score );
         }
     std::sort( id_counts.begin(), id_counts.end(),
-               compare_pair_non_increasing<std::string, double>()
+               util::compare_pair_non_increasing<std::string, double>()
              );
 
 }
@@ -1037,7 +1037,7 @@ module_deconv
     for( outer_index = 0; outer_index < tie_candidates.size(); ++outer_index )
         {
             util::all_distances( pairwise_distances[ outer_index ],
-                                 tie_candidates.begin(),
+                                 tie_candidates.begin()
                                  tie_candidates.end(),
                                  tie_candidates[ outer_index ],
                                  distance
