@@ -232,7 +232,7 @@ void module_deconv::choose_kmers( options_deconv *opts )
                          d_opts->score_overlap_threshold
                        );
 
-            bool is_tie = tied_species.size() > 1;
+            int is_tie = tied_species.size() - 1;
 
             for( auto& tied_peptide : tied_species )
                 {
@@ -244,15 +244,13 @@ void module_deconv::choose_kmers( options_deconv *opts )
                                                                 species_peptide_counts
                                                                 .find( id )->second, // count for species
                                                                 score,
-                                                                is_tie
+                                                                is_tie > 0
                                                                 )
                                                 );
 
 
-                    // if there was a tie
-                    // we only report it for the first
-                    // item 
-                    is_tie = false;
+                    // reduce the number of ties
+                    --is_tie;
 
                     auto current_peptides = id_pep_map.find( id )->second;
 
@@ -268,6 +266,7 @@ void module_deconv::choose_kmers( options_deconv *opts )
                         }
                 }
             tied_species.clear();
+            tie_candidates.clear();
 
             for( auto it = pep_id_map.begin(); it != pep_id_map.end(); ++it )
                 {
