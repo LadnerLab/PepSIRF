@@ -248,7 +248,6 @@ void module_deconv::choose_kmers( options_deconv *opts )
                                                                 )
                                                 );
 
-
                     // reduce the number of ties
                     --is_tie;
 
@@ -265,14 +264,14 @@ void module_deconv::choose_kmers( options_deconv *opts )
                             pep_id_map.erase( pep_id );
                         }
                 }
-            tied_species.clear();
-            tie_candidates.clear();
 
             for( auto it = pep_id_map.begin(); it != pep_id_map.end(); ++it )
                 {
                     pep_species_vec.emplace_back( it->first, it->second );
                 }
 
+            tied_species.clear();
+            tie_candidates.clear();
             id_pep_map.clear();
             pep_id_map.clear();
             species_scores.clear();
@@ -545,26 +544,29 @@ void module_deconv::write_outputs( std::string out_name,
     out_file << "Species ID\tCount\tScore\tOriginal Count\tOriginal Score\n";
 
     bool tied = false;
-    auto tied_item = out_counts.begin();
+    std::vector<std::tuple<std::string,std::size_t,double,bool>> tied_items;
 
-        for( auto it = out_counts.begin(); it != out_counts.end(); ++it )
+    for( auto it = out_counts.begin(); it != out_counts.end(); ++it )
         {
-            if( std::get<3>( *it ) ) // *it and the next species are tied, report together
+            auto tied_item = it;
+            while( std::get<3>( *tied_item ) ) // *it and the next species are tied, report together
                 {
-                    tied_item = std::next( it, 1 );
+                    tied_item = std::next( tied_item, 1 );
+                    tied_items.push_back( *tied_item );
                     tied = true;
                 }
             if( id_name_map != nullptr )
                 {
-                    auto thing = std::get<0>( *tied_item );
-
-                    to_stream_if( out_file, tied, 
-                                  get_map_value( id_name_map,
-                                                 std::get<0>( *tied_item ),
-                                                 std::get<0>( *tied_item )
-                                               ),
-                                  ","
+                    for( auto tied_i : tied_items )
+                        {
+                            to_stream_if( out_file, tied, 
+                                          get_map_value( id_name_map,
+                                                         std::get<0>( tied_i ),
+                                                         std::get<0>( tied_i )
+                                                       ),
+                                          ","
                                 );
+                        }
                     out_file << get_map_value( id_name_map,
                                                std::get<0>( *it ),
                                                std::get<0>( *it )
@@ -576,39 +578,60 @@ void module_deconv::write_outputs( std::string out_name,
                     out_file << "\t";
                 }
 
-            auto tied_id = std::get<0>( *tied_item );
             auto orig_id = std::get<0>( *it );
 
             // species id for both (both are only written if tied is true)
-            to_stream_if( out_file, tied, tied_id, "," );
+            for( auto tied_i : tied_items )
+                {
+                    auto tied_id = std::get<0>( tied_i );
+                    to_stream_if( out_file, tied, tied_id, "," );
+                }
             out_file << orig_id << "\t";
 
             // score for both
-            to_stream_if( out_file, tied, std::get<1>( *tied_item ), "," );
+            for( auto tied_i : tied_items )
+                {
+                    to_stream_if( out_file, tied, std::get<1>( tied_i ), "," );
+                }
+
             out_file << std::get<1>( *it ) << "\t";
 
             // count for both 
-            to_stream_if( out_file, tied, std::get<2>( *tied_item ), "," );
+            for( auto tied_i : tied_items )
+                {
+                    to_stream_if( out_file, tied, std::get<2>( tied_i ), "," );
+                }
+
             out_file << std::get<2>( *it ) << "\t";
 
-            // original count for both
-            to_stream_if( out_file, tied,
-                          original_scores.find( tied_id )->second.first,
-                          ","
-                        );
+            for( auto tied_i : tied_items )
+                {
+                    auto tied_id = std::get<0>( tied_i );
+                    to_stream_if( out_file, tied,
+                                  original_scores.find( tied_id )->second.first,
+                                  ","
+                                  );
+                }
+
             out_file << original_scores.find( orig_id )->second.first << "\t";
 
             // original score for both
-            to_stream_if( out_file, tied,
-                          original_scores.find( tied_id )->second.second,
-                          ","
-                        );
+            for( auto tied_i : tied_items )
+                {
+                    auto tied_id = std::get<0>( tied_i );
+                    to_stream_if( out_file, tied,
+                                  original_scores.find( tied_id )->second.second,
+                                  ","
+                                  );
+                }
+
             out_file << original_scores.find( orig_id )->second.second << "\n";
 
             if( tied )
                 {
-                    ++it;
+                    it = tied_item + 1;
                     tied = false;
+                    tied_items.clear();
                 }
         }
 
@@ -929,7 +952,6 @@ module_deconv::handle_ties( std::vector<std::pair<std::string,double>>&
                              tie_evaluation_strategy,
                              overlap_threshold
                            );
-            dest_vec.push_back( tie_candidates[ 0 ] );
         }
 }
 
@@ -1117,7 +1139,19 @@ module_deconv
                                         ).sufficient( ovlp_threshold )
                               )
                                 {
-                                    tie_outputs.emplace_back( tie_candidates[ max_inner_orig_id ] );
+                                    bool copy = false;
+                                    for( auto x : tie_outputs )
+                                        {
+                                            if( !x.first.compare( tie_candidates[ index ].first ) )
+                                                {
+                                                    copy = true;
+                                                }
+                                        }
+                                    if( !copy )
+                                        {
+                                            tie_outputs.emplace_back( tie_candidates[ index ] );
+                                        }
+                                    copy = false;
                                 }
                         }
                 }
