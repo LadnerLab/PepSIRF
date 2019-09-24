@@ -850,7 +850,7 @@ TEST_CASE( "overlap_data", "[module_deconv]" )
 }
 
 
-TEST_CASE( "pair_compare" )
+TEST_CASE( "pair_compare", "[util]" )
 {
     std::pair<int,int> pair_1{ 1, 2 };
     std::pair<int,int> pair_2{ 2, 3 };
