@@ -923,7 +923,8 @@ module_deconv::handle_ties( std::vector<std::pair<std::string,double>>&
         }
     else // k-way tie
         {
-            handle_kway_tie( id_pep_map,
+            handle_kway_tie( dest_vec,
+                             id_pep_map,
                              pep_species_map_wcounts,
                              tie_candidates,
                              tie_evaluation_strategy,
@@ -1003,6 +1004,7 @@ module_deconv
 void
 module_deconv
 ::handle_kway_tie( 
+                   std::vector<std::pair<std::string,double>>& tie_outputs,
                    std::unordered_map<std::string, std::vector<std::string>>& id_pep_map,
                    std::unordered_map<std::string,std::unordered_map<std::string,std::size_t>>
                    pep_species_map_wcounts,
@@ -1037,15 +1039,90 @@ module_deconv
     for( outer_index = 0; outer_index < tie_candidates.size(); ++outer_index )
         {
             util::all_distances( pairwise_distances[ outer_index ],
-                                 tie_candidates.begin()
+                                 tie_candidates.begin() + outer_index + 1,
                                  tie_candidates.end(),
                                  tie_candidates[ outer_index ],
                                  distance
                                );
         }
 
-    std::tuple<std::size_t, std::size_t, double> max_match{ 0, 0, 0.0 };
+    // index, index (inner), a_to_b, b_to_a
+    std::tuple<std::size_t, 
+               std::size_t,
+               overlap_data<double>
+               > max_match;
+    auto get_cand_idx = []( std::size_t out, std::size_t in )-> std::size_t
+        { return in + out + 1; };
 
+    for( std::size_t index = 0; index < pairwise_distances.size(); ++index )
+        {
+            std::size_t inner_index = 0;
+            for( inner_index = 0;
+                 inner_index < pairwise_distances[ index ].size();
+                 ++inner_index
+               )
+                {
+                    auto current = pairwise_distances[ index ][ inner_index ];
+
+                    // does this pair have greater overlap than the highest we've found?
+                    bool greater_ovlp = std::get<2>( max_match ).get_a_to_b() < current.get_a_to_b();
+                    greater_ovlp = greater_ovlp && std::get<2>( max_match ).get_b_to_a() < current.get_b_to_a();
+
+                    // // does this pair have a higher score than the highest we've found?
+                    bool higher_score = tie_candidates[ std::get<0>( max_match ) ]
+                                        > tie_candidates[ index ]
+                                        &&
+                                        tie_candidates[ std::get<1>( max_match ) ]
+                                        > tie_candidates[ get_cand_idx( index, inner_index ) ];
+
+                    if( greater_ovlp && higher_score )
+                        {
+                            max_match = std::make_tuple(
+                                                        index,
+                                                        inner_index,
+                                                        current
+                                                       );
+                        }
+                }
+
+        }
+
+    tie_outputs.emplace_back( tie_candidates[ std::get<0>( max_match ) ] );
+
+    if( std::get<2>( max_match ).sufficient( ovlp_threshold ) )
+        {
+            // get the species that are in the tie
+            std::size_t max_outer = std::get<0>( max_match );
+            std::size_t max_inner = std::get<1>( max_match );
+            std::size_t max_inner_orig_id = get_cand_idx( max_outer, std::get<1>( max_match ) );
+
+            tie_outputs.emplace_back( tie_candidates[ max_inner_orig_id ] );
+
+            std::vector<overlap_data<double>> outer_distances;
+            util::all_distances( outer_distances,
+                                 tie_candidates.begin(),
+                                 tie_candidates.end(),
+                                 tie_candidates[ max_outer ],
+                                 distance
+                               );
+            
+            for( std::size_t index = 0; index < outer_distances.size(); ++index )
+                {
+                    if( index != max_inner
+                        && index != max_outer
+                        && outer_distances[ index ].sufficient( ovlp_threshold )
+                      )
+                        {
+                            if( distance( tie_candidates[ index ],
+                                          tie_candidates[ max_inner_orig_id ]
+                                        ).sufficient( ovlp_threshold )
+                              )
+                                {
+                                    tie_outputs.emplace_back( tie_candidates[ max_inner_orig_id ] );
+                                }
+                        }
+                }
+        }
 }
 
 bool module_deconv              

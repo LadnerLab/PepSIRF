@@ -701,7 +701,8 @@ class module_deconv : public module
      *        The overlaps are calculated by module_deconv::calculate_overlap
      **/
     void
-        handle_kway_tie( std::unordered_map<std::string, std::vector<std::string>>& id_pep_map,
+        handle_kway_tie( std::vector<std::pair<std::string,double>>& tie_outputs,
+                         std::unordered_map<std::string, std::vector<std::string>>& id_pep_map,
                          std::unordered_map<std::string,std::unordered_map<std::string,std::size_t>>
                          pep_species_map_wcounts,
                          std::vector<std::pair<std::string,double>>& tie_candidates,
