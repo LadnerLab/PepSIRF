@@ -629,12 +629,11 @@ void module_deconv::write_outputs( std::string out_name,
 
             if( tied )
                 {
-                    it = tied_item + 1;
+                    it = tied_item;
                     tied = false;
                     tied_items.clear();
                 }
         }
-
 }
 
 sequential_set<std::string>
