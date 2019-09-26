@@ -13,7 +13,9 @@
 #include "time_keep.h"
 #include "fasta_parser.h"
 #include "setops.h"
+#include "dist_tools.h"
 #include "overlap_data.h"
+#include "distance_matrix.h"
 
 module_deconv::module_deconv() = default;
 
@@ -1057,16 +1059,12 @@ module_deconv
         };
 
     // compute pairwise distances for each of the species
-    for( outer_index = 0; outer_index < tie_candidates.size(); ++outer_index )
-        {
-            util::all_distances( pairwise_distances[ outer_index ],
-                                 tie_candidates.begin() + outer_index + 1,
-                                 tie_candidates.end(),
-                                 tie_candidates[ outer_index ],
-                                 distance
-                               );
-        }
-
+    distance_tools
+        ::pairwise_distances_symmetry_optimized( pairwise_distances,
+                                                 tie_candidates.begin(),
+                                                 tie_candidates.end(),
+                                                 distance
+                                               );
     // index, index (inner), a_to_b, b_to_a
     std::tuple<std::size_t, 
                std::size_t,
@@ -1120,12 +1118,12 @@ module_deconv
             tie_outputs.emplace_back( tie_candidates[ max_inner_orig_id ] );
 
             std::vector<overlap_data<double>> outer_distances;
-            util::all_distances( outer_distances,
-                                 tie_candidates.begin(),
-                                 tie_candidates.end(),
-                                 tie_candidates[ max_outer ],
-                                 distance
-                               );
+            distance_tools::all_distances( outer_distances,
+                                           tie_candidates.begin(),
+                                           tie_candidates.end(),
+                                           tie_candidates[ max_outer ],
+                                           distance
+                                         );
             
             for( std::size_t index = 0; index < outer_distances.size(); ++index )
                 {
