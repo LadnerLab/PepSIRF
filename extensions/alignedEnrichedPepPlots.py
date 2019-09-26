@@ -155,12 +155,12 @@ def plotAlignDepth(samps, spID, alInfo, data, mapDict, id2name, minDepth, annotD
             ax[1].set_yticks(yticks)
             ax[1].set_ylim(1,len(samps)+1)
             if opts.withLabels:
-                ax.set_yticklabels(samps[::-1])
+                ax[1].set_yticklabels(samps[::-1])
             else:
-                ax.set_yticklabels([""]*len(yticks))
-            for item in (ax.get_xticklabels()):
+                ax[1].set_yticklabels([""]*len(yticks))
+            for item in (ax[1].get_xticklabels()):
                 item.set_fontsize(18)
-            for item in (ax.get_yticklabels()):
+            for item in (ax[1].get_yticklabels()):
                 item.set_fontsize(10)
             plt.xlim(0,len(x[0]))
             cbar = fig.colorbar(pcm, extend='max', ax=ax)
