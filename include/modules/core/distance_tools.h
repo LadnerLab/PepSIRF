@@ -1,5 +1,8 @@
 #ifndef DISTANCE_TOOLS_HH_INCLUDED
 #define DISTANCE_TOOLS_HH_INCLUDED
+
+#include "distance_matrix.h"
+
 namespace distance_tools
 {
     /**
@@ -20,14 +23,14 @@ namespace distance_tools
      *        members of type T and returns their distance,
      *        a member of type DistanceType.
      **/
-    template<template<typename...> class DestType,
+    template<template<typename ...> class ContainerType,
         class InputIt,
         class T,
         class DistanceType,
         class DistanceCalc
         >
         void
-        all_distances( DestType<DistanceType>& dest,
+        all_distances( ContainerType<DistanceType>& dest,
                        InputIt begin, InputIt end,
                        T& compare,
                        DistanceCalc d
@@ -39,13 +42,13 @@ namespace distance_tools
                 }
         }
 
-    template<template<typename...> class DestType,
+    template<
         class InputIt,
         class DistanceType,
         class DistanceCalc
         >
         void 
-        pairwise_distances_symmetry_optimized( DestType<DestType<DistanceType>>& dest,
+        pairwise_distances_symmetry_optimized( distance_matrix<DistanceType>& dest,
                                                InputIt begin,
                                                InputIt end,
                                                DistanceCalc distance
@@ -63,13 +66,13 @@ namespace distance_tools
                     }
             }
 
-    template<template<typename...> class DestType,
+    template<
         class InputIt,
         class DistanceType,
         class DistanceCalc
         >
         void 
-        pairwise_distances( DestType<DestType<DistanceType>>& dest,
+        pairwise_distances( distance_matrix<DistanceType>& dest,
                             InputIt begin,
                             InputIt end,
                             DistanceCalc distance
