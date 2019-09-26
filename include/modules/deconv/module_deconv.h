@@ -7,151 +7,15 @@
 #include <memory>
 #include <unordered_map>
 
+#include "overlap_data.h"
 #include "module.h"
 #include "options_deconv.h"
 #include "sequence.h"
 #include "maps.h"
 #include "util.h"
 #include "setops.h"
-
-/**
- * Used for data that is relevant to determining and 
- * communicating data about ties.
- **/
-namespace tie_data
-{
-    /**
-     * Enum declaring the types of ties that 
-     * can be considered. Here we consider 
-     * 3 types.
-     **/
-    enum tie_type
-    {
-        /**
-         * A single-way tie happens when only one species 
-         * meets the criteria that considers ties.
-         **/
-        SINGLE_WAY_TIE = 0,
-
-        /**
-         * A two-way tie happens when exactly two species
-         * meet the criteria that considers ties.
-         **/
-        TWO_WAY_TIE,
-
-        /**
-         * A k-way tie happens when at least three species
-         * meet the criteria that considers ties.
-         **/
-        K_WAY_TIE
-    };
-
-};
-
-/**
- * Defines certain evaluation strategies for
- * handling different situations. 
- * If we need to score or filter species 
- * we have different ways we can do that. 
- **/
-namespace evaluation_strategy
-{
-    /**
-     * Strategy for scoring species. 
-     **/
-    enum score_strategy
-    {
-        /**
-         * For integer scoring, the score of 
-         * each species is the number of peptides 
-         * that species shares a kmer with.
-         **/
-        INTEGER_SCORING = 0,
-
-        /**
-         * For fractional scoring,
-         * each species is given a score based 
-         * on the ratio of species its shared peptides
-         * share a kmer with. So a peptide that shares a kmer
-         * with 3 species is given a score of 1/3, and a peptide
-         * who only shares a kmer with a given species is given a 
-         * score of 1/1. In this way peptides that are more unique to
-         * a species are given a higher score.
-         **/
-        FRACTIONAL_SCORING,
-
-        /**
-         * Summation scoring is used in conjuction 
-         * with peptides that have count information.
-         * So if species1 shares 7 kmers with a peptide,
-         * then that species is given a score of 7. 
-         * Note that this is done for each peptide a species 
-         * shares kmers with and the species is given the score
-         * of the sum of these scores.
-         **/
-        SUMMATION_SCORING
-    };
-
-    /**
-     * Strategies for filtering peptides, 
-     * i.e. if either a species' score or 
-     * count falls below a threshold that 
-     * species is removed from consideration.
-     **/
-    enum filter_strategy
-    {
-        /**
-         * Species whose scores fall below
-         * a certain threshold will be removed.
-         **/
-        SCORE_FILTER = 0,
-
-        /**
-         * Species whose count falls 
-         * below a certain threshold will be 
-         * removed.
-         **/
-        COUNT_FILTER
-    };
-
-    /**
-     * Strategies specifying how to break ties between species. 
-     * Generally one of two outcomes will result from a tie:
-     * -Two species are tied and have enough overlapped peptides to be reported 
-     *  together. 
-     * -Two or more species are tied and the species that shares 
-     * the smallest overlap with others is reported.
-     **/
-    enum tie_eval_strategy
-    {
-        /**
-         * Species that share a certain percentage
-         * of their kmers are reported together, or 
-         * if they do not meet a given threshold they are reported
-         * separately.
-         **/
-        PERCENT_TIE_EVAL = 0,
-
-        /**
-         * Species that share a certain number of 
-         * peptides are considered tied.
-         **/
-        INTEGER_TIE_EVAL,
-
-        /**
-         * Species must have a number of 
-         * unique shared peptides
-         **/
-        SUMMATION_SCORING_TIE_EVAL
-    };
-
-    enum tie_distance_strategy
-    {
-        INTEGER_DISTANCE = 0,
-        RATIO_DISTANCE
-    };
-
-}; //namespace evaluation_strategy
+#include "evaluation_strategy.h"
+#include "tie_data.h"
 
 /**
  * The species deconvolution module of the 
@@ -304,7 +168,7 @@ class module_deconv : public module
     /**
      * Determine how 'overlapped' two species are.
      * Here for species a and b, we define overlap in one 
-     * of two was. We can define overlap by the number of shared 
+     * of two ways. We can define overlap by the number of shared 
      * peptides by each species or by the percentage of 
      * peptides shared between species.
      * @param id_peptide_map Map relating species ids to the 
@@ -321,21 +185,20 @@ class module_deconv : public module
      * @param threshold The threshold that is set to determine
      *        whether the overlap between species is sufficient. 
      * @pre Both first and second should be a key in id_peptide_map
-     * @returns The overlap amount, expressed as either a ratio or 
-     *          a count as determined by ev_strat.
+     * @returns overlap_data<double>, class storing the overlap of first
+     *          and second, and the overlap of second and first.
      **/
     template<template<typename...> class MapType>
-        bool 
-        sufficient_overlap(  MapType<std::string,std::vector<std::string>>&
-                             id_peptide_map,
-                             MapType<std::string,MapType<std::string,std::size_t>>&
-                             pep_species_map_wcounts,
-                             std::string first,
-                             std::string second,
-                             evaluation_strategy::tie_eval_strategy
-                             ev_strat,
-                             double threshold
-                    )
+        overlap_data<double>
+        calculate_overlap( MapType<std::string,std::vector<std::string>>&
+                           id_peptide_map,
+                           MapType<std::string,MapType<std::string,std::size_t>>&
+                           pep_species_map_wcounts,
+                           std::string first,
+                           std::string second,
+                           evaluation_strategy::tie_eval_strategy
+                           ev_strat
+                          )
         {
             auto& first_peptides  = id_peptide_map.find( first )->second;
             auto& second_peptides = id_peptide_map.find( second )->second;
@@ -373,7 +236,9 @@ class module_deconv : public module
                 ::INTEGER_TIE_EVAL
                 )
                 {
-                    return (double) intersection_size >= threshold;
+                    return overlap_data<double>( (double) intersection_size,
+                                                 (double) intersection_size
+                                               );
                 }
 
             else if( ev_strat
@@ -427,14 +292,10 @@ class module_deconv : public module
                             // reset the scores
                             a_score = b_score = 0;
                         }
-
-                    // don't try to divide by zero, but if threshold is
-                    // zero then we need to return true without trying to divide.
-                    return ( threshold == 0 )
-                        || ( a_denom > 0 && b_denom > 0
-                             && util::divide( a_num, a_denom ) >= threshold
-                             && util::divide( b_num, b_denom ) >= threshold
-                             );
+                    
+                    return overlap_data<double>( util::divide( a_num, a_denom ),
+                                                 util::divide( b_num, b_denom )
+                                               );
                 }
 
             // percent tie evaluation strategy 
@@ -442,9 +303,9 @@ class module_deconv : public module
             double b_denom = id_peptide_map.find( second )->second.size();
             double i_size = static_cast<double>( intersection_size );
 
-            return ( util::divide( i_size, a_denom ) >= threshold
-                     && util::divide( i_size, b_denom ) >= threshold
-                     );
+            return overlap_data<double>( util::divide( i_size, a_denom ),
+                                         util::divide( i_size, b_denom )
+                                       );
         }
 
 
@@ -824,16 +685,30 @@ class module_deconv : public module
      * remove all but one item from tie_candidates. 
      * The remaining item is that which has the least integer overlap
      * with the other item in tie_candidates.
+     * @param id_pep_map A map that associates species ids with 
+     *        the peptides that it shares a kmer with.
+     * @param pep_species_map_wcounts Reference to a map that 
+     *        maps string peptide names to a map of species that 
+     *        share a kmer with that peptide. Each species is also
+     *        linked to its score. In summary, we have a mapping 
+     *        that looks like this:
+     *        peptide->species->score
      * @param tie_candidates A vector containing 
      *        pairs of species_id:count items. 
-     * @param id_pep_map Map that associates species with the 
-     *        peptides they share a kmer with.
+     * @param tie_eval_strategy Strategy to use when evaluating ties.
+     *        See evaluation_strategy::tie_eval_strategy for more information.
+     * @param ovlp_threshold Overlap threshold for species to be considered tied.
+     *        The overlaps are calculated by module_deconv::calculate_overlap
      **/
     void
-        handle_kway_tie( std::vector<std::pair<std::string,double>>& tie_candidates,
-                         std::unordered_map<std::string, std::vector<std::string>>& id_pep_map
+        handle_kway_tie( std::vector<std::pair<std::string,double>>& tie_outputs,
+                         std::unordered_map<std::string, std::vector<std::string>>& id_pep_map,
+                         std::unordered_map<std::string,std::unordered_map<std::string,std::size_t>>
+                         pep_species_map_wcounts,
+                         std::vector<std::pair<std::string,double>>& tie_candidates,
+                         evaluation_strategy::tie_eval_strategy eval_strat,
+                         const double ovlp_threshold
                        );
-
 
     /**
      * Combine the count and the score for species.
@@ -980,79 +855,6 @@ class module_deconv : public module
      *          false otherwise
      **/
     bool use_ratio_overlap_threshold( double threshold );
-};
-
-/**
- * Compare pairs in non-decreasing order,
- * i.e. for x[ i ], x[ j ] when i < j, then 
- * x[ i ].second >= x[ j ].second
- * 
- * @param first the first pair to check
- * @param second the second pair to check
- * @note operator '>' must be defined for type V
- * @returns true if first.second > second.first
- **/
-template <class K, class V>
-struct compare_pair_non_increasing
-{
-    bool operator()( const std::pair<K,V>& first,
-                     const std::pair<K,V>& second
-                   )
-    {
-        return first.second > second.second;
-    }
-};
-
-/**
- * Compare pairs in non-increasing order,
- * i.e. for x[ i ], x[ j ] when i < j, then 
- * x[ i ] <= x[ j ]
- * @param first the first pair to check
- * @param second the second pair to check
- * @note operator '<' must be defined for type V
- * @returns true if first.second < second.first
- **/
-template <class K, class V>
-struct compare_pair_non_decreasing
-{
-    bool operator()( const std::pair<K,V>& first,
-                     const std::pair<K,V>& second
-                   )
-    {
-        return std::get<1>( first ) < std::get<1>( second );
-    }
-};
-
-/**
- * Returns euclidean distance between 
- * 1-dimensional points a and b, i.e. a - b.
- * @param a Item of type V
- * @param b Item of type V
- * @returns a - b
- **/
-template<class V>
-struct difference
-{
-    V operator()( const V a, const V b )
-    {
-        return a - b;
-    }
-};
-
-/**
- * Returns a / b if a < b,
- * b / a otherwise.
- **/
-template<class V>
-struct ratio
-{
-    V operator()( const V a, const V b )
-    {
-        // we return something <= 1.0, so
-        // want to make sure the larger is in the
-        // denominator
-        return a > b ? b / a : a / b;
-    }
 };
 
 #endif // MODULE_DECONV_HH_INCLUDED 

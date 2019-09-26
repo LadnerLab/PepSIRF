@@ -8,7 +8,9 @@
 #include <algorithm>
 #include <vector>
 #include <unordered_map>
+#include <cmath>
 
+#include "overlap_data.h"
 #include "sequence_indexer.h"
 #include "sequence.h"
 #include "fastq_sequence.h"
@@ -20,6 +22,8 @@
 #include "sample.h"
 #include "fastq_score.h"
 #include "kmer_tools.h"
+
+using namespace util;
 
 static std::string fasta_ex = ">Example sequence 1\nDJFKDLFJSF\nDJFKDJFDJKFJKDF\n\nJDSKFLJFDKSFLJ\n>Example Sequence 2\n\n\nDJFKLSFJDKLSFJKSLFJSKDLFJDKSLFJKLDKDKDK\n\n\n";
 TEST_CASE( "Sequence", "[sequence]" )
@@ -387,7 +391,7 @@ TEST_CASE( "get_tie_candidates_integer", "[module_deconv]" )
     scores.emplace_back( "105", 249.0 );
     std::sort( scores.begin(),
                scores.end(),
-               compare_pair_non_increasing
+               util::compare_pair_non_increasing
                <std::string, double>()
             );
 
@@ -476,7 +480,7 @@ TEST_CASE( "get_tie_candidates_ratio", "[module_deconv]" )
 
     std::sort( scores.begin(),
                scores.end(),
-               compare_pair_non_increasing
+               util::compare_pair_non_increasing
                <std::string, double>()
             );
 
@@ -484,7 +488,7 @@ TEST_CASE( "get_tie_candidates_ratio", "[module_deconv]" )
                                           scores,
                                           threshold,
                                           ovlp_threshold,
-                                          ratio<double>()
+                                          util::ratio<double>()
                                         );
 
     REQUIRE( candidates.size() == 1 );
@@ -498,7 +502,7 @@ TEST_CASE( "get_tie_candidates_ratio", "[module_deconv]" )
                                      scores,
                                      threshold,
                                      ovlp_threshold,
-                                     ratio<double>()
+                                     util::ratio<double>()
                                    );
 
 
@@ -559,7 +563,7 @@ TEST_CASE( "test_difference", "[struct_difference]" )
 
 }
 
-TEST_CASE( "sufficient_overlap", "[module_deconv]" )
+TEST_CASE( "calculate_overlap", "[module_deconv]" )
 {
 
     auto mod = module_deconv();
@@ -585,43 +589,40 @@ TEST_CASE( "sufficient_overlap", "[module_deconv]" )
 
     double threshold = 1;
 
-    bool so = mod.sufficient_overlap( id_p_map,
-                                      counts_map,
-                                      first, second,
-                                      evaluation_strategy::tie_eval_strategy::INTEGER_TIE_EVAL,
-                                      threshold
-                                    );
-    REQUIRE( so );
+    overlap_data<double> so = mod.calculate_overlap( id_p_map,
+                                                     counts_map,
+                                                     first, second,
+                                                     evaluation_strategy::tie_eval_strategy::INTEGER_TIE_EVAL
+                                                   );
+    REQUIRE( so.sufficient( threshold ) );
 
-    so = mod.sufficient_overlap( id_p_map,
+    so = mod.calculate_overlap( id_p_map,
                                  counts_map,
                                  first, second,
-                                 evaluation_strategy::tie_eval_strategy::INTEGER_TIE_EVAL,
-                                 4
+                                 evaluation_strategy::tie_eval_strategy::INTEGER_TIE_EVAL
                                );
-    REQUIRE( so );
 
-    so = mod.sufficient_overlap( id_p_map,
+    REQUIRE( so.sufficient( 4 ) );
+
+    so = mod.calculate_overlap( id_p_map,
                                  counts_map,
                                  first, second,
-                                 evaluation_strategy::tie_eval_strategy::INTEGER_TIE_EVAL,
-                                 5
+                                 evaluation_strategy::tie_eval_strategy::INTEGER_TIE_EVAL
                                );
-    REQUIRE( !so );
+    REQUIRE( !so.sufficient( 5 ) );
 
 
-    so = mod.sufficient_overlap( id_p_map,
+    so = mod.calculate_overlap( id_p_map,
                                  counts_map,
                                  first, second,
-                                 evaluation_strategy::tie_eval_strategy::PERCENT_TIE_EVAL,
-                                 0.5
+                                 evaluation_strategy::tie_eval_strategy::PERCENT_TIE_EVAL
                                );
-    REQUIRE( so );
+    REQUIRE( so.sufficient( 0.5 ) );
 
 
 }
 
-TEST_CASE( "sufficient_overlap_ratio", "[module_deconv]" )
+TEST_CASE( "calculate_overlap_ratio", "[module_deconv]" )
 {
 
     auto mod = module_deconv();
@@ -654,44 +655,41 @@ TEST_CASE( "sufficient_overlap_ratio", "[module_deconv]" )
 
 
 
-    bool so = false;
+    overlap_data<double> so;
 
-    so = mod.sufficient_overlap( id_p_map,
-                                 counts_map,
-                                 first, second,
-                                 evaluation_strategy::tie_eval_strategy::PERCENT_TIE_EVAL,
-                                 0.5
-                               );
-    REQUIRE( so );
+    so = mod.calculate_overlap( id_p_map,
+                                counts_map,
+                                first, second,
+                                evaluation_strategy::tie_eval_strategy::PERCENT_TIE_EVAL
+                              );
 
-    so = mod.sufficient_overlap( id_p_map,
-                                 counts_map,
-                                 first, second,
-                                 evaluation_strategy::tie_eval_strategy::PERCENT_TIE_EVAL,
-                                 0.8
-                               );
-    REQUIRE( !so );
+    REQUIRE( so.sufficient( 0.5 ) );
 
-    so = mod.sufficient_overlap( id_p_map,
-                                 counts_map,
-                                 first, second,
-                                 evaluation_strategy::tie_eval_strategy::PERCENT_TIE_EVAL,
-                                 0.76
-                               );
-    REQUIRE( !so );
+    so = mod.calculate_overlap( id_p_map,
+                                counts_map,
+                                first, second,
+                                evaluation_strategy::tie_eval_strategy::PERCENT_TIE_EVAL
+                              );
+    REQUIRE( !so.sufficient( 0.8 ) );
 
-    so = mod.sufficient_overlap( id_p_map,
-                                 counts_map,
-                                 first, second,
-                                 evaluation_strategy::tie_eval_strategy::PERCENT_TIE_EVAL,
-                                 0.75
-                               );
-    REQUIRE( so );
+    so = mod.calculate_overlap( id_p_map,
+                                counts_map,
+                                first, second,
+                                evaluation_strategy::tie_eval_strategy::PERCENT_TIE_EVAL
+                              );
+    REQUIRE( !so.sufficient( 0.76 ) );
+
+    so = mod.calculate_overlap( id_p_map,
+                                counts_map,
+                                first, second,
+                                evaluation_strategy::tie_eval_strategy::PERCENT_TIE_EVAL
+                              );
+    REQUIRE( so.sufficient( 0.75 ) );
 
 
 }
 
-TEST_CASE( "sufficient_overlap_summation", "[module_deconv]" )
+TEST_CASE( "calculate_overlap_summation", "[module_deconv]" )
 {
 
     auto mod = module_deconv();
@@ -723,31 +721,28 @@ TEST_CASE( "sufficient_overlap_summation", "[module_deconv]" )
         }
 
 
-    bool so = false;
+    overlap_data<double> so;
 
-    so = mod.sufficient_overlap( id_p_map,
+    so = mod.calculate_overlap( id_p_map,
                                  counts_map,
                                  first, second,
-                                 evaluation_strategy::tie_eval_strategy::SUMMATION_SCORING_TIE_EVAL,
-                                 0.5
+                                 evaluation_strategy::tie_eval_strategy::SUMMATION_SCORING_TIE_EVAL
                                );
-    REQUIRE( so );
+    REQUIRE( so.sufficient( 0.5 ) );
 
-    so = mod.sufficient_overlap( id_p_map,
+    so = mod.calculate_overlap( id_p_map,
+                                counts_map,
+                                first, second,
+                                evaluation_strategy::tie_eval_strategy::SUMMATION_SCORING_TIE_EVAL
+                               );
+    REQUIRE( so.sufficient( 0.75 ) );
+
+    so = mod.calculate_overlap( id_p_map,
                                  counts_map,
                                  first, second,
-                                 evaluation_strategy::tie_eval_strategy::SUMMATION_SCORING_TIE_EVAL,
-                                 0.75
+                                 evaluation_strategy::tie_eval_strategy::SUMMATION_SCORING_TIE_EVAL
                                );
-    REQUIRE( so );
-
-    so = mod.sufficient_overlap( id_p_map,
-                                 counts_map,
-                                 first, second,
-                                 evaluation_strategy::tie_eval_strategy::SUMMATION_SCORING_TIE_EVAL,
-                                 0.76
-                               );
-    REQUIRE( !so );
+    REQUIRE( !so.sufficient( 0.76 ) );
 
 
 
@@ -805,4 +800,102 @@ TEST_CASE( "get_map_value", "[module_deconv]" )
     REQUIRE( mod.get_map_value( map, 3 ) == 3 );
     REQUIRE( mod.get_map_value( map, 4 ) == 0 );
     REQUIRE( mod.get_map_value( map, 5, 9 ) == 9 );
+}
+
+TEST_CASE( "all_distances", "[util]" )
+{
+    std::vector<int> data{ 1, 2, 3, 4, 5 };
+    std::vector<int> distances;
+    int target = 1;
+
+    auto distance = [&]( const int a, const int b ){ return std::abs( a - b ); };
+
+    util::all_distances( distances, data.begin(), data.end(), target, distance );
+
+    REQUIRE( distances.size() == data.size() );
+
+    for( std::size_t index = 0; index < distances.size(); ++index )
+        {
+            REQUIRE(
+                    distances[ index ] == std::abs( data[ index ] - target  )
+                   );
+        }
+
+}
+
+TEST_CASE( "overlap_data", "[module_deconv]" )
+{
+    overlap_data<double> ovlp{ 0.75, 0.5 };
+
+    REQUIRE( ovlp.get_a_to_b() == 0.75 );
+    REQUIRE( ovlp.get_b_to_a() == 0.5  );
+
+    REQUIRE( ovlp.sufficient( 0.49 ) );
+    REQUIRE( ovlp.sufficient( 0.5 ) );
+    REQUIRE( !ovlp.sufficient( 0.51 ) );
+    REQUIRE( ovlp.sufficient( 0 ) );
+
+
+    overlap_data<int> ovlp_int{ 75, 50 };
+    REQUIRE( ovlp_int.get_a_to_b() == 75 );
+    REQUIRE( ovlp_int.get_b_to_a() == 50  );
+
+    REQUIRE( ovlp_int.sufficient( 49 ) );
+    REQUIRE( ovlp_int.sufficient( 50 ) );
+    REQUIRE( !ovlp_int.sufficient( 51 ) );
+    REQUIRE( ovlp_int.sufficient( 0 ) );
+
+
+
+}
+
+
+TEST_CASE( "pair_compare", "[util]" )
+{
+    std::pair<int,int> pair_1{ 1, 2 };
+    std::pair<int,int> pair_2{ 2, 3 };
+
+
+    auto gt = []( const int& a, const int& b ){ return a > b; };
+    REQUIRE( !util::pair_positional_compare( pair_1, pair_2,
+                                             gt,
+                                             gt
+                                           )
+           );
+
+    REQUIRE( util::pair_positional_compare( pair_2, pair_1,
+                                            gt,
+                                            gt
+                                          )
+           );
+
+    std::pair<double,std::size_t> p1{ 10.5, 11 };
+    std::pair<double,std::size_t> p2{ 11.5, 10 };
+
+    auto gt_d = []( const double& a, const double& b ){ return a > b; };
+    auto gt_s = []( const std::size_t& a, const std::size_t& b ){ return a > b; };
+
+    REQUIRE( !util::pair_positional_compare( p2, p1,
+                                             gt_d,
+                                             gt_s
+                                           )
+           );
+
+    p1.first = 100.2;
+    p1.second = 400;
+
+
+    REQUIRE( !util::pair_positional_compare( p2, p1,
+                                             gt_d,
+                                             gt_s
+                                           )
+           );
+    REQUIRE( util::pair_positional_compare( p1, p2,
+                                             gt_d,
+                                             gt_s
+                                           )
+           );
+
+
+
 }
