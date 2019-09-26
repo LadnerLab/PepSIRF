@@ -22,8 +22,13 @@ struct loc
 template<typename T>
 class distance_matrix
 {
+    
  public:
     distance_matrix() = default;
+
+    typedef T value_type;
+
+    distance_matrix( std::size_t n ){ reserve( n ); }
 
     std::vector<T>& operator[]( const std::size_t idx )
     {
@@ -35,10 +40,32 @@ class distance_matrix
         return data[ cLoc.row_id ][ cLoc.column_id ];
     }
 
+    typename std::vector<std::vector<value_type>>::iterator
+        const begin()
+        {
+            return data.begin();
+        }
+
+    typename std::vector<std::vector<value_type>>::iterator
+        const end()
+        {
+            return data.end();
+        }
+
     std::size_t size()
         {
             return data.size();
         }
+
+    void reserve( std::size_t n )
+    {
+        std::size_t index = 0;
+        for( index = 0; index < n; ++index )
+            {
+                data.emplace_back( std::vector<value_type>() );
+                data[ index ].reserve( n );
+            }
+    }
 
 
  private:
