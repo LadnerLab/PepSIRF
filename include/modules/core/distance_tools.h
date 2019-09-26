@@ -38,7 +38,7 @@ namespace distance_tools
         {
             for( auto it = begin; it < end; ++it )
                 {
-                    dest.emplace_back( d( compare, *it ) );
+                    dest.push_back( d( compare, *it ) );
                 }
         }
 
@@ -86,7 +86,7 @@ namespace distance_tools
                                    end,
                                    *current,
                                    distance
-                                   );
+                                 );
                 }
         }
 
