@@ -13,7 +13,7 @@
 #include "time_keep.h"
 #include "fasta_parser.h"
 #include "setops.h"
-#include "dist_tools.h"
+#include "distance_tools.h"
 #include "overlap_data.h"
 #include "distance_matrix.h"
 
