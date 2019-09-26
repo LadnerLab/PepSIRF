@@ -1037,8 +1037,7 @@ module_deconv
                  )
 {
     // std::vector<double> scores( tie_candidates.size(), 0.0 );
-    std::vector<std::vector<overlap_data<double>>>
-        pairwise_distances( tie_candidates.size() );
+    distance_matrix<overlap_data<double>> pairwise_distances;
 
     // precondition: tie_candidates does not have 1 element 1
     double count = ( (double) tie_candidates.size() ) - 1;
@@ -1060,11 +1059,12 @@ module_deconv
 
     // compute pairwise distances for each of the species
     distance_tools
-        ::pairwise_distances_symmetry_optimized( pairwise_distances,
-                                                 tie_candidates.begin(),
-                                                 tie_candidates.end(),
-                                                 distance
-                                               );
+        ::pairwise_distances( pairwise_distances,
+                              tie_candidates.begin(),
+                              tie_candidates.end(),
+                              distance
+                            );
+
     // index, index (inner), a_to_b, b_to_a
     std::tuple<std::size_t, 
                std::size_t,
