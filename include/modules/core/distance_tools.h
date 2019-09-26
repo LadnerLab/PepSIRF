@@ -1,5 +1,5 @@
-#ifndef DIST_TOOLS_HH_INCLUDED
-#define DIST_TOOLS_HH_INCLUDED
+#ifndef DISTANCE_TOOLS_HH_INCLUDED
+#define DISTANCE_TOOLS_HH_INCLUDED
 namespace distance_tools
 {
     /**
@@ -63,6 +63,31 @@ namespace distance_tools
                     }
             }
 
+    template<template<typename...> class DestType,
+        class InputIt,
+        class DistanceType,
+        class DistanceCalc
+        >
+        void 
+        pairwise_distances( DestType<DestType<DistanceType>>& dest,
+                            InputIt begin,
+                            InputIt end,
+                            DistanceCalc distance
+                          )
+        {
+            std::size_t index = 0;
+            for( auto current = begin; current != end; ++current, ++index )
+                {
+                    all_distances( dest[ index ],
+                                   begin,
+                                   end,
+                                   *current,
+                                   distance
+                                   );
+                }
+        }
+
 
 }; // namespace distance_tools 
-#endif 
+
+#endif // DISTANCE_TOOLS_HH_INCLUDED
