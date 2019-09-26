@@ -11,10 +11,12 @@
 #include <cmath>
 
 #include "overlap_data.h"
+#include "distance_tools.h"
 #include "sequence_indexer.h"
 #include "sequence.h"
 #include "fastq_sequence.h"
 #include "maps.h"
+#include "distance_matrix.h"
 #include "fastq_parser.h"
 #include "module_demux.h"
 #include "module_deconv.h"
@@ -810,7 +812,7 @@ TEST_CASE( "all_distances", "[util]" )
 
     auto distance = [&]( const int a, const int b ){ return std::abs( a - b ); };
 
-    util::all_distances( distances, data.begin(), data.end(), target, distance );
+    distance_tools::all_distances( distances, data.begin(), data.end(), target, distance );
 
     REQUIRE( distances.size() == data.size() );
 
@@ -821,6 +823,31 @@ TEST_CASE( "all_distances", "[util]" )
                    );
         }
 
+}
+
+TEST_CASE( "pairwise_distances", "[distance_tools]" )
+{
+    distance_matrix<int> dist( 5 );
+
+    std::vector<int> data{ 1, 2, 3, 4, 5 };
+    auto int_dist = []( int a, int b ){ return std::abs( a - b ); };
+
+    distance_tools::pairwise_distances( dist,
+                                        data.begin(),
+                                        data.end(),
+                                        int_dist
+                                      );
+
+    for( std::size_t index = 0; index < data.size(); ++index )
+        {
+            for( std::size_t inner_index = 0; inner_index < data.size(); ++inner_index )
+                {
+
+                    REQUIRE( dist[ index ][ inner_index ]
+                             == int_dist( data[ index ], data[ inner_index ] )
+                           );
+                }
+        }
 }
 
 TEST_CASE( "overlap_data", "[module_deconv]" )
