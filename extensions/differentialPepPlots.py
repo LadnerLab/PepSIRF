@@ -19,10 +19,26 @@ def main():
     p.add_option('-k', '--kDiff', type='int', default=24, help='Minimum additional # of kmers present for focal species in probe, for probe to be included [24]')
     p.add_option('-m', '--min', type='int', default=50, help='Minimum data value to include in color scale [50]')
     p.add_option('-o', '--out', default="informProbes",  help='String to add to output plots. [informProbes]')
+    p.add_option('-a', '--align', default="/Volumes/GoogleDrive/Shared drives/LadnerLab/Projects/panviral_pepseq/analysis/alignments/AlignmentInfo.txt",  help='File with info on probe level alignments. [/Volumes/GoogleDrive/Shared drives/LadnerLab/Projects/panviral_pepseq/analysis/alignments/AlignmentInfo.txt]')
+    p.add_option('--map', default="/Volumes/GoogleDrive/Shared drives/LadnerLab/Projects/panviral_pepseq/library_design/oligos/2019-02-27/encoding/unrepSW_9_30_70_design_combined_wControls_2019-09-12.csv_map",  help='Probe name map. [/Volumes/GoogleDrive/Shared drives/LadnerLab/Projects/panviral_pepseq/library_design/oligos/2019-02-27/encoding/unrepSW_9_30_70_design_combined_wControls_2019-09-12.csv_map]')
     p.add_option('--log', action='store_true', default=False, help='Use this to plot log scale. [False]')
     p.add_option('--withLabels', action='store_true', default=False, help='Use this flag to include sample labels on y-axis. [False]')
     opts, args = p.parse_args()
     
+
+    #Read in alignment info
+    alInfo = {}
+    with open(opts.align, "r") as fin:
+        lc=0
+        for line in fin:
+            lc+=1
+            if lc>1:
+                cols = line.rstrip("\n").split("\t")
+                alInfo[cols[0]] = ["%s/%s" % (cols[1], x) for x in cols[2:]]
+
+    #Generate dict to translate names    
+    mapDict=readmap(opts.map, order=1)
+
 
     #Read in linkage map
     linkD = readLinkage(opts.linkage)
@@ -39,6 +55,17 @@ def main():
     for thisID in opts.speciesIDs.split(","):
         
         probes = getInfPro(thisID, linkD, opts)               #Pull out informative probes
+        #Sort probes based on alignment position, if alignmnet is available
+        if thisID in alInfo:
+            thisInfo = parseAlInfo(alInfo[thisID])
+            toSort = []
+            for pr in probes:
+                prLong=mapDict[pr]
+                for i, inform in  enumerate(list(thisInfo.values())):
+                    if prLong in inform:
+                        toSort.append((i,inform[prLong][0],pr))
+                probes = [x[2] for x in sorted(toSort)]
+        
         samps = list(data.keys())                             #Grab sample names
         if opts.log:
             toPlot = [[np.log10(data[x][y]) for y in probes] for x in samps]#Grab data to plot
@@ -125,7 +152,38 @@ def parseCounts(countFile, delim="\t"):
                     counts[names[i]][cols[0]] = float(count)
     return counts
 
+def readmap(file, order=0):
+    m={}
+    with open(file, "r") as fin:
+        for line in fin:
+            cols=line.strip("\n").split("\t")
+            if not order:
+                m[cols[0]] = cols[1]
+            else:
+                m[cols[1]] = cols[0]
+    return m
 
+def parseAlInfo(files):
+    alInfo={}
+    for f in files:
+        alPos = parseAlFile(f)
+        geneName = f.split("/")[-1].split("_")[2]
+        alInfo[geneName] = alPos
+    return alInfo
+
+def parseAlFile(file):
+    infD={}
+    thisMin=1000000
+    thisMax=0
+    with open(file, "r") as fin:
+        lc=0
+        for line in fin:
+            lc+=1
+            if lc>1:
+                cols = line.rstrip("\n").split("\t")
+                infD[cols[0]] = [int(cols[1]), int(cols[2]), [int(x) for x in cols[3].split("~")]]
+                    
+    return infD
 
 
 
