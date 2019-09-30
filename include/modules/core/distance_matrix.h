@@ -24,52 +24,73 @@ class distance_matrix
 {
     
  public:
-    distance_matrix() = default;
 
     typedef T value_type;
 
-    distance_matrix( std::size_t n ){ reserve( n ); }
+    distance_matrix()
+        {
+            data = new std::vector<std::vector<value_type>*>();
+        }
+
+
+    distance_matrix( std::size_t n )
+        {
+            data = new std::vector<std::vector<value_type>*>();
+            reserve( n );
+        }
 
     std::vector<T>& operator[]( const std::size_t idx )
     {
-        return data[ idx ];
+        assert( idx < N );
+        return *data->at( idx );
     }
 
     T& operator[]( loc const& cLoc )
     {
-        return data[ cLoc.row_id ][ cLoc.column_id ];
+        return *(data[ cLoc.row_id ])[ cLoc.column_id ];
     }
 
     typename std::vector<std::vector<value_type>>::iterator
         const begin()
         {
-            return data.begin();
+            return data->begin();
         }
 
     typename std::vector<std::vector<value_type>>::iterator
         const end()
         {
-            return data.end();
+            return data->end();
         }
 
     std::size_t size()
         {
-            return data.size();
+            return data->size();
         }
 
     void reserve( std::size_t n )
     {
+        N = n;
         std::size_t index = 0;
         for( index = 0; index < n; ++index )
             {
-                data.emplace_back( std::vector<value_type>() );
-                data[ index ].reserve( n );
+                data->push_back( new std::vector<value_type>() );
+                data->at( index )->reserve( n );
             }
     }
 
+    ~distance_matrix()
+        {
+            for( std::size_t index = 0; index < N; ++index )
+                {
+                    delete (*data)[ index ];
+                }
+            delete data;
+        }
+
 
  private:
-    std::vector<std::vector<T>> data;
+    std::vector<std::vector<T>*> *data;
+    std::size_t N;
 };
 
 #endif // DISTANCE_MATRIX_HH_INCLUDED
