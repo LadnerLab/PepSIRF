@@ -637,7 +637,7 @@ void module_deconv::write_outputs( std::string out_name,
 
             if( tied )
                 {
-                    it = tied_item + 1;
+                    it = tied_item;
                     tied = false;
                     tied_items.clear();
                 }
@@ -1121,8 +1121,7 @@ module_deconv
                  ++index
                )
                 {
-                    if( index != max_inner
-                        && index != max_outer
+                    if( !( index == max_inner || index == max_outer )
                           && pairwise_distances[ max_outer ][ index ]
                              .sufficient( ovlp_threshold )
                             && pairwise_distances[ max_inner ][ index ].sufficient( ovlp_threshold )
