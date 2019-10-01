@@ -1092,10 +1092,9 @@ module_deconv
                     auto current = pairwise_distances[ index ][ inner_index ];
 
                     // does this pair have greater overlap than the highest we've found?
-                    bool greater_ovlp = max_overlap.get_a_to_b() < current.get_a_to_b()
-                                         && max_overlap.get_b_to_a() < current.get_b_to_a();
+                    bool greater_ovlp = max_overlap < current;
 
-                    // // does this pair have a higher score than the highest we've found?
+                    // does this pair have a higher score than the highest we've found?
                     bool higher_score = tie_candidates[ max_index_outer ]
                                         > tie_candidates[ index ]
                                           && tie_candidates[ max_index_inner ]
