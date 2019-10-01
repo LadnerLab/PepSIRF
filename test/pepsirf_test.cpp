@@ -825,7 +825,7 @@ TEST_CASE( "all_distances", "[util]" )
 
 }
 
-TEST_CASE( "pairwise_distances", "[distance_tools]" )
+TEST_CASE( "pairwise_distances_int", "[distance_tools]" )
 {
     distance_matrix<int> dist( 5 );
 
@@ -848,6 +848,52 @@ TEST_CASE( "pairwise_distances", "[distance_tools]" )
                            );
                 }
         }
+
+}
+
+TEST_CASE( "pairwise_dist_string", "[distance_tools]" )
+{
+    distance_matrix<int> dist( 3 );
+    auto ham_dist = []( std::string a, std::string b ) -> int
+        {
+            std::size_t index = 0;
+            int sum = 0;
+            for( index = 0; index < a.length(); ++index )
+                {
+                    sum += a[ index ] != b[ index ];
+                }
+            return sum;
+        };
+
+    std::string a = "string_a";
+    std::string b = "string_b";
+    REQUIRE( ham_dist( a, b ) == 1 );
+
+    std::vector<std::string> data;
+
+    data.push_back( std::string( "string1" ) );
+    data.push_back( std::string( "1234567" ) );
+    data.push_back( std::string( "string3" ) );
+
+    distance_tools::pairwise_distances( dist,
+                                        data.begin(),
+                                        data.end(),
+                                        ham_dist
+                                      );
+
+    for( std::size_t index = 0; index < data.size(); ++index )
+        {
+            for( std::size_t inner_index = 0; inner_index < data.size(); ++inner_index )
+                {
+
+                    REQUIRE( dist[ index ][ inner_index ]
+                             == ham_dist( data[ index ], data[ inner_index ] )
+                           );
+                }
+        }
+
+
+
 }
 
 TEST_CASE( "overlap_data", "[module_deconv]" )
