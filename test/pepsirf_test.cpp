@@ -918,6 +918,16 @@ TEST_CASE( "overlap_data", "[module_deconv]" )
     REQUIRE( !ovlp_int.sufficient( 51 ) );
     REQUIRE( ovlp_int.sufficient( 0 ) );
 
+    overlap_data<int> ovlp1{ 20, 25 };
+    overlap_data<int> ovlp2{ 23, 27 };
+
+    REQUIRE(    ovlp1 < ovlp2 );
+    REQUIRE( !( ovlp1 > ovlp2 ) );
+    REQUIRE( !( ovlp1 == ovlp2 ) );
+    REQUIRE(  ( ovlp1 != ovlp2 ) );
+    REQUIRE(  ( ovlp1 <= ovlp2 ) );
+    REQUIRE( !( ovlp1 >= ovlp2 ) );
+
 
 
 }

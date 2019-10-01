@@ -25,7 +25,7 @@ class overlap_data
     /**
      * Constructor for reflexive overlap.
      * @param a_to_b The overlap of a with respect to b,
-     *        which in this instance is also recorded as the 
+     *        which in *this instance is also recorded as the 
      *        overlap of b with respect to a. 
      **/
     overlap_data( T a_to_b )
@@ -42,7 +42,7 @@ class overlap_data
      * @param threshold The threshold at which 
      *        overlap will be considered sufficient.
      **/
-    bool sufficient( T threshold )
+    bool sufficient( T threshold ) const 
     {
                 return ( threshold == T() )
                     || ( a_to_b >= threshold
@@ -53,7 +53,7 @@ class overlap_data
     /**
      * Get the overlap of a with respect to b.
      **/
-    T get_a_to_b()
+    T get_a_to_b() const
     {
         return a_to_b;
     }
@@ -61,10 +61,47 @@ class overlap_data
     /**
      * Get the overlap of b with respect to a.
      **/
-    T get_b_to_a()
+    T get_b_to_a() const
     {
         return b_to_a;
     }
+
+    bool operator<( const overlap_data<T>& other ) const
+    {
+        return get_a_to_b() < other.get_a_to_b()
+               && get_b_to_a() < other.get_b_to_a();
+    }
+
+    bool operator>( const overlap_data<T>& other ) const
+    {
+        return get_a_to_b() > other.get_a_to_b()
+               && get_b_to_a() > other.get_b_to_a();
+    }
+
+    bool operator==( const overlap_data<T>& other ) const
+    {
+        return a_to_b == other.a_to_b
+                && b_to_a == other.b_to_a;
+    }
+
+    bool operator!=( const overlap_data<T>& other ) const
+    {
+        return !( *this == other );
+    }
+
+    bool operator >=( const overlap_data<T>& other ) const
+    {
+        return *this > other
+            || *this == other;
+    }
+
+    bool operator <=( const overlap_data<T>& other ) const
+    {
+        return *this < other
+            || *this == other;
+    }
+
+
 
 
  private:
