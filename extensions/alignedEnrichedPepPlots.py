@@ -22,6 +22,7 @@ def main():
     p.add_option('--annots', help='File with annotation info. If provided, a graphical representation of the different proteins with also be plotted. [None, OPT]')
     p.add_option('-n', '--minDepth', type='float', default=100, help='Minimum count to be included in plot. [100]')
     p.add_option('--readDepthToo', action='store_true', default=False, help='Use this flag to also generate a plot showing combined read depth at each position. This is most appropriate with normalized read count data. [False]')
+    p.add_option('--withLabels', action='store_true', default=False, help='Use this flag to include sample labels on y-axis. [False]')
     opts, args = p.parse_args()
     
 
@@ -79,7 +80,7 @@ def main():
     #By default, any sample that starts with "Super" is excluded. These are expected to be negative controls
     if opts.readDepthToo:
         for each in opts.speciesIDs.split(","):
-            plotAlignDepth([x for x in list(data.keys()) if not x.startswith("Super")], each, alInfo, data, mapDict, id2name, opts.minDepth, annotD)
+            plotAlignDepth([x for x in list(data.keys()) if not x.startswith("Super")], each, alInfo, data, mapDict, id2name, opts.minDepth, annotD, opts)
 
 #----------------------End of main()
 
@@ -103,7 +104,7 @@ def plotAnnots(aD, ax):
         
         ax.set_axis_off()
 
-def plotAlignDepth(samps, spID, alInfo, data, mapDict, id2name, minDepth, annotD, alFasta=False):
+def plotAlignDepth(samps, spID, alInfo, data, mapDict, id2name, minDepth, annotD, opts, alFasta=False):
     proNames = speciesProbes(mapDict, spID)
     thisInfo = parseAlInfo(alInfo[spID])
 
@@ -125,9 +126,14 @@ def plotAlignDepth(samps, spID, alInfo, data, mapDict, id2name, minDepth, annotD
             yticks = [0.5+x for x in list(range(1, len(samps)+1))]
             ax.set_yticks(yticks)
             ax.set_ylim(1,len(samps)+1)
-            ax.set_yticklabels([""]*len(yticks))
-            for item in (ax.get_xticklabels() + ax.get_yticklabels()):
+            if opts.withLabels:
+                ax.set_yticklabels(samps[::-1])
+            else:
+                ax.set_yticklabels([""]*len(yticks))
+            for item in (ax.get_xticklabels()):
                 item.set_fontsize(18)
+            for item in (ax.get_yticklabels()):
+                item.set_fontsize(10)
             cbar = fig.colorbar(pcm, extend='max')
             cbar.ax.set_ylabel('Normalized Read Count\n(min=%d)' % minDepth, fontsize=18)
 
@@ -148,10 +154,15 @@ def plotAlignDepth(samps, spID, alInfo, data, mapDict, id2name, minDepth, annotD
             yticks = [0.5+x for x in list(range(1, len(samps)+1))]
             ax[1].set_yticks(yticks)
             ax[1].set_ylim(1,len(samps)+1)
-            ax[1].set_yticklabels([""]*len(yticks))
-            plt.xlim(0,len(x[0]))
-            for item in (ax[1].get_xticklabels() + ax[1].get_yticklabels()):
+            if opts.withLabels:
+                ax[1].set_yticklabels(samps[::-1])
+            else:
+                ax[1].set_yticklabels([""]*len(yticks))
+            for item in (ax[1].get_xticklabels()):
                 item.set_fontsize(18)
+            for item in (ax[1].get_yticklabels()):
+                item.set_fontsize(10)
+            plt.xlim(0,len(x[0]))
             cbar = fig.colorbar(pcm, extend='max', ax=ax)
             cbar.ax.set_ylabel('Normalized Read Count\n(min=%d)' % minDepth, fontsize=18)
 
