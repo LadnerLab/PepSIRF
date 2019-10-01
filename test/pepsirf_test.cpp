@@ -982,3 +982,27 @@ TEST_CASE( "pair_compare", "[util]" )
 
 
 }
+
+TEST_CASE( "Deconv end_to_end", "[module_deconv]" )
+{
+    module_deconv mod;
+    options_deconv opts;
+
+    opts.create_linkage = false;
+
+    opts.linked_fname = std::string( "../test/test_pep_linkages.tsv" );
+    opts.output_fname = std::string( "../test/test_deconv_output.tsv" );
+    opts.enriched_fname = std::string( "../test/test_enriched_file.tsv" );
+    opts.id_name_map_fname = std::string();
+
+    opts.threshold = 00;
+    opts.single_threaded = false;
+    opts.fractional_scoring = false;
+    opts.summation_scoring = true;
+    opts.score_filtering = true;
+    opts.species_peptides_out = "";
+    opts.score_tie_threshold = 0.90;
+    opts.score_overlap_threshold = 0.5;
+
+    mod.run( &opts );
+}
