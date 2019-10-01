@@ -703,7 +703,7 @@ class module_deconv : public module
     void
         handle_kway_tie( std::vector<std::pair<std::string,double>>& tie_outputs,
                          std::unordered_map<std::string, std::vector<std::string>>& id_pep_map,
-                         std::unordered_map<std::string,std::unordered_map<std::string,std::size_t>>
+                         std::unordered_map<std::string,std::unordered_map<std::string,std::size_t>>&
                          pep_species_map_wcounts,
                          std::vector<std::pair<std::string,double>>& tie_candidates,
                          evaluation_strategy::tie_eval_strategy eval_strat,
