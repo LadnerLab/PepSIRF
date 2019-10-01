@@ -70,55 +70,19 @@ namespace util
                 }
         }
 
-    /**
-     * Calculate the distance between a member
-     * of the type T with all items between
-     * begin and end. Store the distances in a 
-     * structure that holds DistanceType objects.
-     * @param A structure that holds members of type DistanceType,
-     *        which is the type returned by the Distance
-     *        function d. Results will be stored in 
-     *        the same order in which they were found.
-     * @param begin The first item to compare with.
-     * @param end The last item to compare. 
-     * @param compare The item whose distance 
-     *        from all items between begin and end
-     *        (inclusive) is to be computed.
-     * @param d The distance func, which takes two 
-     *        members of type T and returns their distance,
-     *        a member of type DistanceType.
-     **/
-    template<template<typename...> class DestType,
-        class InputIt, class T,
-        class Distance,
-        class DistanceType
-        >
-        void
-        all_distances( DestType<DistanceType>& dest,
-                       InputIt begin, InputIt end,
-                       T& compare,
-                       Distance d
-                     )
-        {
-            for( auto it = begin; it < end; ++it )
-                {
-                    dest.emplace_back( d( compare, *it ) );
-                }
-        }
-
     template<typename A,typename B,
         typename compare_a,
         typename compare_b
-            >
+        >
         bool
         pair_positional_compare( const std::pair<A,B>& first,
                                  const std::pair<A,B>& second,
                                  compare_a a_comp,
                                  compare_b b_comp
-                               )
+                                 )
         {
             return a_comp( first.first, second.first )
-                   && b_comp( first.second, second.second );
+                && b_comp( first.second, second.second );
         }
 
 /**

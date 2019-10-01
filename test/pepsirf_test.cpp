@@ -11,10 +11,12 @@
 #include <cmath>
 
 #include "overlap_data.h"
+#include "distance_tools.h"
 #include "sequence_indexer.h"
 #include "sequence.h"
 #include "fastq_sequence.h"
 #include "maps.h"
+#include "distance_matrix.h"
 #include "fastq_parser.h"
 #include "module_demux.h"
 #include "module_deconv.h"
@@ -810,7 +812,7 @@ TEST_CASE( "all_distances", "[util]" )
 
     auto distance = [&]( const int a, const int b ){ return std::abs( a - b ); };
 
-    util::all_distances( distances, data.begin(), data.end(), target, distance );
+    distance_tools::all_distances( distances, data.begin(), data.end(), target, distance );
 
     REQUIRE( distances.size() == data.size() );
 
@@ -820,6 +822,77 @@ TEST_CASE( "all_distances", "[util]" )
                     distances[ index ] == std::abs( data[ index ] - target  )
                    );
         }
+
+}
+
+TEST_CASE( "pairwise_distances_int", "[distance_tools]" )
+{
+    distance_matrix<int> dist( 5 );
+
+    std::vector<int> data{ 1, 2, 3, 4, 5 };
+    auto int_dist = []( int a, int b ){ return std::abs( a - b ); };
+
+    distance_tools::pairwise_distances( dist,
+                                        data.begin(),
+                                        data.end(),
+                                        int_dist
+                                      );
+
+    for( std::size_t index = 0; index < data.size(); ++index )
+        {
+            for( std::size_t inner_index = 0; inner_index < data.size(); ++inner_index )
+                {
+
+                    REQUIRE( dist[ index ][ inner_index ]
+                             == int_dist( data[ index ], data[ inner_index ] )
+                           );
+                }
+        }
+
+}
+
+TEST_CASE( "pairwise_dist_string", "[distance_tools]" )
+{
+    distance_matrix<int> dist( 3 );
+    auto ham_dist = []( std::string a, std::string b ) -> int
+        {
+            std::size_t index = 0;
+            int sum = 0;
+            for( index = 0; index < a.length(); ++index )
+                {
+                    sum += a[ index ] != b[ index ];
+                }
+            return sum;
+        };
+
+    std::string a = "string_a";
+    std::string b = "string_b";
+    REQUIRE( ham_dist( a, b ) == 1 );
+
+    std::vector<std::string> data;
+
+    data.push_back( std::string( "string1" ) );
+    data.push_back( std::string( "1234567" ) );
+    data.push_back( std::string( "string3" ) );
+
+    distance_tools::pairwise_distances( dist,
+                                        data.begin(),
+                                        data.end(),
+                                        ham_dist
+                                      );
+
+    for( std::size_t index = 0; index < data.size(); ++index )
+        {
+            for( std::size_t inner_index = 0; inner_index < data.size(); ++inner_index )
+                {
+
+                    REQUIRE( dist[ index ][ inner_index ]
+                             == ham_dist( data[ index ], data[ inner_index ] )
+                           );
+                }
+        }
+
+
 
 }
 
@@ -844,6 +917,16 @@ TEST_CASE( "overlap_data", "[module_deconv]" )
     REQUIRE( ovlp_int.sufficient( 50 ) );
     REQUIRE( !ovlp_int.sufficient( 51 ) );
     REQUIRE( ovlp_int.sufficient( 0 ) );
+
+    overlap_data<int> ovlp1{ 20, 25 };
+    overlap_data<int> ovlp2{ 23, 27 };
+
+    REQUIRE(    ovlp1 < ovlp2 );
+    REQUIRE( !( ovlp1 > ovlp2 ) );
+    REQUIRE( !( ovlp1 == ovlp2 ) );
+    REQUIRE(  ( ovlp1 != ovlp2 ) );
+    REQUIRE(  ( ovlp1 <= ovlp2 ) );
+    REQUIRE( !( ovlp1 >= ovlp2 ) );
 
 
 
@@ -898,4 +981,28 @@ TEST_CASE( "pair_compare", "[util]" )
 
 
 
+}
+
+TEST_CASE( "Deconv end_to_end", "[module_deconv]" )
+{
+    module_deconv mod;
+    options_deconv opts;
+
+    opts.create_linkage = false;
+
+    opts.linked_fname = std::string( "../test/test_pep_linkages.tsv" );
+    opts.output_fname = std::string( "../test/test_deconv_output.tsv" );
+    opts.enriched_fname = std::string( "../test/test_enriched_file.tsv" );
+    opts.id_name_map_fname = std::string();
+
+    opts.threshold = 00;
+    opts.single_threaded = false;
+    opts.fractional_scoring = false;
+    opts.summation_scoring = true;
+    opts.score_filtering = true;
+    opts.species_peptides_out = "";
+    opts.score_tie_threshold = 0.90;
+    opts.score_overlap_threshold = 0.5;
+
+    mod.run( &opts );
 }
