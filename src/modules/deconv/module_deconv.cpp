@@ -1077,6 +1077,10 @@ module_deconv
                overlap_data<double>
                > max_match;
 
+    std::size_t max_index_outer = std::get<0>( max_match );
+    std::size_t max_index_inner = std::get<1>( max_match );
+    overlap_data<double> max_overlap = std::get<2>( max_match );
+
     for( std::size_t index = 0; index < pairwise_distances.size(); ++index )
         {
             std::size_t inner_index = 0;
@@ -1088,15 +1092,14 @@ module_deconv
                     auto current = pairwise_distances[ index ][ inner_index ];
 
                     // does this pair have greater overlap than the highest we've found?
-                    bool greater_ovlp = std::get<2>( max_match ).get_a_to_b() < current.get_a_to_b();
-                    greater_ovlp = greater_ovlp && std::get<2>( max_match ).get_b_to_a() < current.get_b_to_a();
+                    bool greater_ovlp = max_overlap.get_a_to_b() < current.get_a_to_b()
+                                         && max_overlap.get_b_to_a() < current.get_b_to_a();
 
                     // // does this pair have a higher score than the highest we've found?
-                    bool higher_score = tie_candidates[ std::get<0>( max_match ) ]
-                                                                                           > tie_candidates[ index ]
-                                                                                &&
-                                                                                tie_candidates[ std::get<1>( max_match ) ]
-                                                                                > tie_candidates[ inner_index ];
+                    bool higher_score = tie_candidates[ max_index_outer ]
+                                        > tie_candidates[ index ]
+                                          && tie_candidates[ max_index_inner ]
+                                             > tie_candidates[ inner_index ];
 
                     if( greater_ovlp && higher_score )
                         {
@@ -1110,7 +1113,7 @@ module_deconv
 
         }
 
-    tie_outputs.emplace_back( tie_candidates[ std::get<0>( max_match ) ] );
+    tie_outputs.emplace_back( tie_candidates[ max_index_outer ] );
 
     if( std::get<2>( max_match ).sufficient( ovlp_threshold ) )
         {
@@ -1128,7 +1131,7 @@ module_deconv
                 {
                     if( index != max_inner
                         && index != max_outer
-                          && pairwise_distances[ std::get<0>( max_match ) ][ index ]
+                          && pairwise_distances[ max_outer ][ index ]
                              .sufficient( ovlp_threshold )
                             && pairwise_distances[ max_inner ][ index ].sufficient( ovlp_threshold )
                       )
