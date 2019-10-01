@@ -1042,14 +1042,7 @@ module_deconv
                    const double ovlp_threshold
                  )
 {
-    // std::vector<double> scores( tie_candidates.size(), 0.0 );
     distance_matrix<overlap_data<double>> pairwise_distances( tie_candidates.size() );
-
-    // precondition: tie_candidates does not have 1 element 1
-    double count = ( (double) tie_candidates.size() ) - 1;
-
-    // set count to candidate size - 1
-    std::size_t outer_index = 0;
 
     auto distance = [&]( const std::pair<std::string, double>& first,
                          const std::pair<std::string, double>& second
@@ -1095,10 +1088,10 @@ module_deconv
                     bool greater_ovlp = max_overlap < current;
 
                     // does this pair have a higher score than the highest we've found?
-                    bool higher_score = tie_candidates[ max_index_outer ]
-                                        > tie_candidates[ index ]
-                                          && tie_candidates[ max_index_inner ]
-                                             > tie_candidates[ inner_index ];
+                    bool higher_score = tie_candidates[ max_index_outer ].second
+                                        > tie_candidates[ index ].second
+                                          && tie_candidates[ max_index_inner ].second
+                                             > tie_candidates[ inner_index ].second;
 
                     if( greater_ovlp && higher_score )
                         {
