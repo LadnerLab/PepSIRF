@@ -548,15 +548,14 @@ void module_deconv::write_outputs( std::string out_name,
     bool tied = false;
     std::vector<std::tuple<std::string,std::size_t,double,bool>> tied_items;
 
-    std::size_t index = 0;
     for( auto it = out_counts.begin();
-         it != out_counts.end() && index < out_counts.size();
-         ++it, ++index )
+         it != out_counts.end();
+         ++it
+       )
         {
             auto tied_item = it;
             while( std::get<3>( *tied_item ) ) // *it and the next species are tied, report together
                 {
-                    ++index;
                     tied_item = std::next( tied_item, 1 );
                     tied_items.push_back( *tied_item );
                     tied = true;
@@ -1068,10 +1067,10 @@ module_deconv
     std::tuple<std::size_t, 
                std::size_t,
                overlap_data<double>
-               > max_match;
+               > max_match = std::make_tuple( 0, 0, overlap_data<double>{0,0} );
 
-    std::size_t max_index_outer = std::get<0>( max_match );
-    std::size_t max_index_inner = std::get<1>( max_match );
+    std::size_t max_index_outer = 0;
+    std::size_t max_index_inner = 0;
     overlap_data<double> max_overlap = std::get<2>( max_match );
 
     for( std::size_t index = 0; index < pairwise_distances.size(); ++index )
@@ -1100,6 +1099,9 @@ module_deconv
                                                         inner_index,
                                                         current
                                                         );
+
+                            max_index_outer = index;
+                            max_index_inner = inner_index;
                         }
                 }
 
