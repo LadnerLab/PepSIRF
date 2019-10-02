@@ -93,7 +93,29 @@ void module_deconv::choose_kmers( options_deconv *opts )
 
     std::vector<std::tuple<std::string, std::size_t, double, bool>> output_counts;
 
-    auto make_map_and_filter = [&]( evaluation_strategy::filter_strategy filter_strat ) {
+    auto filter = [&]( evaluation_strategy::filter_strategy filter_strat )
+        {
+            if( filter_strat
+                == evaluation_strategy::filter_strategy::SCORE_FILTER )
+                {
+                    filter_counts<std::string,double>
+                    ( species_scores, thresh );
+
+
+                }
+            else if( filter_strat
+                      == evaluation_strategy::filter_strategy::COUNT_FILTER
+                   )
+                {
+                    
+                    // recreate species_scores
+                    filter_counts<std::string,std::size_t>
+                    ( species_peptide_counts, thresh );
+                }
+        };
+
+    auto make_map = [&]()
+        {
         #pragma omp parallel
             {
                 #pragma omp sections
@@ -117,15 +139,6 @@ void module_deconv::choose_kmers( options_deconv *opts )
                         score_species( species_scores, id_pep_map, pep_id_map,
                                        score_strat
                                      );
-
-                        if( filter_strat
-                            == evaluation_strategy::filter_strategy::SCORE_FILTER )
-                            {
-                                filter_counts<std::string,double>
-                                    ( species_scores, thresh );
-
-
-                            }
                     }
 
                     #pragma omp section
@@ -133,34 +146,32 @@ void module_deconv::choose_kmers( options_deconv *opts )
                         get_species_counts_per_peptide( id_pep_map,
                                                         species_peptide_counts
                                                       );
-
-                        if( filter_strat
-                            == evaluation_strategy::filter_strategy::COUNT_FILTER
-                          )
-                            {
-
-                                // recreate species_scores
-                                filter_counts<std::string,std::size_t>
-                                    ( species_peptide_counts, thresh );
-                            }
                     }
                 }
-
-
-
             }
-    };
+        };
 
-    make_map_and_filter(
-                        evaluation_strategy::filter_strategy::NO_FILTER
-                       );
+    auto make_map_and_filter = [&]( evaluation_strategy::filter_strategy filter_strat )
+        {
+            make_map();
+            filter( filter_strat );
+        };
+
+    make_map();
+
+    if( !util::empty( d_opts->orig_scores_fname ) )
+        {
+            // do something with map
+        }
+
+    filter( filter_strat );
 
     std::unordered_map<std::string,std::pair<std::size_t,double>> original_scores;
 
     combine_count_and_score<std::unordered_map>( original_scores,
-                                             species_peptide_counts,
-                                             species_scores
-                                           );
+                                                 species_peptide_counts,
+                                                 species_scores
+                                               );
 
     std::unordered_map<std::string,std::vector<std::string>> peptide_assignment_map;
 
