@@ -85,6 +85,16 @@ namespace util
                 && b_comp( first.second, second.second );
         }
 
+    /**
+     * Determine if an iterable is empty,
+     * i.e. its size is zero
+     **/
+    template<class T>
+    bool empty( const T& iterable )
+    {
+        return iterable.size() == 0;
+    }
+
 /**
  * Compare pairs in non-decreasing order,
  * i.e. for x[ i ], x[ j ] when i < j, then 
