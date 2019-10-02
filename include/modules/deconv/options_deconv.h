@@ -42,6 +42,11 @@ class options_deconv : public options
     std::size_t threshold;
 
     /**
+     * Filename to write out all original scores/counts to.
+     **/
+    std::string orig_scores_fname;
+
+    /**
      * Score threshold to determine 
      * when two species are tied. 
      **/
