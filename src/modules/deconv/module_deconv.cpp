@@ -172,22 +172,32 @@ void module_deconv::choose_kmers( options_deconv *opts )
 
     if( !util::empty( d_opts->orig_scores_fname ) )
         {
+            std::ofstream out_f;
             // populate the unfiltered scores with counts, scores for all species
             std::unordered_map<std::string,std::pair<std::size_t,double>> unfiltered_scores;
             combine_count_and_score( unfiltered_scores,
                                      species_peptide_counts,
                                      species_scores
                                    );
+
+            out_f.open( d_opts->orig_scores_fname );
+
+            write_global_original_scores( out_f,
+                                          name_id_map_ptr,
+                                          unfiltered_scores
+                                        );
+
+            out_f.close();
         }
 
     filter( filter_strat );
 
     std::unordered_map<std::string,std::pair<std::size_t,double>> original_scores;
 
-    combine_count_and_score<std::unordered_map>( original_scores,
-                                                 species_peptide_counts,
-                                                 species_scores
-                                               );
+    combine_count_and_score( original_scores,
+                             species_peptide_counts,
+                             species_scores
+                           );
 
     std::unordered_map<std::string,std::vector<std::string>> peptide_assignment_map;
 
