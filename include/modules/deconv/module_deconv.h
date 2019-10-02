@@ -591,11 +591,12 @@ class module_deconv : public module
         template<typename...> class MapType2
         >
         void write_global_original_scores( StreamType& stream,
-                                           MapType<std::string,std::string> *id_name_map,
-                                           MapType2<std::string,std::pair<std::size_t,double>>& other_map
+                                           MapType<std::string,std::string> const *id_name_map,
+                                           MapType2<std::string,std::pair<std::size_t,double>>& score_map
                                          )
         {
-            for( auto& species : other_map )
+            stream << "Species ID\tSpecies Name\tOriginal Count\tOriginal Score\n";
+            for( auto& species : score_map )
                 {
                     stream << species.first << "\t";
                     if( id_name_map != nullptr )
