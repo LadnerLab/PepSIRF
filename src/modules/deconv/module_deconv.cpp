@@ -93,7 +93,7 @@ void module_deconv::choose_kmers( options_deconv *opts )
 
     std::vector<std::tuple<std::string, std::size_t, double, bool>> output_counts;
 
-    auto make_map_and_filter = [&]() {
+    auto make_map_and_filter = [&]( evaluation_strategy::filter_strategy filter_strat ) {
         #pragma omp parallel
             {
                 #pragma omp sections
@@ -151,7 +151,9 @@ void module_deconv::choose_kmers( options_deconv *opts )
             }
     };
 
-    make_map_and_filter();
+    make_map_and_filter(
+                        evaluation_strategy::filter_strategy::NO_FILTER
+                       );
 
     std::unordered_map<std::string,std::pair<std::size_t,double>> original_scores;
 
@@ -279,7 +281,7 @@ void module_deconv::choose_kmers( options_deconv *opts )
             species_scores.clear();
             species_peptide_counts.clear();
 
-            make_map_and_filter();
+            make_map_and_filter( filter_strat );
 
         }
 
