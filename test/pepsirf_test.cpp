@@ -1025,3 +1025,40 @@ TEST_CASE( "empty", "[util]" )
     REQUIRE( util::empty( iter1 ) );
 
 }
+
+TEST_CASE( "global_original_scores", "[module_deconv]" )
+{
+    module_deconv mod;
+    std::stringstream stream;
+
+    std::unordered_map<std::string,std::string> id_name_map;
+
+    // ordered map used so we can guarantee order
+    std::map<std::string,std::pair<std::size_t,double>> score_map;
+
+    std::vector<std::string> species{ "sp1", "sp2", "sp3", "sp4", "sp5" };
+
+    std::string expected = "Species ID\tSpecies Name\tOriginal Count\tOriginal Score\n"
+                           "sp1\tsp1_name\t0\t1\n"
+                           "sp2\tsp2_name\t1\t2\n"
+                           "sp3\tsp3_name\t2\t3\n"
+                           "sp4\tsp4_name\t3\t4\n"
+                           "sp5\tsp5_name\t4\t5\n";
+
+    std::size_t idx = 0;
+    double idx_dbl = 1.0;
+    for( auto x : species )
+        {
+            std::string name = x + "_name";
+            id_name_map.emplace( x, name );
+
+            score_map.emplace( x,
+                               std::make_pair( idx, idx_dbl )
+                             );
+            ++idx;
+            ++idx_dbl;
+        }
+
+    mod.write_global_original_scores( stream, &id_name_map, score_map );
+    REQUIRE( !stream.str().compare( expected ) );
+}
