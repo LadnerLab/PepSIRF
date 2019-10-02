@@ -1006,3 +1006,22 @@ TEST_CASE( "Deconv end_to_end", "[module_deconv]" )
 
     mod.run( &opts );
 }
+
+TEST_CASE( "empty", "[util]" )
+{
+    std::string iter1{ "Hello world!" };
+
+    REQUIRE( !util::empty( iter1 ) );
+
+    iter1 = "";
+
+    REQUIRE( util::empty( iter1 ) );
+
+    std::vector<int> iter2{ 1, 2, 3, 4 };
+    REQUIRE( !util::empty( iter2 ) );
+
+    iter2.clear();
+
+    REQUIRE( util::empty( iter1 ) );
+
+}
