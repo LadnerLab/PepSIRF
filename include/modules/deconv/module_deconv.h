@@ -586,6 +586,39 @@ class module_deconv : public module
                         peptide_sp_vec
                       );
 
+    template<class StreamType,
+        template<typename...> class MapType, //TODO: Figure out how to have one map type
+        template<typename...> class MapType2
+        >
+        void write_global_original_scores( StreamType& stream,
+                                           MapType<std::string,std::string> *id_name_map,
+                                           MapType2<std::string,std::pair<std::size_t,double>>& other_map
+                                         )
+        {
+            for( auto& species : other_map )
+                {
+                    stream << species.first << "\t";
+                    if( id_name_map != nullptr )
+                        {
+                            stream << get_map_value( (*id_name_map),
+                                                     species.first,
+                                                     species.first
+                                                   );
+                        }
+                    else
+                        {
+                            stream << species.first;
+                            std::cout << species.first;
+                        }
+
+                    stream << "\t"
+                           << species.second.first
+                           << "\t"
+                           << species.second.second
+                           << "\n";
+                }
+        }
+
     /**
      * Filter counts that do not have a high enough score out of the id_counts structure.
      * @param id_counts Structure containing <species_id, score> pairs.
