@@ -11,10 +11,12 @@
 #include <cmath>
 
 #include "overlap_data.h"
+#include "distance_tools.h"
 #include "sequence_indexer.h"
 #include "sequence.h"
 #include "fastq_sequence.h"
 #include "maps.h"
+#include "distance_matrix.h"
 #include "fastq_parser.h"
 #include "module_demux.h"
 #include "module_deconv.h"
@@ -22,6 +24,7 @@
 #include "sample.h"
 #include "fastq_score.h"
 #include "kmer_tools.h"
+#include "fs_tools.h"
 
 using namespace util;
 
@@ -810,7 +813,7 @@ TEST_CASE( "all_distances", "[util]" )
 
     auto distance = [&]( const int a, const int b ){ return std::abs( a - b ); };
 
-    util::all_distances( distances, data.begin(), data.end(), target, distance );
+    distance_tools::all_distances( distances, data.begin(), data.end(), target, distance );
 
     REQUIRE( distances.size() == data.size() );
 
@@ -820,6 +823,77 @@ TEST_CASE( "all_distances", "[util]" )
                     distances[ index ] == std::abs( data[ index ] - target  )
                    );
         }
+
+}
+
+TEST_CASE( "pairwise_distances_int", "[distance_tools]" )
+{
+    distance_matrix<int> dist( 5 );
+
+    std::vector<int> data{ 1, 2, 3, 4, 5 };
+    auto int_dist = []( int a, int b ){ return std::abs( a - b ); };
+
+    distance_tools::pairwise_distances( dist,
+                                        data.begin(),
+                                        data.end(),
+                                        int_dist
+                                      );
+
+    for( std::size_t index = 0; index < data.size(); ++index )
+        {
+            for( std::size_t inner_index = 0; inner_index < data.size(); ++inner_index )
+                {
+
+                    REQUIRE( dist[ index ][ inner_index ]
+                             == int_dist( data[ index ], data[ inner_index ] )
+                           );
+                }
+        }
+
+}
+
+TEST_CASE( "pairwise_dist_string", "[distance_tools]" )
+{
+    distance_matrix<int> dist( 3 );
+    auto ham_dist = []( std::string a, std::string b ) -> int
+        {
+            std::size_t index = 0;
+            int sum = 0;
+            for( index = 0; index < a.length(); ++index )
+                {
+                    sum += a[ index ] != b[ index ];
+                }
+            return sum;
+        };
+
+    std::string a = "string_a";
+    std::string b = "string_b";
+    REQUIRE( ham_dist( a, b ) == 1 );
+
+    std::vector<std::string> data;
+
+    data.push_back( std::string( "string1" ) );
+    data.push_back( std::string( "1234567" ) );
+    data.push_back( std::string( "string3" ) );
+
+    distance_tools::pairwise_distances( dist,
+                                        data.begin(),
+                                        data.end(),
+                                        ham_dist
+                                      );
+
+    for( std::size_t index = 0; index < data.size(); ++index )
+        {
+            for( std::size_t inner_index = 0; inner_index < data.size(); ++inner_index )
+                {
+
+                    REQUIRE( dist[ index ][ inner_index ]
+                             == ham_dist( data[ index ], data[ inner_index ] )
+                           );
+                }
+        }
+
+
 
 }
 
@@ -844,6 +918,16 @@ TEST_CASE( "overlap_data", "[module_deconv]" )
     REQUIRE( ovlp_int.sufficient( 50 ) );
     REQUIRE( !ovlp_int.sufficient( 51 ) );
     REQUIRE( ovlp_int.sufficient( 0 ) );
+
+    overlap_data<int> ovlp1{ 20, 25 };
+    overlap_data<int> ovlp2{ 23, 27 };
+
+    REQUIRE(    ovlp1 < ovlp2 );
+    REQUIRE( !( ovlp1 > ovlp2 ) );
+    REQUIRE( !( ovlp1 == ovlp2 ) );
+    REQUIRE(  ( ovlp1 != ovlp2 ) );
+    REQUIRE(  ( ovlp1 <= ovlp2 ) );
+    REQUIRE( !( ovlp1 >= ovlp2 ) );
 
 
 
@@ -898,4 +982,167 @@ TEST_CASE( "pair_compare", "[util]" )
 
 
 
+}
+
+TEST_CASE( "Deconv end_to_end", "[module_deconv]" )
+{
+    module_deconv mod;
+    options_deconv opts;
+
+    opts.create_linkage = false;
+
+    opts.linked_fname = std::string( "../test/test_pep_linkages.tsv" );
+    opts.output_fname = std::string( "../test/test_deconv_output.tsv" );
+    opts.enriched_fname = std::string( "../test/test_enriched_file.tsv" );
+    opts.id_name_map_fname = std::string();
+
+    opts.threshold = 00;
+    opts.single_threaded = false;
+    opts.fractional_scoring = false;
+    opts.summation_scoring = true;
+    opts.score_filtering = true;
+    opts.species_peptides_out = "";
+    opts.score_tie_threshold = 0.90;
+    opts.score_overlap_threshold = 0.5;
+
+    mod.run( &opts );
+}
+
+TEST_CASE( "empty", "[util]" )
+{
+    std::string iter1{ "Hello world!" };
+
+    REQUIRE( !util::empty( iter1 ) );
+
+    iter1 = "";
+
+    REQUIRE( util::empty( iter1 ) );
+
+    std::vector<int> iter2{ 1, 2, 3, 4 };
+    REQUIRE( !util::empty( iter2 ) );
+
+    iter2.clear();
+
+    REQUIRE( util::empty( iter1 ) );
+
+}
+
+TEST_CASE( "global_original_scores", "[module_deconv]" )
+{
+    module_deconv mod;
+    std::stringstream stream;
+
+    std::unordered_map<std::string,std::string> id_name_map;
+    std::unordered_map<std::string,std::string> *id_name_map_ptr = &id_name_map;
+
+
+    // ordered map used so we can guarantee order
+    std::map<std::string,std::pair<std::size_t,double>> score_map;
+
+    std::vector<std::string> species{ "sp1", "sp2", "sp3", "sp4", "sp5" };
+
+    std::string expected_include_name = "Species ID\tSpecies Name\tCount\tScore\n"
+        "sp1\tsp1_name\t0\t1\n"
+        "sp2\tsp2_name\t1\t2\n"
+        "sp3\tsp3_name\t2\t3\n"
+        "sp4\tsp4_name\t3\t4\n"
+        "sp5\tsp5_name\t4\t5\n";
+
+    std::string expected_exclude_name = "Species ID\tSpecies Name\tCount\tScore\n"
+        "sp1\tsp1\t0\t1\n"
+        "sp2\tsp2\t1\t2\n"
+        "sp3\tsp3\t2\t3\n"
+        "sp4\tsp4\t3\t4\n"
+        "sp5\tsp5\t4\t5\n";
+
+
+    std::size_t idx = 0;
+    double idx_dbl = 1.0;
+    for( auto x : species )
+        {
+            std::string name = x + "_name";
+            id_name_map.emplace( x, name );
+
+            score_map.emplace( x,
+                               std::make_pair( idx, idx_dbl )
+                             );
+            ++idx;
+            ++idx_dbl;
+        }
+
+    mod.write_scores( stream, id_name_map_ptr, score_map );
+    REQUIRE( !stream.str().compare( expected_include_name ) );
+
+    stream.str( std::string() );
+    stream.clear();
+
+    id_name_map_ptr = nullptr;
+
+    mod.write_scores( stream, id_name_map_ptr, score_map );
+
+    REQUIRE( !stream.str().compare( expected_exclude_name ) );
+}
+
+
+TEST_CASE( "to_dir_name", "[fs_tools]" )
+{
+    std::string name_no_trail = "dir1";
+    std::string name_trail = "dir1/";
+    std::string dest_str;
+
+    REQUIRE( fs_tools::to_dir_name( dest_str, name_no_trail ) == name_trail );
+
+    dest_str.clear();
+
+    REQUIRE( fs_tools::to_dir_name( dest_str, name_trail ) == name_trail );
+
+    dest_str.clear();
+    
+    REQUIRE( fs_tools::to_dir_name( name_no_trail ) == name_trail );
+
+    dest_str.clear();
+
+    REQUIRE( fs_tools::to_dir_name( name_trail ) == name_trail );
+
+    std::string path_base( "dir1" );
+    std::string path_base_inc( "dir1/" );
+
+    dest_str.clear();
+
+    fs_tools::create_fname( dest_str, path_base,
+                            "fpart1", 1, 2, 3,
+                            "fpart4"
+                          );
+
+    REQUIRE( dest_str == "dir1/fpart1123fpart4" );
+
+    dest_str.clear();
+    
+    fs_tools::create_fname( dest_str, path_base_inc,
+                            "fpart1", 1, 2, 3,
+                            "fpart4"
+                          );
+
+    REQUIRE( dest_str == "dir1/fpart1123fpart4" );
+
+}
+
+TEST_CASE( "filter_counts (vector template)", "[module_deconv]" )
+{
+    std::vector<std::pair<std::size_t,double>> filter_vec; 
+    module_deconv mod;
+
+    for( std::size_t index = 0; index < 100; ++index )
+        {
+            filter_vec.emplace_back( std::make_pair( index, index + 1 ) );
+        }
+
+
+    mod.filter_counts<std::size_t,double>( filter_vec, 50  );
+
+    REQUIRE( filter_vec.size() == 51 );
+    auto comp_pair = []( const std::pair<size_t,double> first,
+                         const std::pair<size_t,double> second
+                         ){ return first.first < second.first; };
+    REQUIRE( std::min_element( filter_vec.begin(), filter_vec.end(), comp_pair )->second == 50 );
 }

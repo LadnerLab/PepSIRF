@@ -4,6 +4,7 @@
 #include <exception>
 #include <stdexcept>
 
+#include "fs_tools.h"
 #include "options_parser_deconv.h"
 #include "util.h"
 
@@ -36,6 +37,33 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "Name of the file to write output to. Output will be in the form of "
           "a tab-delimited file with a header. Each entry will be of the form:\n"
           "species_id\\tcount\n [create_linkage,scoring_species]\n"
+        )
+        ( "scores_per_round", po::value<std::string>( &opts_deconv->orig_scores_dname )->default_value( "" )
+          ->notifier( [&]( const std::string& val )
+                      {
+                          if( boost::filesystem::exists( val ) )
+                              {
+                                  std::stringstream error_msg;
+
+                                  error_msg << "Directory '"
+                                            << val
+                                            << "' already exists!";
+                                  throw std::runtime_error
+                                      ( error_msg.str() ); 
+                              }
+                          else
+                              {
+                                  
+                                  fs_tools::create_directory( val );
+                              }
+                      }),
+          "Name of directory to write counts/scores to after every round. If included, \n"
+          "the counts and scores for all remaining species will be written after every round. \n"
+          "Filenames will be written in the format '$dir/round_x', where x is the round number. \n"
+          "The original scores will be written to '$dir/round_0'. A new file will be written to the \n"
+          "directory after each subsequent round. If this flag is included \n"
+          "and the specified directory exists, the program will exit with an error. "
+          "[scoring_species\n"
         )
         ( "single_threaded", po::bool_switch( &opts_deconv->single_threaded )->default_value( false ),
           "By default this module uses two threads. Include this option with no arguments if you only want "
@@ -174,7 +202,7 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "shares 12 7-mers with the species with id '455', and 10 7-mers with the species that has id 423. [create_linkage]\n"
         );
 
-    po::store( po::command_line_parser( argc, *argv ).options( desc ).allow_unregistered().run(), vm);
+    po::store( po::command_line_parser( argc, *argv ).options( desc ).run(), vm);
 
     if( vm.count( "help" ) )
         {

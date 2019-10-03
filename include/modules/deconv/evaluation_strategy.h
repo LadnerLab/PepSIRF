@@ -64,7 +64,13 @@ namespace evaluation_strategy
          * below a certain threshold will be 
          * removed.
          **/
-        COUNT_FILTER
+        COUNT_FILTER,
+
+        /**
+         * Option NOT to filter peptides.
+         **/
+        NO_FILTER
+
     };
 
     /**

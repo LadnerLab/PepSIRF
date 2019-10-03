@@ -587,6 +587,56 @@ class module_deconv : public module
                       );
 
     /**
+     * Write species ids, names (if included), counts, and scores 
+     * of species to a stream. 
+     * @param id_name_map Pointer to map associating string species ids
+     *        with the name of the species. If a species name is not found 
+     *        in this map, the species id will be written in place of 
+     *        the name. If this is a null pointer, only species ids will 
+     *        be written to the stream.
+     * @param score_map An iterable (map, vector of pairs, etc) containing 
+     *        first values that are the string species id, and the second being 
+     *        a pair consisting with the first item being the count 
+     *        for a species, and the second being the species' score.
+     * @note This method flushes the buffer after it has finished 
+     *       writing to it. 
+     **/
+    template<
+        template<typename...> class MapType,
+        template<typename...> class IterType
+        >
+        void write_scores( std::ostream& stream,
+                           MapType<std::string,std::string> const *id_name_map,
+                           IterType<std::string,std::pair<std::size_t,double>>& scores
+                         )
+        {
+            stream << "Species ID\tSpecies Name\tCount\tScore\n";
+
+            for( auto& species : scores )
+                {
+                    stream << species.first << "\t";
+                    if( id_name_map != nullptr )
+                        {
+                            stream << get_map_value( (*id_name_map),
+                                                     species.first,
+                                                     species.first
+                                                   );
+                        }
+                    else
+                        {
+                            stream << species.first;
+                        }
+
+                    stream << "\t"
+                           << species.second.first
+                           << "\t"
+                           << species.second.second
+                           << "\n";
+                }
+            std::flush( stream );
+        }
+
+    /**
      * Filter counts that do not have a high enough score out of the id_counts structure.
      * @param id_counts Structure containing <species_id, score> pairs.
      * @param thresh The threshold value. Any pairs in id_counts whose second 
@@ -616,7 +666,7 @@ class module_deconv : public module
      * @note This method has the side effect of removing items from id_counts
      **/
     template<class K, class V>
-        void filter_counts( std::vector<std::pair<K,V>> in_vec,
+        void filter_counts( std::vector<std::pair<K,V>>& in_vec,
                        V thresh
                     )
     {
@@ -703,7 +753,7 @@ class module_deconv : public module
     void
         handle_kway_tie( std::vector<std::pair<std::string,double>>& tie_outputs,
                          std::unordered_map<std::string, std::vector<std::string>>& id_pep_map,
-                         std::unordered_map<std::string,std::unordered_map<std::string,std::size_t>>
+                         std::unordered_map<std::string,std::unordered_map<std::string,std::size_t>>&
                          pep_species_map_wcounts,
                          std::vector<std::pair<std::string,double>>& tie_candidates,
                          evaluation_strategy::tie_eval_strategy eval_strat,

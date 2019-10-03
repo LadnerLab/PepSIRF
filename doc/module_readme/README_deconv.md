@@ -25,6 +25,24 @@ modes are followed by [scoring_species,create_linkage].
                                         species_id\tcount
                                          [create_linkage,scoring_species]
                                         
+  --original_scores arg                 Name of directory to write 
+                                        counts/scores to after every round. If 
+                                        included, 
+                                        the counts and scores for all remaining
+                                        species will be written after every 
+                                        round. 
+                                        Filenames will be written in the format
+                                        '$dir/round_x', where x is the round 
+                                        number. 
+                                        The original scores will be written to 
+                                        '$dir/round_0'. A new file will be 
+                                        written to the 
+                                        directory after each subsequent round. 
+                                        If this flag is included 
+                                        and the specified directory exists, the
+                                        program will exit with an error. 
+                                        [scoring_species
+                                        
   --single_threaded                     By default this module uses two 
                                         threads. Include this option with no 
                                         arguments if you only want  one thread 

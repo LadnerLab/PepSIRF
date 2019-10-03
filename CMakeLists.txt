@@ -7,7 +7,7 @@ set(Boost_USE_STATIC_RUNTIME OFF)
 set(CMAKE_CXX_STANDARD 11)
 
 find_package(OpenMP REQUIRED)
-find_package(Boost REQUIRED COMPONENTS program_options regex )
+find_package(Boost REQUIRED COMPONENTS program_options regex filesystem)
 
 include_directories(include/modules/core)
 include_directories(include/modules/parsers)
@@ -35,6 +35,7 @@ add_library(pepsirf_common STATIC src/modules/parsers/options_parser.cpp src/mod
 			src/modules/core/module.cpp
 			src/modules/core/sequence_indexer.cpp
 			src/modules/core/fastq_score.cpp
+			src/modules/core/fs_tools.cpp
 		   )
 
 add_library(modules_demux STATIC src/modules/demux/options_demux.cpp src/modules/demux/options_parser_demux.cpp src/modules/parsers/options_parser.cpp 
@@ -52,6 +53,7 @@ add_library( modules_deconv STATIC src/modules/deconv/options_deconv.cpp src/mod
 				src/modules/core/options.cpp src/modules/core/options_parser_factory.cpp
 				src/modules/core/module_factory.cpp
 				src/modules/core/module.cpp src/modules/deconv/module_deconv.cpp
+				src/modules/core/fs_tools.cpp
 		)
 
 

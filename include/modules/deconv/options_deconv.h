@@ -42,6 +42,11 @@ class options_deconv : public options
     std::size_t threshold;
 
     /**
+     * Directory name to write round scores/counts to
+     **/
+    std::string orig_scores_dname;
+
+    /**
      * Score threshold to determine 
      * when two species are tied. 
      **/
