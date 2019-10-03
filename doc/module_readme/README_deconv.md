@@ -25,6 +25,13 @@ modes are followed by [scoring_species,create_linkage].
                                         species_id\tcount
                                          [create_linkage,scoring_species]
                                         
+  --orig_scores_outputs arg             Name of file to write original 
+                                        counts/scores to. If included, the 
+                                        original counts 
+                                        and scores for ALL species sharing a 
+                                        kmer with an enriched peptide will be 
+                                        written. [scoring_species
+                                        
   --single_threaded                     By default this module uses two 
                                         threads. Include this option with no 
                                         arguments if you only want  one thread 

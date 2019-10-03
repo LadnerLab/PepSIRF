@@ -37,6 +37,11 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "a tab-delimited file with a header. Each entry will be of the form:\n"
           "species_id\\tcount\n [create_linkage,scoring_species]\n"
         )
+        ( "orig_scores_outputs", po::value<std::string>( &opts_deconv->orig_scores_fname )->default_value( "" ),
+          "Name of file to write original counts/scores to. If included, the original counts \n"
+          "and scores for ALL species sharing a kmer with an enriched peptide will be written. "
+          "[scoring_species\n"
+        )
         ( "single_threaded", po::bool_switch( &opts_deconv->single_threaded )->default_value( false ),
           "By default this module uses two threads. Include this option with no arguments if you only want "
           " one thread to be used. [create_linkage,scoring_species]\n"
@@ -174,7 +179,7 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "shares 12 7-mers with the species with id '455', and 10 7-mers with the species that has id 423. [create_linkage]\n"
         );
 
-    po::store( po::command_line_parser( argc, *argv ).options( desc ).allow_unregistered().run(), vm);
+    po::store( po::command_line_parser( argc, *argv ).options( desc ).run(), vm);
 
     if( vm.count( "help" ) )
         {

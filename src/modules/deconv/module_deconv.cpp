@@ -93,7 +93,40 @@ void module_deconv::choose_kmers( options_deconv *opts )
 
     std::vector<std::tuple<std::string, std::size_t, double, bool>> output_counts;
 
-    auto make_map_and_filter = [&]() {
+    std::string id_name_map_fname;
+
+    std::map<std::string,std::string> name_id_map;
+    std::map<std::string,std::string>* name_id_map_ptr = nullptr;
+
+    if( !util::empty( d_opts->id_name_map_fname ) )
+        {
+            parse_name_map( d_opts->id_name_map_fname, name_id_map );
+            name_id_map_ptr = &name_id_map;
+        }
+
+    auto filter = [&]( evaluation_strategy::filter_strategy filter_strat )
+        {
+            if( filter_strat
+                == evaluation_strategy::filter_strategy::SCORE_FILTER )
+                {
+                    filter_counts<std::string,double>
+                    ( species_scores, thresh );
+
+
+                }
+            else if( filter_strat
+                      == evaluation_strategy::filter_strategy::COUNT_FILTER
+                   )
+                {
+                    
+                    // recreate species_scores
+                    filter_counts<std::string,std::size_t>
+                    ( species_peptide_counts, thresh );
+                }
+        };
+
+    auto make_map = [&]()
+        {
         #pragma omp parallel
             {
                 #pragma omp sections
@@ -117,15 +150,6 @@ void module_deconv::choose_kmers( options_deconv *opts )
                         score_species( species_scores, id_pep_map, pep_id_map,
                                        score_strat
                                      );
-
-                        if( filter_strat
-                            == evaluation_strategy::filter_strategy::SCORE_FILTER )
-                            {
-                                filter_counts<std::string,double>
-                                    ( species_scores, thresh );
-
-
-                            }
                     }
 
                     #pragma omp section
@@ -133,32 +157,47 @@ void module_deconv::choose_kmers( options_deconv *opts )
                         get_species_counts_per_peptide( id_pep_map,
                                                         species_peptide_counts
                                                       );
-
-                        if( filter_strat
-                            == evaluation_strategy::filter_strategy::COUNT_FILTER
-                          )
-                            {
-
-                                // recreate species_scores
-                                filter_counts<std::string,std::size_t>
-                                    ( species_peptide_counts, thresh );
-                            }
                     }
                 }
-
-
-
             }
-    };
+        };
 
-    make_map_and_filter();
+    auto make_map_and_filter = [&]( evaluation_strategy::filter_strategy filter_strat )
+        {
+            make_map();
+            filter( filter_strat );
+        };
+
+    make_map();
+
+    if( !util::empty( d_opts->orig_scores_fname ) )
+        {
+            std::ofstream out_f;
+            // populate the unfiltered scores with counts, scores for all species
+            std::unordered_map<std::string,std::pair<std::size_t,double>> unfiltered_scores;
+            combine_count_and_score( unfiltered_scores,
+                                     species_peptide_counts,
+                                     species_scores
+                                   );
+
+            out_f.open( d_opts->orig_scores_fname );
+
+            write_global_original_scores( out_f,
+                                          name_id_map_ptr,
+                                          unfiltered_scores
+                                        );
+
+            out_f.close();
+        }
+
+    filter( filter_strat );
 
     std::unordered_map<std::string,std::pair<std::size_t,double>> original_scores;
 
-    combine_count_and_score<std::unordered_map>( original_scores,
-                                             species_peptide_counts,
-                                             species_scores
-                                           );
+    combine_count_and_score( original_scores,
+                             species_peptide_counts,
+                             species_scores
+                           );
 
     std::unordered_map<std::string,std::vector<std::string>> peptide_assignment_map;
 
@@ -279,19 +318,8 @@ void module_deconv::choose_kmers( options_deconv *opts )
             species_scores.clear();
             species_peptide_counts.clear();
 
-            make_map_and_filter();
+            make_map_and_filter( filter_strat );
 
-        }
-
-    std::string id_name_map_fname;
-
-    std::map<std::string,std::string> name_id_map;
-    std::map<std::string,std::string>* name_id_map_ptr = nullptr;
-
-    if( d_opts->id_name_map_fname.compare( "" ) )
-        {
-            parse_name_map( d_opts->id_name_map_fname, name_id_map );
-            name_id_map_ptr = &name_id_map;
         }
 
     write_outputs( d_opts->output_fname,
