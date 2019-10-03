@@ -38,7 +38,7 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "a tab-delimited file with a header. Each entry will be of the form:\n"
           "species_id\\tcount\n [create_linkage,scoring_species]\n"
         )
-        ( "original_scores", po::value<std::string>( &opts_deconv->orig_scores_dname )->default_value( "" )
+        ( "scores_per_round", po::value<std::string>( &opts_deconv->orig_scores_dname )->default_value( "" )
           ->notifier( [&]( const std::string& val )
                       {
                           if( boost::filesystem::exists( val ) )

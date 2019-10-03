@@ -24,7 +24,7 @@ std::string options_deconv::get_arguments()
                           " --score_tie_threshold     " << score_tie_threshold << "\n" << 
                           " --score_overlap_threshold " << score_overlap_threshold << "\n" << 
                           " --output                  " << output_fname <<  "\n"
-                          " --original_scores         " << orig_scores_dname <<  "\n"
+                          " --scores_per_round        " << orig_scores_dname <<  "\n"
                           " --peptide_assignment_map  " << species_peptides_out <<  "\n"
                   ;
         }
