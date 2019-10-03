@@ -1032,18 +1032,28 @@ TEST_CASE( "global_original_scores", "[module_deconv]" )
     std::stringstream stream;
 
     std::unordered_map<std::string,std::string> id_name_map;
+    std::unordered_map<std::string,std::string> *id_name_map_ptr = &id_name_map;
+
 
     // ordered map used so we can guarantee order
     std::map<std::string,std::pair<std::size_t,double>> score_map;
 
     std::vector<std::string> species{ "sp1", "sp2", "sp3", "sp4", "sp5" };
 
-    std::string expected = "Species ID\tSpecies Name\tOriginal Count\tOriginal Score\n"
-                           "sp1\tsp1_name\t0\t1\n"
-                           "sp2\tsp2_name\t1\t2\n"
-                           "sp3\tsp3_name\t2\t3\n"
-                           "sp4\tsp4_name\t3\t4\n"
-                           "sp5\tsp5_name\t4\t5\n";
+    std::string expected_include_name = "Species ID\tSpecies Name\tOriginal Count\tOriginal Score\n"
+        "sp1\tsp1_name\t0\t1\n"
+        "sp2\tsp2_name\t1\t2\n"
+        "sp3\tsp3_name\t2\t3\n"
+        "sp4\tsp4_name\t3\t4\n"
+        "sp5\tsp5_name\t4\t5\n";
+
+    std::string expected_exclude_name = "Species ID\tSpecies Name\tOriginal Count\tOriginal Score\n"
+        "sp1\tsp1\t0\t1\n"
+        "sp2\tsp2\t1\t2\n"
+        "sp3\tsp3\t2\t3\n"
+        "sp4\tsp4\t3\t4\n"
+        "sp5\tsp5\t4\t5\n";
+
 
     std::size_t idx = 0;
     double idx_dbl = 1.0;
@@ -1059,6 +1069,15 @@ TEST_CASE( "global_original_scores", "[module_deconv]" )
             ++idx_dbl;
         }
 
-    mod.write_global_original_scores( stream, &id_name_map, score_map );
-    REQUIRE( !stream.str().compare( expected ) );
+    mod.write_scores( stream, id_name_map_ptr, score_map );
+    REQUIRE( !stream.str().compare( expected_include_name ) );
+
+    stream.str( std::string() );
+    stream.clear();
+
+    id_name_map_ptr = nullptr;
+
+    mod.write_scores( stream, id_name_map_ptr, score_map );
+
+    REQUIRE( !stream.str().compare( expected_exclude_name ) );
 }
