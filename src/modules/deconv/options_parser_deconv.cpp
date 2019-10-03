@@ -3,6 +3,8 @@
 #include <iterator>
 #include <exception>
 #include <stdexcept>
+#include <boost/filesystem/path.hpp>
+#include <boost/filesystem/operations.hpp>
 
 #include "options_parser_deconv.h"
 #include "util.h"
@@ -37,9 +39,32 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "a tab-delimited file with a header. Each entry will be of the form:\n"
           "species_id\\tcount\n [create_linkage,scoring_species]\n"
         )
-        ( "orig_scores_outputs", po::value<std::string>( &opts_deconv->orig_scores_fname )->default_value( "" ),
-          "Name of file to write original counts/scores to. If included, the original counts \n"
-          "and scores for ALL species sharing a kmer with an enriched peptide will be written. "
+        ( "original_scores", po::value<std::string>( &opts_deconv->orig_scores_dname )->default_value( "" )
+          ->notifier( [&]( const std::string& val )
+                      {
+                          if( boost::filesystem::exists( val ) )
+                              {
+                                  std::stringstream error_msg;
+
+                                  error_msg << "Directory '"
+                                            << val
+                                            << "' already exists!";
+                                  throw std::runtime_error
+                                      ( error_msg.str() ); 
+                              }
+                          else
+                              {
+                                  boost
+                                      ::filesystem
+                                      ::create_directory( val );
+                              }
+                      }),
+          "Name of directory to write counts/scores to after every round. If included, \n"
+          "the counts and scores for all remaining species will be written after every round. \n"
+          "Filenames will be written in the format '$dir/round_x', where x is the round number. \n"
+          "The original scores will be written to '$dir/round_0', and the scores for the last round \n"
+          "are those that are output, and will not be written to the directory. If this flag is included \n"
+          "and the specified directory exists, the program will exit with an error. "
           "[scoring_species\n"
         )
         ( "single_threaded", po::bool_switch( &opts_deconv->single_threaded )->default_value( false ),
