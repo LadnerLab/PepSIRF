@@ -60,8 +60,8 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "Name of directory to write counts/scores to after every round. If included, \n"
           "the counts and scores for all remaining species will be written after every round. \n"
           "Filenames will be written in the format '$dir/round_x', where x is the round number. \n"
-          "The original scores will be written to '$dir/round_0', and the scores for the last round \n"
-          "are those that are output, and will not be written to the directory. If this flag is included \n"
+          "The original scores will be written to '$dir/round_0'. A new file will be written to the \n"
+          "directory after each subsequent round. If this flag is included \n"
           "and the specified directory exists, the program will exit with an error. "
           "[scoring_species\n"
         )
