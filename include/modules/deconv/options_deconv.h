@@ -42,9 +42,9 @@ class options_deconv : public options
     std::size_t threshold;
 
     /**
-     * Filename to write out all original scores/counts to.
+     * Directory name to write round scores/counts to
      **/
-    std::string orig_scores_fname;
+    std::string orig_scores_dname;
 
     /**
      * Score threshold to determine 

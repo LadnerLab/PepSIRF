@@ -586,17 +586,33 @@ class module_deconv : public module
                         peptide_sp_vec
                       );
 
-    template<class StreamType,
-        template<typename...> class MapType, //TODO: Figure out how to have one map type
-        template<typename...> class MapType2
+    /**
+     * Write species ids, names (if included), counts, and scores 
+     * of species to a stream. 
+     * @param id_name_map Pointer to map associating string species ids
+     *        with the name of the species. If a species name is not found 
+     *        in this map, the species id will be written in place of 
+     *        the name. If this is a null pointer, only species ids will 
+     *        be written to the stream.
+     * @param score_map An iterable (map, vector of pairs, etc) containing 
+     *        first values that are the string species id, and the second being 
+     *        a pair consisting with the first item being the count 
+     *        for a species, and the second being the species' score.
+     * @note This method flushes the buffer after it has finished 
+     *       writing to it. 
+     **/
+    template<
+        template<typename...> class MapType,
+        template<typename...> class IterType
         >
-        void write_global_original_scores( StreamType& stream,
-                                           MapType<std::string,std::string> const *id_name_map,
-                                           MapType2<std::string,std::pair<std::size_t,double>>& score_map
-                                         )
+        void write_scores( std::ostream& stream,
+                           MapType<std::string,std::string> const *id_name_map,
+                           IterType<std::string,std::pair<std::size_t,double>>& scores
+                         )
         {
-            stream << "Species ID\tSpecies Name\tOriginal Count\tOriginal Score\n";
-            for( auto& species : score_map )
+            stream << "Species ID\tSpecies Name\tCount\tScore\n";
+
+            for( auto& species : scores )
                 {
                     stream << species.first << "\t";
                     if( id_name_map != nullptr )
@@ -609,7 +625,6 @@ class module_deconv : public module
                     else
                         {
                             stream << species.first;
-                            std::cout << species.first;
                         }
 
                     stream << "\t"
@@ -618,6 +633,7 @@ class module_deconv : public module
                            << species.second.second
                            << "\n";
                 }
+            std::flush( stream );
         }
 
     /**
@@ -650,7 +666,7 @@ class module_deconv : public module
      * @note This method has the side effect of removing items from id_counts
      **/
     template<class K, class V>
-        void filter_counts( std::vector<std::pair<K,V>> in_vec,
+        void filter_counts( std::vector<std::pair<K,V>>& in_vec,
                        V thresh
                     )
     {
