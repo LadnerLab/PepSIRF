@@ -24,6 +24,7 @@
 #include "sample.h"
 #include "fastq_score.h"
 #include "kmer_tools.h"
+#include "fs_tools.h"
 
 using namespace util;
 
@@ -1080,4 +1081,27 @@ TEST_CASE( "global_original_scores", "[module_deconv]" )
     mod.write_scores( stream, id_name_map_ptr, score_map );
 
     REQUIRE( !stream.str().compare( expected_exclude_name ) );
+}
+
+
+TEST_CASE( "to_dir_name", "[fs_tools]" )
+{
+    std::string name_no_trail = "dir1";
+    std::string name_trail = "dir1/";
+    std::string dest_str;
+
+    REQUIRE( fs_tools::to_dir_name( dest_str, name_no_trail ) == name_trail );
+
+    dest_str.clear();
+
+    REQUIRE( fs_tools::to_dir_name( dest_str, name_trail ) == name_trail );
+
+    dest_str.clear();
+    
+    REQUIRE( fs_tools::to_dir_name( name_no_trail ) == name_trail );
+
+    dest_str.clear();
+
+    REQUIRE( fs_tools::to_dir_name( name_trail ) == name_trail );
+
 }
