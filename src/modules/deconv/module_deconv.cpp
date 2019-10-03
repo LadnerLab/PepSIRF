@@ -8,6 +8,7 @@
 #include <boost/algorithm/string/join.hpp>
 #include <boost/range/adaptor/transformed.hpp>
 
+#include "fs_tools.h"
 #include "module_deconv.h"
 #include "kmer_tools.h"
 #include "time_keep.h"
@@ -170,29 +171,43 @@ void module_deconv::choose_kmers( options_deconv *opts )
 
     make_map();
 
-    if( !util::empty( d_opts->orig_scores_fname ) )
+
+    auto write_round_scores = [&]( std::size_t round_no )
         {
+            std::unordered_map<std::string,std::pair<std::size_t,double>> round_scores;
+
             std::ofstream out_f;
+            std::string fname;
+            fs_tools::create_fname( fname,
+                                    d_opts->orig_scores_dname,
+                                    "round_", round_no
+                                  );
+
             // populate the unfiltered scores with counts, scores for all species
-            std::unordered_map<std::string,std::pair<std::size_t,double>> unfiltered_scores;
-            combine_count_and_score( unfiltered_scores,
+            combine_count_and_score( round_scores,
                                      species_peptide_counts,
                                      species_scores
                                    );
 
-            out_f.open( d_opts->orig_scores_fname );
+            out_f.open( fname );
 
             write_scores( out_f,
                           name_id_map_ptr,
-                          unfiltered_scores
+                          round_scores
                         );
 
             out_f.close();
-        }
+        };
 
     filter( filter_strat );
 
     std::unordered_map<std::string,std::pair<std::size_t,double>> original_scores;
+    std::size_t round_no = 0;
+
+    if( !util::empty( d_opts->orig_scores_dname ) )
+        {
+            write_round_scores( round_no );
+        }
 
     combine_count_and_score( original_scores,
                              species_peptide_counts,
@@ -311,6 +326,11 @@ void module_deconv::choose_kmers( options_deconv *opts )
                     pep_species_vec.emplace_back( it->first, it->second );
                 }
 
+            if( !util::empty( d_opts->orig_scores_dname ) )
+                {
+                    write_round_scores( round_no );
+                }
+
             tied_species.clear();
             tie_candidates.clear();
             id_pep_map.clear();
@@ -320,6 +340,7 @@ void module_deconv::choose_kmers( options_deconv *opts )
 
             make_map_and_filter( filter_strat );
 
+            ++round_no;
         }
 
     write_outputs( d_opts->output_fname,
