@@ -182,10 +182,10 @@ void module_deconv::choose_kmers( options_deconv *opts )
 
             out_f.open( d_opts->orig_scores_fname );
 
-            write_global_original_scores( out_f,
-                                          name_id_map_ptr,
-                                          unfiltered_scores
-                                        );
+            write_scores( out_f,
+                          name_id_map_ptr,
+                          unfiltered_scores
+                        );
 
             out_f.close();
         }
