@@ -1126,3 +1126,23 @@ TEST_CASE( "to_dir_name", "[fs_tools]" )
     REQUIRE( dest_str == "dir1/fpart1123fpart4" );
 
 }
+
+TEST_CASE( "filter_counts (vector template)", "[module_deconv]" )
+{
+    std::vector<std::pair<std::size_t,double>> filter_vec; 
+    module_deconv mod;
+
+    for( std::size_t index = 0; index < 100; ++index )
+        {
+            filter_vec.emplace_back( std::make_pair( index, index + 1 ) );
+        }
+
+
+    mod.filter_counts<std::size_t,double>( filter_vec, 50  );
+
+    REQUIRE( filter_vec.size() == 51 );
+    auto comp_pair = []( const std::pair<size_t,double> first,
+                         const std::pair<size_t,double> second
+                         ){ return first.first < second.first; };
+    REQUIRE( std::min_element( filter_vec.begin(), filter_vec.end(), comp_pair )->second == 50 );
+}
