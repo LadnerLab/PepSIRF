@@ -666,7 +666,7 @@ class module_deconv : public module
      * @note This method has the side effect of removing items from id_counts
      **/
     template<class K, class V>
-        void filter_counts( std::vector<std::pair<K,V>> in_vec,
+        void filter_counts( std::vector<std::pair<K,V>>& in_vec,
                        V thresh
                     )
     {
