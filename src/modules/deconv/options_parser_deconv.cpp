@@ -3,9 +3,8 @@
 #include <iterator>
 #include <exception>
 #include <stdexcept>
-#include <boost/filesystem/path.hpp>
-#include <boost/filesystem/operations.hpp>
 
+#include "fs_tools.h"
 #include "options_parser_deconv.h"
 #include "util.h"
 
@@ -54,9 +53,8 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
                               }
                           else
                               {
-                                  boost
-                                      ::filesystem
-                                      ::create_directory( val );
+                                  
+                                  fs_tools::create_directory( val );
                               }
                       }),
           "Name of directory to write counts/scores to after every round. If included, \n"
