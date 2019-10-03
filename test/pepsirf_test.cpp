@@ -1041,14 +1041,14 @@ TEST_CASE( "global_original_scores", "[module_deconv]" )
 
     std::vector<std::string> species{ "sp1", "sp2", "sp3", "sp4", "sp5" };
 
-    std::string expected_include_name = "Species ID\tSpecies Name\tOriginal Count\tOriginal Score\n"
+    std::string expected_include_name = "Species ID\tSpecies Name\tCount\tScore\n"
         "sp1\tsp1_name\t0\t1\n"
         "sp2\tsp2_name\t1\t2\n"
         "sp3\tsp3_name\t2\t3\n"
         "sp4\tsp4_name\t3\t4\n"
         "sp5\tsp5_name\t4\t5\n";
 
-    std::string expected_exclude_name = "Species ID\tSpecies Name\tOriginal Count\tOriginal Score\n"
+    std::string expected_exclude_name = "Species ID\tSpecies Name\tCount\tScore\n"
         "sp1\tsp1\t0\t1\n"
         "sp2\tsp2\t1\t2\n"
         "sp3\tsp3\t2\t3\n"
