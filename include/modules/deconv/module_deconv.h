@@ -610,7 +610,7 @@ class module_deconv : public module
                            IterType<std::string,std::pair<std::size_t,double>>& scores
                          )
         {
-            stream << "Species ID\tSpecies Name\tOriginal Count\tOriginal Score\n";
+            stream << "Species ID\tSpecies Name\tCount\tScore\n";
 
             for( auto& species : scores )
                 {
