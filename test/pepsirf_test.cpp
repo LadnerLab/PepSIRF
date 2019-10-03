@@ -1104,4 +1104,25 @@ TEST_CASE( "to_dir_name", "[fs_tools]" )
 
     REQUIRE( fs_tools::to_dir_name( name_trail ) == name_trail );
 
+    std::string path_base( "dir1" );
+    std::string path_base_inc( "dir1/" );
+
+    dest_str.clear();
+
+    fs_tools::create_fname( dest_str, path_base,
+                            "fpart1", 1, 2, 3,
+                            "fpart4"
+                          );
+
+    REQUIRE( dest_str == "dir1/fpart1123fpart4" );
+
+    dest_str.clear();
+    
+    fs_tools::create_fname( dest_str, path_base_inc,
+                            "fpart1", 1, 2, 3,
+                            "fpart4"
+                          );
+
+    REQUIRE( dest_str == "dir1/fpart1123fpart4" );
+
 }
