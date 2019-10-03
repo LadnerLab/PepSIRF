@@ -19,3 +19,8 @@ std::string fs_tools::to_dir_name( const std::string& str )
     fs_tools::to_dir_name( ret, str );
     return ret;
 }
+
+bool fs_tools::has_trailing_slash( const std::string& query )
+{
+    return query.back() == '/';
+}

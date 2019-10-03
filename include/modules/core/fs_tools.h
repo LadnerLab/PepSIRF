@@ -14,6 +14,10 @@ namespace fs_tools
                               const std::string& str
                             );
 
+    bool has_trailing_slash( const std::string& query );
+
+
+
     template<typename T>
         std::string& create_fname( std::string& dest,
                                    const std::string& path_base,
