@@ -36,6 +36,7 @@ add_library(pepsirf_common STATIC src/modules/parsers/options_parser.cpp src/mod
 			src/modules/core/sequence_indexer.cpp
 			src/modules/core/fastq_score.cpp
 			src/modules/core/fs_tools.cpp
+            src/modules/core/peptide.cpp
 		   )
 
 add_library(modules_demux STATIC src/modules/demux/options_demux.cpp src/modules/demux/options_parser_demux.cpp src/modules/parsers/options_parser.cpp 
@@ -54,6 +55,8 @@ add_library( modules_deconv STATIC src/modules/deconv/options_deconv.cpp src/mod
 				src/modules/core/module_factory.cpp
 				src/modules/core/module.cpp src/modules/deconv/module_deconv.cpp
 				src/modules/core/fs_tools.cpp
+                src/modules/core/peptide.cpp
+                src/modules/deconv/scored_peptide.cpp
 		)
 
 
