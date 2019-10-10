@@ -32,8 +32,48 @@ class peptide
     peptide( const std::string& sequence )
         : peptide( "", sequence ) {}
 
+
+    /**
+     * Return a constant reference to the 
+     * peptide's name.
+     **/
+    const std::string& get_name();
+
+    /**
+     * Return a constant reference to the peptide's peptide.
+     **/
+    const std::string& get_sequence();
+
+    /**
+     * Set the peptide's name.
+     * @param new_val The new name for this peptide.
+     *        This value will be copied into the peptide's 'name'
+     *        member. Calling get_name() after set_name() will 
+     *        return a string with the contents of new_val
+     **/
+    void set_name( const std::string& new_val );
+
+    /**
+     * Set the peptide's sequence.
+     * @param new_val The new sequence for this peptide.
+     *        This value will be copied into the peptide's 'sequence'
+     *        member. Calling get_sequence() after set_sequence() will 
+     *        return a string with the contents of new_val
+     **/
+    void set_sequence( const std::string& new_val );
+
+
  private:
+
+    /**
+     * The peptide's name. 
+     * This can be used to uniquely identify a peptide.
+     **/
     std::string name;
+
+    /**
+     * The peptide's sequence, i.e. the peptide itself.
+     **/
     std::string sequence;
 
 };
