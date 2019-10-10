@@ -1,0 +1,10 @@
+#ifndef SCORED_PEPTIDE_HH_INCLUDED
+#define SCORED_PEPTIDE_HH_INCLUDED
+
+class scored_peptide
+{
+
+
+};
+
+#endif // SCORED_PEPTIDE_HH_INCLUDED
