@@ -25,6 +25,7 @@
 #include "fastq_score.h"
 #include "kmer_tools.h"
 #include "fs_tools.h"
+#include "peptide.h"
 
 using namespace util;
 
@@ -1145,4 +1146,18 @@ TEST_CASE( "filter_counts (vector template)", "[module_deconv]" )
                          const std::pair<size_t,double> second
                          ){ return first.first < second.first; };
     REQUIRE( std::min_element( filter_vec.begin(), filter_vec.end(), comp_pair )->second == 50 );
+}
+
+TEST_CASE( "peptide", "[peptide]" )
+{
+    peptide pep( "pep1", "ATGC" );
+    peptide pep2( "p11", "ATGC" );
+
+    REQUIRE( pep == pep2 );
+
+    pep2.set_sequence( "AGGG" );
+
+    REQUIRE( pep != pep2 );
+    REQUIRE( !pep2.get_sequence().compare( "AGGG" ) );
+
 }
