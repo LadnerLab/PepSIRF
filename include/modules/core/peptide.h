@@ -62,6 +62,15 @@ class peptide
      **/
     void set_sequence( const std::string& new_val );
 
+    /**
+     * Determine whether this peptide equals another.
+     * Two peptides are equal if their sequence members 
+     * are equal.
+     * @param other The peptide to compare with.
+     * @returns true if (sequence == other.get_sequence() ),
+     *          false otherwise.
+     **/
+    bool operator==( const peptide& other ) const;
 
  private:
 
