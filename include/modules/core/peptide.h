@@ -37,12 +37,12 @@ class peptide
      * Return a constant reference to the 
      * peptide's name.
      **/
-    const std::string& get_name();
+    const std::string& get_name() const;
 
     /**
      * Return a constant reference to the peptide's peptide.
      **/
-    const std::string& get_sequence();
+    const std::string& get_sequence() const;
 
     /**
      * Set the peptide's name.
