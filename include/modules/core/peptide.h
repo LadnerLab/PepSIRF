@@ -67,10 +67,19 @@ class peptide
      * Two peptides are equal if their sequence members 
      * are equal.
      * @param other The peptide to compare with.
-     * @returns true if (sequence == other.get_sequence() ),
+     * @returns true if this == other,
      *          false otherwise.
      **/
     bool operator==( const peptide& other ) const;
+
+    /**
+     * Determine if this peptide is NOT equal to 
+     * another peptide.
+     * @param other The peptide to compare with.
+     * @note this is equivalent to calling !(a==b)
+     * @returns boolean false if this == other, true otherwise
+     **/
+    bool operator!=( const peptide& other ) const;
 
  private:
 

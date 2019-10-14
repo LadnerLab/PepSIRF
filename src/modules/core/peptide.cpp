@@ -26,3 +26,8 @@ bool peptide::operator==( const peptide& other ) const
     return !get_sequence().compare( other.get_sequence() );
 }
 
+bool peptide::operator!=( const peptide& other ) const
+{
+    return !( *this == other );
+}
+
