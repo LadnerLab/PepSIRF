@@ -81,7 +81,7 @@ class peptide
      **/
     bool operator!=( const peptide& other ) const;
 
- private:
+ protected:
 
     /**
      * The peptide's name. 
