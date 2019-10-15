@@ -291,7 +291,6 @@ TEST_CASE( "Test Count Generation", "[module_demux]" )
 
     mod.add_seqs_to_map( my_map, vec, num_samples );
 
-    parallel_map<sequence, std::vector<std::size_t>*>::iterator it = my_map.begin();
     parallel_map<sequence, std::vector<std::size_t>*>::iterator seq_match;
 
     std::size_t index = 0;
