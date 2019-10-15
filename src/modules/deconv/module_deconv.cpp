@@ -17,6 +17,7 @@
 #include "distance_tools.h"
 #include "overlap_data.h"
 #include "distance_matrix.h"
+#include "scored_peptide.h"
 
 module_deconv::module_deconv() = default;
 
