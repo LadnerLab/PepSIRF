@@ -26,6 +26,7 @@
 #include "kmer_tools.h"
 #include "fs_tools.h"
 #include "peptide.h"
+#include "scored_peptide.h"
 
 using namespace util;
 
@@ -1159,5 +1160,19 @@ TEST_CASE( "peptide", "[peptide]" )
 
     REQUIRE( pep != pep2 );
     REQUIRE( !pep2.get_sequence().compare( "AGGG" ) );
+
+}
+
+TEST_CASE( "scored peptide", "[peptide]" )
+{
+    scored_peptide<double> sc( "pep1", "ATGC", 100.0 );
+
+    REQUIRE( sc.get_score() == 100.0 );
+    REQUIRE( !sc.get_name().compare( "pep1" ) );
+    REQUIRE( !sc.get_sequence().compare( "ATGC" ) );
+
+    sc.set_score( 5 );
+    REQUIRE( sc.get_score() == 5 );
+
 
 }
