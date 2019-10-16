@@ -41,20 +41,24 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
         ( "scores_per_round", po::value<std::string>( &opts_deconv->orig_scores_dname )->default_value( "" )
           ->notifier( [&]( const std::string& val )
                       {
-                          if( boost::filesystem::exists( val ) )
+                          // check that a directory was actually supplied
+                          if( val.length() )
                               {
-                                  std::stringstream error_msg;
+                                  if( boost::filesystem::exists( val ) )
+                                      {
+                                          std::stringstream error_msg;
 
-                                  error_msg << "Directory '"
-                                            << val
-                                            << "' already exists!";
-                                  throw std::runtime_error
-                                      ( error_msg.str() ); 
-                              }
-                          else
-                              {
+                                          error_msg << "Directory '"
+                                                    << val
+                                                    << "' already exists!";
+                                          throw std::runtime_error
+                                              ( error_msg.str() ); 
+                                      }
+                                  else
+                                      {
                                   
-                                  fs_tools::create_directory( val );
+                                          fs_tools::create_directory( val );
+                                      }
                               }
                       }),
           "Name of directory to write counts/scores to after every round. If included, \n"
