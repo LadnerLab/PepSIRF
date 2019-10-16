@@ -73,7 +73,7 @@ def main():
     #Make probe count plots
     #By default, any sample that starts with "Super" is excluded. These are expected to be negative controls
     for each in opts.speciesIDs.split(","):
-        plotAlignHits([x for x in list(data.keys()) if not x.startswith("Super")], each, alInfo, data, mapDict, id2name, opts.minDepth, annotD)
+        plotAlignHits([x for x in list(data.keys()) if not x.startswith("Super")], each, alInfo, data, mapDict, id2name, opts.minDepth, annotD, opts)
     
 
     #Make read count depth plots (will be most appropriate with normalized read counts)
@@ -223,7 +223,7 @@ def plotAlignDepth(samps, spID, alInfo, data, mapDict, id2name, minDepth, annotD
     plt.savefig('%s_%s_min%d_Depth.png' % (spID, id2name[spID].replace(" ", "-"), minDepth),dpi=200,bbox_inches='tight')
 
 
-def plotAlignHits(samps, spID, alInfo, data, mapDict, id2name, minDepth, annotD, alFasta=False):
+def plotAlignHits(samps, spID, alInfo, data, mapDict, id2name, minDepth, annotD, opts, alFasta=False):
     proNames = speciesProbes(mapDict, spID)
     thisInfo = parseAlInfo(alInfo[spID])
 
@@ -245,9 +245,14 @@ def plotAlignHits(samps, spID, alInfo, data, mapDict, id2name, minDepth, annotD,
             yticks = [0.5+x for x in list(range(1, len(samps)+1))]
             ax.set_yticks(yticks)
             ax.set_ylim(1,len(samps)+1)
-            ax.set_yticklabels([""]*len(yticks))
-            for item in (ax.get_xticklabels() + ax.get_yticklabels()):
+            if opts.withLabels:
+                ax.set_yticklabels(samps[::-1])
+            else:
+                ax.set_yticklabels([""]*len(yticks))
+            for item in (ax.get_xticklabels()):
                 item.set_fontsize(18)
+            for item in (ax.get_yticklabels()):
+                item.set_fontsize(10)
             cbar = fig.colorbar(pcm, extend='max')
             cbar.ax.set_ylabel('# Enriched Probes\n(min=%d)' % minDepth, fontsize=18)
 
@@ -268,10 +273,15 @@ def plotAlignHits(samps, spID, alInfo, data, mapDict, id2name, minDepth, annotD,
             yticks = [0.5+x for x in list(range(1, len(samps)+1))]
             ax[1].set_yticks(yticks)
             ax[1].set_ylim(1,len(samps)+1)
-            ax[1].set_yticklabels([""]*len(yticks))
-            plt.xlim(0,len(x[0]))
-            for item in (ax[1].get_xticklabels() + ax[1].get_yticklabels()):
+            if opts.withLabels:
+                ax[1].set_yticklabels(samps[::-1])
+            else:
+                ax[1].set_yticklabels([""]*len(yticks))
+            for item in (ax[1].get_xticklabels()):
                 item.set_fontsize(18)
+            for item in (ax[1].get_yticklabels()):
+                item.set_fontsize(10)
+            plt.xlim(0,len(x[0]))
             cbar = fig.colorbar(pcm, extend='max', ax=ax)
             cbar.ax.set_ylabel('# Enriched Probes\n(min=%d)' % minDepth, fontsize=18)
 

@@ -11,7 +11,7 @@ def main():
 
     opts, args = p.parse_args()
     
-    for alfasta in args:
+    for alFasta in args:
         #Make dict that links target seq position to alignment positions (1-based)
         alignD = parseAlignment(alFasta)
 
