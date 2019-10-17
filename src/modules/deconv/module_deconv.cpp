@@ -17,7 +17,6 @@
 #include "distance_tools.h"
 #include "overlap_data.h"
 #include "distance_matrix.h"
-#include "scored_peptide.h"
 
 module_deconv::module_deconv() = default;
 
@@ -724,8 +723,8 @@ std::string module_deconv::get_id( std::string name, std::size_t id_index )
 }
 
 void module_deconv::create_prot_map( std::unordered_map<std::string,
-                                     std::unordered_map<std::string,std::size_t>>&
-                                    map,
+                                     std::unordered_set<scored_entity<std::string,std::size_t>>>&
+                                     scores_map,
                                      std::vector<sequence>& sequences,
                                      std::size_t k,
                                      std::size_t id_index
@@ -746,21 +745,24 @@ void module_deconv::create_prot_map( std::unordered_map<std::string,
             kmer_tools::get_kmers( kmers, sequences[ index ].seq, k );
             std::unordered_map<std::string,std::size_t> val_map;
 
+            std::unordered_set<scored_entity<std::string,std::size_t>>
+                val_set;
+
             for( auto it = kmers.begin(); it != kmers.end(); ++it )
                 {
                     // only inserts if key not already in map
                     auto pair = std::get<0>(
-                                            map.insert( std::make_pair( *it,
-                                                                        val_map
-                                                                      )
-                                                       )
+                                            scores_map.insert( std::make_pair( *it,
+                                                                               val_set
+                                                                               )
+                                                             )
                                             );
 
-                    auto pair_s = std::get<0>(
-                                              pair->second.insert( std::make_pair( spec_id, 0 ) )
-                                             );
-
-                    ++(pair_s->second);
+                    auto scored_ent = pair->second.emplace( scored_entity<std::string,std::size_t>
+                                                            ( spec_id, 0 )
+                                                          )
+                                      .first;
+                    ++( scored_ent->get_score() );
                 }
 
             kmers.clear();

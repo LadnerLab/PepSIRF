@@ -6,6 +6,7 @@
 #include <set>
 #include <memory>
 #include <unordered_map>
+#include <unordered_set>
 
 #include "overlap_data.h"
 #include "module.h"
@@ -16,6 +17,8 @@
 #include "setops.h"
 #include "evaluation_strategy.h"
 #include "tie_data.h"
+#include "scored_peptide.h"
+#include "scored_entity.h"
 
 /**
  * The species deconvolution module of the 
@@ -529,8 +532,9 @@ class module_deconv : public module
      * appear in. Each kmer in the sequences in 'sequences' is 
      * given a count for each species that the kmer appears in.
      * @note After completion of this function 'map' will contain 
-     *       mappings of the form: 'kmer' -> 'species_id' -> 'count'
-     * @param map The map that will store mappings of kmer -> species -> count.
+     *       mappings of the form: 'kmer' -> 'scored_entity, where 
+     *       the scored_entity represents the score of a species.
+     * @param scores_map The map that will store mappings of kmer -> scored_entity.
      * @param sequences The sequences to analyze.
      * @param id_index The index (0-based) of id to choose.
      * @param k The kmer size to use when creating the map. 
@@ -538,8 +542,8 @@ class module_deconv : public module
      *        kmer with that species.
      **/
     void create_prot_map( std::unordered_map<std::string,
-                          std::unordered_map<std::string,std::size_t>>&
-                          map,
+                          std::unordered_set<scored_entity<std::string,std::size_t>>>&
+                          scores_map,
                           std::vector<sequence>& sequences,
                           std::size_t k,
                           std::size_t id_index
