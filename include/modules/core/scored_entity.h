@@ -47,6 +47,27 @@ template<typename Scored, typename ScoreType>
     }
 
     /**
+     * Return a constant reference to this item's
+     * score key.
+     * @returns See above.
+     **/
+    const Scored& get_key() const
+    {
+        return score_key;
+    }
+
+    /**
+     * Return a constant reference to this item's
+     * score.
+     * @returns See above.
+     **/
+    const ScoreType& get_score() const
+    {
+        return score;
+    }
+
+
+    /**
      * Determine whether this is equal to other.
      * For scored_entities a and b, we say a == b 
      * iff a.score_key == b.score_key 
