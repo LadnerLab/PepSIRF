@@ -367,7 +367,7 @@ void module_deconv::create_linkage( options_deconv *opts )
     std::vector<sequence> proteins = fp.parse( d_opts->prot_file_fname    );
 
     std::unordered_map<std::string,
-                       std::unordered_set<scored_entity<std::string,std::size_t>>
+                       std::unordered_set<scored_entity<std::string,double>>
                       >
     kmer_sp_map;
 
@@ -375,7 +375,7 @@ void module_deconv::create_linkage( options_deconv *opts )
       std::tuple<
         std::string,std::unordered_set<
           scored_entity<
-            std::string,std::size_t
+            std::string,double
           >
         >
       >
@@ -731,8 +731,9 @@ std::string module_deconv::get_id( std::string name, std::size_t id_index )
     return 0;
 }
 
+
 void module_deconv::create_prot_map( std::unordered_map<std::string,
-                                     std::unordered_set<scored_entity<std::string,std::size_t>>>&
+                                     std::unordered_set<scored_entity<std::string,double>>>&
                                      scores_map,
                                      std::vector<sequence>& sequences,
                                      std::size_t k,
@@ -754,7 +755,7 @@ void module_deconv::create_prot_map( std::unordered_map<std::string,
             kmer_tools::get_kmers( kmers, sequences[ index ].seq, k );
             std::unordered_map<std::string,std::size_t> val_map;
 
-            std::unordered_set<scored_entity<std::string,std::size_t>>
+            std::unordered_set<scored_entity<std::string,double>>
                 val_set;
 
             for( auto it = kmers.begin(); it != kmers.end(); ++it )
@@ -767,7 +768,7 @@ void module_deconv::create_prot_map( std::unordered_map<std::string,
                                                              )
                                             );
 
-                    auto scored_ent = pair->second.emplace( scored_entity<std::string,std::size_t>
+                    auto scored_ent = pair->second.emplace( scored_entity<std::string,double>
                                                             ( spec_id, 0 )
                                                           )
                                       .first;
@@ -783,10 +784,10 @@ void module_deconv::create_prot_map( std::unordered_map<std::string,
 }
 
 void module_deconv::create_pep_map( std::unordered_map<std::string,
-                                    std::unordered_set<scored_entity<std::string,std::size_t>>>&
+                                    std::unordered_set<scored_entity<std::string,double>>>&
                                     kmer_sp_map,
                                     std::vector<std::tuple<std::string,
-                                    std::unordered_set<scored_entity<std::string,std::size_t>>>>&
+                                    std::unordered_set<scored_entity<std::string,double>>>>&
                                     peptide_sp_vec,
                                     std::vector<sequence>&
                                     peptides,
@@ -801,7 +802,7 @@ void module_deconv::create_pep_map( std::unordered_map<std::string,
         {
             // get the kmers from this peptide
             std::vector<std::string> kmers;
-            std::unordered_set<scored_entity<std::string,std::size_t>> ids;
+            std::unordered_set<scored_entity<std::string,double>> ids;
 
             kmer_tools::get_kmers( kmers, peptides[ index ].seq, k );
 
@@ -824,7 +825,7 @@ void module_deconv::create_pep_map( std::unordered_map<std::string,
                                 {
                                     if( id_ref.find( *it ) == id_ref.end() )
                                         {
-                                            id_ref.insert( scored_entity<std::string,std::size_t>
+                                            id_ref.insert( scored_entity<std::string,double>
                                                            ( it->get_key(), 1 )
                                                          );
                                         }
@@ -841,7 +842,7 @@ void module_deconv::create_pep_map( std::unordered_map<std::string,
 
 void module_deconv::write_outputs( std::string fname,
                                    std::vector<std::tuple<std::string,
-                                   std::unordered_set<scored_entity<std::string,std::size_t>>>>&
+                                   std::unordered_set<scored_entity<std::string,double>>>>&
                                     peptide_sp_vec
                                  )
 {

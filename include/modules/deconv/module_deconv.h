@@ -542,13 +542,12 @@ class module_deconv : public module
      *        kmer with that species.
      **/
     void create_prot_map( std::unordered_map<std::string,
-                          std::unordered_set<scored_entity<std::string,std::size_t>>>&
+                          std::unordered_set<scored_entity<std::string,double>>>&
                           scores_map,
                           std::vector<sequence>& sequences,
                           std::size_t k,
                           std::size_t id_index
                         );
-
 
     /**
      * Create a map that maps peptides to the 
@@ -565,10 +564,10 @@ class module_deconv : public module
      *        component kmers.
      **/
     void create_pep_map( std::unordered_map<std::string,
-                         std::unordered_set<scored_entity<std::string,std::size_t>>>&
+                         std::unordered_set<scored_entity<std::string,double>>>&
                          kmer_sp_map,
                          std::vector<std::tuple<std::string,
-                         std::unordered_set<scored_entity<std::string,std::size_t>>>>&
+                         std::unordered_set<scored_entity<std::string,double>>>>&
                          peptide_sp_vec,
                          std::vector<sequence>&
                          peptides,
@@ -587,7 +586,7 @@ class module_deconv : public module
      **/
     void write_outputs( std::string fname,
                         std::vector<std::tuple<std::string,
-                        std::unordered_set<scored_entity<std::string,std::size_t>>>>&
+                        std::unordered_set<scored_entity<std::string,double>>>>&
                         peptide_sp_vec
                       );
     /**
