@@ -579,19 +579,17 @@ class module_deconv : public module
      * Write outputs for the linkage file generation. 
      * @param fname The name of the file to write output to.
      * @param peptide_sp_vec vector containing the information to write 
-     *        file output to. Each item in the vector is a tuple with 
-     *        the first entry being a string identifying the peptide.
-     *        The second maps peptides to a score.
+     *        file output to. 
      * @note Writes a header to the file.
      * @note Each peptide will get a line in the file. Each line follows
      *       this format: 
      *       pep_name\tid:score,id:score,id:score
      **/
     void write_outputs( std::string fname,
-                        std::vector<std::tuple<std::string,std::unordered_map<std::string,std::size_t>>>&
+                        std::vector<std::tuple<std::string,
+                        std::unordered_set<scored_entity<std::string,std::size_t>>>>&
                         peptide_sp_vec
                       );
-
     /**
      * Write species ids, names (if included), counts, and scores 
      * of species to a stream. 

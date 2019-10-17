@@ -840,7 +840,8 @@ void module_deconv::create_pep_map( std::unordered_map<std::string,
 }
 
 void module_deconv::write_outputs( std::string fname,
-                                   std::vector<std::tuple<std::string,std::unordered_map<std::string,std::size_t>>>&
+                                   std::vector<std::tuple<std::string,
+                                   std::unordered_set<scored_entity<std::string,std::size_t>>>>&
                                     peptide_sp_vec
                                  )
 {
@@ -853,11 +854,12 @@ void module_deconv::write_outputs( std::string fname,
             out_file << std::get<0>( *it ) << "\t";
 
             auto in_vec = std::get<1>( *it );
+
             std::size_t in_index = 0;
             for( auto it = in_vec.begin(); it != in_vec.end(); ++it )
                 {
-                    out_file << std::get<0>( *it )
-                             << ":" << std::get<1>( *it );
+                        out_file << it->get_key()
+                                 << ":" << it->get_score();
 
                     if( in_index != in_vec.size() - 1 )
                         {
