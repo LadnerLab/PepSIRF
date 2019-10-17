@@ -9,6 +9,7 @@
 #include <vector>
 #include <unordered_map>
 #include <cmath>
+#include <unordered_set>
 
 #include "overlap_data.h"
 #include "distance_tools.h"
@@ -27,6 +28,8 @@
 #include "fs_tools.h"
 #include "peptide.h"
 #include "scored_peptide.h"
+#include "species_id.h"
+#include "scored_entity.h"
 
 using namespace util;
 
@@ -1173,5 +1176,42 @@ TEST_CASE( "scored peptide", "[peptide]" )
     sc.set_score( 5 );
     REQUIRE( sc.get_score() == 5 );
 
+
+}
+
+TEST_CASE( "scored_entity", "[scored_entity.h]" )
+{
+    scored_entity<std::string,double> sc( std::string( "pep1" ),
+                                          100.0
+                                        );
+
+    scored_entity<std::string,double> sc2( std::string( "pep1" ),
+                                          155.0
+                                        );
+
+    REQUIRE( sc == sc2 );
+    REQUIRE( !( sc != sc2 ) );
+
+    REQUIRE( sc.get_score() == 100.0 );
+    REQUIRE( sc2.get_score() == 155.0 );
+
+    REQUIRE( !( sc.get_key().compare( "pep1" ) ) );
+    REQUIRE( !( sc2.get_key().compare( "pep1" ) ) );
+
+    sc.set_key( std::string( "new_key" ) );
+    sc2.set_key( std::string( "new_key" ) );
+
+    REQUIRE( sc == sc2 );
+    REQUIRE( !( sc != sc2 ) );
+
+    std::unordered_set<scored_entity<std::string,double>> se_set;
+
+    se_set.insert( sc );
+
+    REQUIRE( se_set.size() == 1 );
+
+    se_set.insert( sc2 );
+
+    REQUIRE( se_set.size() == 1 );
 
 }
