@@ -61,7 +61,7 @@ template<typename Scored, typename ScoreType>
      * score.
      * @returns See above.
      **/
-    const ScoreType& get_score() const
+    ScoreType& get_score() const
     {
         return score;
     }
@@ -100,8 +100,10 @@ template<typename Scored, typename ScoreType>
     /**
      * The score of the entity associated with 
      * score_key.
+     * The score is marked mutable because changing the score
+     * does NOT change the object itself.
      **/
-    ScoreType score;
+    mutable ScoreType score;
 
 
 };
