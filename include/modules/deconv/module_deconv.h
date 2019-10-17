@@ -565,14 +565,16 @@ class module_deconv : public module
      *        component kmers.
      **/
     void create_pep_map( std::unordered_map<std::string,
-                         std::unordered_map<std::string,std::size_t>>&
+                         std::unordered_set<scored_entity<std::string,std::size_t>>>&
                          kmer_sp_map,
-                         std::vector<std::tuple<std::string,std::unordered_map<std::string,std::size_t>>>&
+                         std::vector<std::tuple<std::string,
+                         std::unordered_set<scored_entity<std::string,std::size_t>>>>&
                          peptide_sp_vec,
                          std::vector<sequence>&
                          peptides,
                          std::size_t k
                        );
+
     /**
      * Write outputs for the linkage file generation. 
      * @param fname The name of the file to write output to.
