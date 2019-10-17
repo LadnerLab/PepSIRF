@@ -107,4 +107,21 @@ template<typename Scored, typename ScoreType>
 };
 
 
+namespace std
+{
+    /**
+     * Hash for a scored entity. Here, we define the 
+     * hash of a scored as the hash of its key.
+     **/
+    template<typename K, typename V>
+        struct hash<scored_entity<K,V>>
+        {
+            std::size_t operator()( const scored_entity<K,V>& val ) const
+                {
+                    return std::hash<K>()( val.get_key() );
+                }
+
+        };
+}; // namespace std
+
 #endif // SCORED_ENTITY_HH_INCLUDED
