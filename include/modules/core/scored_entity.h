@@ -46,6 +46,28 @@ template<typename Scored, typename ScoreType>
         score_key = new_key;
     }
 
+    /**
+     * Determine whether this is equal to other.
+     * For scored_entities a and b, we say a == b 
+     * iff a.score_key == b.score_key 
+     * @param other The scored_entity to compare with.
+     * @returns boolean true if this == other, false otherwise
+     **/
+    bool operator==( const scored_entity& other ) const
+    {
+        return score_key == other.score_key;
+    }
+
+    /**
+     * Determine whether this is NOT equal to other.
+     * For scored_entities a and b, we say a != b
+     * iff !( a == b )
+     **/
+    bool operator!=( const scored_entity& other ) const
+    {
+        return !( *this == other );
+    }
+
  private:
     /**
      * The 'score_key' for the entity, this is used to 
