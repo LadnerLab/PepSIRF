@@ -28,8 +28,10 @@ def main():
                     nonIndel = []
                     for p in range(start, stop+1):
                         if p in alignD[tarName]:
-                            nonIndel.append(str(p))
-                    fout.write("%s\t%d\t%d\t%s\n" % (each,start,stop, "~".join(nonIndel)))
+                            nonIndel.append(str(alignD[tarName][p]))
+#                            nonIndel.append(str(p))
+                    fout.write("%s\t%d\t%d\t%s\n" % (each,alignD[tarName][start],alignD[tarName][stop], "~".join(nonIndel)))
+#                    fout.write("%s\t%d\t%d\t%s\n" % (each,start,stop, "~".join(nonIndel)))
 
 #----------------------End of main()
 
