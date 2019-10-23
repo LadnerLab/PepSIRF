@@ -6,9 +6,9 @@ import itertools as it
 #Generate peptide level aligned fasta files based on mapping of probes onto protein-level alignments
 
 def main():
-    usage = '%prog [options]'
+    usage = '%prog [options] probes1.txt [probes2.txt ...]'
     p = optparse.OptionParser()
-    p.add_option('-e', '--enriched',  help='List of peptide names, one per line. [None, REQ]')
+#    p.add_option('-e', '--enriched',  help='List of peptide names, one per line. [None, REQ]')
     p.add_option('-p', '--peps',  help='Fasta file peptide sequences. [None, REQ]')
     p.add_option('-a', '--align',  help='Probe alignment file. [None, REQ]')
     p.add_option('-o', "--outDir", default="pepAligned", help='Name for dirctory in which output files will be generated. This Dirctory should NOT exist already. [pepAligned]')
@@ -25,9 +25,6 @@ def main():
     #Read in peptides
     pepDict = read_fasta_dict_upper(opts.peps)
 
-    #Read in peptides of interest
-    peps = filelist(opts.enriched)
-
     #Read in probe map
     proAl = readAlignments(opts.align)
 
@@ -38,27 +35,33 @@ def main():
     #Read in species ID map, if provided
     if opts.species:
         id2name = speciesNames(opts.species)
+
+    for each in args:
+        #Read in peptides of interest
+        peps = filelist(each)
     
-    #Generate clusters
-    if opts.map:
-        clu = clustProbes([k for k in peps if pepMap[k] in proAl], proAl)
-    else:
-#        print([k for k in peps if k in proAl])
-        clu = clustProbes([k for k in peps if k in proAl], proAl)
-    
-    #Check clusters
-    for a,b in clu.items():
-        if set(a) != set(b):
-            print ("Not all starting places resulted in the same cluster!!!", a, sorted(b))
-    
-    #Write aligned fasta files
-    for c in clu:
+        #Generate clusters
         if opts.map:
-            names,seqs = alignSeqs({x:[pepDict[pepMap[x]], proAl[pepMap[x]][1]] for x in c})
+            clu = clustProbes([k for k in peps if pepMap[k] in proAl], proAl)
         else:
-            names,seqs = alignSeqs({x:[pepDict[x], proAl[x][1]] for x in c})
-        print(names)
-        print("\n".join(seqs))
+    #        print([k for k in peps if k in proAl])
+            clu = clustProbes([k for k in peps if k in proAl], proAl)
+    
+        #Check clusters
+        for a,b in clu.items():
+            if set(a) != set(b):
+                print ("Not all starting places resulted in the same cluster!!!", a, sorted(b))
+    
+        #String for output files
+        outStr="%s_%s" % (each.split("/")[-1].split(".")[0], "_".join(opts.align.split("/")[-1].split("_")[:3]))
+    
+        #Write aligned fasta files
+        for c in clu:
+            if opts.map:
+                names,seqs,bounds = alignSeqs({x:[pepDict[pepMap[x]], proAl[pepMap[x]][1]] for x in c})
+            else:
+                names,seqs,bounds = alignSeqs({x:[pepDict[x], proAl[x][1]] for x in c})
+            write_fasta(names, seqs, "%s/%s_%s.fasta" % (opts.outDir, outStr, bounds))
 
     
 #----------------------End of main()
@@ -87,9 +90,9 @@ def alignSeqs(sD):
     #Make new seqs without the gaps
     if allGaps:
         newSeqs = [noGaps(s,allGaps) for s in seqs]
-        return names, newSeqs
+        return names, newSeqs, "%d-%d" % (mn, mx)
     else:
-        return names, seqs
+        return names, seqs, "%d-%d" % (mn, mx)
 
 def noGaps(seq, allGaps):
     newS=[]
