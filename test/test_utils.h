@@ -10,7 +10,25 @@
 
 namespace test_utils
 {
+    template<template<class K, class...> class Set>
+        void parse_kmer_frequency( Set<scored_entity<std::string,std::size_t>>&
+                                   dest,
+                                   std::ifstream& file_stream
+                                 )
+        {
+            std::string line;
+            std::vector<std::string> tokens;
 
+            while( std::getline( file_stream, line ) )
+                {
+                    boost::split( tokens, line, boost::is_any_of( "\t" ) );
+                    std::size_t score = boost::lexical_cast<int>( tokens[ 1 ] );
+
+                    dest.insert( scored_entity<std::string,std::size_t>(  tokens[ 0 ], score ) );
+
+                    tokens.clear();
+                }
+        }
     
 }; // namespace test_utils
 
