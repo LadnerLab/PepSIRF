@@ -10,6 +10,10 @@
 #include <unordered_map>
 #include <cmath>
 #include <unordered_set>
+#include <string>
+#include <fstream>
+#include <streambuf>
+#include <boost/lexical_cast.hpp>
 
 #include "overlap_data.h"
 #include "distance_tools.h"
@@ -359,13 +363,13 @@ TEST_CASE( "Fastq_scorer", "[fastq_score]" )
 
 TEST_CASE( "get_kmers", "[kmer_scores]" )
 {
-    std::string sequence = "ABCDEFGHIJKLMONPQRSTUVWXYZ";
+    std::string sequence = "ABCDEFGHIJKLMONPQRSTUVWYZ";
     std::vector<std::string> kmers;
     int num_kmers = 0;
 
     num_kmers = kmer_tools::get_kmers( kmers, sequence, 1 );
-    REQUIRE( num_kmers == 26 );
-    REQUIRE( kmers.size() == 26 );
+    REQUIRE( num_kmers == 25 );
+    REQUIRE( kmers.size() == 25 );
 
     kmers.clear();
 
