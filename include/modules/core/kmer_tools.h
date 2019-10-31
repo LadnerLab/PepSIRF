@@ -18,9 +18,9 @@ namespace kmer_tools
         for( std::size_t index = 0; index < num_kmers; ++index )
             {
                 std::string kmer = seq.substr( index, k );
-                if( kmer.find( 'X' ) == )
+                if( kmer.find( 'X' ) == std::string::npos )
                     {
-                kmers.insert( kmers.end(), kmer );
+                        kmers.insert( kmers.end(), kmer );
                     }
             }
 
