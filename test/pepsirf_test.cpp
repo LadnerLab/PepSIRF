@@ -15,6 +15,7 @@
 #include <streambuf>
 #include <boost/lexical_cast.hpp>
 
+#include "test_utils.h"
 #include "overlap_data.h"
 #include "distance_tools.h"
 #include "sequence_indexer.h"
@@ -1217,5 +1218,46 @@ TEST_CASE( "scored_entity", "[scored_entity.h]" )
     se_set.insert( sc2 );
 
     REQUIRE( se_set.size() == 1 );
+
+}
+
+TEST_CASE( "get_kmer_frequency", "[kmer_tools]" )
+{
+    using scored_kmer = scored_entity<std::string,std::size_t>;
+    std::unordered_set<scored_kmer> kmer_frequency_found;
+    std::unordered_set<scored_kmer> kmer_frequency_expected;
+
+    fasta_parser fp;
+    std::vector<sequence> vec;
+    vec = fp.parse( "../test/test.fasta" );
+    std::ifstream input_stream( "../test/test_kmer_frequency.tsv",
+                                std::ios_base::in
+                              );
+
+
+    test_utils::parse_kmer_frequency
+        <std::unordered_set>( kmer_frequency_expected,
+                              input_stream
+                            );
+
+    kmer_tools::get_kmer_frequencies( kmer_frequency_found,
+                                      vec,
+                                      9
+                                    );
+
+    REQUIRE( kmer_frequency_expected.size()
+             == kmer_frequency_found.size()
+           );
+
+    for( auto current : kmer_frequency_expected )
+        {
+            auto found = kmer_frequency_found.find( current );
+            REQUIRE( found
+                     != kmer_frequency_found.end()
+                   );
+            REQUIRE( current.get_key()   == found->get_key() );
+            REQUIRE( current.get_score() == found->get_score() );
+        }
+
 
 }
