@@ -383,11 +383,23 @@ void module_deconv::create_linkage( options_deconv *opts )
         peptide_sp_map;
 
     create_prot_map( kmer_sp_map, proteins, d_opts->k, d_opts->id_index );
-    create_pep_map_with_kmer_penalty( kmer_sp_map,
-                                      peptide_sp_map,
-                                      peptides,
-                                      d_opts->k
-                                    );
+
+    if( d_opts->penalize_kmers )
+        {
+            create_pep_map_with_kmer_penalty( kmer_sp_map,
+                                              peptide_sp_map,
+                                              peptides,
+                                              d_opts->k
+                                              );
+        }
+    else
+        {
+            create_pep_map( kmer_sp_map,
+                            peptide_sp_map,
+                            peptides,
+                            d_opts->k
+                          );
+        }
     write_outputs( d_opts->output_fname, peptide_sp_map );
 
 }
