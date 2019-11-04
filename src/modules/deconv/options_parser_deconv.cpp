@@ -199,6 +199,11 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "the species ID will be used. (2 for genus, 3 for family. 0 can vary depending upon the \n"
           "method used for assigning the 0'th ID. [create_linkage]\n"
         )
+        ( "kmer_redundancy_control", po::bool_switch( &opts_deconv->penalize_kmers )->default_value( false ),
+          "Control for kmer redundancy when creating the peptide linkage map. Instead of a peptide receiving "
+          "one point for each kmer it receives for a species, it recieves 1 / ( the number of times the kmer "
+          "appears in the original design ) points. [create_linkage] \n"
+        )
         ( "kmer_size,k", po::value<std::size_t>( &opts_deconv->k ), "Kmer size to use when creating "
           "the linkage map. Entries in the linkage file will contain peptides and the species ids of "
           "species that share a kmer with this peptide. For example, if k is 7 and there exists a line "
