@@ -577,7 +577,7 @@ class module_deconv : public module
     /**
      * Create a map that scores peptides based 
      * on the scores of its component kmers. Here, the score of a kmer is 
-     * the 1 / ( the number of species the kmer is found in )
+     * the 1 / ( the number of times the kmer appears in the 'peptides' vector )
      * @param kmer_sp_map Map populated by module_deconv::create_prot_map,
      *        mapping kmers to species identifiers.
      * @param peptide_sp_vec vector to which output will be 

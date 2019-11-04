@@ -382,15 +382,12 @@ void module_deconv::create_linkage( options_deconv *opts )
     >
         peptide_sp_map;
 
-    std::cout << "creating protein map\n";
     create_prot_map( kmer_sp_map, proteins, d_opts->k, d_opts->id_index );
-    std::cout << "creating pep_map map\n";
     create_pep_map_with_kmer_penalty( kmer_sp_map,
                                       peptide_sp_map,
                                       peptides,
                                       d_opts->k
                                     );
-    std::cout << "writing outputs\n";
     write_outputs( d_opts->output_fname, peptide_sp_map );
 
 }
@@ -860,6 +857,10 @@ void module_deconv::create_pep_map_with_kmer_penalty( std::unordered_map<std::st
 {
     peptide_sp_vec.reserve( peptides.size() );
 
+    std::unordered_set<scored_entity<std::string,std::size_t>> kmer_pep_frequency;
+
+    kmer_tools::get_kmer_frequencies( kmer_pep_frequency, peptides, k );
+
     auto normalize_score = []( const std::size_t score,
                                const std::size_t penalty
                              )
@@ -892,8 +893,11 @@ void module_deconv::create_pep_map_with_kmer_penalty( std::unordered_map<std::st
                     auto id_count = kmer_sp_map.find( kmers[ kmer_index ] );
                     if( id_count != kmer_sp_map.end() )
                         {
-                            std::size_t score_penalty = kmer_sp_map
-                                .find( kmers[ kmer_index ] )->second.size();
+                            scored_entity<std::string,std::size_t>
+                                temp_score( kmers[ kmer_index ], 0 );
+
+                            std::size_t score_penalty = kmer_pep_frequency
+                                                          .find( temp_score )->get_score();
 
                             for( auto it = id_count->second.begin(); it != id_count->second.end(); ++it )
                                 {
