@@ -25,7 +25,7 @@ modes are followed by [scoring_species,create_linkage].
                                         species_id\tcount
                                          [create_linkage,scoring_species]
                                         
-  --original_scores arg                 Name of directory to write 
+  --scores_per_round arg                Name of directory to write 
                                         counts/scores to after every round. If 
                                         included, 
                                         the counts and scores for all remaining
@@ -232,6 +232,15 @@ modes are followed by [scoring_species,create_linkage].
                                         method used for assigning the 0'th ID. 
                                         [create_linkage]
                                         
+  --kmer_redundancy_control             Control for kmer redundancy when 
+                                        creating the peptide linkage map. 
+                                        Instead of a peptide receiving one 
+                                        point for each kmer it receives for a 
+                                        species, it recieves 1 / ( the number 
+                                        of times the kmer appears in the 
+                                        original design ) points. 
+                                        [create_linkage] 
+                                        
   -k [ --kmer_size ] arg                Kmer size to use when creating the 
                                         linkage map. Entries in the linkage 
                                         file will contain peptides and the 
@@ -244,4 +253,5 @@ modes are followed by [scoring_species,create_linkage].
                                         the species with id '455', and 10 
                                         7-mers with the species that has id 
                                         423. [create_linkage]
+                                        
 ```
