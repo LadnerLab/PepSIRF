@@ -68,11 +68,11 @@ class module_deconv : public module
      * then each species is assigned a score of 1.
      * @param fname Name of file to parse.
      * @returns vector of pairs, where the first entry is the name 
-     *          of the peptide, and the second a vector of size_t ids 
+     *          of the peptide, and the second a vector of string ids 
      *          that represent the id of the species that share a kmer 
      *          with the peptide.
      **/
-    std::vector<std::pair<std::string,std::vector<std::pair<std::string,std::size_t>>>>
+    std::vector<std::pair<std::string,std::vector<std::pair<std::string,double>>>>
         parse_linked_file( std::string fname );
 
 
@@ -89,7 +89,7 @@ class module_deconv : public module
      * @returns The score of the species
      **/
 
-    double get_score( std::unordered_map<std::string,std::vector<std::pair<std::string,std::size_t>>>&
+    double get_score( std::unordered_map<std::string,std::vector<std::pair<std::string,double>>>&
                       spec_count_map,
                       std::string id,
                       std::vector<std::string>& peptides,
@@ -122,10 +122,10 @@ class module_deconv : public module
                         std::map<std::string,std::string>*
                         id_name_map,
                         std::vector<
-                        std::tuple<std::string,std::size_t,double,bool>
+                        std::tuple<std::string,double,double,bool>
                         >&
                         out_counts,
-                        std::unordered_map<std::string,std::pair<std::size_t,double>>&
+                        std::unordered_map<std::string,std::pair<double,double>>&
                         original_scores
                       );
 
@@ -148,7 +148,7 @@ class module_deconv : public module
      **/
     void
         write_species_assign_map( std::string fname,
-                                  std::unordered_map<std::string,std::vector<std::pair<std::string,std::size_t>>>&
+                                  std::unordered_map<std::string,std::vector<std::pair<std::string,double>>>&
                                   peptide_assign_original,
                                   std::unordered_map<std::string,std::vector<std::string>>&
                                   out_map
@@ -195,7 +195,7 @@ class module_deconv : public module
         overlap_data<double>
         calculate_overlap( MapType<std::string,std::vector<std::string>>&
                            id_peptide_map,
-                           MapType<std::string,MapType<std::string,std::size_t>>&
+                           MapType<std::string,MapType<std::string,double>>&
                            pep_species_map_wcounts,
                            std::string first,
                            std::string second,
@@ -345,7 +345,7 @@ class module_deconv : public module
                      dest_vec,
                      std::unordered_map<std::string, std::vector<std::string>>&
                      id_pep_map,
-                     std::unordered_map<std::string,std::unordered_map<std::string,std::size_t>>&
+                     std::unordered_map<std::string,std::unordered_map<std::string,double>>&
                      pep_species_map_wcounts,
                      std::vector<std::pair<std::string,double>>&
                      tie_candidates,
@@ -467,7 +467,7 @@ class module_deconv : public module
      **/
     void id_to_pep( std::unordered_map<std::string, std::vector<std::string>>&
                     id_pep_map,
-                    std::vector<std::pair<std::string, std::vector<std::pair<std::string,std::size_t>>>>&
+                    std::vector<std::pair<std::string, std::vector<std::pair<std::string,double>>>>&
                     pep_species_vec
                   );
 
@@ -481,9 +481,9 @@ class module_deconv : public module
      * @param pep_species_vec a vector containing pairs with the first entry 
      *        a species id, and the second a vector of string peptide names.
      **/
-    void pep_to_id( std::unordered_map<std::string, std::vector<std::pair<std::string,std::size_t>>>&
+    void pep_to_id( std::unordered_map<std::string, std::vector<std::pair<std::string,double>>>&
                     pep_id_map,
-                    std::vector<std::pair<std::string, std::vector<std::pair<std::string,std::size_t>>>>&
+                    std::vector<std::pair<std::string, std::vector<std::pair<std::string,double>>>>&
                     pep_species_vec
                   );
 
@@ -499,7 +499,7 @@ class module_deconv : public module
                         id_counts,
                         std::unordered_map<std::string,std::vector<std::string>>&
                         id_count_map,
-                        std::unordered_map<std::string,std::vector<std::pair<std::string,std::size_t>>>&
+                        std::unordered_map<std::string,std::vector<std::pair<std::string,double>>>&
                         spec_count_map,
                         evaluation_strategy::score_strategy strat
                       );
@@ -575,6 +575,30 @@ class module_deconv : public module
                        );
 
     /**
+     * Create a map that scores peptides based 
+     * on the scores of its component kmers. Here, the score of a kmer is 
+     * the 1 / ( the number of species the kmer is found in )
+     * @param kmer_sp_map Map populated by module_deconv::create_prot_map,
+     *        mapping kmers to species identifiers.
+     * @param peptide_sp_vec vector to which output will be 
+     *        written.
+     * @param peptides Vector containing peptides to 
+     *        analyze.
+     * @param k The kmer size to use. Each peptide in the 
+     *        peptides vector will be broken down into its 
+     *        component kmers.
+     **/
+    void create_pep_map_with_kmer_penalty( std::unordered_map<std::string,
+                                           std::unordered_set<scored_entity<std::string,double>>>&
+                                           kmer_sp_map,
+                                           std::vector<std::tuple<std::string,
+                                           std::unordered_set<scored_entity<std::string,double>>>>&
+                                           peptide_sp_vec,
+                                           std::vector<sequence>&
+                                           peptides,
+                                           std::size_t k
+                                         );
+    /**
      * Write outputs for the linkage file generation. 
      * @param fname The name of the file to write output to.
      * @param peptide_sp_vec vector containing the information to write 
@@ -610,7 +634,7 @@ class module_deconv : public module
         >
         void write_scores( std::ostream& stream,
                            MapType<std::string,std::string> const *id_name_map,
-                           IterType<std::string,std::pair<std::size_t,double>>& scores
+                           IterType<std::string,std::pair<double,double>>& scores
                          )
         {
             stream << "Species ID\tSpecies Name\tCount\tScore\n";
@@ -728,7 +752,7 @@ class module_deconv : public module
     void
         get_species_counts_per_peptide( std::unordered_map<std::string, std::vector<std::string>>&
                                          id_pep_map,
-                                         std::unordered_map<std::string,std::size_t>& pep_counts
+                                         std::unordered_map<std::string,double>& pep_counts
                                        );
 
 
@@ -756,7 +780,7 @@ class module_deconv : public module
     void
         handle_kway_tie( std::vector<std::pair<std::string,double>>& tie_outputs,
                          std::unordered_map<std::string, std::vector<std::string>>& id_pep_map,
-                         std::unordered_map<std::string,std::unordered_map<std::string,std::size_t>>&
+                         std::unordered_map<std::string,std::unordered_map<std::string,double>>&
                          pep_species_map_wcounts,
                          std::vector<std::pair<std::string,double>>& tie_candidates,
                          evaluation_strategy::tie_eval_strategy eval_strat,
@@ -773,8 +797,8 @@ class module_deconv : public module
      *      first items in the pairs of scores.
      **/
     template<template<class, class, class...> class Mtype>
-        void combine_count_and_score( Mtype<std::string,std::pair<std::size_t,double>>& map,
-                                      Mtype<std::string,std::size_t>& c_map,
+        void combine_count_and_score( Mtype<std::string,std::pair<double,double>>& map,
+                                      Mtype<std::string,double>& c_map,
                                       std::vector<std::pair<std::string,double>>& scores
                                     )
         {
