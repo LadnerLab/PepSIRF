@@ -59,21 +59,21 @@ void module_deconv::choose_kmers( options_deconv *opts )
 
     // filter out the peptides that are not enriched
     auto it = std::remove_if( pep_species_vec.begin(), pep_species_vec.end(),
-                              [&]( std::pair<std::string,std::vector<std::pair<std::string,std::size_t>>>& i) -> bool 
+                              [&]( std::pair<std::string,std::vector<std::pair<std::string,double>>>& i) -> bool 
                               { return enriched_species.find( std::get<0>( i ) )
                                       == enriched_species.end();
                               }
                             );
     pep_species_vec.erase( it, pep_species_vec.end() );
 
-    std::unordered_map<std::string,std::vector<std::pair<std::string,std::size_t>>>
+    std::unordered_map<std::string,std::vector<std::pair<std::string,double>>>
         peptide_assignment_global;
 
     // add what species were originally shown to "hit" which peptides
     for( const auto& x : pep_species_vec )
         {
             auto ref = peptide_assignment_global
-                .emplace( x.first, std::vector<std::pair<std::string,std::size_t>>() ).first;
+                .emplace( x.first, std::vector<std::pair<std::string,double>>() ).first;
             for( const auto& i : x.second )
                 {
                     ref->second.emplace_back( i );
@@ -85,14 +85,14 @@ void module_deconv::choose_kmers( options_deconv *opts )
     omp_set_num_threads( d_opts->single_threaded ? 1 : 2 );
 
     std::unordered_map<std::string, std::vector<std::string>> id_pep_map;
-    std::unordered_map<std::string, std::vector<std::pair<std::string,std::size_t>>>
+    std::unordered_map<std::string, std::vector<std::pair<std::string,double>>>
         pep_id_map;
 
     // vector holding the species ids with the highest count
     std::vector<std::pair<std::string, double>> species_scores;
-    std::unordered_map<std::string, std::size_t> species_peptide_counts;
+    std::unordered_map<std::string, double> species_peptide_counts;
 
-    std::vector<std::tuple<std::string, std::size_t, double, bool>> output_counts;
+    std::vector<std::tuple<std::string, double, double, bool>> output_counts;
 
     std::string id_name_map_fname;
 
@@ -121,7 +121,7 @@ void module_deconv::choose_kmers( options_deconv *opts )
                 {
                     
                     // recreate species_scores
-                    filter_counts<std::string,std::size_t>
+                    filter_counts<std::string,double>
                     ( species_peptide_counts, thresh );
                 }
         };
@@ -174,7 +174,7 @@ void module_deconv::choose_kmers( options_deconv *opts )
 
     auto write_round_scores = [&]( std::size_t round_no )
         {
-            std::unordered_map<std::string,std::pair<std::size_t,double>> round_scores;
+            std::unordered_map<std::string,std::pair<double,double>> round_scores;
 
             std::ofstream out_f;
             std::string fname;
@@ -201,7 +201,7 @@ void module_deconv::choose_kmers( options_deconv *opts )
 
     filter( filter_strat );
 
-    std::unordered_map<std::string,std::pair<std::size_t,double>> original_scores;
+    std::unordered_map<std::string,std::pair<double,double>> original_scores;
     std::size_t round_no = 0;
 
     if( !util::empty( d_opts->orig_scores_dname ) )
@@ -216,7 +216,7 @@ void module_deconv::choose_kmers( options_deconv *opts )
 
     std::unordered_map<std::string,std::vector<std::string>> peptide_assignment_map;
 
-    std::unordered_map<std::string,std::unordered_map<std::string,std::size_t>>
+    std::unordered_map<std::string,std::unordered_map<std::string,double>>
         pep_spec_map_w_counts;
 
     if( tie_eval_strat
@@ -232,7 +232,7 @@ void module_deconv::choose_kmers( options_deconv *opts )
             for( const auto& pep : pep_id_map )
                 {
 
-                    std::unordered_map<std::string,std::size_t>
+                    std::unordered_map<std::string,double>
                         val_map;
 
                     util::pairs_to_map
@@ -382,24 +382,31 @@ void module_deconv::create_linkage( options_deconv *opts )
     >
         peptide_sp_map;
 
+    std::cout << "creating protein map\n";
     create_prot_map( kmer_sp_map, proteins, d_opts->k, d_opts->id_index );
-    create_pep_map( kmer_sp_map, peptide_sp_map, peptides, d_opts->k );
+    std::cout << "creating pep_map map\n";
+    create_pep_map_with_kmer_penalty( kmer_sp_map,
+                                      peptide_sp_map,
+                                      peptides,
+                                      d_opts->k
+                                    );
+    std::cout << "writing outputs\n";
     write_outputs( d_opts->output_fname, peptide_sp_map );
 
 }
 
-std::vector<std::pair<std::string,std::vector<std::pair<std::string,std::size_t>>>>
+std::vector<std::pair<std::string,std::vector<std::pair<std::string,double>>>>
 module_deconv::parse_linked_file( std::string fname )
 {
     std::ifstream in_stream( fname );
 
-    std::vector<std::pair<std::string,std::vector<std::pair<std::string,std::size_t>>>>
+    std::vector<std::pair<std::string,std::vector<std::pair<std::string,double>>>>
         ret_vec;
 
     std::string line;
 
     int lineno = 0;
-    const boost::regex id_count_re{ "([^\\s:]+):{0,1}([0-9]*)" };
+    const boost::regex id_count_re{ "([^\\s:]+):{0,1}(\\d*\\.{0,1}\\d*)" };
 
     while( std::getline( in_stream, line ) )
         {
@@ -419,7 +426,7 @@ module_deconv::parse_linked_file( std::string fname )
                                           boost::is_any_of( "," )
                                         );
 
-                            std::vector<std::pair<std::string,std::size_t>> id_ints;
+                            std::vector<std::pair<std::string,double>> id_ints;
 
                             for( auto& item : comma_delimited )
                                 {
@@ -433,7 +440,7 @@ module_deconv::parse_linked_file( std::string fname )
                                             id_ints.emplace_back(
                                                                  std::make_pair(
                                                                  ( match[ 1 ] ),
-                                                                 boost::lexical_cast<std::size_t>
+                                                                 boost::lexical_cast<double>
                                                                  ( 1 )
                                                                                 )
                                                                 );
@@ -445,7 +452,7 @@ module_deconv::parse_linked_file( std::string fname )
                                             id_ints.emplace_back(
                                                                  std::make_pair(
                                                                  ( match[ 1 ] ),
-                                                                 boost::lexical_cast<std::size_t>
+                                                                 boost::lexical_cast<double>
                                                                  ( match[ 2 ] )
                                                                                 )
                                                                 );
@@ -469,7 +476,7 @@ module_deconv::parse_linked_file( std::string fname )
 
 void module_deconv::id_to_pep( std::unordered_map<std::string, std::vector<std::string>>&
                                id_pep_map,
-                               std::vector<std::pair<std::string, std::vector<std::pair<std::string,std::size_t>>>>&
+                               std::vector<std::pair<std::string, std::vector<std::pair<std::string,double>>>>&
                                pep_species_vec )
 {
     for( auto it = pep_species_vec.begin(); it != pep_species_vec.end(); ++it )
@@ -493,7 +500,7 @@ void module_deconv::id_to_pep( std::unordered_map<std::string, std::vector<std::
         }
 }
 
-double module_deconv::get_score( std::unordered_map<std::string,std::vector<std::pair<std::string,std::size_t>>>&
+double module_deconv::get_score( std::unordered_map<std::string,std::vector<std::pair<std::string,double>>>&
                                  spec_count_map,
                                  std::string id,
                                  std::vector<std::string>& peptides,
@@ -540,9 +547,9 @@ double module_deconv::get_score( std::unordered_map<std::string,std::vector<std:
     return score;
 }
 
-void module_deconv::pep_to_id( std::unordered_map<std::string, std::vector<std::pair<std::string,std::size_t>>>&
+void module_deconv::pep_to_id( std::unordered_map<std::string, std::vector<std::pair<std::string,double>>>&
                                pep_id_map,
-                               std::vector<std::pair<std::string, std::vector<std::pair<std::string,std::size_t>>>>&
+                               std::vector<std::pair<std::string, std::vector<std::pair<std::string,double>>>>&
                                pep_species_vec
                              )
 {
@@ -558,7 +565,7 @@ void module_deconv::score_species( std::vector<std::pair<std::string, double>>&
                                    id_counts,
                                    std::unordered_map<std::string,std::vector<std::string>>&
                                    id_count_map,
-                                   std::unordered_map<std::string,std::vector<std::pair<std::string,std::size_t>>>&
+                                   std::unordered_map<std::string,std::vector<std::pair<std::string,double>>>&
                                    spec_count_map,
                                    evaluation_strategy::score_strategy strat
                                 )
@@ -585,10 +592,10 @@ void module_deconv::write_outputs( std::string out_name,
                                    std::map<std::string,std::string>*
                                    id_name_map,
                                    std::vector<
-                                   std::tuple<std::string,std::size_t,double,bool>
+                                   std::tuple<std::string,double,double,bool>
                                    >&
                                    out_counts,
-                                   std::unordered_map<std::string,std::pair<std::size_t,double>>&
+                                   std::unordered_map<std::string,std::pair<double,double>>&
                                    original_scores
                                  )
 
@@ -604,7 +611,7 @@ void module_deconv::write_outputs( std::string out_name,
     out_file << "Species ID\tCount\tScore\tOriginal Count\tOriginal Score\n";
 
     bool tied = false;
-    std::vector<std::tuple<std::string,std::size_t,double,bool>> tied_items;
+    std::vector<std::tuple<std::string,double,double,bool>> tied_items;
 
     for( auto it = out_counts.begin();
          it != out_counts.end();
@@ -839,6 +846,77 @@ void module_deconv::create_pep_map( std::unordered_map<std::string,
             kmers.clear();
         }
 }
+void module_deconv::create_pep_map_with_kmer_penalty( std::unordered_map<std::string,
+                    std::unordered_set<scored_entity<std::string,double>>>&
+                    kmer_sp_map,
+                    std::vector<std::tuple<std::string,
+                    std::unordered_set<scored_entity<std::string,double>>>>&
+                    peptide_sp_vec,
+                    std::vector<sequence>&
+                    peptides,
+                    std::size_t k
+                                                      )
+
+{
+    peptide_sp_vec.reserve( peptides.size() );
+
+    auto normalize_score = []( const std::size_t score,
+                               const std::size_t penalty
+                             )
+        -> double
+        {
+            return ( (double) score ) / ( (double) (penalty ) );
+        };
+
+    std::size_t index = 0;
+    for( index = 0; index < peptides.size(); ++index )
+        {
+            // get the kmers from this peptide
+            std::vector<std::string> kmers;
+            std::unordered_set<scored_entity<std::string,double>> ids;
+
+            kmer_tools::get_kmers( kmers, peptides[ index ].seq, k );
+
+            peptide_sp_vec.insert( peptide_sp_vec.begin() + index,
+                                   std::make_tuple( peptides[ index ].name, ids )
+                                 );
+
+            std::size_t kmer_index = 0;
+
+            auto& id_ref =
+                std::get<1>( peptide_sp_vec[ index ] );
+
+            // for each of this peptide's kmers grab the counts from kmer_sp_map
+            for( kmer_index = 0; kmer_index < kmers.size(); ++kmer_index )
+                {
+                    auto id_count = kmer_sp_map.find( kmers[ kmer_index ] );
+                    if( id_count != kmer_sp_map.end() )
+                        {
+                            std::size_t score_penalty = kmer_sp_map
+                                .find( kmers[ kmer_index ] )->second.size();
+
+                            for( auto it = id_count->second.begin(); it != id_count->second.end(); ++it )
+                                {
+                                    if( id_ref.find( *it ) == id_ref.end() )
+                                        {
+                                            id_ref.insert( scored_entity<std::string,double>
+                                                           ( it->get_key(),
+                                                             normalize_score( 1, score_penalty )
+                                                           )
+                                                         );
+                                        }
+                                    else
+                                        {
+                                            const auto& score = *id_ref.find( *it );
+                                            score.get_score() +=
+                                                normalize_score( 1, score_penalty );
+                                        }
+                                }
+                        }
+                }
+            kmers.clear();
+        }
+}
 
 void module_deconv::write_outputs( std::string fname,
                                    std::vector<std::tuple<std::string,
@@ -954,7 +1032,7 @@ module_deconv::parse_name_map( std::string fname,
 void module_deconv::
 get_species_counts_per_peptide( std::unordered_map<std::string, std::vector<std::string>>&
                                 id_pep_map,
-                                std::unordered_map<std::string,std::size_t>& pep_counts
+                                std::unordered_map<std::string,double>& pep_counts
                               )
 {
     for( auto count = id_pep_map.begin();
@@ -973,7 +1051,7 @@ module_deconv::handle_ties( std::vector<std::pair<std::string,double>>&
                             dest_vec,
                             std::unordered_map<std::string, std::vector<std::string>>&
                             id_pep_map,
-                            std::unordered_map<std::string,std::unordered_map<std::string,std::size_t>>&
+                            std::unordered_map<std::string,std::unordered_map<std::string,double>>&
                             pep_species_map_wcounts,
                             std::vector<std::pair<std::string,double>>&
                             tie_candidates,
@@ -1056,7 +1134,7 @@ module_deconv::get_tie_type( std::size_t to_convert )
 void
 module_deconv
 ::write_species_assign_map( std::string fname,
-                            std::unordered_map<std::string,std::vector<std::pair<std::string,std::size_t>>>&
+                            std::unordered_map<std::string,std::vector<std::pair<std::string,double>>>&
                             peptide_assign_original,
                             std::unordered_map<std::string,std::vector<std::string>>&
                             out_map
@@ -1082,7 +1160,7 @@ module_deconv
 
                     curr_str.append( x.first );
                     curr_str.append( ":" );
-                    curr_str.append( static_cast<std::string(*)(std::size_t)>(std::to_string)( x.second ) ); 
+                    curr_str.append( boost::lexical_cast<std::string>( x.second ) ); 
 
                     id_count_pairs.push_back( curr_str );
                 }
@@ -1102,7 +1180,7 @@ module_deconv
 ::handle_kway_tie( 
                    std::vector<std::pair<std::string,double>>& tie_outputs,
                    std::unordered_map<std::string, std::vector<std::string>>& id_pep_map,
-                   std::unordered_map<std::string,std::unordered_map<std::string,std::size_t>>&
+                   std::unordered_map<std::string,std::unordered_map<std::string,double>>&
                    pep_species_map_wcounts,
                    std::vector<std::pair<std::string,double>>& tie_candidates,
                    evaluation_strategy::tie_eval_strategy eval_strat,
