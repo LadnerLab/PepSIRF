@@ -581,7 +581,7 @@ TEST_CASE( "calculate_overlap", "[module_deconv]" )
     auto mod = module_deconv();
 
     std::unordered_map<std::string,std::vector<std::string>> id_p_map;
-    std::unordered_map<std::string,std::unordered_map<std::string,std::size_t>> counts_map;
+    std::unordered_map<std::string,std::unordered_map<std::string,double>> counts_map;
     std::string first = "100";
     std::string second = "200";
 
@@ -594,7 +594,7 @@ TEST_CASE( "calculate_overlap", "[module_deconv]" )
 
     for( const auto& pep : f_vec )
         {
-            counts_map[ pep ] = std::unordered_map<std::string,std::size_t>();
+            counts_map[ pep ] = std::unordered_map<std::string,double>();
             counts_map[ pep ].emplace( first, 1 );
             counts_map[ pep ].emplace( second, 1 );
         }
@@ -640,7 +640,7 @@ TEST_CASE( "calculate_overlap_ratio", "[module_deconv]" )
     auto mod = module_deconv();
 
     std::unordered_map<std::string,std::vector<std::string>> id_p_map;
-    std::unordered_map<std::string,std::unordered_map<std::string,std::size_t>> counts_map;
+    std::unordered_map<std::string,std::unordered_map<std::string,double>> counts_map;
     std::string first = "100";
     std::string second = "200";
 
@@ -653,14 +653,14 @@ TEST_CASE( "calculate_overlap_ratio", "[module_deconv]" )
 
     for( const auto& pep : f_vec )
         {
-            counts_map[ pep ] = std::unordered_map<std::string,std::size_t>();
+            counts_map[ pep ] = std::unordered_map<std::string,double>();
             counts_map[ pep ].emplace( first, 1 );
         }
     for( const auto& pep : s_vec )
         {
             if( counts_map.find( pep ) == counts_map.end() )
                 {
-                    counts_map[ pep ] = std::unordered_map<std::string,std::size_t>();
+                    counts_map[ pep ] = std::unordered_map<std::string,double>();
                 }
             counts_map[ pep ].emplace( second, 1 );
         }
@@ -707,7 +707,7 @@ TEST_CASE( "calculate_overlap_summation", "[module_deconv]" )
     auto mod = module_deconv();
 
     std::unordered_map<std::string,std::vector<std::string>> id_p_map;
-    std::unordered_map<std::string,std::unordered_map<std::string,std::size_t>> counts_map;
+    std::unordered_map<std::string,std::unordered_map<std::string,double>> counts_map;
     std::string first = "100";
     std::string second = "200";
 
@@ -720,14 +720,14 @@ TEST_CASE( "calculate_overlap_summation", "[module_deconv]" )
 
     for( const auto& pep : f_vec )
         {
-            counts_map[ pep ] = std::unordered_map<std::string,std::size_t>();
+            counts_map[ pep ] = std::unordered_map<std::string,double>();
             counts_map[ pep ].emplace( first, 1 );
         }
     for( const auto& pep : s_vec )
         {
             if( counts_map.find( pep ) == counts_map.end() )
                 {
-                    counts_map[ pep ] = std::unordered_map<std::string,std::size_t>();
+                    counts_map[ pep ] = std::unordered_map<std::string,double>();
                 }
             counts_map[ pep ].emplace( second, 1 );
         }
@@ -1046,7 +1046,7 @@ TEST_CASE( "global_original_scores", "[module_deconv]" )
 
 
     // ordered map used so we can guarantee order
-    std::map<std::string,std::pair<std::size_t,double>> score_map;
+    std::map<std::string,std::pair<double,double>> score_map;
 
     std::vector<std::string> species{ "sp1", "sp2", "sp3", "sp4", "sp5" };
 
@@ -1255,6 +1255,7 @@ TEST_CASE( "get_kmer_frequency", "[kmer_tools]" )
             REQUIRE( found
                      != kmer_frequency_found.end()
                    );
+
             REQUIRE( current.get_key()   == found->get_key() );
             REQUIRE( current.get_score() == found->get_score() );
         }
