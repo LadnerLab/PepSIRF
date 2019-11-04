@@ -31,6 +31,12 @@ class options_deconv : public options
     std::string output_fname;
 
     /**
+     * Flag to penalize kmers based upon their frequency in the 
+     * designed peptides. 
+     **/
+    bool penalize_kmers;
+
+    /**
      * Name of file that contains names of enriched peptides,
      * one per line.
      **/

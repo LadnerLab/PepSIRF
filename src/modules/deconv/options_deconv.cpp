@@ -31,12 +31,13 @@ std::string options_deconv::get_arguments()
 
     else
         {
-            str_stream << "--create_linkage      " << bool_str( create_linkage )  << "\n" << 
-                          " --protein_file        " << prot_file_fname <<  "\n" <<
-                          " --peptide_file        " << peptide_file_fname <<  "\n" <<
-                          " --tax_id_index        " << id_index << "\n" <<
-                          " --output              " << output_fname <<  "\n" <<
-                          " --kmer_size           " << k <<  "\n"
+            str_stream << "--create_linkage                 " << bool_str( create_linkage )  << "\n" << 
+                          " --protein_file                   " << prot_file_fname <<  "\n" <<
+                          " --peptide_file                   " << peptide_file_fname <<  "\n" <<
+                          " --tax_id_index                   " << id_index << "\n" <<
+                          " --kmer_redundancy_control        " << bool_str( penalize_kmers )  << "\n" <<
+                          " --output                         " << output_fname <<  "\n" <<
+                          " --kmer_size                      " << k <<  "\n"
                 ;
         }
     str_stream << "\n";
