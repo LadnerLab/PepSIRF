@@ -57,6 +57,7 @@ add_library( modules_deconv STATIC src/modules/deconv/options_deconv.cpp src/mod
 				src/modules/core/fs_tools.cpp
                 src/modules/deconv/scored_peptide.cpp
                 src/modules/core/peptide.cpp
+                src/modules/deconv/original_data.cpp
 		)
 
 
