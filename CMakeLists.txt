@@ -15,6 +15,7 @@ if(OpenMP_FOUND)
 
 else()
   message( "WARNING: OpenMP not found, parallelism disabled." )
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-pragmas -Wno-unused-value")
 endif()
 
 find_package(Boost REQUIRED COMPONENTS program_options regex filesystem)
