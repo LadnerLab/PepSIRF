@@ -23,6 +23,7 @@ class species_data
      * @param score The score for this species.
      * @param count The count of this species.
      * @param highest_scoring_peptide The peptide whose score is greatest for this species
+     * @pre score and count cannot be negative
      **/
     species_data( const species_id<std::string>& species,
                   const double score,
@@ -34,6 +35,20 @@ class species_data
                     count( count ),
                     highest_scoring_peptide( highest_scoring_peptide )
                     {}
+
+    void set_score( const double new_val );
+
+    void set_count( const double new_val );
+
+    scored_entity<std::string,double>& get_highest_scoring_peptide();
+
+    void set_highest_scoring_peptide( const scored_entity<std::string,double>& new_val );
+
+    double get_score();
+    double get_count();
+
+    const scored_entity<std::string,double>& get_highest_scoring_peptide() const;
+
 
  private:
     /**
@@ -59,6 +74,7 @@ class species_data
      * while the second is the peptide's score.
      **/
     scored_entity<std::string,double> highest_scoring_peptide;
+
 };
 
 
