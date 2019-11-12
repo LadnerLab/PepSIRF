@@ -1,6 +1,7 @@
 #ifndef SCORED_PEPTIDE_HH_INCLUDED
 #define SCORED_PEPTIDE_HH_INCLUDED
 #include "peptide.h"
+#include "scored_entity.h"
 
 /**
  * A scored_peptide is a peptide that has been 
@@ -9,7 +10,7 @@
  * used to score a peptide. (int, double, etc.)
  **/
 template<typename score_type>
-class scored_peptide : public peptide
+class scored_peptide
 {
  public:
 
@@ -29,7 +30,7 @@ class scored_peptide : public peptide
                     const std::string& pep,
                     const score_type start_sc
                )
-        : peptide( name, pep ), score( start_sc ) {}
+        : data( peptide( name, pep ), start_sc ) {}
 
     /**
      * Construct a scored_peptide with a peptide sequence,
@@ -39,9 +40,25 @@ class scored_peptide : public peptide
     scored_peptide( const std::string& pep,
                     const score_type start_sc
                   )
-        : peptide( pep ), score( start_sc ) {}
+        : data( peptide( pep ), start_sc ) {}
     
+    /**
+     * Return the name of this peptide.
+     * @returns constant reference to this peptide's name
+     **/
+    const std::string& get_name() const
+    {
+        return data.get_key().get_name();
+    }
 
+    /**
+     * Return constant reference to this 
+     * object's sequence.
+     **/
+    const std::string& get_sequence() const
+    {
+        return data.get_key().get_sequence();
+    }
 
     /**
      * Return (by value) the peptide's score.
@@ -51,7 +68,7 @@ class scored_peptide : public peptide
      **/
     score_type get_score()
     {
-        return score;
+        return data.get_score();
     }
 
     /**
@@ -60,7 +77,7 @@ class scored_peptide : public peptide
      **/
     void set_score( score_type new_sc )
     {
-        score = new_sc;
+        data.set_score( new_sc );
     }
 
  private: 
@@ -68,7 +85,7 @@ class scored_peptide : public peptide
      * The score of a peptide, defined 
      * by some scoring metric.
      **/
-    score_type score;
+    scored_entity<peptide,score_type> data;
 
 };
 
