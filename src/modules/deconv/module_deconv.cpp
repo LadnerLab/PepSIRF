@@ -2,7 +2,7 @@
 #include <fstream>
 #include <sstream>
 #include <boost/algorithm/string.hpp>
-#include "omp_opt.h"
+#include <omp.h>
 #include <boost/lexical_cast.hpp>
 #include <boost/regex.hpp>
 #include <boost/algorithm/string/join.hpp>

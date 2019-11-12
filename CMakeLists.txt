@@ -1,23 +1,12 @@
 cmake_minimum_required(VERSION 3.9)
-project(PepSIRF LANGUAGES CXX)
+project(PepSIRF)
 
 set(Boost_USE_STATIC_LIBS ON) 
 set(Boost_USE_MULTITHREADED ON)  
 set(Boost_USE_STATIC_RUNTIME OFF) 
 set(CMAKE_CXX_STANDARD 11)
 
-find_package(OpenMP)
-
-if(OpenMP_FOUND)
-  message( "OpenMP enabled" )
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
-  add_definitions( -DENABLE_OPENMP )
-
-else()
-  message( "WARNING: OpenMP not found, parallelism disabled." )
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-pragmas -Wno-unused-value")
-endif()
-
+find_package(OpenMP REQUIRED)
 find_package(Boost REQUIRED COMPONENTS program_options regex filesystem)
 
 include_directories(include/modules/core)
@@ -25,8 +14,8 @@ include_directories(include/modules/parsers)
 include_directories(include/modules/demux)
 include_directories(include/modules/deconv)
 include_directories(lib/parallel_hashmap)
-add_compile_options( "-Wall" "-std=c++11" "-Wextra"
-                     "$<$<CONFIG:DEBUG>:-O0;-g>" 
+add_compile_options( "-Wall" "-std=c++11" "-Wextra" "-fopenmp"
+                     "$<$<CONFIG:DEBUG>:-O0;-g;-DDEBUG>" 
 					 "$<$<CONFIG:RELEASE>:-O3>")
 
 if(NOT CMAKE_BUILD_TYPE)
