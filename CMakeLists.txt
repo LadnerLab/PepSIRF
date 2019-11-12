@@ -15,7 +15,7 @@ include_directories(include/modules/demux)
 include_directories(include/modules/deconv)
 include_directories(lib/parallel_hashmap)
 add_compile_options( "-Wall" "-std=c++11" "-Wextra" "-fopenmp"
-                     "$<$<CONFIG:DEBUG>:-O0;-g>" 
+                     "$<$<CONFIG:DEBUG>:-O0;-g;-DDEBUG>" 
 					 "$<$<CONFIG:RELEASE>:-O3>")
 
 if(NOT CMAKE_BUILD_TYPE)
