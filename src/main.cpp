@@ -23,7 +23,7 @@ int main( int argc, char **argv )
 
     bool help_msg_only = false;
 
-	int ret_code = EXIT_SUCCESS;
+    int ret_code = EXIT_SUCCESS;
 
     try
         {
