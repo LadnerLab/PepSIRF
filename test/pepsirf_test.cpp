@@ -35,6 +35,7 @@
 #include "scored_peptide.h"
 #include "species_id.h"
 #include "scored_entity.h"
+#include "species_data.h"
 
 using namespace util;
 
@@ -1260,5 +1261,24 @@ TEST_CASE( "get_kmer_frequency", "[kmer_tools]" )
             REQUIRE( current.get_score() == found->get_score() );
         }
 
+
+}
+
+TEST_CASE( "species_data", "[module_deconv]" )
+{
+    species_id<std::string> spec( "species 1" );
+    scored_entity<std::string,double> peptide( "ATGC", 105.0 );
+    double score = 4;
+    double count = 11;
+
+    species_data dat( spec, score, count, peptide );
+
+    auto pep = dat.get_highest_scoring_peptide();
+
+    REQUIRE( pep.get_score() == 105.0 );
+    REQUIRE( !pep.get_key().compare( "ATGC" ) );
+    dat.set_score( 104.0 );
+
+    REQUIRE( dat.get_score() == 104.0 );
 
 }
