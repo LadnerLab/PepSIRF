@@ -4,7 +4,6 @@
 #include <iostream>
 #include <stdexcept>
 #include <fstream>
-#include <omp.h>
 #include <algorithm>
 #include <vector>
 #include <unordered_map>
@@ -15,6 +14,7 @@
 #include <streambuf>
 #include <boost/lexical_cast.hpp>
 
+#include "omp_opt.h"
 #include "test_utils.h"
 #include "overlap_data.h"
 #include "distance_tools.h"
