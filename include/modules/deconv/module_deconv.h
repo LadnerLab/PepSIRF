@@ -81,14 +81,13 @@ class module_deconv : public module
      * This means that spec_count_map contains the peptides that share a 
      * kmer with a certain species. 
      * @param spec_count_map Map that maps peptides to the species that 
-     *        a peptides shares an ID with.
+     *        a peptides shares an kmer with.
      * @param id the species id that is being searched. Note that this is only 
      *        used in summation scoring.
      * @param peptides A list of enriched peptides.
      * @param strat The scoring strategy to use for scoring peptides.
      * @returns The score of the species
      **/
-
     double get_score( std::unordered_map<std::string,std::vector<std::pair<std::string,double>>>&
                       spec_count_map,
                       std::string id,
@@ -96,7 +95,26 @@ class module_deconv : public module
                       evaluation_strategy::score_strategy strat
                     );
 
-
+    /**
+     * Get the score that a single peptide contributes to a species.
+     * @param peptide The peptide whose score is found.
+     * @param spec_count_map Map that associates peptides to the species 
+     *        the peptide shares a kmer with
+     * @param id the species id that is being searched. 
+     * @param score_strat The scoring strategy to use.
+     * @note id is only used for summation scoring
+     * @returns The score the id contributes to the species, as defined by 
+     *          score_strat
+     **/
+    double score_peptide_for_species( const peptide& peptide,
+                                      std::unordered_map
+                                      <std::string,
+                                      std::vector<std::pair<std::string,double>
+                                      >>&
+                                      spec_count_map,
+                                      std::string id,
+                                      evaluation_strategy::score_strategy score_strat
+                                    );
     /**
      * Parse a map that will provide name->tax id mappings. This map should be formatted 
      * in the same manner as that of 'lineage.dmp' from NCBI. 

@@ -508,6 +508,39 @@ void module_deconv::id_to_pep( std::unordered_map<std::string, std::vector<std::
                 }
         }
 }
+double module_deconv::score_peptide_for_species( const peptide& peptide,
+                                std::unordered_map
+                                <std::string,std::vector<std::pair<std::string,double>>>&
+                                spec_count_map,
+                                std::string id,
+                                evaluation_strategy::score_strategy score_strat
+                                )
+{
+    double score = 0;
+
+    const std::string& peptide_str = peptide.get_sequence();
+
+    if( score_strat == evaluation_strategy::score_strategy::INTEGER_SCORING )
+        {
+            score =  1.0;
+        }
+    else if( score_strat == evaluation_strategy::score_strategy::FRACTIONAL_SCORING )
+        {
+            score = 1.0 / (double) spec_count_map[ peptide_str ].size();
+        }
+    else if( score_strat == evaluation_strategy::score_strategy::SUMMATION_SCORING )
+        {
+                    for( auto& iter : spec_count_map[ peptide_str ] )
+                        {
+                            if( std::get<0>( iter ) == id )
+                                {
+                                    score += std::get<1>( iter );
+                                }
+                        }
+        }
+    return score;
+}
+
 
 double module_deconv::get_score( std::unordered_map<std::string,std::vector<std::pair<std::string,double>>>&
                                  spec_count_map,
