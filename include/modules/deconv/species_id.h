@@ -1,5 +1,6 @@
 #ifndef SPECIES_ID_HH_INCLUDED
 #define SPECIES_ID_HH_INCLUDED
+#include <cstddef>
 
 /**
  * A class to represent the ID for a species.
@@ -49,6 +50,23 @@ class species_id
     IDType id;
 
 
+};
+
+namespace std
+{
+    /**
+     * Define how to hash a species_id.
+     * Here we define the hash of species_id as 
+     * the hash of its IDType value
+     **/
+    template<typename IDType>
+        struct hash<species_id<IDType>>
+        {
+            std::size_t operator()( const species_id<IDType>& ref ) const
+                {
+                    return hash<IDType>()( ref.get_id() );
+                }
+        };
 };
 
 #endif // SPECIES_ID_HH_INCLUDED
