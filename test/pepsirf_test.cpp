@@ -1282,3 +1282,51 @@ TEST_CASE( "species_data", "[module_deconv]" )
     REQUIRE( dat.get_score() == 104.0 );
 
 }
+
+TEST_CASE( "score_peptide_for_species", "[module_deconv]" )
+{
+    options_deconv opts;
+    auto mod = module_deconv();
+
+    peptide pep( "ATGC" );
+
+    std::unordered_map<
+        std::string,std::vector<std::pair<std::string,double>>>
+        spec_count_map;
+
+    std::string species_id = "spec 1";
+
+    evaluation_strategy::score_strategy strat;
+
+    strat = evaluation_strategy::score_strategy::INTEGER_SCORING;
+
+    std::vector<std::pair<std::string,double>> value;
+    value.emplace_back( species_id, 150.0 );
+    value.emplace_back( "spec 2", 140.0 );
+
+    spec_count_map[ pep.get_sequence() ] = value;
+
+    auto eval = [&]() -> double
+    {
+        return mod.score_peptide_for_species( pep, spec_count_map,
+                                              species_id,
+                                              strat
+                                            );
+    };
+    double score = eval();
+
+    REQUIRE( score == 1 );
+
+    strat = evaluation_strategy::score_strategy::SUMMATION_SCORING;
+
+    score = eval();
+
+    REQUIRE( score == 150.0 );
+
+    strat = evaluation_strategy::score_strategy::FRACTIONAL_SCORING;
+
+    score = eval();
+
+    REQUIRE( score == 0.5 );
+
+}
