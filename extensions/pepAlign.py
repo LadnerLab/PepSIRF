@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+import matplotlib.pyplot as plt
+import matplotlib as mpl
+mpl.rcParams['pdf.fonttype'] = 42
+import numpy as np
 import optparse, os, subprocess, re
 import itertools as it
 
@@ -12,6 +16,7 @@ def main():
     p.add_option('-p', '--peps',  help='Fasta file peptide sequences. [None, REQ]')
     p.add_option('-a', '--align',  help='Probe alignment file. [None, REQ]')
     p.add_option('-o', "--outDir", default="pepAligned", help='Name for dirctory in which output files will be generated. This Dirctory should NOT exist already. [pepAligned]')
+    p.add_option("--plot", help='If this option is used, along with some type of matrix, then heat map plots will be generated for each alignment. [OPT]')
     p.add_option('-m', '--map',  help='File containing map to link names in enriched list to those in pep fasta. [OPT]')
     p.add_option('--mapOrder', default=1,  type='int', help='Integer indicate the column # of the name labels in the enriched list. Must be 1 or 2 (1-based)[1]')
     p.add_option('-s', '--species',  help='File containing link between species taxonomy IDs and full names. [OPT]')
@@ -31,22 +36,31 @@ def main():
     #Read in name map, if provided
     if opts.map:
         pepMap = readmap(opts.map, order=opts.mapOrder-1)
+        revPepMap = {v:k for k,v in pepMap.items()}
 
     #Read in species ID map, if provided
     if opts.species:
         id2name = speciesNames(opts.species)
 
+    #Read in score matrix, if provided
+    if opts.plot:
+        scoreDict = parseCounts(opts.plot)
+        print("Read Scores")
+
+
+    #Step through each list of probes provided
     for each in args:
+        print(each)
         #Read in peptides of interest
         peps = filelist(each)
-    
+        print(len(peps))
         #Generate clusters
         if opts.map:
-            clu = clustProbes([k for k in peps if pepMap[k] in proAl], proAl)
+            clu = clustProbes([pepMap[k] for k in peps if pepMap[k] in proAl], proAl)
         else:
     #        print([k for k in peps if k in proAl])
             clu = clustProbes([k for k in peps if k in proAl], proAl)
-    
+        print(len(clu))
         #Check clusters
         for a,b in clu.items():
             if set(a) != set(b):
@@ -58,13 +72,48 @@ def main():
         #Write aligned fasta files
         for c in clu:
             if opts.map:
-                names,seqs,bounds = alignSeqs({x:[pepDict[pepMap[x]], proAl[pepMap[x]][1]] for x in c})
+                names,seqs,bounds = alignSeqs({x:[pepDict[x], proAl[x][1]] for x in c})
             else:
                 names,seqs,bounds = alignSeqs({x:[pepDict[x], proAl[x][1]] for x in c})
             write_fasta(names, seqs, "%s/%s_%s.fasta" % (opts.outDir, outStr, bounds))
-
+            
+            #Generate heat map
+            if opts.plot:
+                heatMap([revPepMap[x] for x in names], seqs, {k:{p:s for p,s in v.items() if pepMap[p] in c} for k,v in scoreDict.items()}, "%s/%s_%s.pdf" % (opts.outDir, outStr, bounds), opts)
     
 #----------------------End of main()
+
+def heatMap(names, seqs, dta, outname, opts):
+    samps = sorted(dta.keys())
+    vals = [[dta[x][y] for x in samps] for y in names]
+#    print(vals)
+    fig,ax = plt.subplots(1,1,figsize=(8,2),facecolor='w')
+    
+    #Set color palette
+    palatte = plt.cm.viridis
+    palatte.set_under(color='white')
+    
+    #Make plot
+    ims = ax.imshow(vals, vmin=8)
+    cbar = fig.colorbar(ims)
+#    ax.set_xlim(-1,len(samps)+1)
+#    ax.set_ylim(-1,len(names)+1)
+
+    #Label rows with sequences
+    ax.set_yticks(range(len(seqs)))
+    ax.set_yticklabels([x.replace("-", " ") for x in seqs])
+    for tick in ax.get_yticklabels():
+        tick.set_fontname("Courier New")
+        tick.set_fontsize(5)
+
+    # Sample labels
+    ax.set_xticks(range(len(samps)))
+    ax.set_xticklabels([x.split("_")[0] for x in samps], rotation = 90)
+    for tick in ax.get_xticklabels():
+#        tick.set_fontname("Courier New")
+        tick.set_fontsize(4)
+    plt.tight_layout()
+    fig.savefig(outname,dpi=200,bbox_inches='tight')
 
 def alignSeqs(sD):
     mn = min([min(x[1]) for x in sD.values()])
@@ -278,6 +327,22 @@ def speciesNames(file):
                 cols=line.strip("\n").split("\t")
                 id2name[cols[4]]=cols[0]
     return(id2name)
+
+def parseCounts(countFile, delim="\t"):
+    counts={}
+    with open(countFile, "r") as fin:
+        lc=0
+        for line in fin:
+            lc+=1
+            cols=line.rstrip("\n").split(delim)
+            if lc == 1:
+                names = cols[1:]
+                for n in names:
+                    counts[n]={}
+            else:
+                for i, count in enumerate(cols[1:]):
+                    counts[names[i]][cols[0]] = float(count)
+    return counts
 
 ###------------------------------------->>>>    
 
