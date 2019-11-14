@@ -8,16 +8,6 @@ set(CMAKE_CXX_STANDARD 11)
 
 find_package(OpenMP)
 
-if(OpenMP_FOUND)
-  message( "OpenMP enabled" )
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
-  add_definitions( -DENABLE_OPENMP )
-
-else()
-  message( "WARNING: OpenMP not found, parallelism disabled." )
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-pragmas -Wno-unused-value")
-endif()
-
 find_package(Boost REQUIRED COMPONENTS program_options regex filesystem)
 
 include_directories(include/modules/core)
@@ -29,13 +19,22 @@ add_compile_options( "-Wall" "-std=c++11" "-Wextra"
                      "$<$<CONFIG:DEBUG>:-O0;-g>" 
 					 "$<$<CONFIG:RELEASE>:-O3>")
 
+if(OpenMP_FOUND)
+  message( "OpenMP enabled" )
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
+  add_definitions( -DENABLE_OPENMP )
+
+else()
+  message( "WARNING: OpenMP not found, parallelism disabled." )
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-pragmas -Wno-unused-value")
+endif()
+
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
 
 include_directories(${Boost_INCLUDE_DIRS})
 add_executable(pep_sirf src/main.cpp)
-
 
 # Library common to all modules
 add_library(pepsirf_common STATIC src/modules/parsers/options_parser.cpp src/modules/core/options.cpp 
