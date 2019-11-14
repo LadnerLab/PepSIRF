@@ -1,5 +1,4 @@
 #include <iostream>
-#include <omp.h>
 #include <exception>
 #include <stdlib.h>
 
