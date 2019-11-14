@@ -6,6 +6,7 @@
 #include <set>
 #include <memory>
 #include <unordered_map>
+#include <map>
 #include <unordered_set>
 
 #include "overlap_data.h"
@@ -19,6 +20,7 @@
 #include "tie_data.h"
 #include "scored_peptide.h"
 #include "scored_entity.h"
+#include "species_data.h"
 
 /**
  * The species deconvolution module of the 
@@ -81,14 +83,13 @@ class module_deconv : public module
      * This means that spec_count_map contains the peptides that share a 
      * kmer with a certain species. 
      * @param spec_count_map Map that maps peptides to the species that 
-     *        a peptides shares an ID with.
+     *        a peptides shares an kmer with.
      * @param id the species id that is being searched. Note that this is only 
      *        used in summation scoring.
      * @param peptides A list of enriched peptides.
      * @param strat The scoring strategy to use for scoring peptides.
      * @returns The score of the species
      **/
-
     double get_score( std::unordered_map<std::string,std::vector<std::pair<std::string,double>>>&
                       spec_count_map,
                       std::string id,
@@ -96,7 +97,26 @@ class module_deconv : public module
                       evaluation_strategy::score_strategy strat
                     );
 
-
+    /**
+     * Get the score that a single peptide contributes to a species.
+     * @param peptide The peptide whose score is found.
+     * @param spec_count_map Map that associates peptides to the species 
+     *        the peptide shares a kmer with
+     * @param id the species id that is being searched. 
+     * @param score_strat The scoring strategy to use.
+     * @note id is only used for summation scoring
+     * @returns The score the id contributes to the species, as defined by 
+     *          score_strat
+     **/
+    double score_peptide_for_species( const peptide& peptide,
+                                      std::unordered_map
+                                      <std::string,
+                                      std::vector<std::pair<std::string,double>
+                                      >>&
+                                      spec_count_map,
+                                      std::string id,
+                                      evaluation_strategy::score_strategy score_strat
+                                    );
     /**
      * Parse a map that will provide name->tax id mappings. This map should be formatted 
      * in the same manner as that of 'lineage.dmp' from NCBI. 
@@ -122,7 +142,7 @@ class module_deconv : public module
                         std::map<std::string,std::string>*
                         id_name_map,
                         std::vector<
-                        std::tuple<std::string,double,double,bool>
+                        std::pair<species_data, bool>
                         >&
                         out_counts,
                         std::unordered_map<std::string,std::pair<double,double>>&
@@ -504,6 +524,27 @@ class module_deconv : public module
                         evaluation_strategy::score_strategy strat
                       );
 
+    /**
+     * Calculate the score that each peptide contributes to a species.
+     * @param dest The map to write outputs to. For each species id,
+     *        a vector of scored_peptides will be created. Each entry in 
+     *        this vector will contain a scored peptide whose is score is the score 
+     *        the peptide contributes to the species.
+     * @param id_count_map Map associating species to the peptides they share a kmer with
+     * @param spec_count_map Map that associates peptides with the species 
+     *        that share a kmer with the peptide.
+     * @param strat The scoring strategy to use when calculating scores for peptides.
+     **/
+    void score_species_peptides(
+                   std::unordered_map<std::string,
+                   std::vector<scored_peptide<double>>
+                   >& dest,
+                   std::unordered_map<std::string,std::vector<std::string>>&
+                   id_count_map,
+                   std::unordered_map<std::string,std::vector<std::pair<std::string,double>>>&
+                   spec_count_map,
+                   evaluation_strategy::score_strategy strat
+                                );
 
     /**
      * Choose the 'best' kmers as defined by the scoring options passed to the program.
@@ -815,6 +856,25 @@ class module_deconv : public module
                 }
 
         }
+
+    /**
+     * Get the highest scoring peptide for each species found in 
+     * species_peptide_scores. Each species is mapped to its 
+     * highest-scoring peptide in dest.
+     * @param dest The location to store each species with its 
+     *        highest-scoring peptide
+     * @param species_peptide_scores A map associating species with 
+     *        the peptides it shares a kmer with. Each scored_peptide
+     *        has a peptide and a score.
+     **/
+    void get_highest_score_per_species( std::unordered_map<std::string,
+                                        scored_peptide<double>>& dest,
+                                        const std::unordered_map
+                                        <std::string, std::vector<scored_peptide<double>>
+                                        >&
+                                        species_peptide_scores
+                                      );
+
 
 
     /**
