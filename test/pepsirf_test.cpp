@@ -1382,9 +1382,9 @@ TEST_CASE( "score_species_peptides/get_highest_score_per_species", "[module_deco
      spec_count_map[ "pep1" ] = a_score;
      spec_count_map[ "pep2" ] = b_score;
 
+     std::unordered_map<std::string,scored_peptide<double>> highest_scores;
 
-
-     auto eval = [&]()
+     auto eval_sc_sp_pep = [&]()
          {
              mod.score_species_peptides( counts,
                                          id_count_map,
@@ -1393,31 +1393,56 @@ TEST_CASE( "score_species_peptides/get_highest_score_per_species", "[module_deco
                                          );
          };
 
+     auto clear = [&]() { counts[ "species 1" ].clear();
+                          counts[ "species 2" ].clear();
+                          highest_scores.clear();
+     };
+
+     auto eval_max_score = [&] ()
+         {
+             mod.get_highest_score_per_species( highest_scores, counts );
+         };
+
      strat = evaluation_strategy::score_strategy::SUMMATION_SCORING;
 
-     eval();
+     eval_sc_sp_pep();
 
      REQUIRE( counts[ "species 1" ][ 0 ].get_score() == 2.4 );
      REQUIRE( counts[ "species 1" ][ 1 ].get_score() == 8.4 );
      REQUIRE( counts[ "species 2" ][ 0 ].get_score() == 3.4 );
      REQUIRE( counts[ "species 2" ][ 1 ].get_score() == 9.4 );
 
+     eval_max_score();
+
+     REQUIRE( highest_scores[ "species 1" ].get_score() == 8.4 );
+     REQUIRE( highest_scores[ "species 2" ].get_score() == 9.4 );
+
+     clear();
      strat = evaluation_strategy::score_strategy::INTEGER_SCORING;
 
-     eval();
+     eval_sc_sp_pep();
 
      REQUIRE( counts[ "species 1" ][ 0 ].get_score() == 1 );
      REQUIRE( counts[ "species 1" ][ 1 ].get_score() == 1 );
      REQUIRE( counts[ "species 2" ][ 0 ].get_score() == 1 );
      REQUIRE( counts[ "species 2" ][ 1 ].get_score() == 1 );
 
+     eval_max_score();
+
+     REQUIRE( highest_scores[ "species 1" ].get_score() == 1 );
+     REQUIRE( highest_scores[ "species 2" ].get_score() == 1 );
+
+     clear();
      strat = evaluation_strategy::score_strategy::FRACTIONAL_SCORING;
 
-     eval();
+     eval_sc_sp_pep();
 
      REQUIRE( counts[ "species 1" ][ 0 ].get_score() == 0.5 );
      REQUIRE( counts[ "species 1" ][ 1 ].get_score() == 0.5 );
      REQUIRE( counts[ "species 2" ][ 0 ].get_score() == 0.5 );
      REQUIRE( counts[ "species 2" ][ 1 ].get_score() == 0.5 );
 
+     eval_max_score();
+     REQUIRE( highest_scores[ "species 1" ].get_score() == 0.5 );
+     REQUIRE( highest_scores[ "species 2" ].get_score() == 0.5 );
 }
