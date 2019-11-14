@@ -630,6 +630,40 @@ void module_deconv::score_species( std::vector<std::pair<std::string, double>>&
 
 }
 
+void module_deconv::score_species_peptides(
+                   std::unordered_map<std::string,
+                   std::vector<scored_peptide<double>>
+                   >& dest,
+                   std::unordered_map<std::string,std::vector<std::string>>&
+                   id_count_map,
+                   std::unordered_map<std::string,std::vector<std::pair<std::string,double>>>&
+                   spec_count_map,
+                   evaluation_strategy::score_strategy strat
+                                )
+    {
+
+        dest.reserve( id_count_map.size() );
+
+        for( const auto& species : id_count_map )
+            {
+                const auto& species_id = species.first;
+                const auto& peptides   = species.second;
+
+                dest[ species_id ] = std::vector<scored_peptide<double>>();
+                dest[ species_id ].reserve( peptides.size() );
+
+                for( const auto& pep : peptides )
+                    {
+                        double score = score_peptide_for_species
+                            ( peptide( pep ), spec_count_map, species_id, strat );
+
+                        auto new_pep = scored_peptide<double>( pep, score );
+                        dest[ species_id ].push_back( new_pep );
+                    }
+            }
+    }
+
+
 void module_deconv::write_outputs( std::string out_name,
                                    std::map<std::string,std::string>*
                                    id_name_map,

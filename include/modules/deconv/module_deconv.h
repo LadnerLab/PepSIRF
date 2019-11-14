@@ -522,6 +522,27 @@ class module_deconv : public module
                         evaluation_strategy::score_strategy strat
                       );
 
+    /**
+     * Calculate the score that each peptide contributes to a species.
+     * @param dest The map to write outputs to. For each species id,
+     *        a vector of scored_peptides will be created. Each entry in 
+     *        this vector will contain a scored peptide whose is score is the score 
+     *        the peptide contributes to the species.
+     * @param id_count_map Map associating species to the peptides they share a kmer with
+     * @param spec_count_map Map that associates peptides with the species 
+     *        that share a kmer with the peptide.
+     * @param strat The scoring strategy to use when calculating scores for peptides.
+     **/
+    void score_species_peptides(
+                   std::unordered_map<std::string,
+                   std::vector<scored_peptide<double>>
+                   >& dest,
+                   std::unordered_map<std::string,std::vector<std::string>>&
+                   id_count_map,
+                   std::unordered_map<std::string,std::vector<std::pair<std::string,double>>>&
+                   spec_count_map,
+                   evaluation_strategy::score_strategy strat
+                                );
 
     /**
      * Choose the 'best' kmers as defined by the scoring options passed to the program.
