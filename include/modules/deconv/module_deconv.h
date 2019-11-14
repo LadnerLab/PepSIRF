@@ -6,6 +6,7 @@
 #include <set>
 #include <memory>
 #include <unordered_map>
+#include <map>
 #include <unordered_set>
 
 #include "overlap_data.h"
@@ -19,6 +20,7 @@
 #include "tie_data.h"
 #include "scored_peptide.h"
 #include "scored_entity.h"
+#include "species_data.h"
 
 /**
  * The species deconvolution module of the 
@@ -140,7 +142,7 @@ class module_deconv : public module
                         std::map<std::string,std::string>*
                         id_name_map,
                         std::vector<
-                        std::tuple<std::string,double,double,bool>
+                        std::pair<species_data, bool>
                         >&
                         out_counts,
                         std::unordered_map<std::string,std::pair<double,double>>&
@@ -854,7 +856,6 @@ class module_deconv : public module
                 }
 
         }
-
 
     /**
      * Get the highest scoring peptide for each species found in 
