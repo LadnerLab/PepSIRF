@@ -70,6 +70,11 @@ void module_deconv::choose_kmers( options_deconv *opts )
     std::unordered_map<std::string,std::vector<std::pair<std::string,double>>>
         peptide_assignment_global;
 
+    std::unordered_map<species_id<std::string>,
+                       scored_entity<peptide, double>
+                       >
+        species_highest_peptide;
+
     // add what species were originally shown to "hit" which peptides
     for( const auto& x : pep_species_vec )
         {
@@ -202,7 +207,8 @@ void module_deconv::choose_kmers( options_deconv *opts )
 
     filter( filter_strat );
 
-    std::unordered_map<std::string,std::pair<double,double>> original_scores;
+    // used to track the original scores for each species
+    std::unordered_map<std::string,species_data> original_scores;
     std::size_t round_no = 0;
 
     if( !util::empty( d_opts->orig_scores_dname ) )
@@ -210,10 +216,22 @@ void module_deconv::choose_kmers( options_deconv *opts )
             write_round_scores( round_no );
         }
 
-    combine_count_and_score( original_scores,
-                             species_peptide_counts,
-                             species_scores
-                           );
+    std::unordered_map<std::string, std::vector<scored_peptide<double>>>
+        species_peptide_scores;
+
+    score_species_peptides( species_peptide_scores,
+                            id_pep_map,
+                            pep_id_map,
+                            score_strat
+                          );
+
+    std::unordered_map<std::string, scored_peptide<double>>
+        species_with_highest_peptide;
+
+    get_highest_score_per_species( species_with_highest_peptide,
+                                   species_peptide_scores
+                                 );
+
 
     std::unordered_map<std::string,std::vector<std::string>> peptide_assignment_map;
 
