@@ -216,22 +216,6 @@ void module_deconv::choose_kmers( options_deconv *opts )
             write_round_scores( round_no );
         }
 
-    std::unordered_map<std::string, std::vector<scored_peptide<double>>>
-        species_peptide_scores;
-
-    score_species_peptides( species_peptide_scores,
-                            id_pep_map,
-                            pep_id_map,
-                            score_strat
-                          );
-
-    std::unordered_map<std::string, scored_peptide<double>>
-        species_with_highest_peptide;
-
-    get_highest_score_per_species( species_with_highest_peptide,
-                                   species_peptide_scores
-                                 );
-
     combine_count_and_score( original_scores,
                              species_peptide_counts,
                              species_scores
@@ -271,6 +255,12 @@ void module_deconv::choose_kmers( options_deconv *opts )
                                );
                 }
         }
+
+    std::unordered_map<std::string, std::vector<scored_peptide<double>>>
+        species_peptide_scores;
+
+    std::unordered_map<std::string, scored_peptide<double>>
+        species_with_highest_peptide;
 
     while( species_peptide_counts.size()
            && species_scores[ 0 ].second > thresh )
@@ -312,6 +302,20 @@ void module_deconv::choose_kmers( options_deconv *opts )
                        );
 
             int is_tie = tied_species.size() - 1;
+
+            // calculate the score each peptide attributes to
+            // its species score
+            score_species_peptides( species_peptide_scores,
+                                    id_pep_map,
+                                    pep_id_map,
+                                    score_strat
+                                    );
+
+            // get the highest of these scores for each species
+            get_highest_score_per_species( species_with_highest_peptide,
+                                           species_peptide_scores
+                                           );
+
 
             for( auto& tied_peptide : tied_species )
                 {
@@ -364,6 +368,8 @@ void module_deconv::choose_kmers( options_deconv *opts )
             pep_id_map.clear();
             species_scores.clear();
             species_peptide_counts.clear();
+            species_peptide_scores.clear();
+            species_with_highest_peptide.clear();
 
             make_map_and_filter( filter_strat );
 
@@ -795,7 +801,7 @@ void module_deconv::write_outputs( std::string out_name,
 
             out_file << it->first.get_count() << "\t";
 
-            // count for both 
+            // score for both 
             for( auto tied_i : tied_items )
                 {
                     to_stream_if( out_file, tied, tied_i.first.get_score(), "," );
@@ -803,6 +809,7 @@ void module_deconv::write_outputs( std::string out_name,
 
             out_file << it->first.get_score() << "\t";
 
+            // original count for both
             for( auto tied_i : tied_items )
                 {
                     auto tied_id = std::get<0>( tied_i );
