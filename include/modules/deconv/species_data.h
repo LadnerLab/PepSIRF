@@ -2,7 +2,7 @@
 #define SPECIES_DATA_HH_INCLUDED
 #include <string>
 #include "species_id.h"
-#include "scored_entity.h"
+#include "scored_peptide.h"
 
 /**
  * A class to take a 'snapshot' of scoring information for 
@@ -28,7 +28,7 @@ class species_data
     species_data( const species_id<std::string>& species,
                   const double score,
                   const double count,
-                  const scored_entity<std::string,double>&
+                  const scored_peptide<double>&
                   highest_scoring_peptide
                 ) : spec_id( species ),
                     score( score ),
@@ -40,14 +40,14 @@ class species_data
 
     void set_count( const double new_val );
 
-    scored_entity<std::string,double>& get_highest_scoring_peptide();
+    scored_peptide<double>& get_highest_scoring_peptide();
 
-    void set_highest_scoring_peptide( const scored_entity<std::string,double>& new_val );
+    void set_highest_scoring_peptide( const scored_peptide<double>& new_val );
 
     double get_score();
     double get_count();
 
-    const scored_entity<std::string,double>& get_highest_scoring_peptide() const;
+    const scored_peptide<double>& get_highest_scoring_peptide() const;
 
 
  private:
@@ -69,11 +69,10 @@ class species_data
     double count;
 
     /**
-     * A scored entity representing this species' highest-scoring 
-     * peptide. The first member of the scored_entity is the peptide itself,
-     * while the second is the peptide's score.
+     * A scored peptide representing this species' highest-scoring 
+     * peptide. 
      **/
-    scored_entity<std::string,double> highest_scoring_peptide;
+    scored_peptide<double> highest_scoring_peptide;
 
 };
 

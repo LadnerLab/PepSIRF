@@ -1267,7 +1267,7 @@ TEST_CASE( "get_kmer_frequency", "[kmer_tools]" )
 TEST_CASE( "species_data", "[module_deconv]" )
 {
     species_id<std::string> spec( "species 1" );
-    scored_entity<std::string,double> peptide( "ATGC", 105.0 );
+    scored_peptide<double> peptide( "ATGC", 105.0 );
     double score = 4;
     double count = 11;
 
