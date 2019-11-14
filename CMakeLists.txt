@@ -15,7 +15,8 @@ include_directories(include/modules/parsers)
 include_directories(include/modules/demux)
 include_directories(include/modules/deconv)
 include_directories(lib/parallel_hashmap)
-add_compile_options( "-Wall" "-std=c++11" "-Wextra"
+add_compile_options( "-Wall" "-std=c++11" "-Wextra" "-fvisibility=hidden"
+                     "-fvisibility-inlines-hidden"
                      "$<$<CONFIG:DEBUG>:-O0;-g>" 
 					 "$<$<CONFIG:RELEASE>:-O3>")
 
