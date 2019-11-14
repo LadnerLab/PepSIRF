@@ -9,7 +9,7 @@ void species_data::set_count( const double new_val )
     count = new_val;
 }
 
-const scored_peptide<double>& species_data::get_highest_scoring_peptide() const
+scored_peptide<double>& species_data::get_highest_scoring_peptide()
 {
     return highest_scoring_peptide;
 }
