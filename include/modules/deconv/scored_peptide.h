@@ -66,7 +66,7 @@ class scored_peptide
      * small, resulting in small overhead for copying,
      * @returns this peptide's score.
      **/
-    score_type get_score()
+    score_type get_score() const
     {
         return data.get_score();
     }
@@ -79,6 +79,31 @@ class scored_peptide
     {
         data.set_score( new_sc );
     }
+
+    /**
+     * Determine whether this scored_peptide is less than comp.
+     * For two scored_peptides a and b, we say a < b iff
+     * a.get_score() < b.get_score()
+     * @param comp The peptide with which we are comparing this.
+     * @returns boolean true if this < comp, false otherwise
+     **/
+    bool operator<( const scored_peptide& comp ) const
+    {
+        return get_score() < comp.get_score();
+    }
+
+    /**
+     * Determine whether this scored_peptide is greater than comp.
+     * For two scored_peptides a and b, we say a > b iff
+     * a.get_score() > b.get_score()
+     * @param comp The peptide with which we are comparing this.
+     * @returns boolean true if this > comp, false otherwise
+     **/
+    bool operator>( const scored_peptide& comp ) const
+    {
+        return get_score() > comp.get_score();
+    }
+
 
  private: 
     /**
