@@ -98,7 +98,7 @@ void module_deconv::choose_kmers( options_deconv *opts )
     std::vector<std::pair<std::string, double>> species_scores;
     std::unordered_map<std::string, double> species_peptide_counts;
 
-    std::vector<std::tuple<std::string, double, double, bool>> output_counts;
+    std::vector<std::pair<species_data, bool>> output_counts;
 
     std::string id_name_map_fname;
 
@@ -208,7 +208,7 @@ void module_deconv::choose_kmers( options_deconv *opts )
     filter( filter_strat );
 
     // used to track the original scores for each species
-    std::unordered_map<std::string,species_data> original_scores;
+    std::unordered_map<std::string,std::pair<double,double>> original_scores;
     std::size_t round_no = 0;
 
     if( !util::empty( d_opts->orig_scores_dname ) )
@@ -232,6 +232,10 @@ void module_deconv::choose_kmers( options_deconv *opts )
                                    species_peptide_scores
                                  );
 
+    combine_count_and_score( original_scores,
+                             species_peptide_counts,
+                             species_scores
+                           );
 
     std::unordered_map<std::string,std::vector<std::string>> peptide_assignment_map;
 
@@ -314,11 +318,15 @@ void module_deconv::choose_kmers( options_deconv *opts )
                     std::string id = tied_peptide.first;
                     double score   = tied_peptide.second;
 
-                    output_counts.emplace_back( std::make_tuple(
-                                                                id,
-                                                                species_peptide_counts
-                                                                .find( id )->second, // count for species
-                                                                score,
+                    auto new_data = species_data( species_id<std::string>( id ),
+                                                  score,
+                                                  species_peptide_counts
+                                                  .find( id )->second,
+                                                  species_with_highest_peptide[ id ]
+                                                );
+
+                    output_counts.emplace_back( std::make_pair(
+                                                                new_data,
                                                                 is_tie > 0
                                                                 )
                                                 );
@@ -711,7 +719,7 @@ void module_deconv::write_outputs( std::string out_name,
                                    std::map<std::string,std::string>*
                                    id_name_map,
                                    std::vector<
-                                   std::tuple<std::string,double,double,bool>
+                                   std::pair<species_data, bool>
                                    >&
                                    out_counts,
                                    std::unordered_map<std::string,std::pair<double,double>>&
@@ -730,7 +738,7 @@ void module_deconv::write_outputs( std::string out_name,
     out_file << "Species ID\tCount\tScore\tOriginal Count\tOriginal Score\n";
 
     bool tied = false;
-    std::vector<std::tuple<std::string,double,double,bool>> tied_items;
+    std::vector<std::pair<species_data,bool>> tied_items;
 
     for( auto it = out_counts.begin();
          it != out_counts.end();
@@ -738,7 +746,7 @@ void module_deconv::write_outputs( std::string out_name,
        )
         {
             auto tied_item = it;
-            while( std::get<3>( *tied_item ) ) // *it and the next species are tied, report together
+            while( tied_item->second ) // *it and the next species are tied, report together
                 {
                     tied_item = std::next( tied_item, 1 );
                     tied_items.push_back( *tied_item );
@@ -751,15 +759,15 @@ void module_deconv::write_outputs( std::string out_name,
                         {
                             to_stream_if( out_file, tied, 
                                           get_map_value( id_name_map,
-                                                         std::get<0>( tied_i ),
-                                                         std::get<0>( tied_i )
+                                                         tied_i.first.get_id(),
+                                                         tied_i.first.get_id()
                                                        ),
                                           ","
                                 );
                         }
                     out_file << get_map_value( id_name_map,
-                                               std::get<0>( *it ),
-                                               std::get<0>( *it )
+                                               it->first.get_id(),
+                                               it->first.get_id()
                                              ) << "\t";
                 }
 
@@ -768,38 +776,39 @@ void module_deconv::write_outputs( std::string out_name,
                     out_file << "\t";
                 }
 
-            auto orig_id = std::get<0>( *it );
+            auto orig_id = it->first.get_id();
 
             // species id for both (both are only written if tied is true)
             for( auto tied_i : tied_items )
                 {
 
-                    auto tied_id = std::get<0>( tied_i );
-                    to_stream_if( out_file, tied, tied_id, "," );
+                    auto tied_id = tied_i.first;
+                    to_stream_if( out_file, tied, tied_id.get_id(), "," );
                 }
             out_file << orig_id << "\t";
 
-            // score for both
+            // count for both
             for( auto tied_i : tied_items )
                 {
-                    to_stream_if( out_file, tied, std::get<1>( tied_i ), "," );
+                    to_stream_if( out_file, tied, tied_i.first.get_count(), "," );
                 }
 
-            out_file << std::get<1>( *it ) << "\t";
+            out_file << it->first.get_count() << "\t";
 
             // count for both 
             for( auto tied_i : tied_items )
                 {
-                    to_stream_if( out_file, tied, std::get<2>( tied_i ), "," );
+                    to_stream_if( out_file, tied, tied_i.first.get_score(), "," );
                 }
 
-            out_file << std::get<2>( *it ) << "\t";
+            out_file << it->first.get_score() << "\t";
 
             for( auto tied_i : tied_items )
                 {
                     auto tied_id = std::get<0>( tied_i );
                     to_stream_if( out_file, tied,
-                                  original_scores.find( tied_id )->second.first,
+                                  original_scores
+                                  .find( tied_id.get_id() )->second.first,
                                   ","
                                   );
                 }
@@ -811,9 +820,10 @@ void module_deconv::write_outputs( std::string out_name,
                 {
                     auto tied_id = std::get<0>( tied_i );
                     to_stream_if( out_file, tied,
-                                  original_scores.find( tied_id )->second.second,
+                                  original_scores
+                                  .find( tied_id.get_id() )->second.second,
                                   ","
-                                  );
+                                );
                 }
 
             out_file << original_scores.find( orig_id )->second.second << "\n";
