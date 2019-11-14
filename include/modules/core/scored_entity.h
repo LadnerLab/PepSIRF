@@ -32,7 +32,7 @@ template<typename Scored, typename ScoreType>
      **/ 
     void set_score( const ScoreType& score )
     {
-        this->score = score;
+        score = score;
     }
 
     /**

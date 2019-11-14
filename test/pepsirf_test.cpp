@@ -4,7 +4,6 @@
 #include <iostream>
 #include <stdexcept>
 #include <fstream>
-#include <omp.h>
 #include <algorithm>
 #include <vector>
 #include <unordered_map>
@@ -15,6 +14,7 @@
 #include <streambuf>
 #include <boost/lexical_cast.hpp>
 
+#include "omp_opt.h"
 #include "test_utils.h"
 #include "overlap_data.h"
 #include "distance_tools.h"
@@ -35,7 +35,6 @@
 #include "scored_peptide.h"
 #include "species_id.h"
 #include "scored_entity.h"
-#include "species_data.h"
 
 using namespace util;
 
@@ -1262,187 +1261,4 @@ TEST_CASE( "get_kmer_frequency", "[kmer_tools]" )
         }
 
 
-}
-
-TEST_CASE( "species_data", "[module_deconv]" )
-{
-    species_id<std::string> spec( "species 1" );
-    scored_peptide<double> peptide( "ATGC", 105.0 );
-    double score = 4;
-    double count = 11;
-
-    species_data dat( spec, score, count, peptide );
-
-    auto pep = dat.get_highest_scoring_peptide();
-
-    REQUIRE( pep.get_score() == 105.0 );
-    REQUIRE( !pep.get_sequence().compare( "ATGC" ) );
-    dat.set_score( 104.0 );
-
-    REQUIRE( dat.get_score() == 104.0 );
-
-}
-
-TEST_CASE( "score_peptide_for_species", "[module_deconv]" )
-{
-    auto mod = module_deconv();
-
-    peptide pep( "ATGC" );
-
-    std::unordered_map<
-        std::string,std::vector<std::pair<std::string,double>>>
-        spec_count_map;
-
-    std::string species_id = "spec 1";
-
-    evaluation_strategy::score_strategy strat;
-
-    strat = evaluation_strategy::score_strategy::INTEGER_SCORING;
-
-    std::vector<std::pair<std::string,double>> value;
-    value.emplace_back( species_id, 150.0 );
-    value.emplace_back( "spec 2", 140.0 );
-
-    spec_count_map[ pep.get_sequence() ] = value;
-
-    auto eval = [&]() -> double
-    {
-        return mod.score_peptide_for_species( pep, spec_count_map,
-                                              species_id,
-                                              strat
-                                            );
-    };
-    double score = eval();
-
-    REQUIRE( score == 1 );
-
-    strat = evaluation_strategy::score_strategy::SUMMATION_SCORING;
-
-    score = eval();
-
-    REQUIRE( score == 150.0 );
-
-    strat = evaluation_strategy::score_strategy::FRACTIONAL_SCORING;
-
-    score = eval();
-
-    REQUIRE( score == 0.5 );
-
-}
-
-TEST_CASE( "score_species_peptides/get_highest_score_per_species", "[module_deconv]" )
-{
-    auto mod = module_deconv();
-
-    std::unordered_map<std::string,
-                       std::vector<scored_peptide<double>>
-                       >
-        counts;
-
-
-    std::unordered_map<std::string,std::vector<std::string>>
-        id_count_map;
-
-    std::unordered_map<std::string,std::vector<std::pair<std::string,double>>>
-        spec_count_map;
-
-     evaluation_strategy::score_strategy strat;
-
-     std::vector<std::string> a_pep;
-     std::vector<std::string> b_pep;
-
-     a_pep.emplace_back( "pep1" );
-     a_pep.emplace_back( "pep2" );
-
-     b_pep.emplace_back( "pep1" );
-     b_pep.emplace_back( "pep2" );
-
-     id_count_map.emplace(
-                          std::make_pair(
-                                         "species 1",
-                                         a_pep
-                                         )
-                          );
-     id_count_map.emplace(
-                          std::make_pair(
-                                         "species 2",
-                                         b_pep
-                                         )
-                          );
-
-     std::vector<std::pair<std::string,double>> a_score;
-     std::vector<std::pair<std::string,double>> b_score;
-
-     a_score.emplace_back( std::make_pair( "species 1", 2.4 ) );
-     a_score.emplace_back( std::make_pair( "species 2", 3.4 ) );
-
-     b_score.emplace_back( std::make_pair( "species 1", 8.4 ) );
-     b_score.emplace_back( std::make_pair( "species 2", 9.4 ) );
-
-     spec_count_map[ "pep1" ] = a_score;
-     spec_count_map[ "pep2" ] = b_score;
-
-     std::unordered_map<std::string,scored_peptide<double>> highest_scores;
-
-     auto eval_sc_sp_pep = [&]()
-         {
-             mod.score_species_peptides( counts,
-                                         id_count_map,
-                                         spec_count_map,
-                                         strat
-                                         );
-         };
-
-     auto clear = [&]() { counts[ "species 1" ].clear();
-                          counts[ "species 2" ].clear();
-                          highest_scores.clear();
-     };
-
-     auto eval_max_score = [&] ()
-         {
-             mod.get_highest_score_per_species( highest_scores, counts );
-         };
-
-     strat = evaluation_strategy::score_strategy::SUMMATION_SCORING;
-
-     eval_sc_sp_pep();
-
-     REQUIRE( counts[ "species 1" ][ 0 ].get_score() == 2.4 );
-     REQUIRE( counts[ "species 1" ][ 1 ].get_score() == 8.4 );
-     REQUIRE( counts[ "species 2" ][ 0 ].get_score() == 3.4 );
-     REQUIRE( counts[ "species 2" ][ 1 ].get_score() == 9.4 );
-
-     eval_max_score();
-
-     REQUIRE( highest_scores[ "species 1" ].get_score() == 8.4 );
-     REQUIRE( highest_scores[ "species 2" ].get_score() == 9.4 );
-
-     clear();
-     strat = evaluation_strategy::score_strategy::INTEGER_SCORING;
-
-     eval_sc_sp_pep();
-
-     REQUIRE( counts[ "species 1" ][ 0 ].get_score() == 1 );
-     REQUIRE( counts[ "species 1" ][ 1 ].get_score() == 1 );
-     REQUIRE( counts[ "species 2" ][ 0 ].get_score() == 1 );
-     REQUIRE( counts[ "species 2" ][ 1 ].get_score() == 1 );
-
-     eval_max_score();
-
-     REQUIRE( highest_scores[ "species 1" ].get_score() == 1 );
-     REQUIRE( highest_scores[ "species 2" ].get_score() == 1 );
-
-     clear();
-     strat = evaluation_strategy::score_strategy::FRACTIONAL_SCORING;
-
-     eval_sc_sp_pep();
-
-     REQUIRE( counts[ "species 1" ][ 0 ].get_score() == 0.5 );
-     REQUIRE( counts[ "species 1" ][ 1 ].get_score() == 0.5 );
-     REQUIRE( counts[ "species 2" ][ 0 ].get_score() == 0.5 );
-     REQUIRE( counts[ "species 2" ][ 1 ].get_score() == 0.5 );
-
-     eval_max_score();
-     REQUIRE( highest_scores[ "species 1" ].get_score() == 0.5 );
-     REQUIRE( highest_scores[ "species 2" ].get_score() == 0.5 );
 }
