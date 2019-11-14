@@ -1276,7 +1276,7 @@ TEST_CASE( "species_data", "[module_deconv]" )
     auto pep = dat.get_highest_scoring_peptide();
 
     REQUIRE( pep.get_score() == 105.0 );
-    REQUIRE( !pep.get_key().compare( "ATGC" ) );
+    REQUIRE( !pep.get_sequence().compare( "ATGC" ) );
     dat.set_score( 104.0 );
 
     REQUIRE( dat.get_score() == 104.0 );
