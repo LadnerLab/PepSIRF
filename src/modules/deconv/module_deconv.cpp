@@ -741,7 +741,7 @@ void module_deconv::write_outputs( std::string out_name,
         }
 
 
-    out_file << "Species ID\tCount\tScore\tOriginal Count\tOriginal Score\n";
+    out_file << "Species ID\tCount\tScore\tOriginal Count\tOriginal Score\tMax Probe Score\n";
 
     bool tied = false;
     std::vector<std::pair<species_data,bool>> tied_items;
@@ -833,7 +833,13 @@ void module_deconv::write_outputs( std::string out_name,
                                 );
                 }
 
-            out_file << original_scores.find( orig_id )->second.second << "\n";
+            out_file << original_scores.find( orig_id )->second.second << "\t";
+
+            for( auto tied_i : tied_items )
+                {
+                    out_file << tied_i.first.get_highest_scoring_peptide().get_score() << ",";
+                }
+            out_file << it->first.get_highest_scoring_peptide().get_score() << "\n";
 
             if( tied )
                 {
