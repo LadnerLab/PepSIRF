@@ -1330,7 +1330,7 @@ TEST_CASE( "score_peptide_for_species", "[module_deconv]" )
 
 }
 
-TEST_CASE( "score_species_peptides", "[module_deconv]" )
+TEST_CASE( "score_species_peptides/get_highest_score_per_species", "[module_deconv]" )
 {
     auto mod = module_deconv();
 
@@ -1397,5 +1397,27 @@ TEST_CASE( "score_species_peptides", "[module_deconv]" )
 
      eval();
 
+     REQUIRE( counts[ "species 1" ][ 0 ].get_score() == 2.4 );
+     REQUIRE( counts[ "species 1" ][ 1 ].get_score() == 8.4 );
+     REQUIRE( counts[ "species 2" ][ 0 ].get_score() == 3.4 );
+     REQUIRE( counts[ "species 2" ][ 1 ].get_score() == 9.4 );
+
+     strat = evaluation_strategy::score_strategy::INTEGER_SCORING;
+
+     eval();
+
+     REQUIRE( counts[ "species 1" ][ 0 ].get_score() == 1 );
+     REQUIRE( counts[ "species 1" ][ 1 ].get_score() == 1 );
+     REQUIRE( counts[ "species 2" ][ 0 ].get_score() == 1 );
+     REQUIRE( counts[ "species 2" ][ 1 ].get_score() == 1 );
+
+     strat = evaluation_strategy::score_strategy::FRACTIONAL_SCORING;
+
+     eval();
+
+     REQUIRE( counts[ "species 1" ][ 0 ].get_score() == 0.5 );
+     REQUIRE( counts[ "species 1" ][ 1 ].get_score() == 0.5 );
+     REQUIRE( counts[ "species 2" ][ 0 ].get_score() == 0.5 );
+     REQUIRE( counts[ "species 2" ][ 1 ].get_score() == 0.5 );
 
 }
