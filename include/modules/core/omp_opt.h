@@ -2,7 +2,7 @@
 #define OMP_OPT_HH_INCLUDED
 
 #ifdef ENABLE_OPENMP
-#include "omp_opt.h"
+#include <omp.h>
 
 #else
 #include <time.h>
