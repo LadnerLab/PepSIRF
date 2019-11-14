@@ -14,6 +14,11 @@ scored_peptide<double>& species_data::get_highest_scoring_peptide()
     return highest_scoring_peptide;
 }
 
+const std::string& species_data::get_id() const
+{
+    return spec_id.get_id();
+}
+
 void species_data
      ::set_highest_scoring_peptide( const scored_peptide<double>& new_val )
 {

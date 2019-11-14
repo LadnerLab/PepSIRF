@@ -48,6 +48,7 @@ class species_data
     double get_count();
 
     const scored_peptide<double>& get_highest_scoring_peptide() const;
+    const std::string& get_id() const;
 
 
  private:
