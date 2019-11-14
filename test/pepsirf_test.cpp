@@ -1285,7 +1285,6 @@ TEST_CASE( "species_data", "[module_deconv]" )
 
 TEST_CASE( "score_peptide_for_species", "[module_deconv]" )
 {
-    options_deconv opts;
     auto mod = module_deconv();
 
     peptide pep( "ATGC" );
@@ -1328,5 +1327,75 @@ TEST_CASE( "score_peptide_for_species", "[module_deconv]" )
     score = eval();
 
     REQUIRE( score == 0.5 );
+
+}
+
+TEST_CASE( "score_species_peptides", "[module_deconv]" )
+{
+    auto mod = module_deconv();
+
+    std::unordered_map<std::string,
+                       std::vector<scored_peptide<double>>
+                       >
+        counts;
+
+
+    std::unordered_map<std::string,std::vector<std::string>>
+        id_count_map;
+
+    std::unordered_map<std::string,std::vector<std::pair<std::string,double>>>
+        spec_count_map;
+
+     evaluation_strategy::score_strategy strat;
+
+     std::vector<std::string> a_pep;
+     std::vector<std::string> b_pep;
+
+     a_pep.emplace_back( "pep1" );
+     a_pep.emplace_back( "pep2" );
+
+     b_pep.emplace_back( "pep1" );
+     b_pep.emplace_back( "pep2" );
+
+     id_count_map.emplace(
+                          std::make_pair(
+                                         "species 1",
+                                         a_pep
+                                         )
+                          );
+     id_count_map.emplace(
+                          std::make_pair(
+                                         "species 2",
+                                         b_pep
+                                         )
+                          );
+
+     std::vector<std::pair<std::string,double>> a_score;
+     std::vector<std::pair<std::string,double>> b_score;
+
+     a_score.emplace_back( std::make_pair( "species 1", 2.4 ) );
+     a_score.emplace_back( std::make_pair( "species 2", 3.4 ) );
+
+     b_score.emplace_back( std::make_pair( "species 1", 8.4 ) );
+     b_score.emplace_back( std::make_pair( "species 2", 9.4 ) );
+
+     spec_count_map[ "pep1" ] = a_score;
+     spec_count_map[ "pep2" ] = b_score;
+
+
+
+     auto eval = [&]()
+         {
+             mod.score_species_peptides( counts,
+                                         id_count_map,
+                                         spec_count_map,
+                                         strat
+                                         );
+         };
+
+     strat = evaluation_strategy::score_strategy::SUMMATION_SCORING;
+
+     eval();
+
 
 }
