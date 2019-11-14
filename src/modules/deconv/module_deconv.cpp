@@ -7,6 +7,7 @@
 #include <boost/regex.hpp>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/range/adaptor/transformed.hpp>
+#include <algorithm>
 
 #include "fs_tools.h"
 #include "module_deconv.h"
@@ -662,6 +663,30 @@ void module_deconv::score_species_peptides(
                     }
             }
     }
+
+void module_deconv::get_highest_score_per_species( std::unordered_map<std::string,
+                                                   scored_peptide<double>>& dest,
+                                                   const std::unordered_map<
+                                                   std::string,
+                                                   std::vector<scored_peptide<double>>
+                                                   >&
+                                                   species_peptide_scores
+                                                 )
+{
+    for( const auto& species_w_peptides : species_peptide_scores )
+        {
+            const auto& species_id = species_w_peptides.first;
+            const auto& peptides = species_w_peptides.second;
+
+            const auto max_peptide = std::max_element( peptides.begin(),
+                                                       peptides.end()
+                                                     );
+
+            dest.emplace( species_id, *max_peptide );
+        }
+
+}
+
 
 
 void module_deconv::write_outputs( std::string out_name,

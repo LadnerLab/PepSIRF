@@ -857,6 +857,26 @@ class module_deconv : public module
 
 
     /**
+     * Get the highest scoring peptide for each species found in 
+     * species_peptide_scores. Each species is mapped to its 
+     * highest-scoring peptide in dest.
+     * @param dest The location to store each species with its 
+     *        highest-scoring peptide
+     * @param species_peptide_scores A map associating species with 
+     *        the peptides it shares a kmer with. Each scored_peptide
+     *        has a peptide and a score.
+     **/
+    void get_highest_score_per_species( std::unordered_map<std::string,
+                                        scored_peptide<double>>& dest,
+                                        const std::unordered_map
+                                        <std::string, std::vector<scored_peptide<double>>
+                                        >&
+                                        species_peptide_scores
+                                      );
+
+
+
+    /**
      * Either find an item in a map, or return a default-constructed
      * value from that map. This useful if you want to print the value 
      * if it is found in the map, or a default string otherwise.
