@@ -20,6 +20,7 @@ def main():
     p.add_option('-o', '--out',  help='String for output files. [None, REQ]')
     p.add_option('-w', '--win', default=7,  type='int', help='Window size. [7]')
     p.add_option('-t', '--step', default=3,  type='int', help='Step size between windows. [3]')
+    p.add_option('--taxCat', default=1,  type='int', help='Taxonomic category to use. 0=subspecies, 1=species, 2=genus, 3=family [1]')
     p.add_option('--ovlp', default=0.5,  type='float', help='Probe must cover at least this proportion of window to be included. [0.5]')
     p.add_option('-m', '--map',  help='File containing map to link names in enriched list to those in pep fasta. [OPT]')
     p.add_option('--mapOrder', default=1,  type='int', help='Integer indicate the column # of the name labels in the enriched list. Must be 1 or 2 (1-based)[1]')
@@ -44,15 +45,11 @@ def main():
     proAl = readAlignments(opts.align)
     #Get min and max positions of aligned probes
     minPos, maxPos = getMinMax(proAl)
+    # Get all species-level taxIDs in the probe alignment
+    ids = allIDs(list(proAl.keys()), pepMap, revPepMap, opts)
     #Make new version with only the enriched probes
     proAl = downSample(proAl, pros, pepMap, revPepMap)
     print("Read Probe Alignment")
-    
-    
-    
-    # Get all species-level taxIDs in the probe alignment
-    ids = allIDs(list(proAl.keys()), pepMap, revPepMap)
-    
     
     allYs = {x:[] for x in ids}          #To collect maxZ scores, which will be plotted on the y-axis
     xs = []                              #To collect window positions for the x-axis
@@ -76,8 +73,9 @@ def main():
                 else:
                     print("Can't find uncoded name for %s" % p)
                 if taxInf:
-                    if thisWin[taxInf[0]] < scoreDict[opts.name][p]:
-                        thisWin[taxInf[0]] = scoreDict[opts.name][p]
+                    avgS=np.mean([scoreDict[n][p] for n in opts.name.split(",")])
+                    if thisWin[taxInf[opts.taxCat]] < avgS:
+                        thisWin[taxInf[opts.taxCat]] = avgS
                 else:
                     print("Can't find tax info for %s" % p)
                     
@@ -89,7 +87,7 @@ def main():
     
 #----------------------End of main()
 
-def allIDs(pros, pepMap, revPepMap):
+def allIDs(pros, pepMap, revPepMap, opts):
     newL=[]
     for p in pros:
         if "OXX" in p:
@@ -101,7 +99,7 @@ def allIDs(pros, pepMap, revPepMap):
         else:
             print("Can't find uncoded name for %s" % p)
         if taxInf:
-            newL.append(taxInf[0])
+            newL.append(taxInf[opts.taxCat])
 
     return list(set(newL))
 
@@ -136,7 +134,10 @@ def plotData(xs, allYs, opts):
     fig,ax = plt.subplots(1,1,figsize=(15,3),facecolor='w')
     
     #Set color palette
-    cols = ['#66c2a5','#fc8d62','#8da0cb','#e78ac3','#a6d854','#ffd92f','#e5c494','#b3b3b3']
+    if len(allYs) > 8:
+        cols = ['#8dd3c7','#ffffb3','#bebada','#fb8072','#80b1d3','#fdb462','#b3de69','#fccde5','#d9d9d9','#bc80bd','#ccebc5','#ffed6f']
+    else:
+        cols = ['#66c2a5','#fc8d62','#8da0cb','#e78ac3','#a6d854','#ffd92f','#e5c494','#b3b3b3']
     
     #One line per species
     counter=0
@@ -201,35 +202,6 @@ def noGaps(seq, allGaps):
             newS.append(s)
     return "".join(newS)
 
-
-def clustProbes(eD, proAl):
-    ovlp = {x:[] for x in eD}
-    for a, b in it.combinations(eD, 2):
-        if proAl[a][0].intersection(proAl[b][0]):
-            ovlp[a].append(b)
-            ovlp[b].append(a)
-#        else:
-#            print(proAl[a][1])
-#            print(proAl[b][1])
-    
-    clusts = {}
-    for s in ovlp:
-        this={}
-        this = makeClusts(this, s, ovlp)
-        c = tuple(sorted(list(this.keys())))
-        if c not in clusts:
-            clusts[c] = [s]
-        else:
-            clusts[c].append(s)
-    return clusts
-
-def makeClusts(this,s,ovlp):
-    if s not in this:
-        this[s]=""
-        for each in ovlp[s]:
-            if each not in this:
-                this = makeClusts(this, each, ovlp)
-    return this
 
 def readAlignments(align):
     dd={}
@@ -306,8 +278,8 @@ def parse_tax(name):
     oxpat = re.compile("OXX=(\d*),(\d*),(\d*),(\d*)")
     tax_id = oxpat.search(name)
     if tax_id:
-        species,genus,family = (tax_id.group(2),tax_id.group(3),tax_id.group(4))
-        return species,genus,family
+        strain,species,genus,family = (tax_id.group(1),tax_id.group(2),tax_id.group(3),tax_id.group(4))
+        return strain,species,genus,family
     else:
         #print(name)
         return None
