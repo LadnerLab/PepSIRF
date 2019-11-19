@@ -1,4 +1,3 @@
-Learn more or give us feedback
 #!/usr/bin/env python
 
 import optparse, os, subprocess, re
