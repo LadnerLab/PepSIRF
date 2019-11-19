@@ -17,6 +17,7 @@ def main():
     p.add_option('-n', "--name", help='Sample name, must match a column in the score matrix. [None, REQ]')
     p.add_option('-p', "--probes", help='File containing a list of enriched probes. [None, REQ]')
     p.add_option('-a', '--align',  help='Probe alignment file. [None, REQ]')
+    p.add_option('-o', '--out',  help='String for output files. [None, REQ]')
     p.add_option('-w', '--win', default=7,  type='int', help='Window size. [7]')
     p.add_option('-t', '--step', default=3,  type='int', help='Step size between windows. [3]')
     p.add_option('--ovlp', default=0.5,  type='float', help='Probe must cover at least this proportion of window to be included. [0.5]')
@@ -31,10 +32,9 @@ def main():
         revPepMap = {v:k for k,v in pepMap.items()}
         print("Read Name Map")
         
-    #Read in score matrix, if provided
-    if opts.plot:
-        scoreDict = parseCounts(opts.scores)
-        print("Read Scores")
+    #Read in score matrix
+    scoreDict = parseCounts(opts.scores)
+    print("Read Scores")
 
     #Read in enriched probes
     pros = filelist(opts.probes)
@@ -42,13 +42,13 @@ def main():
 
     #Read in probe map
     proAl = readAlignments(opts.align)
+    #Get min and max positions of aligned probes
+    minPos, maxPos = getMinMax(proAl)
     #Make new version with only the enriched probes
     proAl = downSample(proAl, pros, pepMap, revPepMap)
     print("Read Probe Alignment")
     
     
-    #Get min and max positions of aligned probes
-    minPos, maxPos = getMinMax(proAl)
     
     # Get all species-level taxIDs in the probe alignment
     ids = allIDs(list(proAl.keys()), pepMap, revPepMap)
@@ -64,7 +64,8 @@ def main():
         inWin = set(range(i,i+opts.win))     #Positions covered by this window
         for p, inf in proAl.items():         #Step through all of the enriched probes
             # If this probe overlaps with the current window
-            if len(inf[0].intersection(inWin))/opts.win >= opts.ovlp:
+            if len(set(inf[1]).intersection(inWin))/opts.win >= opts.ovlp:            #To only use positions at which the probes is aligned (no gaps)
+#            if len(inf[0].intersection(inWin))/opts.win >= opts.ovlp:           #To use the full range spanned by the start and stop coordinates of the probe (including gaps)
                 #If working with the uncoded names
                 if "OXX" in p:
                     taxInf = parse_tax(p)
@@ -112,9 +113,11 @@ def downSample(proAl, pros, pepMap, revPepMap):
         if p in proAl:
             newD[p] = proAl[p]
         elif p in pepMap:
-            newD[p] = proAl[pepMap[p]]
+            if pepMap[p] in proAl:
+                newD[p] = proAl[pepMap[p]]
         elif p in revPepMap:
-            newD[p] = proAl[revPepMap[p]]
+            if revPepMap[p] in proAl:
+                newD[p] = proAl[revPepMap[p]]
         else:
             print("Can't locate alignment info for %s" % p)
     return newD
@@ -137,11 +140,16 @@ def plotData(xs, allYs, opts):
     
     #One line per species
     counter=0
-    for thisID, ys in allYs.items():
+    idSorted = sorted(list(allYs.keys()))
+    for thisID in idSorted:
+        ys = allYs[thisID]
         ax.plot(xs, ys, c=cols[counter], label=thisID)
-
+        counter+=1
     #Generate figure legend
     ax.legend()
+    #Set axis labels
+    ax.set_ylabel("Max Z-score")
+    ax.set_xlabel("Alignment Position")
 
 #    ax.set_yticks(range(len(seqs)))
 #    ax.set_yticklabels([x.replace("-", " ") for x in seqs])
