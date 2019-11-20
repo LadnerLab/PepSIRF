@@ -11,6 +11,7 @@
 
 #include "module_normalize.h"
 #include "options_normalize.h"
+#include "time_keep.h"
 
 module_normalize::module_normalize()
 {
@@ -25,6 +26,9 @@ std::string module_normalize::get_name()
 void module_normalize::run( options *opts )
 {
     options_normalize *n_opts = (options_normalize*) opts;
+    time_keep::timer timer;
+
+    timer.start();
 
     std::string scores_fname = n_opts->peptide_scores_fname;
 
@@ -39,6 +43,10 @@ void module_normalize::run( options *opts )
     
 
     write_peptide_scores( "pep_out.tsv", original_scores );
+
+    timer.stop();
+    
+    std::cout << "Took " << timer.get_elapsed() << " seconds.\n";
 
 }
 

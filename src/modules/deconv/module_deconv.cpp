@@ -31,7 +31,7 @@ void module_deconv::run( options *opts )
     options_deconv *d_opts = ( options_deconv * ) opts;
     time_keep::timer timer;
 
-    timer.start = omp_get_wtime();
+    timer.start();
 
     if( d_opts->create_linkage )
         {
@@ -42,7 +42,7 @@ void module_deconv::run( options *opts )
             choose_kmers( d_opts );
         }
 
-    timer.end = omp_get_wtime();
+    timer.stop();
 
     std::cout << "Took " << time_keep::get_elapsed( timer ) << " second(s).\n";
 }
