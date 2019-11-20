@@ -27,6 +27,7 @@ def main():
     p.add_option('--taxCat', default=1,  type='int', help='Taxonomic category to use. 0=subspecies, 1=species, 2=genus, 3=family [1]')
     p.add_option('--ovlp', default=0.5,  type='float', help='Probe must cover at least this proportion of window to be included. [0.5]')
     p.add_option('-m', '--map',  help='File containing map to link names in enriched list to those in pep fasta. [OPT]')
+    p.add_option('--taxIDs',  help='Optional way of providing taxon IDs of interest, as a comma separated list. [OPT]')
 #    p.add_option('--mapOrder', default=1,  type='int', help='Integer indicate the column # of the name labels in the enriched list. Must be 1 or 2 (1-based)[1]')
 
     opts, args = p.parse_args()
@@ -55,7 +56,10 @@ def main():
     #Get min and max positions of aligned probes
     minPos, maxPos = getMinMax(proAl)
     # Get all species-level taxIDs in the probe alignment
-    ids = allIDs(list(proAl.keys()), pepMap, revPepMap, opts)
+    if opts.taxIDs:
+        ids = opts.taxIDs.split(",")
+    else:
+        ids = allIDs(list(proAl.keys()), pepMap, revPepMap, opts)
     #Make new version with only the enriched probes
     proAl = downSample(proAl, pros, pepMap, revPepMap)
     print("Read Probe Alignment")
