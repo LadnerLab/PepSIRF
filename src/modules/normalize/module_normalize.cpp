@@ -1,5 +1,5 @@
 #include <iostream>
-#include <omp.h>
+#include "omp_opt.h"
 #include <algorithm>
 #include <fstream>
 #include <boost/algorithm/string.hpp>
