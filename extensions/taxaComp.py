@@ -23,13 +23,13 @@ def main():
     p.add_option('--taxCat', default=1,  type='int', help='Taxonomic category to use. 0=subspecies, 1=species, 2=genus, 3=family [1]')
     p.add_option('--ovlp', default=0.5,  type='float', help='Probe must cover at least this proportion of window to be included. [0.5]')
     p.add_option('-m', '--map',  help='File containing map to link names in enriched list to those in pep fasta. [OPT]')
-    p.add_option('--mapOrder', default=1,  type='int', help='Integer indicate the column # of the name labels in the enriched list. Must be 1 or 2 (1-based)[1]')
+#    p.add_option('--mapOrder', default=1,  type='int', help='Integer indicate the column # of the name labels in the enriched list. Must be 1 or 2 (1-based)[1]')
 
     opts, args = p.parse_args()
 
     #Read in name map, if provided
     if opts.map:
-        pepMap = readmap(opts.map, order=opts.mapOrder-1)
+        pepMap = readmap(opts.map, order=0)
         revPepMap = {v:k for k,v in pepMap.items()}
         print("Read Name Map")
         
@@ -76,6 +76,7 @@ def main():
                     avgS=np.mean([scoreDict[n][p] for n in opts.name.split(",")])
                     if thisWin[taxInf[opts.taxCat]] < avgS:
                         thisWin[taxInf[opts.taxCat]] = avgS
+                        print(p, avgS, revPepMap[p], i)
                 else:
                     print("Can't find tax info for %s" % p)
                     
