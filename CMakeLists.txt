@@ -21,6 +21,9 @@ add_compile_options( "-Wall" "-std=c++11" "-Wextra" "-fvisibility=hidden"
                      "$<$<CONFIG:DEBUG>:-O0;-g>" 
 					 "$<$<CONFIG:RELEASE>:-O3>")
 
+
+set(PepSIRF_MODULES pepsirf_common modules_demux modules_deconv modules_normalize)                
+
 if(OpenMP_FOUND)
   message( "OpenMP enabled" )
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
@@ -85,16 +88,17 @@ if(BUILD_TESTS)
   include_directories(pepsirf_test lib)
   enable_testing()
 if(OpenMP_FOUND)
-  target_link_libraries(pepsirf_test PUBLIC OpenMP::OpenMP_CXX pepsirf_common modules_demux modules_deconv modules_normalize ${Boost_LIBRARIES} )
+  target_link_libraries(pepsirf_test PUBLIC OpenMP::OpenMP_CXX ${PepSIRF_MODULES} ${Boost_LIBRARIES} )
+
 else()
-  target_link_libraries(pepsirf_test PUBLIC pepsirf_common modules_demux modules_deconv modules_normalize ${Boost_LIBRARIES} )
+  target_link_libraries(pepsirf_test PUBLIC ${PepSIRF_MODULES} ${Boost_LIBRARIES} )
 endif()
 
   add_test( NAME test COMMAND pepsirf_test ) 
 endif()
 
 if(OpenMP_FOUND)
-  target_link_libraries(pep_sirf PUBLIC OpenMP::OpenMP_CXX pepsirf_common modules_demux modules_deconv modules_normalize ${Boost_LIBRARIES} )
+  target_link_libraries(pep_sirf PUBLIC OpenMP::OpenMP_CXX ${PepSIRF_MODULES} ${Boost_LIBRARIES} )
 else()
-  target_link_libraries(pep_sirf PUBLIC pepsirf_common modules_demux modules_deconv nodules_normalize ${Boost_LIBRARIES} )
+  target_link_libraries(pep_sirf PUBLIC ${PepSIRF_MODULES} ${Boost_LIBRARIES} )
 endif()
