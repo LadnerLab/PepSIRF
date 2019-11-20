@@ -25,6 +25,24 @@ modes are followed by [scoring_species,create_linkage].
                                         species_id\tcount
                                          [create_linkage,scoring_species]
                                         
+  --scores_per_round arg                Name of directory to write 
+                                        counts/scores to after every round. If 
+                                        included, 
+                                        the counts and scores for all remaining
+                                        species will be written after every 
+                                        round. 
+                                        Filenames will be written in the format
+                                        '$dir/round_x', where x is the round 
+                                        number. 
+                                        The original scores will be written to 
+                                        '$dir/round_0'. A new file will be 
+                                        written to the 
+                                        directory after each subsequent round. 
+                                        If this flag is included 
+                                        and the specified directory exists, the
+                                        program will exit with an error. 
+                                        [scoring_species
+                                        
   --single_threaded                     By default this module uses two 
                                         threads. Include this option with no 
                                         arguments if you only want  one thread 
@@ -104,12 +122,15 @@ modes are followed by [scoring_species,create_linkage].
                                         peptides were assigned to which species
                                         will be written. This map will be a 
                                         tab-delimited file with the first 
-                                        column peptide names, and the second 
-                                        column is a comma-separated list of 
-                                        species the peptide was assigned to. 
-                                        Note that this comma-separated list 
-                                        will only contain multiple values in 
-                                        the event of a tie. [scoring_species]
+                                        column peptide names, the second column
+                                        is a comma-separated list of species 
+                                        the peptide was assigned to. The third 
+                                        column will be a list of the species 
+                                        the peptide originally shared a kmer 
+                                        with. 
+                                        Note that the second column will only 
+                                        contain multiple values in the event of
+                                        a tie. [scoring_species]
                                         
   --score_tie_threshold arg (=0)        Threshold for two species to be 
                                         evaluated as a tie. Note that this 
@@ -200,6 +221,26 @@ modes are followed by [scoring_species,create_linkage].
                                         peptides that have been designed as 
                                         part of a library. [create_linkage]
                                         
+  --tax_id_index arg (=1)               The index (0-based, valid values 
+                                        include 0-3) of the tax id to use for 
+                                        linking peptides and species. For 
+                                        example, if this argument is passed 
+                                        with the value 1, 
+                                        the species ID will be used. (2 for 
+                                        genus, 3 for family. 0 can vary 
+                                        depending upon the 
+                                        method used for assigning the 0'th ID. 
+                                        [create_linkage]
+                                        
+  --kmer_redundancy_control             Control for kmer redundancy when 
+                                        creating the peptide linkage map. 
+                                        Instead of a peptide receiving one 
+                                        point for each kmer it receives for a 
+                                        species, it recieves 1 / ( the number 
+                                        of times the kmer appears in the 
+                                        original design ) points. 
+                                        [create_linkage] 
+                                        
   -k [ --kmer_size ] arg                Kmer size to use when creating the 
                                         linkage map. Entries in the linkage 
                                         file will contain peptides and the 
@@ -212,4 +253,5 @@ modes are followed by [scoring_species,create_linkage].
                                         the species with id '455', and 10 
                                         7-mers with the species that has id 
                                         423. [create_linkage]
+                                        
 ```

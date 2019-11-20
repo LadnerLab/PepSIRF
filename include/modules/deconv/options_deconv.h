@@ -23,10 +23,18 @@ class options_deconv : public options
      **/
     std::string linked_fname;
 
+    std::size_t id_index;
+
     /**
      * Name of the file to write output to.
      **/
     std::string output_fname;
+
+    /**
+     * Flag to penalize kmers based upon their frequency in the 
+     * designed peptides. 
+     **/
+    bool penalize_kmers;
 
     /**
      * Name of file that contains names of enriched peptides,
@@ -38,6 +46,11 @@ class options_deconv : public options
      * Threshold value for a peptide to not be filtered out.
      **/
     std::size_t threshold;
+
+    /**
+     * Directory name to write round scores/counts to
+     **/
+    std::string orig_scores_dname;
 
     /**
      * Score threshold to determine 

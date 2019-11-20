@@ -6,7 +6,7 @@
 #include <limits>
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
-#include <omp.h>
+#include "omp_opt.h"
 
 #include "options_demux.h"
 #include "maps.h"

@@ -8,11 +8,21 @@
 #include <algorithm>
 #include <vector>
 #include <unordered_map>
+#include <cmath>
+#include <unordered_set>
+#include <string>
+#include <fstream>
+#include <streambuf>
+#include <boost/lexical_cast.hpp>
 
+#include "test_utils.h"
+#include "overlap_data.h"
+#include "distance_tools.h"
 #include "sequence_indexer.h"
 #include "sequence.h"
 #include "fastq_sequence.h"
 #include "maps.h"
+#include "distance_matrix.h"
 #include "fastq_parser.h"
 #include "module_demux.h"
 #include "module_deconv.h"
@@ -20,6 +30,14 @@
 #include "sample.h"
 #include "fastq_score.h"
 #include "kmer_tools.h"
+#include "fs_tools.h"
+#include "peptide.h"
+#include "scored_peptide.h"
+#include "species_id.h"
+#include "scored_entity.h"
+#include "species_data.h"
+
+using namespace util;
 
 static std::string fasta_ex = ">Example sequence 1\nDJFKDLFJSF\nDJFKDJFDJKFJKDF\n\nJDSKFLJFDKSFLJ\n>Example Sequence 2\n\n\nDJFKLSFJDKLSFJKSLFJSKDLFJDKSLFJKLDKDKDK\n\n\n";
 TEST_CASE( "Sequence", "[sequence]" )
@@ -187,7 +205,7 @@ TEST_CASE( "Test samplelist_parser and sample", "[samplelist_parser]" )
 
 
     unsigned int index = 0;
-    sequential_map<sample, int> s_map( vec.size() );
+    std::unordered_map<sample, int> s_map( vec.size() );
     for( index = 0 ; index < vec.size(); ++index )
         {
             s_map[ vec[ index ] ] = vec[ index ].id;
@@ -282,7 +300,6 @@ TEST_CASE( "Test Count Generation", "[module_demux]" )
 
     mod.add_seqs_to_map( my_map, vec, num_samples );
 
-    parallel_map<sequence, std::vector<std::size_t>*>::iterator it = my_map.begin();
     parallel_map<sequence, std::vector<std::size_t>*>::iterator seq_match;
 
     std::size_t index = 0;
@@ -348,13 +365,13 @@ TEST_CASE( "Fastq_scorer", "[fastq_score]" )
 
 TEST_CASE( "get_kmers", "[kmer_scores]" )
 {
-    std::string sequence = "ABCDEFGHIJKLMONPQRSTUVWXYZ";
+    std::string sequence = "ABCDEFGHIJKLMONPQRSTUVWYZ";
     std::vector<std::string> kmers;
     int num_kmers = 0;
 
     num_kmers = kmer_tools::get_kmers( kmers, sequence, 1 );
-    REQUIRE( num_kmers == 26 );
-    REQUIRE( kmers.size() == 26 );
+    REQUIRE( num_kmers == 25 );
+    REQUIRE( kmers.size() == 25 );
 
     kmers.clear();
 
@@ -374,21 +391,21 @@ TEST_CASE( "get_tie_candidates_integer", "[module_deconv]" )
 {
     auto mod = module_deconv();
 
-    std::vector<std::pair<std::size_t, double>> candidates;
-    std::vector<std::pair<std::size_t, double>> scores;
+    std::vector<std::pair<std::string, double>> candidates;
+    std::vector<std::pair<std::string, double>> scores;
     double threshold      = 4.0;
     double ovlp_threshold = 4.0;
 
-    scores.emplace_back( 100, 245.0 );
-    scores.emplace_back( 101, 105.0 );
-    scores.emplace_back( 102, 5.0 );
-    scores.emplace_back( 103, 245.0 );
-    scores.emplace_back( 104, 135.0 );
-    scores.emplace_back( 105, 249.0 );
+    scores.emplace_back( "100", 245.0 );
+    scores.emplace_back( "101", 105.0 );
+    scores.emplace_back( "102", 5.0 );
+    scores.emplace_back( "103", 245.0 );
+    scores.emplace_back( "104", 135.0 );
+    scores.emplace_back( "105", 249.0 );
     std::sort( scores.begin(),
                scores.end(),
-               compare_pair_non_increasing
-               <std::size_t, double>()
+               util::compare_pair_non_increasing
+               <std::string, double>()
             );
 
     auto t_type = mod.get_tie_candidates( candidates,
@@ -462,29 +479,29 @@ TEST_CASE( "get_tie_candidates_ratio", "[module_deconv]" )
 {
     auto mod = module_deconv();
 
-    std::vector<std::pair<std::size_t, double>> candidates;
-    std::vector<std::pair<std::size_t, double>> scores;
+    std::vector<std::pair<std::string, double>> candidates;
+    std::vector<std::pair<std::string, double>> scores;
     double threshold      = 4.0;
     double ovlp_threshold = 0;
 
-    scores.emplace_back( 100, 245.0 );
-    scores.emplace_back( 101, 105.0 );
-    scores.emplace_back( 102, 5.0 );
-    scores.emplace_back( 103, 245.0 );
-    scores.emplace_back( 104, 135.0 );
-    scores.emplace_back( 105, 249.0 );
+    scores.emplace_back( "100", 245.0 );
+    scores.emplace_back( "101", 105.0 );
+    scores.emplace_back( "102", 5.0 );
+    scores.emplace_back( "103", 245.0 );
+    scores.emplace_back( "104", 135.0 );
+    scores.emplace_back( "105", 249.0 );
 
     std::sort( scores.begin(),
                scores.end(),
-               compare_pair_non_increasing
-               <std::size_t, double>()
+               util::compare_pair_non_increasing
+               <std::string, double>()
             );
 
     auto t_type = mod.get_tie_candidates( candidates,
                                           scores,
                                           threshold,
                                           ovlp_threshold,
-                                          ratio<double>()
+                                          util::ratio<double>()
                                         );
 
     REQUIRE( candidates.size() == 1 );
@@ -498,7 +515,7 @@ TEST_CASE( "get_tie_candidates_ratio", "[module_deconv]" )
                                      scores,
                                      threshold,
                                      ovlp_threshold,
-                                     ratio<double>()
+                                     util::ratio<double>()
                                    );
 
 
@@ -559,15 +576,15 @@ TEST_CASE( "test_difference", "[struct_difference]" )
 
 }
 
-TEST_CASE( "sufficient_overlap", "[module_deconv]" )
+TEST_CASE( "calculate_overlap", "[module_deconv]" )
 {
 
     auto mod = module_deconv();
 
-    sequential_map<std::size_t,std::vector<std::string>> id_p_map;
-    sequential_map<std::string,sequential_map<std::size_t,std::size_t>> counts_map;
-    std::size_t first = 100;
-    std::size_t second = 200;
+    std::unordered_map<std::string,std::vector<std::string>> id_p_map;
+    std::unordered_map<std::string,std::unordered_map<std::string,double>> counts_map;
+    std::string first = "100";
+    std::string second = "200";
 
 
     std::vector<std::string> f_vec { "pep1", "pep2", "pep3", "pep4" };
@@ -578,58 +595,55 @@ TEST_CASE( "sufficient_overlap", "[module_deconv]" )
 
     for( const auto& pep : f_vec )
         {
-            counts_map[ pep ] = sequential_map<std::size_t,std::size_t>();
+            counts_map[ pep ] = std::unordered_map<std::string,double>();
             counts_map[ pep ].emplace( first, 1 );
             counts_map[ pep ].emplace( second, 1 );
         }
 
     double threshold = 1;
 
-    bool so = mod.sufficient_overlap( id_p_map,
-                                      counts_map,
-                                      first, second,
-                                      evaluation_strategy::tie_eval_strategy::INTEGER_TIE_EVAL,
-                                      threshold
-                                    );
-    REQUIRE( so );
+    overlap_data<double> so = mod.calculate_overlap( id_p_map,
+                                                     counts_map,
+                                                     first, second,
+                                                     evaluation_strategy::tie_eval_strategy::INTEGER_TIE_EVAL
+                                                   );
+    REQUIRE( so.sufficient( threshold ) );
 
-    so = mod.sufficient_overlap( id_p_map,
+    so = mod.calculate_overlap( id_p_map,
                                  counts_map,
                                  first, second,
-                                 evaluation_strategy::tie_eval_strategy::INTEGER_TIE_EVAL,
-                                 4
+                                 evaluation_strategy::tie_eval_strategy::INTEGER_TIE_EVAL
                                );
-    REQUIRE( so );
 
-    so = mod.sufficient_overlap( id_p_map,
+    REQUIRE( so.sufficient( 4 ) );
+
+    so = mod.calculate_overlap( id_p_map,
                                  counts_map,
                                  first, second,
-                                 evaluation_strategy::tie_eval_strategy::INTEGER_TIE_EVAL,
-                                 5
+                                 evaluation_strategy::tie_eval_strategy::INTEGER_TIE_EVAL
                                );
-    REQUIRE( !so );
+    REQUIRE( !so.sufficient( 5 ) );
 
 
-    so = mod.sufficient_overlap( id_p_map,
+    so = mod.calculate_overlap( id_p_map,
                                  counts_map,
                                  first, second,
-                                 evaluation_strategy::tie_eval_strategy::PERCENT_TIE_EVAL,
-                                 0.5
+                                 evaluation_strategy::tie_eval_strategy::PERCENT_TIE_EVAL
                                );
-    REQUIRE( so );
+    REQUIRE( so.sufficient( 0.5 ) );
 
 
 }
 
-TEST_CASE( "sufficient_overlap_ratio", "[module_deconv]" )
+TEST_CASE( "calculate_overlap_ratio", "[module_deconv]" )
 {
 
     auto mod = module_deconv();
 
-    sequential_map<std::size_t,std::vector<std::string>> id_p_map;
-    sequential_map<std::string,sequential_map<std::size_t,std::size_t>> counts_map;
-    std::size_t first = 100;
-    std::size_t second = 200;
+    std::unordered_map<std::string,std::vector<std::string>> id_p_map;
+    std::unordered_map<std::string,std::unordered_map<std::string,double>> counts_map;
+    std::string first = "100";
+    std::string second = "200";
 
 
     std::vector<std::string> f_vec { "pep1", "pep3", "pep4" };
@@ -640,67 +654,63 @@ TEST_CASE( "sufficient_overlap_ratio", "[module_deconv]" )
 
     for( const auto& pep : f_vec )
         {
-            counts_map[ pep ] = sequential_map<std::size_t,std::size_t>();
+            counts_map[ pep ] = std::unordered_map<std::string,double>();
             counts_map[ pep ].emplace( first, 1 );
         }
     for( const auto& pep : s_vec )
         {
             if( counts_map.find( pep ) == counts_map.end() )
                 {
-                    counts_map[ pep ] = sequential_map<std::size_t,std::size_t>();
+                    counts_map[ pep ] = std::unordered_map<std::string,double>();
                 }
             counts_map[ pep ].emplace( second, 1 );
         }
 
 
 
-    bool so = false;
-    double threshold = 1;
+    overlap_data<double> so;
 
-    so = mod.sufficient_overlap( id_p_map,
-                                 counts_map,
-                                 first, second,
-                                 evaluation_strategy::tie_eval_strategy::PERCENT_TIE_EVAL,
-                                 0.5
-                               );
-    REQUIRE( so );
+    so = mod.calculate_overlap( id_p_map,
+                                counts_map,
+                                first, second,
+                                evaluation_strategy::tie_eval_strategy::PERCENT_TIE_EVAL
+                              );
 
-    so = mod.sufficient_overlap( id_p_map,
-                                 counts_map,
-                                 first, second,
-                                 evaluation_strategy::tie_eval_strategy::PERCENT_TIE_EVAL,
-                                 0.8
-                               );
-    REQUIRE( !so );
+    REQUIRE( so.sufficient( 0.5 ) );
 
-    so = mod.sufficient_overlap( id_p_map,
-                                 counts_map,
-                                 first, second,
-                                 evaluation_strategy::tie_eval_strategy::PERCENT_TIE_EVAL,
-                                 0.76
-                               );
-    REQUIRE( !so );
+    so = mod.calculate_overlap( id_p_map,
+                                counts_map,
+                                first, second,
+                                evaluation_strategy::tie_eval_strategy::PERCENT_TIE_EVAL
+                              );
+    REQUIRE( !so.sufficient( 0.8 ) );
 
-    so = mod.sufficient_overlap( id_p_map,
-                                 counts_map,
-                                 first, second,
-                                 evaluation_strategy::tie_eval_strategy::PERCENT_TIE_EVAL,
-                                 0.75
-                               );
-    REQUIRE( so );
+    so = mod.calculate_overlap( id_p_map,
+                                counts_map,
+                                first, second,
+                                evaluation_strategy::tie_eval_strategy::PERCENT_TIE_EVAL
+                              );
+    REQUIRE( !so.sufficient( 0.76 ) );
+
+    so = mod.calculate_overlap( id_p_map,
+                                counts_map,
+                                first, second,
+                                evaluation_strategy::tie_eval_strategy::PERCENT_TIE_EVAL
+                              );
+    REQUIRE( so.sufficient( 0.75 ) );
 
 
 }
 
-TEST_CASE( "sufficient_overlap_summation", "[module_deconv]" )
+TEST_CASE( "calculate_overlap_summation", "[module_deconv]" )
 {
 
     auto mod = module_deconv();
 
-    sequential_map<std::size_t,std::vector<std::string>> id_p_map;
-    sequential_map<std::string,sequential_map<std::size_t,std::size_t>> counts_map;
-    std::size_t first = 100;
-    std::size_t second = 200;
+    std::unordered_map<std::string,std::vector<std::string>> id_p_map;
+    std::unordered_map<std::string,std::unordered_map<std::string,double>> counts_map;
+    std::string first = "100";
+    std::string second = "200";
 
 
     std::vector<std::string> f_vec { "pep1", "pep3", "pep4" };
@@ -711,45 +721,41 @@ TEST_CASE( "sufficient_overlap_summation", "[module_deconv]" )
 
     for( const auto& pep : f_vec )
         {
-            counts_map[ pep ] = sequential_map<std::size_t,std::size_t>();
+            counts_map[ pep ] = std::unordered_map<std::string,double>();
             counts_map[ pep ].emplace( first, 1 );
         }
     for( const auto& pep : s_vec )
         {
             if( counts_map.find( pep ) == counts_map.end() )
                 {
-                    counts_map[ pep ] = sequential_map<std::size_t,std::size_t>();
+                    counts_map[ pep ] = std::unordered_map<std::string,double>();
                 }
             counts_map[ pep ].emplace( second, 1 );
         }
 
 
-    bool so = false;
-    double threshold = 1;
+    overlap_data<double> so;
 
-    so = mod.sufficient_overlap( id_p_map,
+    so = mod.calculate_overlap( id_p_map,
                                  counts_map,
                                  first, second,
-                                 evaluation_strategy::tie_eval_strategy::SUMMATION_SCORING_TIE_EVAL,
-                                 0.5
+                                 evaluation_strategy::tie_eval_strategy::SUMMATION_SCORING_TIE_EVAL
                                );
-    REQUIRE( so );
+    REQUIRE( so.sufficient( 0.5 ) );
 
-    so = mod.sufficient_overlap( id_p_map,
+    so = mod.calculate_overlap( id_p_map,
+                                counts_map,
+                                first, second,
+                                evaluation_strategy::tie_eval_strategy::SUMMATION_SCORING_TIE_EVAL
+                               );
+    REQUIRE( so.sufficient( 0.75 ) );
+
+    so = mod.calculate_overlap( id_p_map,
                                  counts_map,
                                  first, second,
-                                 evaluation_strategy::tie_eval_strategy::SUMMATION_SCORING_TIE_EVAL,
-                                 0.75
+                                 evaluation_strategy::tie_eval_strategy::SUMMATION_SCORING_TIE_EVAL
                                );
-    REQUIRE( so );
-
-    so = mod.sufficient_overlap( id_p_map,
-                                 counts_map,
-                                 first, second,
-                                 evaluation_strategy::tie_eval_strategy::SUMMATION_SCORING_TIE_EVAL,
-                                 0.76
-                               );
-    REQUIRE( !so );
+    REQUIRE( !so.sufficient( 0.76 ) );
 
 
 
@@ -797,13 +803,646 @@ TEST_CASE( "get_map_value", "[module_deconv]" )
 {
     auto mod = module_deconv();
 
-    sequential_map<int,int> map;
+    std::unordered_map<int,int> map;
     map.emplace( 1, 1 );
     map.emplace( 2, 2 );
     map.emplace( 3, 3 );
 
-    REQUIRE( get_map_value<sequential_map,int,int>( map, 1 ) == 1 );
-    REQUIRE( get_map_value<sequential_map,int,int>( map, 2 ) == 2 );
-    REQUIRE( get_map_value<sequential_map,int,int>( map, 3 ) == 3 );
-    REQUIRE( get_map_value<sequential_map,int,int>( map, 4 ) == 0 );
+    REQUIRE( mod.get_map_value( map, 1 ) == 1 );
+    REQUIRE( mod.get_map_value( map, 2 ) == 2 );
+    REQUIRE( mod.get_map_value( map, 3 ) == 3 );
+    REQUIRE( mod.get_map_value( map, 4 ) == 0 );
+    REQUIRE( mod.get_map_value( map, 5, 9 ) == 9 );
+}
+
+TEST_CASE( "all_distances", "[util]" )
+{
+    std::vector<int> data{ 1, 2, 3, 4, 5 };
+    std::vector<int> distances;
+    int target = 1;
+
+    auto distance = [&]( const int a, const int b ){ return std::abs( a - b ); };
+
+    distance_tools::all_distances( distances, data.begin(), data.end(), target, distance );
+
+    REQUIRE( distances.size() == data.size() );
+
+    for( std::size_t index = 0; index < distances.size(); ++index )
+        {
+            REQUIRE(
+                    distances[ index ] == std::abs( data[ index ] - target  )
+                   );
+        }
+
+}
+
+TEST_CASE( "pairwise_distances_int", "[distance_tools]" )
+{
+    distance_matrix<int> dist( 5 );
+
+    std::vector<int> data{ 1, 2, 3, 4, 5 };
+    auto int_dist = []( int a, int b ){ return std::abs( a - b ); };
+
+    distance_tools::pairwise_distances( dist,
+                                        data.begin(),
+                                        data.end(),
+                                        int_dist
+                                      );
+
+    for( std::size_t index = 0; index < data.size(); ++index )
+        {
+            for( std::size_t inner_index = 0; inner_index < data.size(); ++inner_index )
+                {
+
+                    REQUIRE( dist[ index ][ inner_index ]
+                             == int_dist( data[ index ], data[ inner_index ] )
+                           );
+                }
+        }
+
+}
+
+TEST_CASE( "pairwise_dist_string", "[distance_tools]" )
+{
+    distance_matrix<int> dist( 3 );
+    auto ham_dist = []( std::string a, std::string b ) -> int
+        {
+            std::size_t index = 0;
+            int sum = 0;
+            for( index = 0; index < a.length(); ++index )
+                {
+                    sum += a[ index ] != b[ index ];
+                }
+            return sum;
+        };
+
+    std::string a = "string_a";
+    std::string b = "string_b";
+    REQUIRE( ham_dist( a, b ) == 1 );
+
+    std::vector<std::string> data;
+
+    data.push_back( std::string( "string1" ) );
+    data.push_back( std::string( "1234567" ) );
+    data.push_back( std::string( "string3" ) );
+
+    distance_tools::pairwise_distances( dist,
+                                        data.begin(),
+                                        data.end(),
+                                        ham_dist
+                                      );
+
+    for( std::size_t index = 0; index < data.size(); ++index )
+        {
+            for( std::size_t inner_index = 0; inner_index < data.size(); ++inner_index )
+                {
+
+                    REQUIRE( dist[ index ][ inner_index ]
+                             == ham_dist( data[ index ], data[ inner_index ] )
+                           );
+                }
+        }
+
+
+
+}
+
+TEST_CASE( "overlap_data", "[module_deconv]" )
+{
+    overlap_data<double> ovlp{ 0.75, 0.5 };
+
+    REQUIRE( ovlp.get_a_to_b() == 0.75 );
+    REQUIRE( ovlp.get_b_to_a() == 0.5  );
+
+    REQUIRE( ovlp.sufficient( 0.49 ) );
+    REQUIRE( ovlp.sufficient( 0.5 ) );
+    REQUIRE( !ovlp.sufficient( 0.51 ) );
+    REQUIRE( ovlp.sufficient( 0 ) );
+
+
+    overlap_data<int> ovlp_int{ 75, 50 };
+    REQUIRE( ovlp_int.get_a_to_b() == 75 );
+    REQUIRE( ovlp_int.get_b_to_a() == 50  );
+
+    REQUIRE( ovlp_int.sufficient( 49 ) );
+    REQUIRE( ovlp_int.sufficient( 50 ) );
+    REQUIRE( !ovlp_int.sufficient( 51 ) );
+    REQUIRE( ovlp_int.sufficient( 0 ) );
+
+    overlap_data<int> ovlp1{ 20, 25 };
+    overlap_data<int> ovlp2{ 23, 27 };
+
+    REQUIRE(    ovlp1 < ovlp2 );
+    REQUIRE( !( ovlp1 > ovlp2 ) );
+    REQUIRE( !( ovlp1 == ovlp2 ) );
+    REQUIRE(  ( ovlp1 != ovlp2 ) );
+    REQUIRE(  ( ovlp1 <= ovlp2 ) );
+    REQUIRE( !( ovlp1 >= ovlp2 ) );
+
+
+
+}
+
+
+TEST_CASE( "pair_compare", "[util]" )
+{
+    std::pair<int,int> pair_1{ 1, 2 };
+    std::pair<int,int> pair_2{ 2, 3 };
+
+
+    auto gt = []( const int& a, const int& b ){ return a > b; };
+    REQUIRE( !util::pair_positional_compare( pair_1, pair_2,
+                                             gt,
+                                             gt
+                                           )
+           );
+
+    REQUIRE( util::pair_positional_compare( pair_2, pair_1,
+                                            gt,
+                                            gt
+                                          )
+           );
+
+    std::pair<double,std::size_t> p1{ 10.5, 11 };
+    std::pair<double,std::size_t> p2{ 11.5, 10 };
+
+    auto gt_d = []( const double& a, const double& b ){ return a > b; };
+    auto gt_s = []( const std::size_t& a, const std::size_t& b ){ return a > b; };
+
+    REQUIRE( !util::pair_positional_compare( p2, p1,
+                                             gt_d,
+                                             gt_s
+                                           )
+           );
+
+    p1.first = 100.2;
+    p1.second = 400;
+
+
+    REQUIRE( !util::pair_positional_compare( p2, p1,
+                                             gt_d,
+                                             gt_s
+                                           )
+           );
+    REQUIRE( util::pair_positional_compare( p1, p2,
+                                             gt_d,
+                                             gt_s
+                                           )
+           );
+
+
+
+}
+
+TEST_CASE( "Deconv end_to_end", "[module_deconv]" )
+{
+    module_deconv mod;
+    options_deconv opts;
+
+    opts.create_linkage = false;
+
+    opts.linked_fname = std::string( "../test/test_pep_linkages.tsv" );
+    opts.output_fname = std::string( "../test/test_deconv_output.tsv" );
+    opts.enriched_fname = std::string( "../test/test_enriched_file.tsv" );
+    opts.id_name_map_fname = std::string();
+
+    opts.threshold = 00;
+    opts.single_threaded = false;
+    opts.fractional_scoring = false;
+    opts.summation_scoring = true;
+    opts.score_filtering = true;
+    opts.species_peptides_out = "";
+    opts.score_tie_threshold = 0.90;
+    opts.score_overlap_threshold = 0.5;
+
+    mod.run( &opts );
+}
+
+TEST_CASE( "empty", "[util]" )
+{
+    std::string iter1{ "Hello world!" };
+
+    REQUIRE( !util::empty( iter1 ) );
+
+    iter1 = "";
+
+    REQUIRE( util::empty( iter1 ) );
+
+    std::vector<int> iter2{ 1, 2, 3, 4 };
+    REQUIRE( !util::empty( iter2 ) );
+
+    iter2.clear();
+
+    REQUIRE( util::empty( iter1 ) );
+
+}
+
+TEST_CASE( "global_original_scores", "[module_deconv]" )
+{
+    module_deconv mod;
+    std::stringstream stream;
+
+    std::unordered_map<std::string,std::string> id_name_map;
+    std::unordered_map<std::string,std::string> *id_name_map_ptr = &id_name_map;
+
+
+    // ordered map used so we can guarantee order
+    std::map<std::string,std::pair<double,double>> score_map;
+
+    std::vector<std::string> species{ "sp1", "sp2", "sp3", "sp4", "sp5" };
+
+    std::string expected_include_name = "Species ID\tSpecies Name\tCount\tScore\n"
+        "sp1\tsp1_name\t0\t1\n"
+        "sp2\tsp2_name\t1\t2\n"
+        "sp3\tsp3_name\t2\t3\n"
+        "sp4\tsp4_name\t3\t4\n"
+        "sp5\tsp5_name\t4\t5\n";
+
+    std::string expected_exclude_name = "Species ID\tSpecies Name\tCount\tScore\n"
+        "sp1\tsp1\t0\t1\n"
+        "sp2\tsp2\t1\t2\n"
+        "sp3\tsp3\t2\t3\n"
+        "sp4\tsp4\t3\t4\n"
+        "sp5\tsp5\t4\t5\n";
+
+
+    std::size_t idx = 0;
+    double idx_dbl = 1.0;
+    for( auto x : species )
+        {
+            std::string name = x + "_name";
+            id_name_map.emplace( x, name );
+
+            score_map.emplace( x,
+                               std::make_pair( idx, idx_dbl )
+                             );
+            ++idx;
+            ++idx_dbl;
+        }
+
+    mod.write_scores( stream, id_name_map_ptr, score_map );
+    REQUIRE( !stream.str().compare( expected_include_name ) );
+
+    stream.str( std::string() );
+    stream.clear();
+
+    id_name_map_ptr = nullptr;
+
+    mod.write_scores( stream, id_name_map_ptr, score_map );
+
+    REQUIRE( !stream.str().compare( expected_exclude_name ) );
+}
+
+
+TEST_CASE( "to_dir_name", "[fs_tools]" )
+{
+    std::string name_no_trail = "dir1";
+    std::string name_trail = "dir1/";
+    std::string dest_str;
+
+    REQUIRE( fs_tools::to_dir_name( dest_str, name_no_trail ) == name_trail );
+
+    dest_str.clear();
+
+    REQUIRE( fs_tools::to_dir_name( dest_str, name_trail ) == name_trail );
+
+    dest_str.clear();
+    
+    REQUIRE( fs_tools::to_dir_name( name_no_trail ) == name_trail );
+
+    dest_str.clear();
+
+    REQUIRE( fs_tools::to_dir_name( name_trail ) == name_trail );
+
+    std::string path_base( "dir1" );
+    std::string path_base_inc( "dir1/" );
+
+    dest_str.clear();
+
+    fs_tools::create_fname( dest_str, path_base,
+                            "fpart1", 1, 2, 3,
+                            "fpart4"
+                          );
+
+    REQUIRE( dest_str == "dir1/fpart1123fpart4" );
+
+    dest_str.clear();
+    
+    fs_tools::create_fname( dest_str, path_base_inc,
+                            "fpart1", 1, 2, 3,
+                            "fpart4"
+                          );
+
+    REQUIRE( dest_str == "dir1/fpart1123fpart4" );
+
+}
+
+TEST_CASE( "filter_counts (vector template)", "[module_deconv]" )
+{
+    std::vector<std::pair<std::size_t,double>> filter_vec; 
+    module_deconv mod;
+
+    for( std::size_t index = 0; index < 100; ++index )
+        {
+            filter_vec.emplace_back( std::make_pair( index, index + 1 ) );
+        }
+
+
+    mod.filter_counts<std::size_t,double>( filter_vec, 50  );
+
+    REQUIRE( filter_vec.size() == 51 );
+    auto comp_pair = []( const std::pair<size_t,double> first,
+                         const std::pair<size_t,double> second
+                         ){ return first.first < second.first; };
+    REQUIRE( std::min_element( filter_vec.begin(), filter_vec.end(), comp_pair )->second == 50 );
+}
+
+TEST_CASE( "peptide", "[peptide]" )
+{
+    peptide pep( "pep1", "ATGC" );
+    peptide pep2( "p11", "ATGC" );
+
+    REQUIRE( pep == pep2 );
+
+    pep2.set_sequence( "AGGG" );
+
+    REQUIRE( pep != pep2 );
+    REQUIRE( !pep2.get_sequence().compare( "AGGG" ) );
+
+}
+
+TEST_CASE( "scored peptide", "[peptide]" )
+{
+    scored_peptide<double> sc( "pep1", "ATGC", 100.0 );
+
+    REQUIRE( sc.get_score() == 100.0 );
+    REQUIRE( !sc.get_name().compare( "pep1" ) );
+    REQUIRE( !sc.get_sequence().compare( "ATGC" ) );
+
+    sc.set_score( 5 );
+    REQUIRE( sc.get_score() == 5 );
+
+
+}
+
+TEST_CASE( "scored_entity", "[scored_entity.h]" )
+{
+    scored_entity<std::string,double> sc( std::string( "pep1" ),
+                                          100.0
+                                        );
+
+    scored_entity<std::string,double> sc2( std::string( "pep1" ),
+                                          155.0
+                                        );
+
+    REQUIRE( sc == sc2 );
+    REQUIRE( !( sc != sc2 ) );
+
+    REQUIRE( sc.get_score() == 100.0 );
+    REQUIRE( sc2.get_score() == 155.0 );
+
+    REQUIRE( !( sc.get_key().compare( "pep1" ) ) );
+    REQUIRE( !( sc2.get_key().compare( "pep1" ) ) );
+
+    sc.set_key( std::string( "new_key" ) );
+    sc2.set_key( std::string( "new_key" ) );
+
+    REQUIRE( sc == sc2 );
+    REQUIRE( !( sc != sc2 ) );
+
+    std::unordered_set<scored_entity<std::string,double>> se_set;
+
+    se_set.insert( sc );
+
+    REQUIRE( se_set.size() == 1 );
+
+    se_set.insert( sc2 );
+
+    REQUIRE( se_set.size() == 1 );
+
+}
+
+TEST_CASE( "get_kmer_frequency", "[kmer_tools]" )
+{
+    using scored_kmer = scored_entity<std::string,std::size_t>;
+    std::unordered_set<scored_kmer> kmer_frequency_found;
+    std::unordered_set<scored_kmer> kmer_frequency_expected;
+
+    fasta_parser fp;
+    std::vector<sequence> vec;
+    vec = fp.parse( "../test/test.fasta" );
+    std::ifstream input_stream( "../test/test_kmer_frequency.tsv",
+                                std::ios_base::in
+                              );
+
+
+    test_utils::parse_kmer_frequency
+        <std::unordered_set>( kmer_frequency_expected,
+                              input_stream
+                            );
+
+    kmer_tools::get_kmer_frequencies( kmer_frequency_found,
+                                      vec,
+                                      9
+                                    );
+
+    REQUIRE( kmer_frequency_expected.size()
+             == kmer_frequency_found.size()
+           );
+
+    for( auto current : kmer_frequency_expected )
+        {
+            auto found = kmer_frequency_found.find( current );
+            REQUIRE( found
+                     != kmer_frequency_found.end()
+                   );
+
+            REQUIRE( current.get_key()   == found->get_key() );
+            REQUIRE( current.get_score() == found->get_score() );
+        }
+
+
+}
+
+TEST_CASE( "species_data", "[module_deconv]" )
+{
+    species_id<std::string> spec( "species 1" );
+    scored_peptide<double> peptide( "ATGC", 105.0 );
+    double score = 4;
+    double count = 11;
+
+    species_data dat( spec, score, count, peptide );
+
+    auto pep = dat.get_highest_scoring_peptide();
+
+    REQUIRE( pep.get_score() == 105.0 );
+    REQUIRE( !pep.get_sequence().compare( "ATGC" ) );
+    dat.set_score( 104.0 );
+
+    REQUIRE( dat.get_score() == 104.0 );
+
+}
+
+TEST_CASE( "score_peptide_for_species", "[module_deconv]" )
+{
+    auto mod = module_deconv();
+
+    peptide pep( "ATGC" );
+
+    std::unordered_map<
+        std::string,std::vector<std::pair<std::string,double>>>
+        spec_count_map;
+
+    std::string species_id = "spec 1";
+
+    evaluation_strategy::score_strategy strat;
+
+    strat = evaluation_strategy::score_strategy::INTEGER_SCORING;
+
+    std::vector<std::pair<std::string,double>> value;
+    value.emplace_back( species_id, 150.0 );
+    value.emplace_back( "spec 2", 140.0 );
+
+    spec_count_map[ pep.get_sequence() ] = value;
+
+    auto eval = [&]() -> double
+    {
+        return mod.score_peptide_for_species( pep, spec_count_map,
+                                              species_id,
+                                              strat
+                                            );
+    };
+    double score = eval();
+
+    REQUIRE( score == 1 );
+
+    strat = evaluation_strategy::score_strategy::SUMMATION_SCORING;
+
+    score = eval();
+
+    REQUIRE( score == 150.0 );
+
+    strat = evaluation_strategy::score_strategy::FRACTIONAL_SCORING;
+
+    score = eval();
+
+    REQUIRE( score == 0.5 );
+
+}
+
+TEST_CASE( "score_species_peptides/get_highest_score_per_species", "[module_deconv]" )
+{
+    auto mod = module_deconv();
+
+    std::unordered_map<std::string,
+                       std::vector<scored_peptide<double>>
+                       >
+        counts;
+
+
+    std::unordered_map<std::string,std::vector<std::string>>
+        id_count_map;
+
+    std::unordered_map<std::string,std::vector<std::pair<std::string,double>>>
+        spec_count_map;
+
+     evaluation_strategy::score_strategy strat;
+
+     std::vector<std::string> a_pep;
+     std::vector<std::string> b_pep;
+
+     a_pep.emplace_back( "pep1" );
+     a_pep.emplace_back( "pep2" );
+
+     b_pep.emplace_back( "pep1" );
+     b_pep.emplace_back( "pep2" );
+
+     id_count_map.emplace(
+                          std::make_pair(
+                                         "species 1",
+                                         a_pep
+                                         )
+                          );
+     id_count_map.emplace(
+                          std::make_pair(
+                                         "species 2",
+                                         b_pep
+                                         )
+                          );
+
+     std::vector<std::pair<std::string,double>> a_score;
+     std::vector<std::pair<std::string,double>> b_score;
+
+     a_score.emplace_back( std::make_pair( "species 1", 2.4 ) );
+     a_score.emplace_back( std::make_pair( "species 2", 3.4 ) );
+
+     b_score.emplace_back( std::make_pair( "species 1", 8.4 ) );
+     b_score.emplace_back( std::make_pair( "species 2", 9.4 ) );
+
+     spec_count_map[ "pep1" ] = a_score;
+     spec_count_map[ "pep2" ] = b_score;
+
+     std::unordered_map<std::string,scored_peptide<double>> highest_scores;
+
+     auto eval_sc_sp_pep = [&]()
+         {
+             mod.score_species_peptides( counts,
+                                         id_count_map,
+                                         spec_count_map,
+                                         strat
+                                         );
+         };
+
+     auto clear = [&]() { counts[ "species 1" ].clear();
+                          counts[ "species 2" ].clear();
+                          highest_scores.clear();
+     };
+
+     auto eval_max_score = [&] ()
+         {
+             mod.get_highest_score_per_species( highest_scores, counts );
+         };
+
+     strat = evaluation_strategy::score_strategy::SUMMATION_SCORING;
+
+     eval_sc_sp_pep();
+
+     REQUIRE( counts[ "species 1" ][ 0 ].get_score() == 2.4 );
+     REQUIRE( counts[ "species 1" ][ 1 ].get_score() == 8.4 );
+     REQUIRE( counts[ "species 2" ][ 0 ].get_score() == 3.4 );
+     REQUIRE( counts[ "species 2" ][ 1 ].get_score() == 9.4 );
+
+     eval_max_score();
+
+     REQUIRE( highest_scores[ "species 1" ].get_score() == 8.4 );
+     REQUIRE( highest_scores[ "species 2" ].get_score() == 9.4 );
+
+     clear();
+     strat = evaluation_strategy::score_strategy::INTEGER_SCORING;
+
+     eval_sc_sp_pep();
+
+     REQUIRE( counts[ "species 1" ][ 0 ].get_score() == 1 );
+     REQUIRE( counts[ "species 1" ][ 1 ].get_score() == 1 );
+     REQUIRE( counts[ "species 2" ][ 0 ].get_score() == 1 );
+     REQUIRE( counts[ "species 2" ][ 1 ].get_score() == 1 );
+
+     eval_max_score();
+
+     REQUIRE( highest_scores[ "species 1" ].get_score() == 1 );
+     REQUIRE( highest_scores[ "species 2" ].get_score() == 1 );
+
+     clear();
+     strat = evaluation_strategy::score_strategy::FRACTIONAL_SCORING;
+
+     eval_sc_sp_pep();
+
+     REQUIRE( counts[ "species 1" ][ 0 ].get_score() == 0.5 );
+     REQUIRE( counts[ "species 1" ][ 1 ].get_score() == 0.5 );
+     REQUIRE( counts[ "species 2" ][ 0 ].get_score() == 0.5 );
+     REQUIRE( counts[ "species 2" ][ 1 ].get_score() == 0.5 );
+
+     eval_max_score();
+     REQUIRE( highest_scores[ "species 1" ].get_score() == 0.5 );
+     REQUIRE( highest_scores[ "species 2" ].get_score() == 0.5 );
 }
