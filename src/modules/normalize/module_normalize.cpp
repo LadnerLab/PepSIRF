@@ -156,7 +156,7 @@ void module_normalize::write_peptide_scores( std::string dest_fname,
 
             for( inner_index = 0; inner_index < data.sample_names.size(); ++inner_index )
                 {
-                    std::sprintf( digits, "%f", data.scores[ index ][ inner_index ] );
+                    std::sprintf( digits, "%.2f", data.scores[ index ][ inner_index ] );
                     out_file << digits;
 
                     if( inner_index < data.sample_names.size() - 1 )
