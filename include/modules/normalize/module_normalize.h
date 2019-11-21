@@ -67,6 +67,15 @@ class module_normalize : public module
                 );
 
 
+    /**
+     * Normalize the counts in a vector of column sums 
+     * using the column_sum method. For this method, 
+     * the sum of each column is divided by 1e6.
+     * @param cols A vector of doubles, where each value is the 
+     *        sum of a column
+     * @post Each value in cols is now 1/1e6 its original value
+     **/
+    void norm_counts_col_sum( std::vector<double>& cols );
 
 };
 

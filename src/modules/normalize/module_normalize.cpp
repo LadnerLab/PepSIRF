@@ -122,9 +122,9 @@ void module_normalize::write_peptide_scores( std::string dest_fname,
         }
 }
 
-    void module_normalize::get_sum( std::vector<double>& dest,
-                                    std::vector<std::vector<double>>& src
-                                  )
+void module_normalize::get_sum( std::vector<double>& dest,
+                                std::vector<std::vector<double>>& src
+                                )
 {
     std::size_t index = 0;
 
