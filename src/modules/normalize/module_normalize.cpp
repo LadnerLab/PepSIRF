@@ -39,8 +39,18 @@ void module_normalize::run( options *opts )
 
     parse_peptide_scores( original_scores, scores_fname );
 
-    std::vector<double> col_sums( original_scores.sample_names.size(), 0 );
-    get_sum( col_sums, original_scores.scores );
+    std::vector<double> norm_factors( original_scores.sample_names.size(), 0 );
+    get_sum( norm_factors, original_scores.scores );
+    norm_counts_col_sum( norm_factors );
+
+    // normalize the counts
+    for( std::size_t index = 0; index < original_scores.scores.size(); ++index )
+        {
+            for( std::size_t inner_index = 0; inner_index < original_scores.scores[ index ].size(); ++inner_index )
+                {
+                    original_scores.scores[ index ][ inner_index ] /= norm_factors[ inner_index ];
+                }
+        }
     
 
     write_peptide_scores( "pep_out.tsv", original_scores );
