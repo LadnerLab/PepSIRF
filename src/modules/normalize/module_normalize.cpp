@@ -68,40 +68,71 @@ void module_normalize::parse_peptide_scores( peptide_score_data_sample_major& de
     std::string line;
     std::ifstream in_file( ifname, std::ios_base::in );
 
-    bool is_header = true; // first line is the header
+    std::vector<std::string> lines_from_file;
     std::vector<std::string> split_line;
 
     while( std::getline( in_file, line ).good() )
         {
             boost::trim_right( line );
-            boost::split( split_line, line, boost::is_any_of( "\t" ) );
+            lines_from_file.emplace_back( line );
+        }
 
-            if( is_header )
+    std::size_t line_count = lines_from_file.size();
+    std::size_t num_peptides = line_count - 1; // -1 because of the header
+    std::size_t sample_count = std::count( lines_from_file[ 0 ].begin(),
+                                           lines_from_file[ 0 ].end(),
+                                           '\t'
+                                         );
+    dest.scores.reserve( num_peptides );
+    dest.pep_names.reserve( num_peptides );
+    dest.sample_names.reserve( sample_count );
+
+    std::size_t index = 0;
+
+    for( index = 0; index < num_peptides; ++index )
+        {
+            dest.pep_names.emplace_back( std::string( "" ) );
+        }
+
+    for( index = 0; index < num_peptides; ++index )
+        {
+            dest.scores.emplace_back( std::vector<double>( sample_count, 0 ) );
+            dest.scores.back().reserve( sample_count );
+        }
+
+    // save the sample names to the samplenames vector
+    boost::split( split_line, lines_from_file[ 0 ], boost::is_any_of( "\t" ) );
+    std::for_each( split_line.begin() + 1, split_line.end(),
+                   [&]( const std::string &item )
+                   {
+                       dest.sample_names.push_back( item );
+                   }
+                 );
+
+    for( index = 1; index < lines_from_file.size(); ++index )
+        {
+            std::size_t assign_index = index - 1;
+            // get the name of the peptide
+            const std::string& my_str = lines_from_file[ index ];
+            std::size_t pos = my_str.find( '\t' );
+
+            dest.pep_names[ assign_index ] = my_str.substr( 0, pos );
+
+            std::size_t begin_pos = pos + 1;
+            
+            // for j = 0 -> num_samples grab the number
+            for( std::size_t count_index = 0; count_index < sample_count; ++count_index )
                 {
-                    // copy all but the header (Sequence name) to the destination
-                    std::for_each( split_line.begin() + 1, split_line.end(),
-                                   [&]( const std::string &item )
-                                   {
-                                      dest.sample_names.push_back( item );
-                                   }
-                                 );
-
-                    is_header = false;
-                }
-            else
-                {
-                    dest.pep_names.push_back( split_line[ 0 ] );
-                    dest.scores.emplace_back( std::vector<double>() );
-                    dest.scores.back().reserve( dest.sample_names.size() );
-                    std::size_t index = 0;
-
-                    for( index = 1; index < split_line.size(); ++index )
-                        {
-                            unsigned long score = std::atol( split_line[ index ].c_str() );
-                            dest.scores.back().emplace_back( score );
-                        }
+                    std::size_t end_pos   = my_str.find( '\t', begin_pos );
+                    double val = std::strtod( my_str.substr( begin_pos, end_pos - begin_pos ).c_str(),
+                                     nullptr
+                                   );
+                    dest.scores[ assign_index ][ count_index ] = val;
+                    begin_pos = end_pos + 1;
+                        
                 }
         }
+
 }
 
 
