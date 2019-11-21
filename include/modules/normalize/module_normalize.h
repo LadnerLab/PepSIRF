@@ -62,6 +62,15 @@ class module_normalize : public module
     void write_peptide_scores( std::string dest_fname,
                                peptide_score_data_sample_major& data
                              );
+
+    /**
+     * Get the sum of each column in a matrix src.
+     * @param dest The location to store the sums.
+     *        After this function, the n'th position in dest will 
+     *        hold the sum of the n'th column of src.
+     * @param N x M matrix representing the values parsed from 
+     *        a score matrix file.
+     **/
     void get_sum( std::vector<double>& dest,
                   std::vector<std::vector<double>>& src
                 );

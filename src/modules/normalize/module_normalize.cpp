@@ -12,6 +12,7 @@
 #include "module_normalize.h"
 #include "options_normalize.h"
 #include "time_keep.h"
+#define ONE_MILLION 1000000
 
 module_normalize::module_normalize()
 {
@@ -81,6 +82,7 @@ void module_normalize::parse_peptide_scores( peptide_score_data_sample_major& de
                 {
                     dest.pep_names.push_back( split_line[ 0 ] );
                     dest.scores.emplace_back( std::vector<double>() );
+                    dest.scores.back().reserve( dest.sample_names.size() );
                     std::size_t index = 0;
 
                     for( index = 1; index < split_line.size(); ++index )
@@ -119,6 +121,14 @@ void module_normalize::write_peptide_scores( std::string dest_fname,
                         }
                 }
             out_file << "\n";
+        }
+}
+
+void module_normalize::norm_counts_col_sum( std::vector<double>& cols )
+{
+    for( std::size_t index = 0; index < cols.size(); ++index )
+        {
+            cols[ index ] /= ONE_MILLION;
         }
 }
 
