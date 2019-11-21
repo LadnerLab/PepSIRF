@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cstdio>
 #include "omp_opt.h"
 #include <algorithm>
 #include <fstream>
@@ -141,6 +142,7 @@ void module_normalize::write_peptide_scores( std::string dest_fname,
                                            )
 {
     std::ofstream out_file( dest_fname, std::ios_base::out );
+    char digits[ 30 ];
 
     out_file << "Sequence name\t";
 
@@ -154,7 +156,8 @@ void module_normalize::write_peptide_scores( std::string dest_fname,
 
             for( inner_index = 0; inner_index < data.sample_names.size(); ++inner_index )
                 {
-                    out_file << data.scores[ index ][ inner_index ];
+                    std::sprintf( digits, "%f", data.scores[ index ][ inner_index ] );
+                    out_file << digits;
 
                     if( inner_index < data.sample_names.size() - 1 )
                         {
