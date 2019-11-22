@@ -94,6 +94,7 @@ def main():
                 if len(taxInf)==1:
                     if thisWin[taxInf[0]] < avgS:
                         thisWin[taxInf[0]] = avgS
+#                        print(p, revPepMap[p], taxInf[0], inf)
                 elif len(taxInf)>1:
                     for each in taxInf:
                         if each in thisWinMulti:                #To deal with taxon that aren't in the alignment, but may be considered good matches
