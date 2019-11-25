@@ -34,7 +34,7 @@ void module_demux::run( options *opts )
 
     omp_set_num_threads( opts->num_threads );
 
-    total_time.start = omp_get_wtime();
+    total_time.start();;
 
     // vector to store the .fna sequences that represent a designed library
     std::vector<sequence> library_seqs;
@@ -230,7 +230,7 @@ void module_demux::run( options *opts )
                 }
         }
 
-    total_time.end = omp_get_wtime();
+    total_time.stop();
 
     if( d_opts->input_r2_fname.length() > 0 )
         {

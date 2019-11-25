@@ -1,5 +1,6 @@
 #include "module_factory.h"
 #include "module_deconv.h"
+#include "module_normalize.h"
 
 module_factory::module_factory() = default; // default constructor
 
@@ -15,6 +16,11 @@ module *module_factory::create( const char *mod_name )
         {
             return new module_deconv();
         }
+    else if( !mod_str.compare( "norm" ) )
+        {
+            return new module_normalize();
+        }
+
 
     return nullptr;
 }
