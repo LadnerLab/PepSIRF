@@ -23,7 +23,7 @@ options *options_factory::create( int argc, char ***argv )
                 {
                     return new options_deconv();
                 }
-            else if( !mod_name.compare( "normalize" ) )
+            else if( !mod_name.compare( "norm" ) )
                 {
                     return new options_normalize();
                 }

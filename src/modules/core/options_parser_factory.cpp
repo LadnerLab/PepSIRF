@@ -21,7 +21,7 @@ options_parser *options_parser_factory::create( int argc, char ***argv )
                     std::cout << "\nUSAGE: pep_sirf [ --help | module_name <module_args*> ] " << "\n";
                     std::cout << "The currently available modules are:\n";
                     std::cout << " -demux\n";
-                    std::cout << " -normalize\n";
+                    std::cout << " -norm\n";
                     std::cout << " -deconv\n\n";
                     std::cout << "--help, -h displays this message, while 'pep_sirf module_name --help' will display the help for " 
                         "the module module_name.\n";
@@ -36,7 +36,7 @@ options_parser *options_parser_factory::create( int argc, char ***argv )
                 {
                     return new options_parser_deconv();
                 }
-            else if( !arg.compare( "normalize" ) )
+            else if( !arg.compare( "norm" ) )
                 {
                     return new options_parser_normalize();
                 }

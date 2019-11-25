@@ -17,7 +17,7 @@
 
 module_normalize::module_normalize()
 {
-    name = "Normalize";
+    name = "Norm";
 }
 
 std::string module_normalize::get_name()

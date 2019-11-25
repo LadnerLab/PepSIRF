@@ -16,7 +16,7 @@ module *module_factory::create( const char *mod_name )
         {
             return new module_deconv();
         }
-    else if( !mod_str.compare( "normalize" ) )
+    else if( !mod_str.compare( "norm" ) )
         {
             return new module_normalize();
         }
