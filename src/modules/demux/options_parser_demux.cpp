@@ -115,7 +115,9 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
 
     po::store( po::command_line_parser( argc, *argv ).options( desc ).allow_unregistered().run(), vm);
 
-    if( vm.count( "help" ) )
+    if( vm.count( "help" ) 
+	    || argc == 2 
+	  )
         {
             std::cout << desc << std::endl;
             return false;
