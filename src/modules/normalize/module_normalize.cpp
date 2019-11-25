@@ -54,7 +54,7 @@ void module_normalize::run( options *opts )
         }
     
 
-    write_peptide_scores( "pep_out.tsv", original_scores );
+    write_peptide_scores( n_opts->output_fname, original_scores );
 
     timer.stop();
     
