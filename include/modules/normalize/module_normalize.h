@@ -78,13 +78,15 @@ class module_normalize : public module
 
     /**
      * Normalize the counts in a vector of column sums 
-     * using the column_sum method. For this method, 
-     * the sum of each column is divided by 1e6.
+     * by a constant factor.
      * @param cols A vector of doubles, where each value is the 
      *        sum of a column
-     * @post Each value in cols is now 1/1e6 its original value
+     * @param factor The factor by which to normalize values in cols
+     * @post Each value in cols is now 1/factor its original value
      **/
-    void norm_counts_col_sum( std::vector<double>& cols );
+    void constant_factor_normalization( std::vector<double>& cols,
+                                        const std::size_t factor
+                                      );
 
     /**
      * Normalize the counts in 'original_scores' using the colsum 
