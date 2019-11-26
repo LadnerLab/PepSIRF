@@ -86,6 +86,20 @@ class module_normalize : public module
      **/
     void norm_counts_col_sum( std::vector<double>& cols );
 
+    /**
+     * Normalize the counts in 'original_scores' using the colsum 
+     * method of normalization. For colsum, each score is transformed into 
+     * reads mapped per-million.
+     * @param original_scores A score matrix of the original scores.
+     * @param norm_factors The column normalization factors to adjust the 
+     *        score of each in original_score by.
+     **/
+    void normalize_counts_colsum( std::vector<std::vector<double>>&
+                                  original_scores,
+                                  const std::vector<double>& norm_factors
+                                );
+
+
 };
 
 /**

@@ -45,14 +45,7 @@ void module_normalize::run( options *opts )
     norm_counts_col_sum( norm_factors );
 
     // normalize the counts
-    for( std::size_t index = 0; index < original_scores.scores.size(); ++index )
-        {
-            for( std::size_t inner_index = 0; inner_index < original_scores.scores[ index ].size(); ++inner_index )
-                {
-                    original_scores.scores[ index ][ inner_index ] /= norm_factors[ inner_index ];
-                }
-        }
-    
+    normalize_counts_colsum( original_scores.scores, norm_factors );
 
     write_peptide_scores( n_opts->output_fname, original_scores );
 
@@ -190,5 +183,19 @@ void module_normalize::get_sum( std::vector<double>& dest,
                     dest[ inner_index ] += src[ index ][ inner_index ];
                 }
             
+        }
+}
+
+void module_normalize::normalize_counts_colsum( std::vector<std::vector<double>>&
+                                                original_scores,
+                                                const std::vector<double>& norm_factors
+                                              )
+{
+    for( std::size_t index = 0; index < original_scores.size(); ++index )
+        {
+            for( std::size_t inner_index = 0; inner_index < original_scores[ index ].size(); ++inner_index )
+                {
+                    original_scores[ index ][ inner_index ] /= norm_factors[ inner_index ];
+                }
         }
 }
