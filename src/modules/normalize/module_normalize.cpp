@@ -45,7 +45,7 @@ void module_normalize::run( options *opts )
     constant_factor_normalization( norm_factors, ONE_MILLION );
 
     // normalize the counts
-    normalize_counts_colsum( original_scores.scores, norm_factors );
+    normalize_counts( original_scores.scores, norm_factors );
 
     write_peptide_scores( n_opts->output_fname, original_scores );
 
@@ -188,10 +188,10 @@ void module_normalize::get_sum( std::vector<double>& dest,
         }
 }
 
-void module_normalize::normalize_counts_colsum( std::vector<std::vector<double>>&
-                                                original_scores,
-                                                const std::vector<double>& norm_factors
-                                              )
+void module_normalize::normalize_counts( std::vector<std::vector<double>>&
+                                         original_scores,
+                                         const std::vector<double>& norm_factors
+                                       )
 {
     for( std::size_t index = 0; index < original_scores.size(); ++index )
         {

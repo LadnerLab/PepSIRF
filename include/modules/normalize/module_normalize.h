@@ -89,17 +89,19 @@ class module_normalize : public module
                                       );
 
     /**
-     * Normalize the counts in 'original_scores' using the colsum 
-     * method of normalization. For colsum, each score is transformed into 
-     * reads mapped per-million.
+     * Normalize the counts in 'original_scores'.
+     * Each score in a column will be divided by the respective index in 
+     * norm_factors, i.e. each value in column n will be divided by 
+     * norm_factors[ n ]. 
      * @param original_scores A score matrix of the original scores.
      * @param norm_factors The column normalization factors to adjust the 
      *        score of each in original_score by.
      **/
-    void normalize_counts_colsum( std::vector<std::vector<double>>&
-                                  original_scores,
-                                  const std::vector<double>& norm_factors
-                                );
+    void normalize_counts( std::vector<std::vector<double>>&
+                           original_scores,
+                           const std::vector<double>& norm_factors
+                         );
+
 
 
 };
