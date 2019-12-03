@@ -1,11 +1,11 @@
-#include "module_details.h"
+#include "module_initializer.h"
 #include <algorithm>
 
-module_details::module_details() 
+module_initializer::module_initializer() 
     : opts( nullptr ), mod( nullptr ), opt_parser( nullptr )
       {} 
 
-module_details::~module_details() 
+module_initializer::~module_initializer() 
 {
     if( opts )
         {
@@ -22,7 +22,7 @@ module_details::~module_details()
 }
 
 
-void module_details::initialize( const std::string& mod_name )
+void module_initializer::initialize( const std::string& mod_name )
 {
 
     if( !mod_name.compare( "demux" ) )
@@ -49,21 +49,21 @@ void module_details::initialize( const std::string& mod_name )
         }
 }
 
-options *module_details::get_opts()
+options *module_initializer::get_opts()
 {
     throw_on_null( opts );
 
     return opts;
 }
 
-module *module_details::get_module()
+module *module_initializer::get_module()
 {
     throw_on_null( mod );
 
     return mod;
 }
 
-options_parser *module_details::get_options_parser()
+options_parser *module_initializer::get_options_parser()
 {
     throw_on_null( opt_parser );
 

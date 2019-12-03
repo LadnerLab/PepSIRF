@@ -1,5 +1,5 @@
-#ifndef MODULE_DETAILS_HH_INCLUDED
-#define MODULE_DETAILS_HH_INCLUDED
+#ifndef MODULE_INITIALIZER_HH_INCLUDED
+#define MODULE_INITIALIZER_HH_INCLUDED
 #include <string>
 #include <stdexcept>
 
@@ -28,21 +28,21 @@
 
 /**
  * Contains the items necessary to instantiate a module.
- * To add a module, add the entry to module_details::initialize.
+ * To add a module, add the entry to module_initializer::initialize.
  **/
-class module_details
+class module_initializer
 {
  public:
 
     /**
-     * Construct the module_details, initialize everything to null.
+     * Construct the module_initializer, initialize everything to null.
      **/
-    module_details();
+    module_initializer();
 
     /**
      * Destroy the initializer, deletes any allocated memory.
      **/
-    ~module_details();
+    ~module_initializer();
 
     /**
      * Initialize a module based upon a module name. 
@@ -116,4 +116,4 @@ class module_details
 };
 
 
-#endif // MODULE_DETAILS_HH_INCLUDED
+#endif // MODULE_INITIALIZER_HH_INCLUDED
