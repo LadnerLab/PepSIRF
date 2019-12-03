@@ -41,8 +41,16 @@ void module_normalize::run( options *opts )
     parse_peptide_scores( original_scores, scores_fname );
 
     std::vector<double> norm_factors( original_scores.sample_names.size(), 0 );
-    get_sum( norm_factors, original_scores.scores );
-    constant_factor_normalization( norm_factors, ONE_MILLION );
+
+    if( n_opts->size_factors_norm )
+        {
+            compute_size_factors( norm_factors, original_scores.scores );
+        }
+    else
+        {
+            get_sum( norm_factors, original_scores.scores );
+            constant_factor_normalization( norm_factors, ONE_MILLION );
+        }
 
     // normalize the counts
     normalize_counts( original_scores.scores, norm_factors );
