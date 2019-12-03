@@ -48,3 +48,25 @@ void module_details::initialize( const std::string& mod_name )
             throw std::runtime_error( "Invalid module name entered." );
         }
 }
+
+options *module_details::get_opts()
+{
+    throw_on_null( opts );
+
+    return opts;
+}
+
+module *module_details::get_module()
+{
+    throw_on_null( mod );
+
+    return mod;
+}
+
+options_parser *module_details::get_options_parser()
+{
+    throw_on_null( opt_parser );
+
+    return opt_parser;
+}
+

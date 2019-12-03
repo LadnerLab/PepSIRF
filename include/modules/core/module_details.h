@@ -54,8 +54,31 @@ class module_details
      **/
     void initialize( const std::string& module_name );
 
+    /**
+     * Get the initialized options for the 
+     * specified module. 
+     * @pre This has been successfully initialized
+     * @returns A pointer to the options initialized by this module
+     * @throws std::runtime_error if this has not yet been initialized.
+     **/
     options *get_opts();
+
+    /**
+     * Get the initialized module object for the 
+     * specified module. 
+     * @pre This has been successfully initialized
+     * @returns A pointer to the module object initialized by this module
+     * @throws std::runtime_error if this has not yet been initialized.
+     **/
     module *get_module();
+
+    /**
+     * Get the initialized options_parser for the 
+     * specified module. 
+     * @pre This has been successfully initialized
+     * @returns A pointer to the options_parser initialized by this module
+     * @throws std::runtime_error if this has not yet been initialized.
+     **/
     options_parser *get_options_parser();
 
  private:
