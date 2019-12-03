@@ -201,3 +201,62 @@ void module_normalize::normalize_counts( std::vector<std::vector<double>>&
                 }
         }
 }
+
+void module_normalize::compute_size_factors( std::vector<double>& size_factors,
+                                             const std::vector<std::vector<double>>& data
+                                           )
+{
+ //    auto median = []( std::vector<double>& v ) -> double
+ //        {
+ // size_t n = v.size() / 2;
+ //  std::nth_element(v.begin(), v.begin()+n, v.end());
+ //  double vn = v[n];
+ //  if(v.size()%2 == 1)
+ //  {
+ //    return vn;
+ //  }else
+ //  {
+ //    std::nth_element(v.begin(), v.begin()+n-1, v.end());
+ //    return 0.5*(vn+v[n-1]);
+ //  }
+ //        };
+
+    std::vector<double> row;
+    std::vector<std::vector<double>> geom_mean_factors;
+    geom_mean_factors.reserve( data[ 0 ].size() );
+
+    std::size_t index = 0;
+
+    for( index = 0; index < data[ 0 ].size(); ++index )
+        {
+            geom_mean_factors.emplace_back( std::vector<double>( data.size(), 0 ) ) ;
+        }
+
+    for( index = 0; index < data.size(); ++index )
+        {
+            double g_mean = geom_mean( data[ index ] );
+
+            for( std::size_t inner_index = 0; inner_index < data[ index ].size(); ++inner_index )
+                {
+                    // transpose the data here so computing the medians is easier
+                    geom_mean_factors[ inner_index ][ index ] = data[ index ][ inner_index ] / g_mean;
+                }
+        }
+
+    for( index = 0; index < geom_mean_factors.size(); ++index )
+        {
+            std::sort( geom_mean_factors[ index ].begin(),
+                       geom_mean_factors[ index ].end()
+                     );
+
+            auto begin = std::upper_bound( geom_mean_factors[ index ].end(),
+                                           geom_mean_factors[ index ].end(),
+                                           0
+                                         );
+            int median_loc = (geom_mean_factors[ index ].size()
+                              - std::distance( begin, geom_mean_factors[ index ].end() )) / 2;
+            size_factors.push_back( geom_mean_factors[ index ][ median_loc ] );
+        }
+
+}
+

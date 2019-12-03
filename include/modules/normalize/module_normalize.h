@@ -130,6 +130,16 @@ class module_normalize : public module
             return n == 0 ? 0 : std::exp( log_sum );
         }
 
+    /**
+     * Compute the size factors for each column in a set of data.
+     * This method implements equation 5 in Anders and Huber 2010.
+     * @param size_factors The location to store the size factors that 
+     *        were found, one per column (sample).
+     * @param data The counts to get the size factors of.
+     **/
+    void compute_size_factors( std::vector<double>& size_factors,
+                               const std::vector<std::vector<double>>& data
+                             );
 
 
 };
