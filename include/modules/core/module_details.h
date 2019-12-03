@@ -43,6 +43,15 @@ class module_details
      * Destroy the initializer, deletes any allocated memory.
      **/
     ~module_details();
+
+    /**
+     * Initialize a module based upon a module name. 
+     * If a valid module name is supplied, this will be populated 
+     * with the module itself, the module's options, and options_parser.
+     * Each of these items can be retrieved after creation.
+     * @param module_name The name of the module to initialize
+     * @throws std::runtime_error if an invalid module name is provided.
+     **/
     void initialize( const std::string& module_name );
 
     options *get_opts();

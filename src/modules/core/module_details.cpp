@@ -22,8 +22,29 @@ module_details::~module_details()
 }
 
 
-void module_details::initialize( const std::string& module_name )
+void module_details::initialize( const std::string& mod_name )
 {
 
-    initialized = true;
+    if( !mod_name.compare( "demux" ) )
+        {
+            opts       = new options_demux();
+            opt_parser = new options_parser_demux();
+            mod        = new module_demux();
+        }
+    else if( !mod_name.compare( "deconv" ) )
+        {
+            opts       = new options_deconv();
+            opt_parser = new options_parser_deconv();
+            mod        = new module_deconv();
+        }
+    else if( !mod_name.compare( "norm" ) )
+        {
+            opts        = new options_normalize();
+            opt_parser  = new options_parser_normalize();
+            mod         = new module_normalize();
+        }
+    else
+        {
+            throw std::runtime_error( "Invalid module name entered." );
+        }
 }
