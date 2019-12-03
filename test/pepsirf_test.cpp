@@ -36,6 +36,7 @@
 #include "species_id.h"
 #include "scored_entity.h"
 #include "species_data.h"
+#include "module_normalize.h"
 
 using namespace util;
 
@@ -1445,4 +1446,23 @@ TEST_CASE( "score_species_peptides/get_highest_score_per_species", "[module_deco
      eval_max_score();
      REQUIRE( highest_scores[ "species 1" ].get_score() == 0.5 );
      REQUIRE( highest_scores[ "species 2" ].get_score() == 0.5 );
+}
+
+TEST_CASE( "geometric means", "[module_normalize]" )
+{
+    module_normalize mod;
+
+    std::vector<double> values{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+
+    double mean = mod.geom_mean( values );
+    double epsilon = 0.0005;
+
+    // check that we're sufficiently close 
+    REQUIRE( std::abs( mean - 4.52873 ) < epsilon );
+
+    values.push_back( 0 );
+
+    mean = mod.geom_mean( values );
+    REQUIRE( std::abs( mean - 4.52873 ) < epsilon );
+
 }
