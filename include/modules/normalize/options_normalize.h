@@ -33,6 +33,9 @@ class options_normalize : public options
      **/
     std::string output_fname;
 
+    bool col_sum_norm;
+    bool size_factors_norm;
+
 
 };
 

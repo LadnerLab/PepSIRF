@@ -24,15 +24,20 @@ bool options_parser_normalize::parse( int argc, char ***argv, options *opts )
 
     desc.add_options()
         ( "help,h", "Produce help message\n" )
-        ( "threads,t", po::value<int>( &opts_normalize->num_threads )
-          ->default_value( opts_normalize->DEFAULT_NUM_THREADS ),
-          "The number of threads to use when performing analyses.\n"
-        )
         ( "peptide_scores", po::value<std::string>( &opts_normalize->peptide_scores_fname ),
           "Name of file containing peptide scores. This file should be tab-delimited "
           "with the first column being peptide names, and every next column should be \n"
           "the peptide's score within a given sample (the first item in the column). "
           "This is exactly the format output by the deconv module.\n"
+        )
+        ( "col_sum,c", po::bool_switch( &opts_normalize->col_sum_norm )->default_value( true ),
+          "Normalize the counts using a column-sum method. Output is the number of reads a peptide "
+          "per reads million mapped. Note that if size_factors is also included, the value of this flag "
+          "will be ignored and the size_factors method is used. By default, col_sum normalization is used.\n"
+        )
+        ( "size_factors,s", po::bool_switch( &opts_normalize->size_factors_norm )->default_value( false ),
+          "Normalize the counts using the size factors method (Anders and Huber 2010). Note that if this "
+          "flag is included, the value of col_sum will be ignored.\n"
         )
         ( "output,o", po::value<std::string>( &opts_normalize->output_fname )
           ->default_value( "norm_output.tsv" ),
@@ -42,7 +47,7 @@ bool options_parser_normalize::parse( int argc, char ***argv, options *opts )
           "in the output has been normalized in the manner specified.\n"
         );
 
-    po::store( po::command_line_parser( argc, *argv ).options( desc ).allow_unregistered().run(), vm);
+    po::store( po::command_line_parser( argc, *argv ).options( desc ).run(), vm);
 
     if( vm.count( "help" )
         || argc == 2 // argc == 2 when 'pep_sirf norm' is called
