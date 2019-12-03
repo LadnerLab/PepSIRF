@@ -1,12 +1,8 @@
 #### Module Demux
 ```
-
 PepSIRF: Peptide-based Serological Immune Response Framework score normalization module. 
 :
   -h [ --help ]                         Produce help message
-                                        
-  -t [ --threads ] arg (=2)             The number of threads to use when 
-                                        performing analyses.
                                         
   --peptide_scores arg                  Name of file containing peptide scores.
                                         This file should be tab-delimited with 
@@ -16,6 +12,19 @@ PepSIRF: Peptide-based Serological Immune Response Framework score normalization
                                         sample (the first item in the column). 
                                         This is exactly the format output by 
                                         the deconv module.
+                                        
+  -c [ --col_sum ]                      Normalize the counts using a column-sum
+                                        method. Output is the number of reads a
+                                        peptide per reads million mapped. Note 
+                                        that if size_factors is also included, 
+                                        the value of this flag will be ignored 
+                                        and the size_factors method is used. By
+                                        default, col_sum normalization is used.
+                                        
+  -s [ --size_factors ]                 Normalize the counts using the size 
+                                        factors method (Anders and Huber 2010).
+                                        Note that if this flag is included, the
+                                        value of col_sum will be ignored.
                                         
   -o [ --output ] arg (=norm_output.tsv)
                                         The name of the file to write output 

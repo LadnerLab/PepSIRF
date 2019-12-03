@@ -41,18 +41,19 @@ void module_normalize::run( options *opts )
     parse_peptide_scores( original_scores, scores_fname );
 
     std::vector<double> norm_factors( original_scores.sample_names.size(), 0 );
-    get_sum( norm_factors, original_scores.scores );
-    norm_counts_col_sum( norm_factors );
+
+    if( n_opts->size_factors_norm )
+        {
+            compute_size_factors( norm_factors, original_scores.scores );
+        }
+    else
+        {
+            get_sum( norm_factors, original_scores.scores );
+            constant_factor_normalization( norm_factors, ONE_MILLION );
+        }
 
     // normalize the counts
-    for( std::size_t index = 0; index < original_scores.scores.size(); ++index )
-        {
-            for( std::size_t inner_index = 0; inner_index < original_scores.scores[ index ].size(); ++inner_index )
-                {
-                    original_scores.scores[ index ][ inner_index ] /= norm_factors[ inner_index ];
-                }
-        }
-    
+    normalize_counts( original_scores.scores, norm_factors );
 
     write_peptide_scores( n_opts->output_fname, original_scores );
 
@@ -168,11 +169,13 @@ void module_normalize::write_peptide_scores( std::string dest_fname,
         }
 }
 
-void module_normalize::norm_counts_col_sum( std::vector<double>& cols )
+void module_normalize::constant_factor_normalization( std::vector<double>& cols,
+                                                      const std::size_t factor
+                                                    )
 {
     for( std::size_t index = 0; index < cols.size(); ++index )
         {
-            cols[ index ] /= ONE_MILLION;
+            cols[ index ] /= factor;
         }
 }
 
@@ -192,3 +195,76 @@ void module_normalize::get_sum( std::vector<double>& dest,
             
         }
 }
+
+void module_normalize::normalize_counts( std::vector<std::vector<double>>&
+                                         original_scores,
+                                         const std::vector<double>& norm_factors
+                                       )
+{
+    for( std::size_t index = 0; index < original_scores.size(); ++index )
+        {
+            for( std::size_t inner_index = 0; inner_index < original_scores[ index ].size(); ++inner_index )
+                {
+                    original_scores[ index ][ inner_index ] /= norm_factors[ inner_index ];
+                }
+        }
+}
+
+void module_normalize::compute_size_factors( std::vector<double>& size_factors,
+                                             const std::vector<std::vector<double>>& data
+                                           )
+{
+ //    auto median = []( std::vector<double>& v ) -> double
+ //        {
+ // size_t n = v.size() / 2;
+ //  std::nth_element(v.begin(), v.begin()+n, v.end());
+ //  double vn = v[n];
+ //  if(v.size()%2 == 1)
+ //  {
+ //    return vn;
+ //  }else
+ //  {
+ //    std::nth_element(v.begin(), v.begin()+n-1, v.end());
+ //    return 0.5*(vn+v[n-1]);
+ //  }
+ //        };
+
+    std::vector<double> row;
+    std::vector<std::vector<double>> geom_mean_factors;
+    geom_mean_factors.reserve( data[ 0 ].size() );
+
+    std::size_t index = 0;
+
+    for( index = 0; index < data[ 0 ].size(); ++index )
+        {
+            geom_mean_factors.emplace_back( std::vector<double>( data.size(), 0 ) ) ;
+        }
+
+    for( index = 0; index < data.size(); ++index )
+        {
+            double g_mean = geom_mean( data[ index ] );
+
+            for( std::size_t inner_index = 0; inner_index < data[ index ].size(); ++inner_index )
+                {
+                    // transpose the data here so computing the medians is easier
+                    geom_mean_factors[ inner_index ][ index ] = data[ index ][ inner_index ] / g_mean;
+                }
+        }
+
+    for( index = 0; index < geom_mean_factors.size(); ++index )
+        {
+            std::sort( geom_mean_factors[ index ].begin(),
+                       geom_mean_factors[ index ].end()
+                     );
+
+            auto begin = std::upper_bound( geom_mean_factors[ index ].end(),
+                                           geom_mean_factors[ index ].end(),
+                                           0
+                                         );
+            int median_loc = (geom_mean_factors[ index ].size()
+                              - std::distance( begin, geom_mean_factors[ index ].end() )) / 2;
+            size_factors.push_back( geom_mean_factors[ index ][ median_loc ] );
+        }
+
+}
+
