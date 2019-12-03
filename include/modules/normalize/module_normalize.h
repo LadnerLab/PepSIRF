@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <cmath>
 
 #include "module.h"
 #include "options.h"
@@ -101,6 +102,33 @@ class module_normalize : public module
                            original_scores,
                            const std::vector<double>& norm_factors
                          );
+
+    /**
+     * Compute the geometric mean of a set of data of type T.
+     * @pre T must be a numeric type (std::size_t, double, int, etc.)
+     * @pre all of the values in data are greater than zero
+     * @note Only non-zero values are considered in the calculation, so 
+     *       the 'size' of data is considered the number of non-zero values in 
+     *       data.
+     * @param data The dataset whose geometric mean to compute.
+     **/
+    template <typename T>
+        double geom_mean( const std::vector<T>& data )
+        {
+            std::size_t n = 0;
+            std::size_t index = 0;
+            double log_sum = 0;
+
+            for( index = 0; index < data.size(); ++index )
+                {
+                    log_sum += std::log( std::max( (T) 1, (T)data[ index ] ) );
+                    n += data[ index ] != 0;
+                }
+
+            log_sum /= (double) n;
+
+            return n == 0 ? 0 : std::exp( log_sum );
+        }
 
 
 
