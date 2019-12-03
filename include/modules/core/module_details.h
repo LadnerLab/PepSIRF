@@ -75,6 +75,20 @@ class module_details
      **/
     options_parser *opt_parser;
 
+    /**
+     * Throws std::runtime_error if ptr == nullptr
+     **/
+    template<typename T>
+    void throw_on_null( const T *ptr ) const
+        {
+            if( ptr == nullptr )
+                {
+                    throw std::runtime_error(
+                                             "The provided pointer is NULL, "
+                                             "operations cannot be performed on it."
+                                            );
+                }
+        }
 
 };
 
