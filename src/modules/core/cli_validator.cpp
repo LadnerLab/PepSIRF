@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <string>
 #include <unordered_set>
+#include "modules.h"
 
 cli_validator::cli_validator() = default;
 
@@ -24,9 +25,8 @@ bool cli_validator::validate( int argc, char ***argv )
                     std::cout << desc << "\n";
                     std::cout << "\nUSAGE: pep_sirf [ --help | module_name <module_args*> ] " << "\n";
                     std::cout << "The currently available modules are:\n";
-                    std::cout << " -demux\n";
-                    std::cout << " -norm\n";
-                    std::cout << " -deconv\n\n";
+                    std::cout << modules::join_names( " - ", "\n" );
+                    std::cout << "\n";
                     std::cout << "--help, -h displays this message, while "
                                  "'pep_sirf module_name --help' will display "
                                  "the help for " 
@@ -35,11 +35,7 @@ bool cli_validator::validate( int argc, char ***argv )
             return false;
         }
 
-    std::unordered_set<std::string> module_names = { "demux", "deconv", 
-                                                     "norm"
-                                                   };
-
-    if( module_names.find( arg ) != module_names.end() )
+    if( modules::is_module( argv_loc[ 2 ] ) )
         {
             return true;
         }
