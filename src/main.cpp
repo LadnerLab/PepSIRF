@@ -2,53 +2,50 @@
 #include <exception>
 #include <stdlib.h>
 
-#include "options_parser_factory.h"
-#include "options_factory.h"
 #include "options_parser.h"
 #include "options.h"
 #include "module.h"
-#include "module_factory.h"
+#include "cli_validator.h"
+#include "module_initializer.h"
 
 int main( int argc, char **argv )
 {
     // create objects to be used
-    options_parser_factory parser_fact;
-    options_parser *parser = nullptr;
-
-    options_factory opts_fact;
-    options *opts = nullptr;
-
-    module_factory mod_fact;
-    module *mod = nullptr;
+    module_initializer init;
+    cli_validator cli_val;
 
     bool help_msg_only = false;
-
 	int ret_code = EXIT_SUCCESS;
 
     try
         {
             // create our option parser for parsing command-line options
-            parser = parser_fact.create( argc, &argv );
+            help_msg_only = cli_val.validate( argc, &argv );
 
             // the '-h' argument was passed without a module, help message has been displayed
-            if( !parser )
+            if( help_msg_only )
                 {
                     return EXIT_SUCCESS;
                 }
             // create the correct options object
-            opts = opts_fact.create( argc, &argv );
+            init.initialize( argv[ 1 ] );
 
             // parse the arguments, any incorrect arguments will raise an error
             // note that parser->parse returns true if arguments other than
             // help are passed
-            help_msg_only = !parser->parse( argc, &argv, opts );
+            // help_msg_only = !parser->parse( argc, &argv, opts );
+            help_msg_only = !init.get_options_parser()
+                             ->parse( argc, &argv, init.get_opts() );
 
             if( !help_msg_only )
                 {
 				    // run PepSIRF with options parsed from command-line
-                    mod = mod_fact.create( argv[ 1 ] );
-                    std::cout << "Starting module " << mod->get_name() << " with arguments: \n " << opts->get_arguments();
-                    mod->run( opts );
+                    std::cout << "Starting module "
+                              << init.get_module()->get_name()
+                              << " with arguments: \n "
+                              << init.get_opts()->get_arguments();
+
+                    init.get_module()->run( init.get_opts() );
                 }
         }
     catch( std::exception& e )
@@ -59,8 +56,5 @@ int main( int argc, char **argv )
             ret_code = EXIT_FAILURE;
         }
 
-    delete parser;
-    delete mod;
-	delete opts;
 	return ret_code;
 }
