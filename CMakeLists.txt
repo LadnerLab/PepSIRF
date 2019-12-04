@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.9)
 project(PepSIRF LANGUAGES CXX)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 set(Boost_USE_STATIC_LIBS ON) 
 set(Boost_USE_MULTITHREADED ON)  
 set(Boost_USE_STATIC_RUNTIME OFF) 
@@ -15,14 +17,16 @@ include_directories(include/modules/normalize)
 include_directories(include/modules/parsers)
 include_directories(include/modules/demux)
 include_directories(include/modules/deconv)
+include_directories(include/modules/subjoin)
 include_directories(lib/parallel_hashmap)
 add_compile_options( "-Wall" "-std=c++11" "-Wextra" "-fvisibility=hidden"
                      "-fvisibility-inlines-hidden"
                      "$<$<CONFIG:DEBUG>:-O0;-g>" 
-					 "$<$<CONFIG:RELEASE>:-O3>")
+					 "$<$<CONFIG:RELEASE>:-O3>"
+                   )
 
 
-set(PepSIRF_MODULES pepsirf_common modules_demux modules_deconv modules_normalize)                
+set(PepSIRF_MODULES pepsirf_common modules_demux modules_deconv modules_normalize modules_subjoin )                
 
 if(OpenMP_FOUND)
   message( "OpenMP enabled" )
@@ -45,18 +49,17 @@ add_executable(pep_sirf src/main.cpp)
 add_library(pepsirf_common STATIC src/modules/parsers/options_parser.cpp src/modules/core/options.cpp 
             src/modules/core/sequence.cpp 
 			src/modules/parsers/fastq_parser.cpp src/modules/parsers/fasta_parser.cpp
-			src/modules/core/options_factory.cpp src/modules/core/options_parser_factory.cpp
-			src/modules/core/module_factory.cpp src/modules/core/module_factory.cpp
 			src/modules/core/module.cpp
 			src/modules/core/sequence_indexer.cpp
 			src/modules/core/fastq_score.cpp
 			src/modules/core/fs_tools.cpp
             src/modules/core/peptide.cpp
+            src/modules/core/module_initializer.cpp
+            src/modules/core/cli_validator.cpp
            )
 
 add_library(modules_demux STATIC src/modules/demux/options_demux.cpp src/modules/demux/options_parser_demux.cpp src/modules/parsers/options_parser.cpp 
-            src/modules/core/options.cpp src/modules/core/options_parser_factory.cpp
-			src/modules/core/module_factory.cpp
+            src/modules/core/options.cpp 
 			src/modules/core/module.cpp src/modules/demux/module_demux.cpp
 			src/modules/parsers/fasta_parser.cpp src/modules/parsers/fastq_parser.cpp
             src/modules/core/sequence.cpp 
@@ -66,8 +69,6 @@ add_library(modules_demux STATIC src/modules/demux/options_demux.cpp src/modules
 		   )
 
 add_library( modules_deconv STATIC src/modules/deconv/options_deconv.cpp src/modules/deconv/options_parser_deconv.cpp 
-				src/modules/core/options.cpp src/modules/core/options_parser_factory.cpp
-				src/modules/core/module_factory.cpp
 				src/modules/core/module.cpp src/modules/deconv/module_deconv.cpp
 				src/modules/core/fs_tools.cpp
                 src/modules/deconv/scored_peptide.cpp
@@ -75,10 +76,17 @@ add_library( modules_deconv STATIC src/modules/deconv/options_deconv.cpp src/mod
                 src/modules/deconv/species_data.cpp
 		)
 
-add_library( modules_normalize STATIC src/modules/normalize/options_normalize.cpp src/modules/normalize/options_parser_normalize.cpp
-			 src/modules/core/options.cpp src/modules/core/options_parser_factory.cpp
+add_library( modules_normalize STATIC src/modules/normalize/options_normalize.cpp
+             src/modules/normalize/options_parser_normalize.cpp
 			 src/modules/core/module.cpp src/modules/normalize/module_normalize.cpp
 		   )
+
+add_library( modules_subjoin STATIC src/modules/subjoin/options_subjoin.cpp
+             src/modules/subjoin/options_parser_subjoin.cpp
+             src/modules/core/module.cpp src/modules/normalize/module_normalize.cpp
+           )
+
+           
 
 
 
