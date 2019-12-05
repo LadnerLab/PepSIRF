@@ -94,6 +94,7 @@ add_library( modules_subjoin STATIC src/modules/subjoin/options_subjoin.cpp
 option( BUILD_TESTS "Determines whether to build tests." ON )
 if(BUILD_TESTS)
   add_executable(pepsirf_test test/pepsirf_test.cpp)
+  add_definitions( -DMATRIX_SAFE_ACCESS )
   include_directories(pepsirf_test lib)
   enable_testing()
 if(OpenMP_FOUND)
