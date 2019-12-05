@@ -37,6 +37,7 @@
 #include "scored_entity.h"
 #include "species_data.h"
 #include "module_normalize.h"
+#include "matrix.h"
 
 using namespace util;
 
@@ -1464,5 +1465,32 @@ TEST_CASE( "geometric means", "[module_normalize]" )
 
     mean = mod.geom_mean( values );
     REQUIRE( std::abs( mean - 4.52873 ) < epsilon );
+
+}
+
+TEST_CASE( "matrix", "[matrix]" )
+{
+    matrix<int> a{ 12, 13 };
+
+    a.at( 0, 0 ) = 0;
+
+    REQUIRE( a.at( 0, 0 ) == 0 );
+    REQUIRE( a( 0, 0 ) == 0 );
+    REQUIRE( a.get_shape() == std::pair<std::uint32_t,std::uint32_t>( 12, 13 ) );
+    REQUIRE_THROWS( a( 1300, 1400 ) );
+
+    a( 0, 3 ) = 4;
+    REQUIRE( a.at( 0, 3 ) == 4 );
+    REQUIRE( a( 0, 3 ) == 4 );
+
+    a.set_all( 100 );
+
+    for( std::uint32_t x = 0; x < 12; ++x )
+        {
+            for( std::uint32_t y = 0; y < 13; ++y )
+                {
+                    REQUIRE( a( x, y ) == 100 );
+                }
+        }
 
 }
