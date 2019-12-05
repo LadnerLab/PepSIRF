@@ -68,6 +68,20 @@ class matrix
         return arr[ access_to_1d( x, y ) ] ;
     }
 
+    /**
+     * Set all of the members of the matrix to 
+     * a certain value.
+     * @param val The value to set all members of the matrix to.
+     **/
+    void set_all( const ValType& val)
+    {
+        std::uint32_t idx = 0;
+
+        for( idx = 0; idx < ( access_to_1d( N, M ) ); ++idx )
+            {
+                arr[ idx ] = val;
+            }
+    }
 
     /**
      * Access the mutable (x,y) element of the array, checking that we will be 
