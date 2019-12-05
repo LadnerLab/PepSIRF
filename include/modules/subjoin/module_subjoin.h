@@ -2,6 +2,7 @@
 #define MODULE_SUBJOIN_HH_DEFINED
 
 #include "module.h"
+#include "options_subjoin.h"
 
 /**
  *
