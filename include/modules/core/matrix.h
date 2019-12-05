@@ -8,7 +8,7 @@
 
 #define ACCESS_MATRIX( x, y ) \
 ({                        \
- if( ( ( (x) * N ) + (y) ) >= ( N * M ) ) \
+    if( !in_range( (x), (y) ))                  \
      { \
        throw std::out_of_range( "Matrix access too large" ); \
      } \
@@ -50,6 +50,43 @@ class matrix
         }
 
     /**
+     * Access the constant (x,y) element of the array, checking that we will be 
+     * performing a check to ensure the access is in bounds.
+     * @param x The index of the row to acccess
+     * @param y the index of the column to access.
+     * @returns constant reference to the (x,y) item in the matrix.
+     * @throws std::out_of_range if (x,y) is greater than the shape of the 
+     *         matrix.
+     **/
+    const ValType& at( const std::uint32_t x, const std::uint32_t y ) const
+    {
+        if( !in_range( x, y ) )
+            {
+                throw std::out_of_range( "Matrix access too large" );
+            }
+        return arr[ access_to_1d( x, y ) ] ;
+    }
+
+
+    /**
+     * Access the mutable (x,y) element of the array, checking that we will be 
+     * performing a check to ensure the access is in bounds.
+     * @param x The index of the row to acccess
+     * @param y the index of the column to access.
+     * @returns mutable reference to the (x,y) item in the matrix.
+     * @throws std::out_of_range if (x,y) is greater than the shape of the 
+     *         matrix.
+     **/
+    ValType& at( const std::uint32_t x, const std::uint32_t y )
+    {
+        if( !in_range( x, y ) )
+            {
+                throw std::out_of_range( "Matrix access too large" );
+            }
+        return arr[ access_to_1d( x, y ) ] ;
+    }
+
+    /**
      * Return the allocated memory
      **/
     ~matrix()
@@ -64,10 +101,22 @@ class matrix
 
     ValType *arr;
 
+    /**
+     * Turn an (x,y) coordinate into a 1-dimensional coordinate.
+     **/
     std::uint32_t access_to_1d( const std::uint32_t x, const std::uint32_t y )
         {
             return ( x * N ) + y;
         }
+
+    /**
+     * Check if accessing the (x,y)th element of this matrix will 
+     * be valid.
+     **/    
+    bool in_range( const std::uint32_t x, const std::uint32_t y )
+    {
+        return access_to_1d( x, y ) < ( N * M );
+    }
     
 };
 
