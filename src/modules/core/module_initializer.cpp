@@ -43,6 +43,12 @@ void module_initializer::initialize( const std::string& mod_name )
             opt_parser  = new options_parser_normalize();
             mod         = new module_normalize();
         }
+    else if( !mod_name.compare( "subjoin" ) )
+        {
+            opts        = new options_subjoin();
+            opt_parser  = new options_parser_subjoin();
+            mod         = new module_subjoin();
+        }
     else
         {
             throw std::runtime_error( "Invalid module name entered." );

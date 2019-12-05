@@ -28,7 +28,7 @@
 
 /**
  * Contains the items necessary to instantiate a module.
- * To add a module, add the entry to module_initializer::initialize.
+ * to add a module, add the entry to module_initializer::initialize.
  **/
 class module_initializer
 {
