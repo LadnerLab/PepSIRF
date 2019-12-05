@@ -8,17 +8,17 @@
 
 #define ACCESS_MATRIX( x, y ) \
 ({                        \
-    if( !in_range( (x), (y) ))                  \
+    if( !in_range( (x), (y) )) \
      { \
        throw std::out_of_range( "Matrix access too large" ); \
      } \
-    arr[ access_to_1d( (x), (y) ) ]; \
+    return arr[ access_to_1d( (x), (y) ) ]; \
 })
 
 #else
 #define ACCESS_MATRIX( x, y ) \
 ({                        \
-    arr[ access_to_1d( (x), (y) ) ];  \
+    return arr[ access_to_1d( (x), (y) ) ];  \
 })
 
 #endif
@@ -30,6 +30,7 @@
 template <typename ValType>
 class matrix
 {
+ public:
     /**
      * Construct an N x M matrix
      * @param in_N the x-dimension of the matrix to be created.
@@ -112,6 +113,17 @@ class matrix
             ACCESS_MATRIX( x, y );
         }
 
+    /**
+     * Get the shape of the matrix, where 
+     * the shape of an N x M matrix is (N,M).
+     * @returns a pair containing the number of rows 
+     *          and number of columns in the matrix.
+     **/
+    const std::pair<std::uint32_t,std::uint32_t>
+        get_shape() const
+        {
+            return std::make_pair( N, M );
+        };
 
     /**
      * Return the allocated memory
