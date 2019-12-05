@@ -87,6 +87,33 @@ class matrix
     }
 
     /**
+     * Access the mutable (x,y) element of the array.
+     * @param x The index of the row to acccess
+     * @param y the index of the column to access.
+     * @returns mutable reference to the (x,y) item in the matrix.
+     * @note if the compile-time constant 'MATRIX_CHECK_BOUNDS' is defined, 
+     *       this method throws std::out_of_range on invalid access.
+     **/
+    ValType& operator()( const std::uint32_t x, const std::uint32_t y )
+        {
+            ACCESS_MATRIX( x, y );
+        }
+
+    /**
+     * Access the constant (x,y) element of the array.
+     * @param x The index of the row to acccess
+     * @param y the index of the column to access.
+     * @returns constant reference to the (x,y) item in the matrix.
+     * @note if the compile-time constant 'MATRIX_CHECK_BOUNDS' is defined, 
+     *       this method throws std::out_of_range on invalid access.
+     **/
+    const ValType& operator()( const std::uint32_t x, const std::uint32_t y ) const
+        {
+            ACCESS_MATRIX( x, y );
+        }
+
+
+    /**
      * Return the allocated memory
      **/
     ~matrix()
