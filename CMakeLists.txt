@@ -84,7 +84,7 @@ add_library( modules_normalize STATIC src/modules/normalize/options_normalize.cp
 
 add_library( modules_subjoin STATIC src/modules/subjoin/options_subjoin.cpp
              src/modules/subjoin/options_parser_subjoin.cpp
-             src/modules/core/module.cpp src/modules/normalize/module_normalize.cpp
+             src/modules/core/module.cpp src/modules/subjoin/module_subjoin.cpp
            )
 
            
