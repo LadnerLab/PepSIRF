@@ -175,6 +175,18 @@ class matrix
     {
         return access_to_1d( x, y ) < ( N * M );
     }
+
+    /**
+     * Returns a pointer to the first item in this matrix's
+     * data. For internal use only.
+     * @note Does not perform any bounds or safety checks.
+     * @param row_idx The 0-based row number to return.
+     * @returns const pointer to the first item in the row_idx'th row
+     **/
+    const ValType *get_row_ptr( std::uint32_t row_idx ) const
+    {
+        return &(this->arr[ row_idx * this->M ]);
+    }
     
 };
 
