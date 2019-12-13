@@ -151,7 +151,7 @@ class matrix
         }
 
 
- private:
+ protected:
     std::uint32_t N;
     std::uint32_t M;
 
@@ -294,10 +294,10 @@ class labeled_matrix : public matrix<ValType>
      **/
     ValType &operator()( const LabelType& row_lab, const LabelType& col_lab  )
         {
-            std::uint32_t row_idx = row_labels[ row_lab ];
-            std::uint32_t col_idx = col_labels[ col_lab ];
+            const std::uint32_t row_idx = row_labels[ row_lab ];
+            const std::uint32_t col_idx = col_labels[ col_lab ];
 
-            this->operator()( row_idx, col_idx );
+            ACCESS_MATRIX( row_idx, col_idx );
         }
 
     /**
@@ -312,7 +312,7 @@ class labeled_matrix : public matrix<ValType>
             std::uint32_t row_idx = row_labels[ row_lab ];
             std::uint32_t col_idx = col_labels[ col_lab ];
 
-            this->operator()( row_idx, col_idx );
+            ACCESS_MATRIX( row_idx, col_idx );
         }
 
     /**
@@ -325,18 +325,15 @@ class labeled_matrix : public matrix<ValType>
      **/
     template<typename LabelContainerType>
     void init_labels( const LabelContainerType &labels,
-                      const std::unordered_map<LabelType, std::uint32_t>& label_dest
+                      std::unordered_map<LabelType, std::uint32_t>& label_dest
                     )
         {
             std::uint32_t idx = 0;
             label_dest.reserve( std::distance( labels.begin(), labels.end() ) );
 
-            for( const auto& iter_loc = labels.begin();
-                 iter_loc != labels.end();
-                 ++iter_loc
-               )
+            for( const auto& iter_loc : labels )
                 {
-                    label_dest.emplace( *iter_loc, idx++ );
+                    label_dest.emplace( iter_loc, idx++ );
                 }
         }
 
