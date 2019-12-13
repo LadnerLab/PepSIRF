@@ -199,6 +199,31 @@ class labelled_matrix : public matrix<ValType>
     labelled_matrix( const std::uint32_t in_N, const std::uint32_t in_M )
         : matrix<ValType>{ in_N, in_M } {}
 
+    /**
+     * Initialize the locally-stored labels for the matrix.
+     * Stores each label with its corresponding row/column number in label_dest
+     * @tparam LabelContainerType the type of the container holding labels.
+     * @param label_dest The place to store the label/index mappings.
+     * @post label_dest.size() == labels.size()
+     * @post For label L and index J, label_dest[ L ] = J
+     **/
+    template<typename LabelContainerType>
+    void init_labels( const LabelContainerType &labels,
+                      const std::unordered_map<LabelType, std::uint32_t>& label_dest
+                    )
+        {
+            std::uint32_t idx = 0;
+            label_dest.reserve( std::distance( labels.begin(), labels.end() ) );
+
+            for( const auto& iter_loc = labels.begin();
+                 iter_loc != labels.end();
+                 ++iter_loc
+               )
+                {
+                    label_dest.emplace( *iter_loc, idx++ );
+                }
+        }
+
 
  private:
     /**
