@@ -215,10 +215,14 @@ class labeled_matrix : public matrix<ValType>
 
     /**
      * Initialize a labeled matrix with row and column labels.
-     * @tparam LabelContainerType The container that holds the values for 
-     *         the row/column labels. This container must be ordered, containing 
+     * @tparam RowLabelContainerType The container that holds the values for 
+     *         the row labels. This container must be ordered, containing 
      *         begin() and end() functions such that for LabelContainerType L,
-     *         L.begin() + N is the label for the N'th row or column.
+     *         L.begin() + N is the label for the N'th row.
+     * @tparam ColLabelContainerType The container that holds the values for 
+     *         the column labels. This container must be ordered, containing 
+     *         begin() and end() functions such that for LabelContainerType L,
+     *         L.begin() + N is the label for the N'th column.
      * @param in_N The number of rows in the matrix.
      * @param in_M The number of columns in the matrix.
      * @param row_labels The labels for each row. If any row has a label,
@@ -226,10 +230,12 @@ class labeled_matrix : public matrix<ValType>
      * @param col_labels The labels for each column. If any column has a label,
      *        then each column should have a label, so col_labels.size() = in_M.
      **/
-    template<typename LabelContainerType>
+    template<typename RowLabelContainerType,
+             typename ColLabelContainerType
+           >
         labeled_matrix( const std::uint32_t in_N, const std::uint32_t in_M,
-                         const LabelContainerType& row_labels,
-                         const LabelContainerType& col_labels
+                         const RowLabelContainerType& row_labels,
+                         const ColLabelContainerType& col_labels
                        )
         : matrix<ValType>{ in_N, in_M }
     {
