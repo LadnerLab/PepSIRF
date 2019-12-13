@@ -5,6 +5,8 @@
 #include <stdexcept>
 #include <unordered_map>
 #include <algorithm>
+#include <vector>
+#include <iostream>
 
 #ifdef MATRIX_CHECK_BOUNDS
 
@@ -162,7 +164,7 @@ class matrix
      **/
     std::uint32_t access_to_1d( const std::uint32_t x, const std::uint32_t y )
         {
-            return ( x * N ) + y;
+            return ( x * M ) + y;
         }
 
     /**
