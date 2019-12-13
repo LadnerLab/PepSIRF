@@ -144,6 +144,41 @@ class matrix
             return std::make_pair( N, M );
         };
 
+
+    /**
+     * Compare the row_idx'th row of this matrix
+     * with the row_idx'th row of comp. 
+     * For the rows we say they are equal if they have 
+     * the same number of columns AND each item in the row 
+     * is equal to the item in comp's row at that index.
+     * @param comp The matrix to grab a row from to compare
+     * @param row_idx The row to compare
+     * @returns boolean true if the matrices have the same 
+     *          number of columns, and each item in the row 
+     *          of each are the same.
+     **/
+    bool compare_row( const matrix<ValType>& comp,
+                      std::uint32_t row_idx
+                    )
+    {
+        const ValType *row_start_self = this->get_row_ptr( row_idx );
+        const ValType *row_start_comp = comp.get_row_ptr( row_idx );
+
+        bool diff = this->M == comp.M;
+
+        for( std::uint32_t col_idx = 0;
+             col_idx < this->M && !diff;
+             ++col_idx
+           )
+            {
+                diff = *row_start_self == *row_start_comp;
+                ++row_start_self;
+                ++row_start_comp;
+            }
+
+        return diff;
+    }
+
     /**
      * Return the allocated memory
      **/
@@ -360,6 +395,42 @@ class labeled_matrix : public matrix<ValType>
                 }
         }
 
+    template<typename ContainerType>
+    labeled_matrix<ValType,LabelType>
+        filter_rows( const ContainerType& row_labels )
+        {
+            std::vector<LabelType> column_labels;
+            column_labels.resize( this->col_labels.size() );
+
+            // assign the column labels to the a standalone data structure,
+            // taking care to remember std::unordered_map is unordered
+            for( const auto& col_data : this->col_labels )
+                {
+                    column_labels[ col_data.second ] = col_data.first;
+                }
+
+            std::uint32_t num_rows = row_labels.size();
+            labeled_matrix<ValType,LabelType> return_matrix( num_rows, this->M,
+                                                             row_labels,
+                                                             column_labels
+                                                           );
+
+            std::uint32_t row_idx_new = 0;
+
+            for( const auto& row_lab : row_labels )
+                {
+                    std::uint32_t row_idx_original = this->row_labels[ row_lab ];
+                    const ValType *row_ptr = this->get_row_ptr( row_idx_original );
+
+                    for( std::uint32_t row_val = 0; row_val < this->M; ++row_val )
+                        {
+                            return_matrix( row_idx_new, row_val ) = *row_ptr;
+                            ++row_ptr;
+                        }
+                    ++row_idx_new;
+                }
+            return return_matrix;
+        }
 
  private:
     /**
