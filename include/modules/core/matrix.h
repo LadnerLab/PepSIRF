@@ -200,6 +200,36 @@ class labelled_matrix : public matrix<ValType>
         : matrix<ValType>{ in_N, in_M } {}
 
     /**
+     * Initialize a labelled matrix with row and column labels.
+     * @tparam LabelContainerType The container that holds the values for 
+     *         the row/column labels. This container must be ordered, containing 
+     *         begin() and end() functions such that for LabelContainerType L,
+     *         L.begin() + N is the label for the N'th row or column.
+     * @param in_N The number of rows in the matrix.
+     * @param in_M The number of columns in the matrix.
+     * @param row_labels The labels for each row. If any row has a label,
+     *        then each row should have a label, so row_labels.size() = in_N.
+     * @param col_labels The labels for each column. If any column has a label,
+     *        then each column should have a label, so col_labels.size() = in_M.
+     **/
+    template<typename LabelContainerType>
+        labelled_matrix( const std::uint32_t in_N, const std::uint32_t in_M,
+                         const LabelContainerType& row_labels,
+                         const LabelContainerType& col_labels
+                       )
+        : matrix<ValType>{ in_N, in_M }
+    {
+        init_labels( row_labels,
+                     this->row_labels
+                   );
+
+        init_labels( col_labels,
+                     this->col_labels
+                   );
+
+    }
+
+    /**
      * Initialize the locally-stored labels for the matrix.
      * Stores each label with its corresponding row/column number in label_dest
      * @tparam LabelContainerType the type of the container holding labels.
