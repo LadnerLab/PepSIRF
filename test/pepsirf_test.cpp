@@ -1517,4 +1517,45 @@ TEST_CASE( "labeled_matrix", "[labeled_matrix]" )
     REQUIRE_THROWS( lab_mat.at( "nonsense", "labels" ) );
     REQUIRE_THROWS( lab_mat.at( 150, 2343 ) );
 
+    std::vector<std::string> rows{ "row_1" };
+    auto new_matr = lab_mat.filter_rows( rows );
+
+    REQUIRE( new_matr.get_shape() == std::pair<std::uint32_t,std::uint32_t>( 1, 5 ) );
+
+    for( std::uint32_t col_idx = 0; col_idx < col_labels.size(); ++col_idx )
+        {
+            REQUIRE( new_matr( 0, col_idx ) == lab_mat( 0, col_idx ) );
+        }
+
+    std::vector<std::string> rows2{ "row_1", "row_3" };
+    auto new_matr2 = lab_mat.filter_rows( rows2 );
+
+    REQUIRE( new_matr2.get_shape() == std::pair<std::uint32_t,std::uint32_t>( 2, 5 ) );
+
+    for( std::uint32_t col_idx = 0; col_idx < col_labels.size(); ++col_idx )
+        {
+            REQUIRE( new_matr2( 0, col_idx ) == lab_mat( 0, col_idx ) );
+            REQUIRE( new_matr2( 1, col_idx ) == lab_mat( 2, col_idx ) );
+        }
+
+    for( uint in_idx = 0; in_idx < 5; ++in_idx )
+        {
+            for( uint out_idx = 0; out_idx < 5; ++out_idx )
+                {
+                    lab_mat( in_idx, out_idx ) = in_idx * out_idx;
+                }
+        }
+    std::vector<std::string> rows3{ "row_1", "row_3", "row_5", "row_4" };
+    auto new_matr3 = lab_mat.filter_rows( rows3 );
+    new_matr.compare_row( lab_mat, 1 );
+
+    for( std::uint32_t col_idx = 0; col_idx < col_labels.size(); ++col_idx )
+        {
+            REQUIRE( new_matr3( 0, col_idx ) == lab_mat( 0, col_idx ) );
+            REQUIRE( new_matr3( 1, col_idx ) == lab_mat( 2, col_idx ) );
+            REQUIRE( new_matr3( 2, col_idx ) == lab_mat( 4, col_idx ) );
+            REQUIRE( new_matr3( 3, col_idx ) == lab_mat( 3, col_idx ) );
+        }
+
+
 }
