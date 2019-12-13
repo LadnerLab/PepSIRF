@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <new>
 #include <stdexcept>
+#include <unordered_map>
+#include <algorithm>
 
 #ifdef MATRIX_CHECK_BOUNDS
 
@@ -42,6 +44,7 @@ class matrix
     matrix( const std::uint32_t in_N, const std::uint32_t in_M )
         : N( in_N ), M( in_M )
         {
+
             arr = (ValType*) malloc( sizeof( ValType ) * N * M );
 
             if( !arr )
@@ -171,6 +174,44 @@ class matrix
         return access_to_1d( x, y ) < ( N * M );
     }
     
+};
+
+
+/**
+ * A matrix whose rows and columns are labelled. 
+ * A label can be any type, but is likely a string. 
+ * @tparam ValType The type of the values stored in the matrix.
+ * @tparam LabelType The type of the labels.
+ **/
+template <typename ValType,
+          typename LabelType
+        >
+class labelled_matrix : public matrix<ValType>
+{
+ public:
+    
+    /**
+     * Constructor that initializes the matrix itself without any labels.
+     * Initializes in_N \times in_M values of type ValType
+     * @param in_N The number of rows the matrix has.
+     * @param in_M The number of columns the matrix has.
+     **/
+    labelled_matrix( const std::uint32_t in_N, const std::uint32_t in_M )
+        : matrix<ValType>{ in_N, in_M } {}
+
+
+ private:
+    /**
+     * The labels for each row of the matrix.
+     **/
+    std::unordered_map<LabelType, std::uint32_t>
+        row_labels;
+    /**
+     * The labels for each column of the matrix.
+     **/
+    std::unordered_map<LabelType, std::uint32_t>
+        col_labels;
+
 };
 
 #endif // MATRIX_HH_INCLUDED
