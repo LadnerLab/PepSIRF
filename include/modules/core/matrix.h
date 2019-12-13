@@ -178,7 +178,7 @@ class matrix
 
 
 /**
- * A matrix whose rows and columns are labelled. 
+ * A matrix whose rows and columns are labeled. 
  * A label can be any type, but is likely a string. 
  * @tparam ValType The type of the values stored in the matrix.
  * @tparam LabelType The type of the labels.
@@ -186,7 +186,7 @@ class matrix
 template <typename ValType,
           typename LabelType
         >
-class labelled_matrix : public matrix<ValType>
+class labeled_matrix : public matrix<ValType>
 {
  public:
     
@@ -196,11 +196,11 @@ class labelled_matrix : public matrix<ValType>
      * @param in_N The number of rows the matrix has.
      * @param in_M The number of columns the matrix has.
      **/
-    labelled_matrix( const std::uint32_t in_N, const std::uint32_t in_M )
+    labeled_matrix( const std::uint32_t in_N, const std::uint32_t in_M )
         : matrix<ValType>{ in_N, in_M } {}
 
     /**
-     * Initialize a labelled matrix with row and column labels.
+     * Initialize a labeled matrix with row and column labels.
      * @tparam LabelContainerType The container that holds the values for 
      *         the row/column labels. This container must be ordered, containing 
      *         begin() and end() functions such that for LabelContainerType L,
@@ -213,7 +213,7 @@ class labelled_matrix : public matrix<ValType>
      *        then each column should have a label, so col_labels.size() = in_M.
      **/
     template<typename LabelContainerType>
-        labelled_matrix( const std::uint32_t in_N, const std::uint32_t in_M,
+        labeled_matrix( const std::uint32_t in_N, const std::uint32_t in_M,
                          const LabelContainerType& row_labels,
                          const LabelContainerType& col_labels
                        )
@@ -285,11 +285,34 @@ class labelled_matrix : public matrix<ValType>
             return this->at( row_val->second, col_val->second );
         }
 
+    /**
+     * Access a mutable member of the matrix using its row/column labels instead of 
+     * integer indices.
+     * @note Does NOT perform bounds check on the access, behavior is undefined if 
+     *       the access is invalid.
+     * @returns Mutable reference to the (row_lab, col_lab) member of the matrix.
+     **/
+    ValType &operator()( const LabelType& row_lab, const LabelType& col_lab  )
         {
             std::uint32_t row_idx = row_labels[ row_lab ];
             std::uint32_t col_idx = col_labels[ col_lab ];
 
-            return this->at( row_idx, col_idx );
+            this->operator()( row_idx, col_idx );
+        }
+
+    /**
+     * Access a constant member of the matrix using its row/column labels instead of 
+     * integer indices.
+     * @note Does NOT perform bounds check on the access, behavior is undefined if 
+     *       the access is invalid.
+     * @returns Constant reference to the (row_lab, col_lab) member of the matrix.
+     **/
+    const ValType &operator()( const LabelType& row_lab, const LabelType& col_lab  ) const
+        {
+            std::uint32_t row_idx = row_labels[ row_lab ];
+            std::uint32_t col_idx = col_labels[ col_lab ];
+
+            this->operator()( row_idx, col_idx );
         }
 
     /**
