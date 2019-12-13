@@ -245,8 +245,8 @@ class labeled_matrix : public matrix<ValType>
      **/
     ValType &at( const LabelType& row_lab, const LabelType& col_lab )
         {
-            const auto& row_val = row_labels[ row_lab ];
-            const auto& col_val = col_labels[ col_lab ];
+            const auto row_val = row_labels.find( row_lab );
+            const auto col_val = col_labels.find( col_lab );
 
             if( row_val == row_labels.end() )
                 {
