@@ -229,6 +229,9 @@ class labeled_matrix : public matrix<ValType>
 
     }
 
+    using matrix<ValType>::operator();
+    using matrix<ValType>::at;
+
     /**
      * Access a mutable member of the matrix using its row/column labels instead 
      * of integer indices. 
