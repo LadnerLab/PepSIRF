@@ -230,6 +230,40 @@ class labelled_matrix : public matrix<ValType>
     }
 
     /**
+     * Access a mutable member of the matrix using its row/column labels instead 
+     * of integer indices. Perform bounds check on the access.
+     * @param row_lab The label of the row to access
+     * @param col_lab The label of the column to access
+     * @throws std::out_of_range if (row_lab, col_lab) resolves to indices 
+     *         that are not in range of the matrix.
+     * @returns mutable reference to the matrix at (row_lab, col_lab) 
+     **/
+    ValType &at( const LabelType& row_lab, const LabelType& col_lab )
+        {
+            std::uint32_t row_idx = row_labels[ row_lab ];
+            std::uint32_t col_idx = col_labels[ col_lab ];
+
+            return this->at( row_idx, col_idx );
+        }
+
+    /**
+     * Access a constant member of the matrix using its row/column labels instead 
+     * of integer indices. Perform bounds check on the access.
+     * @param row_lab The label of the row to access
+     * @param col_lab The label of the column to access
+     * @throws std::out_of_range if (row_lab, col_lab) resolves to indices 
+     *         that are not in range of the matrix.
+     * @returns constant reference to the matrix at (row_lab, col_lab) 
+     **/
+    const ValType &at( const LabelType& row_lab, const LabelType& col_lab ) const
+        {
+            std::uint32_t row_idx = row_labels[ row_lab ];
+            std::uint32_t col_idx = col_labels[ col_lab ];
+
+            return this->at( row_idx, col_idx );
+        }
+
+    /**
      * Initialize the locally-stored labels for the matrix.
      * Stores each label with its corresponding row/column number in label_dest
      * @tparam LabelContainerType the type of the container holding labels.
