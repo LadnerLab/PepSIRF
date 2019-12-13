@@ -1468,7 +1468,7 @@ TEST_CASE( "geometric means", "[module_normalize]" )
 
 }
 
-TEST_CASE( "matrix", "[matrix]" )
+TEST_CASE( "matrix creation, setting individual members of matrix", "[matrix]" )
 {
     matrix<int> a{ 12, 13 };
 
@@ -1492,5 +1492,29 @@ TEST_CASE( "matrix", "[matrix]" )
                     REQUIRE( a( x, y ) == 100 );
                 }
         }
+
+    a.at( 1, 2 ) = 4;
+    REQUIRE( a( 1, 2 ) == 4 );
+
+}
+
+TEST_CASE( "labeled_matrix", "[labeled_matrix]" )
+{
+
+    std::vector<std::string> row_labels{ "row_1", "row_2", "row_3", "row_4", "row_5" };
+    std::vector<std::string> col_labels{ "col_1", "col_2", "col_3", "col_4", "col_5" };
+
+    labeled_matrix<double, std::string> lab_mat( 5, 5, row_labels, col_labels );
+
+    lab_mat.set_all( 15 );
+
+    REQUIRE( lab_mat.get_shape() == std::pair<std::uint32_t,std::uint32_t>( 5, 5 ) );
+    REQUIRE( lab_mat( "row_1", "col_1" ) == 15 );
+
+    lab_mat( "row_1", "col_3" ) = 4;
+    REQUIRE( lab_mat( 0, 2 ) == 4 );
+
+    REQUIRE_THROWS( lab_mat.at( "nonsense", "labels" ) );
+    REQUIRE_THROWS( lab_mat.at( 150, 2343 ) );
 
 }
