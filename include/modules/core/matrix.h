@@ -10,17 +10,17 @@
 
 #define ACCESS_MATRIX( x, y ) \
 ({                        \
-    if( !in_range( (x), (y) )) \
+    if( !this->in_range( (x), (y) )) \
      { \
        throw std::out_of_range( "Matrix access too large" ); \
      } \
-    return arr[ access_to_1d( (x), (y) ) ]; \
+    return this->arr[ this->access_to_1d( (x), (y) ) ]; \
 })
 
 #else
 #define ACCESS_MATRIX( x, y ) \
 ({                        \
-    return arr[ access_to_1d( (x), (y) ) ];  \
+    return this->arr[ this->access_to_1d( (x), (y) ) ]; \
 })
 
 #endif
