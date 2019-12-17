@@ -190,6 +190,36 @@ class matrix
     };
 
     /**
+     * Returns an iterator to 
+     * this matrix whose pointer is at the 
+     * first element in the matrix.
+     **/
+    iterator get_iterator() const
+    {
+        return iterator( this );
+    }
+
+    /**
+     * Get an iterator that is pointing to the end of 
+     * the n'th row. 
+     * @note No safety checks are made to ensure 
+     *       the chosen row is actually in the matrix.
+     * @param row The row to point to the end of.
+     **/
+    const iterator row_end( std::size_t row ) const
+    {
+        return iterator( this, row + 1, 0 );
+    }
+
+    /**
+     * Get an iterator to the beginning of the n'th row.
+     **/
+    const iterator row_begin( std::size_t row ) const
+    {
+        return iterator( this, row, 0 );
+    }
+
+    /**
      * Construct an N x M matrix
      * @param in_N the x-dimension of the matrix to be created.
      *        (the number of rows)
