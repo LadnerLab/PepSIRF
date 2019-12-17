@@ -72,38 +72,38 @@ void module_normalize::constant_factor_normalization( std::vector<double>& cols,
 }
 
 void module_normalize::get_sum( std::vector<double>& dest,
-                                std::vector<std::vector<double>>& src
-                                )
+                                matrix<double>& src
+                              )
 {
     std::size_t index = 0;
 
-    for( index = 0; index < src.size(); ++index )
+    for( index = 0; index < src.nrows(); ++index )
         {
             std::size_t inner_index = 0;
-            for( inner_index = 0; inner_index < src[ index ].size(); ++inner_index )
+            for( inner_index = 0; inner_index < src.ncols(); ++inner_index )
                 {
-                    dest[ inner_index ] += src[ index ][ inner_index ];
+                    dest[ inner_index ] += src( index, inner_index );
                 }
             
         }
 }
 
-void module_normalize::normalize_counts( std::vector<std::vector<double>>&
+void module_normalize::normalize_counts( matrix<double>&
                                          original_scores,
                                          const std::vector<double>& norm_factors
                                        )
 {
-    for( std::size_t index = 0; index < original_scores.size(); ++index )
+    for( std::size_t index = 0; index < original_scores.nrows(); ++index )
         {
-            for( std::size_t inner_index = 0; inner_index < original_scores[ index ].size(); ++inner_index )
+            for( std::size_t inner_index = 0; inner_index < original_scores.ncols(); ++inner_index )
                 {
-                    original_scores[ index ][ inner_index ] /= norm_factors[ inner_index ];
+                    original_scores( index, inner_index ) /= norm_factors[ inner_index ];
                 }
         }
 }
 
 void module_normalize::compute_size_factors( std::vector<double>& size_factors,
-                                             const std::vector<std::vector<double>>& data
+                                             const matrix<double>& data
                                            )
 {
  //    auto median = []( std::vector<double>& v ) -> double
@@ -123,23 +123,25 @@ void module_normalize::compute_size_factors( std::vector<double>& size_factors,
 
     std::vector<double> row;
     std::vector<std::vector<double>> geom_mean_factors;
-    geom_mean_factors.reserve( data[ 0 ].size() );
+    geom_mean_factors.reserve( data.ncols() );
 
     std::size_t index = 0;
 
-    for( index = 0; index < data[ 0 ].size(); ++index )
+    for( index = 0; index < data.nrows(); ++index )
         {
-            geom_mean_factors.emplace_back( std::vector<double>( data.size(), 0 ) ) ;
+            geom_mean_factors.emplace_back( std::vector<double>( data.nrows(), 0 ) ) ;
         }
 
-    for( index = 0; index < data.size(); ++index )
+    for( index = 0; index < data.nrows(); ++index )
         {
-            double g_mean = geom_mean( data[ index ] );
+            double g_mean = geom_mean( data.row_begin( index ),
+                                       data.row_end( index )
+                                     );
 
-            for( std::size_t inner_index = 0; inner_index < data[ index ].size(); ++inner_index )
+            for( std::size_t inner_index = 0; inner_index < data.ncols(); ++inner_index )
                 {
                     // transpose the data here so computing the medians is easier
-                    geom_mean_factors[ inner_index ][ index ] = data[ index ][ inner_index ] / g_mean;
+                    geom_mean_factors[ inner_index ][ index ] = data( index, inner_index ) / g_mean;
                 }
         }
 

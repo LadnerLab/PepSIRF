@@ -33,7 +33,7 @@ class module_normalize : public module
      *        a score matrix file.
      **/
     void get_sum( std::vector<double>& dest,
-                  std::vector<std::vector<double>>& src
+                  matrix<double>& src
                 );
 
 
@@ -58,7 +58,7 @@ class module_normalize : public module
      * @param norm_factors The column normalization factors to adjust the 
      *        score of each in original_score by.
      **/
-    void normalize_counts( std::vector<std::vector<double>>&
+    void normalize_counts( matrix<double>&
                            original_scores,
                            const std::vector<double>& norm_factors
                          );
@@ -72,17 +72,19 @@ class module_normalize : public module
      *       data.
      * @param data The dataset whose geometric mean to compute.
      **/
-    template <typename T>
-        double geom_mean( const std::vector<T>& data )
+    template <typename Iterator
+             >
+        double geom_mean( const Iterator& begin,
+                          const Iterator& end
+                        )
         {
             std::size_t n = 0;
-            std::size_t index = 0;
             double log_sum = 0;
 
-            for( index = 0; index < data.size(); ++index )
+            for( auto index = begin; index != end; ++index )
                 {
-                    log_sum += std::log( std::max( (T) 1, (T)data[ index ] ) );
-                    n += data[ index ] != 0;
+                    log_sum += std::log( *index == 0 ? 1 : *index );
+                    n += *index != 0;
                 }
 
             log_sum /= (double) n;
@@ -98,7 +100,7 @@ class module_normalize : public module
      * @param data The counts to get the size factors of.
      **/
     void compute_size_factors( std::vector<double>& size_factors,
-                               const std::vector<std::vector<double>>& data
+                               const matrix<double>& data
                              );
 
 
