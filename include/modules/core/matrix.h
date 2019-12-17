@@ -470,7 +470,7 @@ class matrix
     /**
      * Turn a 1-dimensional coordinate in to an (x,y) coordinate.
      **/
-    std::pair<std::uint32_t,std::uint32_t> access_to_2d( const std::uint32_t idx )
+    std::pair<std::uint32_t,std::uint32_t> access_to_2d( const std::uint32_t idx ) const
         {
             std::pair<std::uint32_t,std::uint32_t> transform_acc_vec;
             transform_acc_vec.first = idx / this->M;
@@ -564,6 +564,38 @@ class labeled_matrix : public matrix<ValType>
 
     using matrix<ValType>::operator();
     using matrix<ValType>::at;
+
+    /**
+     * Set the row labels for this matrix. 
+     * @tparam ContainerType the container labels are currently stored in.
+     *         this should be an ordered container.
+     * @pre the values in labels are in the same order as the 
+     *      rows of this matrix.
+     * @post This matrix's row labels are set to the labels in containers
+     **/
+    template<typename ContainerType>
+        void set_row_labels( const ContainerType& labels )
+        {
+            init_labels( labels,
+                         this->row_labels
+                       );
+        }
+
+    /**
+     * Set the column labels for this matrix. 
+     * @tparam ContainerType the container labels are currently stored in.
+     *         this should be an ordered container.
+     * @pre the values in labels are in the same order as the 
+     *      columns of this matrix.
+     * @post This matrix's column labels are set to the labels in containers
+     **/
+    template<typename ContainerType>
+        void set_col_labels( const ContainerType& labels )
+        {
+            init_labels( labels,
+                         this->col_labels
+                       );
+        }
 
     /**
      * Access a mutable member of the matrix using its row/column labels instead 
@@ -673,6 +705,18 @@ class labeled_matrix : public matrix<ValType>
                 }
         }
 
+    /**
+     * Filter the rows in this matrix, keeping only the rows whose 
+     * labels are found in the provided container.
+     * @tparam ContainerType the type of container the labels are 
+     *         stored in. Must be iterable by a range-based for loop.
+     * @param row_labels 
+     * @note row_labels the order of the labels in row_labels is 
+     *       preserved.
+     * @returns An K x M matrix, where K is the size of row_labels. The returned 
+     *          matrix will contain the rows in this matrix whose labels are found in 
+     *          row labels. The columns and their labels will remain unchanged.
+     **/
     template<typename ContainerType>
     labeled_matrix<ValType,LabelType>
         filter_rows( const ContainerType& row_labels )
