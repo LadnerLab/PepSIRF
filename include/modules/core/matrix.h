@@ -70,6 +70,18 @@ class matrix
               {}
 
         
+        /**
+         * Determines whether the iterator has reached 
+         * at least the end of the matrix.
+         * @returns boolean True if the current pointer is greater than 
+         *          the size of the matrix, False otherwise.
+         **/
+        bool end()
+        {
+            return current_idx >=
+                 this->matr.access_to_1d( this->matr.N, this->matr.M );
+        }
+        
     private:
         /**
          * The matrix being iterated over.
