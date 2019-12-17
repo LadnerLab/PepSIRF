@@ -83,6 +83,16 @@ class matrix
         }
         
         /**
+         * Constant access to the current value pointed to by the 
+         * iterator.
+         * @returns constant reference to the current iterated value
+         **/
+        const ValType& operator*() const
+        {
+            return this->matr->operator()( this->current_idx );
+        }
+
+        /**
          * In-place advance the iterator forward.
          * @param advance The number of positions to 
          *        advance.
