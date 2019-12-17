@@ -372,6 +372,32 @@ class matrix
             return std::make_pair( N, M );
         };
 
+    /**
+     * Get the number of rows in the matrix.
+     **/
+    std::size_t nrows() const
+        {
+            return N;
+        }
+
+    /**
+     * Get the number of columns in the matrix.
+     **/
+    std::size_t ncols() const
+        {
+            return M;
+        }
+
+    /**
+     * Get the total size (total number of possible elements)
+     * of the matrix.
+     *
+     **/
+    std::size_t total_size() const
+        {
+            return N * M;
+        }
+
 
     /**
      * Compare the row_idx'th row of this matrix
