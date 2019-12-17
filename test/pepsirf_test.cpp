@@ -1451,21 +1451,39 @@ TEST_CASE( "score_species_peptides/get_highest_score_per_species", "[module_deco
 
 TEST_CASE( "geometric means", "[module_normalize]" )
 {
+    // TODO: RE-implement this test
     module_normalize mod;
 
-    std::vector<double> values{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+    matrix<double> values{ 3, 4 };
 
-    double mean = mod.geom_mean( values );
+    for( int outer = 0; outer < 3; ++outer )
+        {
+            for( int inner = 0; inner < 4; ++inner )
+                {
+                    values( outer, inner ) = outer * inner;
+                }
+        }
+
+    double mean = mod.geom_mean( values.row_begin( 1 ),
+                                 values.row_end( 1 )
+                               );
     double epsilon = 0.0005;
 
-    // check that we're sufficiently close 
-    REQUIRE( std::abs( mean - 4.52873 ) < epsilon );
+    // check that we're sufficiently close, I calculated the
+    // value separately, taking care to remove any zeros
+    REQUIRE( std::abs( mean - 1.81712 ) < epsilon );
 
-    values.push_back( 0 );
 
-    mean = mod.geom_mean( values );
-    REQUIRE( std::abs( mean - 4.52873 ) < epsilon );
+    mean = mod.geom_mean( values.row_begin( 2 ),
+                          values.row_end( 2 )
+                        );
+    REQUIRE( std::abs( mean - 3.63424 ) < epsilon );
 
+    mean = mod.geom_mean( values.row_begin( 0 ),
+                          values.row_end( 0 )
+                        );
+
+    REQUIRE( mean == 0 );
 }
 
 TEST_CASE( "matrix creation, setting individual members of matrix", "[matrix]" )
