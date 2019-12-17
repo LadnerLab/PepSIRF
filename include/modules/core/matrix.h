@@ -251,7 +251,7 @@ class matrix
         : N( in_N ), M( in_M )
         {
 
-            arr = (ValType*) malloc( sizeof( ValType ) * N * M );
+            arr = (ValType*) std::calloc( N * M, sizeof( ValType) );
 
             if( !arr )
                 {
