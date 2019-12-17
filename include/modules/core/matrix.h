@@ -220,6 +220,26 @@ class matrix
     }
 
     /**
+     * Default constructor.
+     **/
+    matrix() = default;
+
+    /**
+     * Assigns the values of this matrix to the values of other.
+     * @param other The matrix to copy.
+     * @note A deep copy of the values in other is made.
+     * @post after a call to this method, this( i, j ) == other( i, j ) 
+     *       for all i, j
+     **/
+    void operator=( const matrix<ValType>& other )
+        {
+            this->arr = (ValType*) malloc( sizeof( ValType ) * other.N * other.M );
+            std::memcpy( this->arr, other.arr, sizeof( ValType ) * other.N * other.M );
+            this->M = other.M;
+            this->N = other.N;
+        }
+
+    /**
      * Construct an N x M matrix
      * @param in_N the x-dimension of the matrix to be created.
      *        (the number of rows)
