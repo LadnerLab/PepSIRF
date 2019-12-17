@@ -137,6 +137,45 @@ class matrix
                 return *this;
             }
 
+        /**
+         * Determines whether this iterator is NOT equal to 
+         * another.
+         * @note We say two iterators are equal if they point to the 
+         *       same position in the same matrix. See matrix::iterator::operator==
+         * @returns True if !( this == comp ), false otherwise
+         **/
+        bool operator!=( const iterator& comp ) const
+        {
+            return !( *this == comp );
+        }
+        
+        /**
+         * Determine whether two iterators are equal.
+         * @note We define two iterators as equivalent if 
+         *       they point to the same position in the same 
+         *       matrix.
+         * @returns True if this == comp, false otherwise.
+         **/
+        bool operator==( const iterator& comp ) const
+        {
+            return this->matr == comp.matr 
+                     && this->current_idx == comp.current_idx;
+        }
+
+        /**
+         * Assign this iterator to another.
+         * @param other The iterator to copy.
+         * @note After calling this method, this == other will be true,
+         *       and it is thus important to note that this method does not
+         *       copy the matrix pointed to by other, it copies only its 
+         *       pointer.
+         **/
+        void operator=( const matrix<ValType>& other )
+            {
+                this->matr = other.matr;
+                this->current_idx = other.current_idx;
+            }
+    
     private:
         /**
          * The matrix being iterated over.
