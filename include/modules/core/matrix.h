@@ -443,24 +443,47 @@ class matrix
 
 
  protected:
+    /**
+     * The number of rows 
+     * the matrix has
+     **/
     std::uint32_t N;
+
+    /**
+     * The number of columns the matrix has.
+     **/
     std::uint32_t M;
 
+    /**
+     * The values stored in the matrix.
+     **/
     ValType *arr;
 
     /**
      * Turn an (x,y) coordinate into a 1-dimensional coordinate.
      **/
-    std::uint32_t access_to_1d( const std::uint32_t x, const std::uint32_t y )
+    std::uint32_t access_to_1d( const std::uint32_t x, const std::uint32_t y ) const
         {
             return ( x * M ) + y;
+        }
+
+    /**
+     * Turn a 1-dimensional coordinate in to an (x,y) coordinate.
+     **/
+    std::pair<std::uint32_t,std::uint32_t> access_to_2d( const std::uint32_t idx )
+        {
+            std::pair<std::uint32_t,std::uint32_t> transform_acc_vec;
+            transform_acc_vec.first = idx / this->M;
+
+            transform_acc_vec.second = idx / this->N;
+            return transform_acc_vec;
         }
 
     /**
      * Check if accessing the (x,y)th element of this matrix will 
      * be valid.
      **/    
-    bool in_range( const std::uint32_t x, const std::uint32_t y )
+    bool in_range( const std::uint32_t x, const std::uint32_t y ) const
     {
         return access_to_1d( x, y ) < ( N * M );
     }
@@ -493,6 +516,7 @@ class labeled_matrix : public matrix<ValType>
 {
  public:
     
+    labeled_matrix() = default;
     /**
      * Constructor that initializes the matrix itself without any labels.
      * Initializes in_N \times in_M values of type ValType
