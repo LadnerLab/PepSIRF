@@ -82,6 +82,51 @@ class matrix
                  this->matr.access_to_1d( this->matr.N, this->matr.M );
         }
         
+        /**
+         * In-place advance the iterator forward.
+         * @param advance The number of positions to 
+         *        advance.
+         **/
+        void operator+=( int advance )
+        {
+            current_idx += advance;
+        }
+
+        /**
+         * Increment in-place, return reference to 
+         * this iterator.
+         **/
+        iterator &operator++()
+            {
+                *this += 1; return *this;
+            }
+
+        /**
+         * Advance forward an entire row from the 
+         * current position. 
+         * @note This does not advance to the beginning of 
+         *       the row, but advances to the current position in 
+         *       the next row.
+         **/
+        iterator& next_row()
+            {
+                this += this->matr.M;
+                return *this;
+            }
+
+        /**
+         * Advance forward an entire column from the 
+         * current position. 
+         * @note This does not advance to the beginning of 
+         *       the column, but advances to the current position in 
+         *       the next column.
+         **/
+        iterator &next_col()
+            {
+                this += this->matr.N;
+                return *this;
+            }
+
     private:
         /**
          * The matrix being iterated over.
