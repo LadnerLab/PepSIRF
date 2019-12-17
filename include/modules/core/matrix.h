@@ -324,6 +324,30 @@ class matrix
         }
 
     /**
+     * Access a constant member of the matrix using 1-dimensional 
+     * access.
+     * @note no safety checks are made to ensure the access is valid.
+     * @returns constant reference to the access_idx'th item in 
+     *          the matrix.
+     **/
+    const ValType& operator()( const std::uint32_t access_idx ) const
+        {
+            return this->arr[ access_idx ];
+        }
+
+    /**
+     * Access a mutable member of the matrix using 1-dimensional 
+     * access.
+     * @note no safety checks are made to ensure the access is valid.
+     * @returns mutable reference to the access_idx'th item in 
+     *          the matrix.
+     **/
+    ValType& operator()( const std::uint32_t access_idx ) 
+        {
+            return this->arr[ access_idx ];
+        }
+
+    /**
      * Access the constant (x,y) element of the array.
      * @param x The index of the row to acccess
      * @param y the index of the column to access.
