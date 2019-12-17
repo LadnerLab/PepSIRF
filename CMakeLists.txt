@@ -57,6 +57,7 @@ add_library(pepsirf_common STATIC src/modules/parsers/options_parser.cpp src/mod
             src/modules/core/module_initializer.cpp
             src/modules/core/cli_validator.cpp
             src/modules/core/modules.cpp
+			src/modules/core/peptide_scoring.cpp
            )
 
 add_library(modules_demux STATIC src/modules/demux/options_demux.cpp src/modules/demux/options_parser_demux.cpp src/modules/parsers/options_parser.cpp 
@@ -80,15 +81,13 @@ add_library( modules_deconv STATIC src/modules/deconv/options_deconv.cpp src/mod
 add_library( modules_normalize STATIC src/modules/normalize/options_normalize.cpp
              src/modules/normalize/options_parser_normalize.cpp
 			 src/modules/core/module.cpp src/modules/normalize/module_normalize.cpp
-		   )
+			 src/modules/core/peptide_scoring.cpp
+           )
 
 add_library( modules_subjoin STATIC src/modules/subjoin/options_subjoin.cpp
              src/modules/subjoin/options_parser_subjoin.cpp
              src/modules/core/module.cpp src/modules/subjoin/module_subjoin.cpp
            )
-
-           
-
 
 
 option( BUILD_TESTS "Determines whether to build tests." ON )
