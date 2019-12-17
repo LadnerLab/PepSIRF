@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <vector>
 #include <iostream>
+#include <cstring>
 
 #ifdef MATRIX_CHECK_BOUNDS
 
@@ -35,6 +36,53 @@ template <typename ValType>
 class matrix
 {
  public:
+    // TODO: Constant/mutable iterators
+
+    /**
+     * An iterator providing functionality for iterating over rows/columns 
+     * of a matrix.
+     **/
+    class iterator
+    {
+
+    public:
+        /**
+         * Initialize the iterator with a matrix, 
+         * sets iterator pointer to zero.
+         **/
+    iterator( const ::matrix<ValType> *matr ) 
+            : matr( matr ),
+              current_idx( 0 )
+              {}
+
+        /**
+         * Initialize with a matrix and starting (row, column) position.
+         * @param matr The matrix to iterate over.
+         * @param start_row The row to begin iteration on
+         * @param start_col the column to begin iteration on
+         **/
+    iterator( const ::matrix<ValType> *matr,
+              std::size_t start_row,
+              std::size_t start_col
+                       ) 
+            : matr( matr ),
+              current_idx( matr->access_to_1d( start_row, start_col ) )
+              {}
+
+        
+    private:
+        /**
+         * The matrix being iterated over.
+         **/
+        const ::matrix<ValType> *matr;
+
+        /**
+         * The current location of the iterator. 
+         **/
+        std::size_t current_idx;
+
+    };
+
     /**
      * Construct an N x M matrix
      * @param in_N the x-dimension of the matrix to be created.
