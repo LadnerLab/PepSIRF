@@ -250,8 +250,7 @@ class matrix
     matrix( const std::uint32_t in_N, const std::uint32_t in_M )
         : N( in_N ), M( in_M )
         {
-
-            arr = (ValType*) std::calloc( N * M, sizeof( ValType) );
+            arr = new ValType[ N * M ]();
 
             if( !arr )
                 {
@@ -286,7 +285,7 @@ class matrix
     {
         std::uint32_t idx = 0;
 
-        for( idx = 0; idx < ( access_to_1d( N, M ) ); ++idx )
+        for( idx = 0; idx <  N * M ; ++idx )
             {
                 arr[ idx ] = val;
             }
@@ -438,7 +437,7 @@ class matrix
      **/
     ~matrix()
         {
-            delete arr;
+            delete[] arr;
         }
 
 
