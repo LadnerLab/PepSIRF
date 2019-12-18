@@ -1,8 +1,8 @@
 #include "module_subjoin.h"
 #include "matrix.h"
-
-#include <omp.h>
 #include <iostream>
+#include "time_keep.h" 
+
 module_subjoin::module_subjoin() = default;
 
 void module_subjoin::parse_namelist( std::vector<std::string>& dest,
@@ -24,7 +24,13 @@ void module_subjoin::run( options *opts )
     parsed_score_data.resize( s_opts->matrix_name_pairs.size() );
     std::uint32_t idx = 0;
 
+    time_keep::timer time;
+
+    time.start();
+
     // for all of the ( score_matrix, names_to_filter ) pairs:
+    #pragma omp parallel for num_threads( 2 ) private( idx ) schedule( dynamic ) \
+            shared( s_opts, parsed_score_data ) 
     for( idx = 0; idx < s_opts->matrix_name_pairs.size(); ++idx )
         {
             auto &score_name_pair = s_opts->matrix_name_pairs[ idx ];
@@ -68,4 +74,8 @@ void module_subjoin::run( options *opts )
         {
             output << parsed_score_data[ 0 ].scores;
         }
+
+    time.stop();
+
+    std::cout << "Took " << time.get_elapsed() << " seconds.\n";
 }
