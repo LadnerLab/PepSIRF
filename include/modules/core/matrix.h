@@ -584,6 +584,86 @@ class labeled_matrix : public matrix<ValType>
         }
 
     /**
+     * Full outer join this matrix with other.
+     * Creates a matrix with all of the rows and columns of 
+     * this and other. Any values that are not in the join will 
+     * be zero-initialized, as defined by ValType.
+     * @param other The matrix to join with this.
+     * @returns a labeled matrix with the rows and columns of this 
+     *          and other.
+     **/
+    labeled_matrix<ValType, LabelType>
+        full_outer_join( const labeled_matrix<ValType, LabelType>& other )
+    {
+        // find a_columns union b_cols -> number of columns in output
+        std::unordered_set<LabelType> col_lab_union;
+        setops::set_union( col_lab_union,
+                           this->col_labels,
+                           other.col_labels,
+                           setops
+                           ::get_key<LabelType,
+                           std::pair<LabelType,std::uint32_t>
+                           >()
+                         );
+
+        // find a_rows union b_cols -> number of rows in output
+        std::unordered_set<LabelType> row_lab_union;
+        setops::set_union( row_lab_union,
+                           this->row_labels,
+                           other.row_labels,
+                           setops
+                           ::get_key<LabelType,
+                           std::pair<LabelType,std::uint32_t>
+                           >()
+                         );
+
+        std::uint32_t join_N = row_lab_union.size(),
+                      join_M = col_lab_union.size();
+
+        // create the output with the correct number of rows, columns
+        labeled_matrix<ValType,LabelType> joined_matr( join_N, join_M,
+                                                       row_lab_union,
+                                                       col_lab_union
+                                                     );
+
+        for( const auto& row_lab : this->row_labels )
+            {
+                for( const auto& col_lab : this->col_labels )
+                    {
+                                joined_matr( row_lab.first, col_lab.first ) =
+                                    this->operator()( row_lab.first, col_lab.first );
+                    }
+            }
+
+        for( const auto& row_lab : other.row_labels )
+            {
+                for( const auto& col_lab : other.col_labels )
+                    {
+                                joined_matr( row_lab.first, col_lab.first ) =
+                                    other( row_lab.first, col_lab.first );
+                    }
+            }
+
+        return joined_matr;
+    }
+
+    typename matrix<ValType>::iterator find( const LabelType& row_lab,
+                                             const LabelType& col_lab
+                                           )
+    {
+        const auto& row_label = this->row_labels.find( row_lab );
+        const auto& col_label = this->col_labels.find( col_lab );
+        if( row_label == this->row_labels.end()
+            || col_label == this->col_labels.end()
+          )
+            {
+                return this->end();
+            }
+
+        return matrix<ValType>::iterator( this->arr, row_label.second, col_label.second );
+    }
+
+    /**
      * Set the column labels for this matrix. 
      * @tparam ContainerType the container labels are currently stored in.
      *         this should be an ordered container.

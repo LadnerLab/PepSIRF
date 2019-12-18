@@ -1577,3 +1577,99 @@ TEST_CASE( "labeled_matrix", "[labeled_matrix]" )
 
 
 }
+
+TEST_CASE( "labeled_matrix full outer join", "[matrix]" )
+{
+    std::uint32_t a_N = 3, a_M = 3;
+    std::uint32_t b_N = 2, b_M = 6;
+
+    std::vector<std::string> a_rl{ "arow1", "arow2", "arow3" };
+    std::vector<std::string> b_rl{ "brow1", "brow2" };
+
+    std::vector<std::string> a_cl{ "acol1", "acol2", "acol3" };
+    std::vector<std::string> b_cl{ "bcol1", "bcol2", "bcol3",
+                                   "bcol4", "bcol5", "bcol6"
+                                 };
+
+
+    labeled_matrix<double, std::string> a( a_N, a_M,
+                                           a_rl, a_cl
+                                         );
+    labeled_matrix<double, std::string> b( b_N, b_M,
+                                           b_rl, b_cl
+                                         );
+    a( "arow1", "acol1" ) = 5.5;
+    b( "brow2", "bcol5" ) = 5.5;
+    
+    labeled_matrix<double,std::string> a_join_b
+        = a.full_outer_join( b );
+
+    REQUIRE( a_join_b.nrows() == a_N + b_N );
+    REQUIRE( a_join_b.ncols() == a_M + b_M );
+    REQUIRE( a_join_b( "arow1", "acol1" ) == 5.5 );
+    REQUIRE( a_join_b( "brow2", "bcol5" ) == 5.5 );
+    REQUIRE( a_join_b( "brow2", "acol1" ) == 0 );
+
+    std::vector<std::string> a1_rl;
+    std::vector<std::string> a1_cl;
+    std::vector<std::string> a2_rl;
+    std::vector<std::string> a2_cl;
+    int x_dim = 100;
+    int y_dim = 150;
+
+    labeled_matrix<double,std::string> a1_matr( x_dim, y_dim );
+    labeled_matrix<double,std::string> a2_matr( x_dim, y_dim );
+
+    for( int x = 0; x < x_dim - 1; ++x )
+        {
+
+            a1_rl.push_back( "a_" );
+            a1_rl.back().append( std::to_string( x ) );
+
+            a2_rl.push_back( "c_" );
+            a2_rl.back().append( std::to_string( x ) );
+        }
+
+    a1_rl.push_back( "shared_label_row" );
+    a2_rl.push_back( "shared_label_row" );
+
+    for( int y = 0; y < y_dim; ++y )
+        {
+
+            a1_cl.push_back( "b_" );
+            a1_cl.back().append( std::to_string( y ) );
+
+
+            a2_cl.push_back( "d_" );
+            a2_cl.back().append( std::to_string( y ) );
+
+
+        }
+
+    for( int x = 0; x < x_dim; ++x )
+        {
+            for( int y = 0; y < y_dim; ++ y )
+                {
+                    a1_matr( x, y ) = x * y;
+                    a2_matr( y % x_dim, x ) = x * y;
+                }
+        }
+            
+    a1_matr.set_col_labels( a1_cl );
+    a1_matr.set_row_labels( a1_rl );
+    a2_matr.set_col_labels( a2_cl );
+    a2_matr.set_row_labels( a2_rl );
+
+    labeled_matrix<double,std::string> a1_join_b2 = a1_matr.full_outer_join( a2_matr );
+
+    for( int x = 0; x < x_dim; ++x )
+        {
+            for( int y = 0; y < y_dim; ++y )
+                {
+                    REQUIRE( a1_join_b2( a1_rl[ x ], a1_cl[ y ] ) == a1_matr( a1_rl[ x ], a1_cl[ y ] ) );
+                    REQUIRE( a1_join_b2( a2_rl[ x ], a2_cl[ y ] ) == a2_matr( a2_rl[ x ], a2_cl[ y ] ) );
+                }
+        }
+
+
+}
