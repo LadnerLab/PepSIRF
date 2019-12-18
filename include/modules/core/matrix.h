@@ -9,6 +9,9 @@
 #include <vector>
 #include <iostream>
 #include <cstring>
+#include <sstream>
+#include <iostream>
+#include <boost/algorithm/string/join.hpp>
 
 #include "setops.h"
 
@@ -889,6 +892,51 @@ class labeled_matrix : public matrix<ValType>
             return return_matrix;
         }
 
+    /**
+     * Convert this matrix to a string.
+     **/
+    std::string to_string() const
+        {
+            std::stringstream output_str_buf;
+            char digits[ 30 ];
+            output_str_buf << "Sequence name\t";
+            std::vector<LabelType> row_labs;
+            std::vector<LabelType> col_labs;
+
+            row_labs.reserve( this->row_labels.size() );
+            col_labs.reserve( this->col_labels.size() );
+
+            this->get_row_labels( row_labs );
+            this->get_col_labels( col_labs );
+
+            output_str_buf << boost::algorithm::join( col_labs, "\t" ) << "\n";
+
+            for( const auto& row_lab : row_labs  )
+                {
+                    output_str_buf << row_lab << "\t";
+
+                    std::uint32_t col_idx = 0;
+                    for( const auto& col_lab : col_labs )
+                        {
+                            std::sprintf( digits,
+                                          "%.2f",
+                                          this->operator()( row_lab, col_lab )
+                                        );
+
+                            output_str_buf << digits;
+
+                            if( col_idx < this->ncols() - 1 )
+                                {
+                                    output_str_buf << "\t";
+                                }
+                            ++col_idx;
+                        }
+                    output_str_buf << "\n";
+                }
+
+            return output_str_buf.str();
+        }
+
  private:
     /**
      * The labels for each row of the matrix.
@@ -902,5 +950,14 @@ class labeled_matrix : public matrix<ValType>
         col_labels;
 
 };
+
+template<typename Stream, typename Lab, typename Val>
+Stream& operator<<( Stream& out,
+                    const labeled_matrix<Lab,Val>& matr
+                  )
+{
+    out << matr.to_string();
+    return out;
+}
 
 #endif // MATRIX_HH_INCLUDED
