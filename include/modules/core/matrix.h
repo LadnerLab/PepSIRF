@@ -584,6 +584,20 @@ class labeled_matrix : public matrix<ValType>
         }
 
     /**
+     * Get the labels from a map, store them in the container dest.
+     **/
+    template<typename ContainerType>
+        void get_labels( ContainerType& dest,
+                         const std::unordered_map<LabelType,std::uint32_t>& src
+                         ) const
+        {
+            for( const auto lab : src )
+                {
+                    dest.insert( dest.end(), lab.first );
+                }
+        }
+
+    /**
      * Full outer join this matrix with other.
      * Creates a matrix with all of the rows and columns of 
      * this and other. Any values that are not in the join will 
