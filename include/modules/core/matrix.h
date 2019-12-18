@@ -584,6 +584,45 @@ class labeled_matrix : public matrix<ValType>
         }
 
     /**
+     * Get the row labels of the matrix, store them in 
+     * dest.
+     * @tparam ContainerType The type of container to store labels in.
+     *         This type should have an 'insert( hint, val )' method.
+     * @param dest The location to store the labels in.
+     * @note This method does not force any ordering of the labels,
+     *       do not expect the n'th item in dest to be the label of the 
+     *       n'th row in the matrix.
+     **/
+    template<typename ContainerType>
+        ContainerType& get_row_labels( ContainerType& dest ) const
+        {
+            get_labels( dest,
+                        this->row_labels
+                      );
+            return dest;
+        }
+
+    /**
+     * Get the column labels of the matrix, store them in 
+     * dest.
+     * @tparam ContainerType The type of container to store labels in.
+     *         This type should have an 'insert( hint, val )' method.
+     * @param dest The location to store the labels in.
+     * @note This method does not force any ordering of the labels,
+     *       do not expect the n'th item in dest to be the label of the 
+     *       n'th column in the matrix.
+     **/
+    template<typename ContainerType>
+        ContainerType& get_col_labels( ContainerType& dest ) const 
+        {
+            get_labels( dest,
+                        this->col_labels
+                        );
+
+            return dest;
+        }
+
+    /**
      * Get the labels from a map, store them in the container dest.
      **/
     template<typename ContainerType>
