@@ -1,5 +1,8 @@
 #ifndef OPTIONS_SUBJOIN_HH_INCLUDED
 #define OPTIONS_SUBJOIN_HH_INCLUDED
+#include <vector>
+#include <string>
+
 #include "options.h"
 
 /**
@@ -16,17 +19,7 @@ class options_subjoin : public options
      **/
     std::string get_arguments();
 
-    /**
-     * The filename of the file containing 
-     * the names of peptides to keep.
-     **/
-    std::string names_list_fname;
-
-    /**
-     * The name of the matrix file to be 
-     * filtered.
-     **/
-    std::string in_matrix_fname;
+    std::vector<std::pair<std::string,std::string>> matrix_name_pairs;
 
     /**
      * The name of the file to write output to.
