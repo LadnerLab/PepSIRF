@@ -6,6 +6,26 @@
 namespace setops
 {
 
+    template<typename K,
+             typename MapIter>
+        struct get_key
+        {
+            K operator()( const MapIter& kv_pair )
+            {
+                return kv_pair.first;
+            }
+        };
+
+    template<typename K, typename V,
+        template<typename...> class Map>
+        struct get_value
+        {
+            K operator()( const typename Map<K,V>::iterator& kv_pair )
+            {
+                return kv_pair.second;
+            }
+        };
+
     // A - B
     template<class I, class K>
         void set_intersection( I& dest,
@@ -71,6 +91,35 @@ namespace setops
                 dest.insert( u );
             }
     }
+
+    // A u B
+    template<class I, class K, class Get>
+        void set_union( I& dest,
+                        const K& first,
+                        const K& second,
+                        Get retr
+                      )
+    {
+        using ValType = typename K::key_type;
+
+        sequential_set<ValType> union_set;
+
+        for( const auto& f : first )
+            {
+                union_set.insert( retr( f ) );
+            }
+        for( const auto& s : second )
+            {
+                union_set.insert( retr( s ) );
+            }
+
+        for( const auto& u : union_set )
+            {
+                dest.insert( u );
+            }
+    }
+
+
 
     // A u B
     template<class I, class K>
