@@ -4,10 +4,13 @@
 #include <new>
 #include <stdexcept>
 #include <unordered_map>
+#include <unordered_set>
 #include <algorithm>
 #include <vector>
 #include <iostream>
 #include <cstring>
+
+#include "setops.h"
 
 #ifdef MATRIX_CHECK_BOUNDS
 
@@ -676,8 +679,8 @@ class labeled_matrix : public matrix<ValType>
      **/
     const ValType &operator()( const LabelType& row_lab, const LabelType& col_lab  ) const
         {
-            std::uint32_t row_idx = row_labels[ row_lab ];
-            std::uint32_t col_idx = col_labels[ col_lab ];
+            std::uint32_t row_idx = row_labels.find( row_lab )->second;
+            std::uint32_t col_idx = col_labels.find( col_lab )->second;
 
             ACCESS_MATRIX( row_idx, col_idx );
         }
