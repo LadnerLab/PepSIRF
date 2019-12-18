@@ -8,7 +8,7 @@
 /**
  * Basic class for parsing options from the commandline. Makes use of 
  * boost::program_options. Note that this class is used for parsing options 
- * pertinent to the 'deconv' module.
+ * pertinent to the 'subjoin' module.
  **/
 class options_parser_subjoin : public options_parser
 {
