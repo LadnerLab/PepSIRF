@@ -10,6 +10,7 @@
 #include "module_normalize.h"
 #include "options_normalize.h"
 #include "time_keep.h"
+#include "stats.h"
 #define ONE_MILLION 1000000
 
 module_normalize::module_normalize()
@@ -106,21 +107,6 @@ void module_normalize::compute_size_factors( std::vector<double>& size_factors,
                                              const matrix<double>& data
                                            )
 {
- //    auto median = []( std::vector<double>& v ) -> double
- //        {
- // size_t n = v.size() / 2;
- //  std::nth_element(v.begin(), v.begin()+n, v.end());
- //  double vn = v[n];
- //  if(v.size()%2 == 1)
- //  {
- //    return vn;
- //  }else
- //  {
- //    std::nth_element(v.begin(), v.begin()+n-1, v.end());
- //    return 0.5*(vn+v[n-1]);
- //  }
- //        };
-
     std::vector<double> row;
     std::vector<std::vector<double>> geom_mean_factors;
     geom_mean_factors.reserve( data.ncols() );
@@ -134,9 +120,9 @@ void module_normalize::compute_size_factors( std::vector<double>& size_factors,
 
     for( index = 0; index < data.nrows(); ++index )
         {
-            double g_mean = geom_mean( data.row_begin( index ),
-                                       data.row_end( index )
-                                     );
+            double g_mean = stats::geom_mean( data.row_begin( index ),
+                                              data.row_end( index )
+                                            );
 
             for( std::size_t inner_index = 0; inner_index < data.ncols(); ++inner_index )
                 {
