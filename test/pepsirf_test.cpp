@@ -38,6 +38,7 @@
 #include "species_data.h"
 #include "module_normalize.h"
 #include "matrix.h"
+#include "stats.h"
 
 using namespace util;
 
@@ -1464,9 +1465,9 @@ TEST_CASE( "geometric means", "[module_normalize]" )
                 }
         }
 
-    double mean = mod.geom_mean( values.row_begin( 1 ),
-                                 values.row_end( 1 )
-                               );
+    double mean = stats::geom_mean( values.row_begin( 1 ),
+                                    values.row_end( 1 )
+                                  );
     double epsilon = 0.0005;
 
     // check that we're sufficiently close, I calculated the
@@ -1474,14 +1475,15 @@ TEST_CASE( "geometric means", "[module_normalize]" )
     REQUIRE( std::abs( mean - 1.81712 ) < epsilon );
 
 
-    mean = mod.geom_mean( values.row_begin( 2 ),
-                          values.row_end( 2 )
-                        );
+    mean = stats::geom_mean( values.row_begin( 2 ),
+                             values.row_end( 2 )
+                           );
+
     REQUIRE( std::abs( mean - 3.63424 ) < epsilon );
 
-    mean = mod.geom_mean( values.row_begin( 0 ),
-                          values.row_end( 0 )
-                        );
+    mean = stats::geom_mean( values.row_begin( 0 ),
+                             values.row_end( 0 )
+                           );
 
     REQUIRE( mean == 0 );
 }
