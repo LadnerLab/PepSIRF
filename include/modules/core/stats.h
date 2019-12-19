@@ -3,6 +3,7 @@
 #include <cmath>
 #include <algorithm>
 #include <vector>
+#include <iostream>
 
 /**
  * Includes methods to assist in the statistical
@@ -38,6 +39,42 @@ namespace stats
 
             return n == 0 ? 0 : std::exp( log_sum );
         }
+
+
+    /**
+     * Compute the median from a range of items.
+     * @param begin The first item in the range 
+     * @param end the last item in the range
+     * @returns The median of the items in the range [begin, end]
+     **/
+    template<typename Iterator>
+        double median( Iterator begin,
+                       Iterator end
+                     )
+    {
+        std::size_t size = std::distance( begin, end );
+
+        size_t n = size / 2;
+        std::nth_element(begin, begin + n, end );
+
+        auto vn = *( begin + n );
+
+        if( size % 2 )
+            {
+                return vn;
+            }
+        else
+            {
+                std::nth_element( begin,
+                                  begin + n - 1,
+                                  end
+                                );
+                auto vn_min_1 = *( begin + n - 1 );
+                return 0.5 * ( vn + vn_min_1 );
+            }
+    }
+
+
 };
 
 #endif // STATS_HH_INCLUDED

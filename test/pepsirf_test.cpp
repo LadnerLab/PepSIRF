@@ -1450,7 +1450,7 @@ TEST_CASE( "score_species_peptides/get_highest_score_per_species", "[module_deco
      REQUIRE( highest_scores[ "species 2" ].get_score() == 0.5 );
 }
 
-TEST_CASE( "geometric means", "[module_normalize]" )
+TEST_CASE( "geometric means", "[stats]" )
 {
     // TODO: RE-implement this test
     module_normalize mod;
@@ -1673,5 +1673,51 @@ TEST_CASE( "labeled_matrix full outer join", "[matrix]" )
                 }
         }
 
+
+}
+
+TEST_CASE( "median", "[stats]" )
+{
+
+    SECTION( "Median can be found in a vector of odd length" )
+        {
+            std::vector<int> data{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+            auto median = stats::median( data.begin(), data.end() );
+            REQUIRE( median == 5 );
+
+            data = std::vector<int>{ 4, 5, 0, 1, 3, 2, 8, 10, 9, 7, 6 };
+            median = stats::median( data.begin(), data.end() );
+            REQUIRE( median == 5 );
+
+            data = std::vector<int>{ 6, 8, 10, 2, 3, 5, 4, 7, 0, 1, 9 };
+            median = stats::median( data.begin(), data.end() );
+            REQUIRE( median == 5 );
+
+            // data generated with python
+            data = std::vector<int>{ 67,69,94,77,49,89,86,61,23,87,75,80,78,81,1,93,27,22,88,0,11 };
+            median = stats::median( data.begin(), data.end() );
+            REQUIRE( median == 75 );
+
+        }
+
+    SECTION( "Median can be found in a vector of even length" )
+        {
+            std::vector<int> data{ 0, 1, 2, 3, 4, 6, 7, 8, 9, 10 };
+            auto median = stats::median( data.begin(), data.end() );
+            REQUIRE( median == 5 );
+
+            data = std::vector<int>{ 4, 5, 0, 1, 3, 2, 10, 9, 7, 6 };
+            median = stats::median( data.begin(), data.end() );
+            REQUIRE( median == 4.5 );
+
+            data = std::vector<int>{ 6, 8, 10, 2, 3, 5, 4, 7, 1, 9 };
+            median = stats::median( data.begin(), data.end() );
+            REQUIRE( median == 5.5 );
+
+            // data generated with python
+            data = std::vector<int>{ 67,69,94,77,49,89,86,61,23,87,75,80,78,81,1,93,27,22,88,0 };
+            median = stats::median( data.begin(), data.end() );
+            REQUIRE( median == 76 );
+        }
 
 }
