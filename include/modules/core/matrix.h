@@ -231,21 +231,6 @@ class matrix
     matrix() = default;
 
     /**
-     * Assigns the values of this matrix to the values of other.
-     * @param other The matrix to copy.
-     * @note A deep copy of the values in other is made.
-     * @post after a call to this method, this( i, j ) == other( i, j ) 
-     *       for all i, j
-     **/
-    void operator=( const matrix<ValType>& other )
-        {
-            this->arr = (ValType*) malloc( sizeof( ValType ) * other.N * other.M );
-            std::memcpy( this->arr, other.arr, sizeof( ValType ) * other.N * other.M );
-            this->M = other.M;
-            this->N = other.N;
-        }
-
-    /**
      * Construct an N x M matrix
      * @param in_N the x-dimension of the matrix to be created.
      *        (the number of rows)
@@ -262,6 +247,36 @@ class matrix
                 {
                     throw std::bad_alloc();
                 }
+        }
+
+    /**
+     * Move constructor, takes ownership of to_move's data.
+     **/
+    matrix( matrix<ValType>&& to_move )
+        : matrix()
+        {
+            swap( *this, to_move );
+        }
+
+    /**
+     * Swap this matrix with another. 
+     **/
+    friend void swap( matrix<ValType>& first, matrix<ValType>& second )
+    {
+        using std::swap;
+
+        swap( first.arr, second.arr );
+        swap( first.M, second.M );
+        swap( first.N, second.M );
+    }
+
+    /**
+     * Assign this matrix to another.
+     **/
+    matrix<ValType>& operator=( matrix<ValType> other )
+        {
+            swap( *this,other );
+            return *this;
         }
 
     /**
@@ -566,6 +581,46 @@ class labeled_matrix : public matrix<ValType>
                    );
 
     }
+
+    /**
+     * Swap first and second.
+     **/
+    void friend swap( labeled_matrix<ValType,LabelType>& first,
+                      labeled_matrix<ValType,LabelType>& second
+                    )
+    {
+        using std::swap;
+        swap( static_cast<matrix<ValType>&>( first ),
+              static_cast<matrix<ValType>&>( second )
+            );
+        swap( first.row_labels,
+              second.row_labels
+            );
+        swap( first.col_labels,
+              second.col_labels
+            );
+    }
+    
+    /**
+     * Move constructor.
+     **/
+    labeled_matrix( labeled_matrix<ValType,LabelType>&& to_move )
+        : labeled_matrix() 
+        {
+            swap( *this, to_move );
+        }
+
+
+    /**
+     * Assignment operator that uses move-and-swap idiom.
+     **/
+    labeled_matrix<ValType,LabelType>& operator=( labeled_matrix<ValType,LabelType>
+                                                  to_assign
+                                                )
+        {
+            swap( *this, to_assign );
+            return *this;
+        }
 
     using matrix<ValType>::operator();
     using matrix<ValType>::at;
