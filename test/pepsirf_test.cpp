@@ -1742,3 +1742,34 @@ TEST_CASE( "Standard deviation", "[stats]" )
     REQUIRE( ( ( stdev - 4.8989 < epsilon ) && ( stdev != 0 ) ) );
 }
 
+TEST_CASE( "z-scores", "[stats]" )
+{
+    std::vector<double> data{ 10, 12, 23, 23, 16, 23, 21, 16 };
+
+    auto verify_vec = [&]( const std::vector<double>& stdev )
+        {
+            REQUIRE( stats::is_close( stdev[ 0 ], -1.63299 ) );
+            REQUIRE( stats::is_close( stdev[ 1 ], -1.22474 ) );
+            REQUIRE( stats::is_close( stdev[ 2 ], 1.02062  ) );
+            REQUIRE( stats::is_close( stdev[ 3 ], 1.02062  ) );
+            REQUIRE( stats::is_close( stdev[ 4 ], -0.40824 ) );
+            REQUIRE( stats::is_close( stdev[ 5 ], 1.02062  ) );
+            REQUIRE( stats::is_close( stdev[ 6 ], 0.61237  ) );
+            REQUIRE( stats::is_close( stdev[ 7 ], -0.40824 ) );
+        };
+
+    SECTION( "Input and output are not the same vector" )
+        {
+            std::vector<double> deviations;
+            deviations.resize( 8 );
+
+            stats::zscore( data.begin(), data.end(), deviations.begin() );
+            verify_vec( deviations );
+        }
+
+    SECTION( "Input and output are the same vector" )
+        {
+            stats::zscore( data.begin(), data.end(), data.begin() );
+            verify_vec( data );
+        }
+}

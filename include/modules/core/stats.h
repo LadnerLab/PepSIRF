@@ -188,6 +188,60 @@ namespace stats
             return stdev( begin, end, mean );;
         }
 
+    /**
+     * Calculate the z-score for a value, given the mean and 
+     * standard dataset of the data the value is from.
+     **/
+    template<typename T>
+    double zscore( T value, double mean, double stdev )
+    {
+        return ( value - mean ) / stdev;
+    }
+
+    /**
+     * Calculate the z-score for each item in the 
+     * range [begin,end), outputting to result.
+     * @tparam Iterator input iterator to read data from.
+     * @tparam OutputIterator the type of iterator to write
+     *         results to.
+     * @param mean The population arithmetic mean of 
+     *        the items in the input range.
+     * @param stdev the population standard deviation of the data
+     **/
+    template<typename Iterator,
+             typename OutputIterator>
+        void zscore( Iterator begin,
+                     Iterator end,
+                     OutputIterator result,
+                     double mean,
+                     double stdev
+                   )
+        {
+            for( auto idx = begin; idx != end; ++idx )
+                {
+                    *result = zscore( *idx, mean, stdev );
+                    ++result;
+                }
+        }
+
+    /**
+     * Calculate the z-score for each item in the range [begin, end), 
+     * outputting to result.
+     * @param src_begin The first item in the range.
+     * @param src_end The last item in the range
+     * @param output The output iterator. 
+     **/
+    template<typename Iterator, typename OutputIterator>
+        void zscore( Iterator src_begin,
+                     Iterator src_end,
+                     OutputIterator output
+                   )
+        {
+            double mean = arith_mean( src_begin, src_end );
+            double stand_dev = stdev( src_begin, src_end, mean );
+
+            zscore( src_begin, src_end, output, mean, stand_dev );
+        }
 
 };
 
