@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <vector>
 #include <iostream>
+#include <numeric>
 
 /**
  * Includes methods to assist in the statistical
@@ -11,6 +12,46 @@
  **/
 namespace stats
 {
+    /**
+     * A default epsilon value for determining 'closeness' of two values.
+     **/
+    constexpr double DEFAULT_EPSILON = 0.001;
+
+    /**
+     * Determine the relative difference between 
+     * two values of type T.
+     **/
+    template<typename T>
+    double relative_difference( T a, T b )
+    {
+        T a_abs = std::abs( a );
+        T b_abs = std::abs( b );
+
+        T d = std::max( a_abs, b_abs );
+        return d == 0.0 ? 0.0 : std::abs( a - b ) / d;
+    }
+
+    /**
+     * Determine whether the relative_difference between 
+     * a and b is less than or equal to the tolerance.
+     **/
+    template<typename T>
+    bool is_close( T a, T b, double tol )
+    {
+        return relative_difference( a, b ) <= tol;
+    }
+    
+    /**
+     * Determine whether the relative difference between 
+     * too values is less than or equal to the default 
+     * epsilon value.
+     **/
+    template<typename T>
+    bool is_close( T a, T b )
+    {
+        return is_close( a, b, DEFAULT_EPSILON );
+    }
+    
     /**
      * Compute the geometric mean of a set of data of type T.
      * @pre T must be a numeric type (std::size_t, double, int, etc.)
