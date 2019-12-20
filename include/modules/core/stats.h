@@ -81,12 +81,26 @@ namespace stats
             return n == 0 ? 0 : std::exp( log_sum );
         }
 
+    /**
+     * Calculate the arithmetic mean of a range [begin,end).
+     * @param begin The first item in the range
+     * @param end the last item in the range
+     * @returns the arithmetic mean of all items in the range.
+     **/
+    template<typename Iterator>
+        double arith_mean( Iterator begin,
+                           Iterator end
+                         )
+        {
+            double sum = std::accumulate( begin, end, 0 );
+            return sum / std::distance( begin, end );
+        }
 
     /**
      * Compute the median from a range of items.
      * @param begin The first item in the range 
      * @param end the last item in the range
-     * @returns The median of the items in the range [begin, end]
+     * @returns The median of the items in the range [begin,end)
      **/
     template<typename Iterator>
         double median( Iterator begin,

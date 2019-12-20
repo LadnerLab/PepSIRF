@@ -1721,3 +1721,14 @@ TEST_CASE( "median", "[stats]" )
         }
 
 }
+
+TEST_CASE( "Arithmetic mean", "[stats]" )
+{
+
+    SECTION( "Arithmetic mean of vector" )
+        {
+            std::vector<double> data{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+            REQUIRE( stats::arith_mean( data.begin(), data.end() ) == 5.5 );
+        }
+
+}
