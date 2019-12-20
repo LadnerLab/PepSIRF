@@ -249,6 +249,10 @@ class matrix
                 }
         }
 
+    matrix( const matrix<ValType>& other )
+        : N( other.N ), M( other.M ), arr( new ValType[ N * M ] )
+    {}
+
     /**
      * Move constructor, takes ownership of to_move's data.
      **/
@@ -610,6 +614,11 @@ class labeled_matrix : public matrix<ValType>
             swap( *this, to_move );
         }
 
+    labeled_matrix( labeled_matrix<ValType,LabelType>& copy )
+        : matrix<ValType>{ static_cast<matrix<ValType>>( copy ) },
+          row_labels{ copy.row_labels },
+          col_labels{ copy.col_labels }
+    {}
 
     /**
      * Assignment operator that uses move-and-swap idiom.
