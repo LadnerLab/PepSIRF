@@ -1732,3 +1732,13 @@ TEST_CASE( "Arithmetic mean", "[stats]" )
         }
 
 }
+
+TEST_CASE( "Standard deviation", "[stats]" )
+{
+    std::vector<double> data{ 10, 12, 23, 23, 16, 23, 21, 16 };
+
+    double stdev = stats::stdev( data.begin(), data.end() );
+    double epsilon = 0.005;
+    REQUIRE( ( ( stdev - 4.8989 < epsilon ) && ( stdev != 0 ) ) );
+}
+

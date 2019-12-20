@@ -129,6 +129,65 @@ namespace stats
             }
     }
 
+    /**
+     * Return the sum of the square differences for every item in 
+     * range [begin,end).
+     * @param begin The first item in the range
+     * @param end the last item in the range
+     * @param subtrahend The item to subtract from each value in 
+     *        range [begin,end)
+     * @returns sum( ( x - subtrahend )^2 for x in [begin,end) )
+     **/
+    template<typename Iterator>
+        double squared_diff( Iterator begin,
+                             Iterator end,
+                             double subtrahend
+                           )
+        {
+            double accumulate = 0;
+            for( auto idx = begin; idx != end; ++idx )
+                {
+                    double diff = *idx - subtrahend;
+                    accumulate += ( diff ) * ( diff );
+                }
+            return accumulate;
+        }
+
+    /**
+     * Given the population mean, calculate the population 
+     * standard deviation of the items in the range [begin, end).
+     * @param begin The first item in the range
+     * @param end The last item in the range
+     * @param the arithmetic mean of the items in the range [begin, end)
+     * @returns the population standard deviation.
+     **/
+    template<typename Iterator>
+        double stdev( Iterator begin,
+                      Iterator end,
+                      double mean
+                    )
+        {
+            double diff = squared_diff( begin, end, mean );
+            std::size_t N = std::distance( begin, end );
+            return std::sqrt( ( 1 / (double) N ) * diff );
+        }
+
+    /**
+     * Calculate the population standard deviation of 
+     * the range [begin, end).
+     * @param begin The first item in the range.
+     * @param end The last item in the range.
+     * @returns the population standard deviation of the range [begin,end).
+     **/
+    template<typename Iterator>
+        double stdev( Iterator begin,
+                      Iterator end
+                    )
+        {
+            double mean = arith_mean( begin, end );
+            return stdev( begin, end, mean );;
+        }
+
 
 };
 
