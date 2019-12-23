@@ -999,7 +999,6 @@ class labeled_matrix : public matrix<ValType>
     std::string to_string() const
         {
             std::stringstream output_str_buf;
-            char digits[ 30 ];
             output_str_buf << "Sequence name\t";
             std::vector<LabelType> row_labs;
             std::vector<LabelType> col_labs;
@@ -1019,12 +1018,7 @@ class labeled_matrix : public matrix<ValType>
                     std::uint32_t col_idx = 0;
                     for( const auto& col_lab : col_labs )
                         {
-                            std::sprintf( digits,
-                                          "%.2f",
-                                          this->operator()( row_lab, col_lab )
-                                        );
-
-                            output_str_buf << digits;
+                            output_str_buf << this->operator()( row_lab, col_lab );
 
                             if( col_idx < this->ncols() - 1 )
                                 {
