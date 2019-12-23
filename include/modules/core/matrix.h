@@ -1032,6 +1032,13 @@ class labeled_matrix : public matrix<ValType>
             return output_str_buf.str();
         }
 
+    bool operator==( const labeled_matrix<ValType,LabelType>& other ) const
+    {
+        return matrix<ValType>::operator==( other ) 
+               && this->row_labels == other.row_labels
+                  && this->col_labels == other.col_labels;
+    }
+
  private:
     /**
      * The labels for each row of the matrix.
