@@ -610,6 +610,20 @@ class labeled_matrix : public matrix<ValType>
     }
 
     /**
+     * Construct a labeled_matrix given row and column labels.
+     **/
+ labeled_matrix( const std::uint32_t in_N, const std::uint32_t in_M,
+                 const std::unordered_map<LabelType,std::uint32_t> row_labels,
+                 const std::unordered_map<LabelType,std::uint32_t> col_labels
+                 )
+     : matrix<ValType>{ in_N, in_M }
+    {
+        this->row_labels = row_labels;
+        this->col_labels = col_labels;
+    }
+
+
+    /**
      * Swap first and second.
      **/
     void friend swap( labeled_matrix<ValType,LabelType>& first,
