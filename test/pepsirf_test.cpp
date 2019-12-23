@@ -1673,3 +1673,65 @@ TEST_CASE( "labeled_matrix full outer join", "[matrix]" )
 
 
 }
+
+TEST_CASE( "matrix transposition", "[matrix]" )
+{
+    SECTION( "Transposition of a square matrix", "[matrix]" )
+        {
+            labeled_matrix<int,std::string> matr{ 5, 5 };
+            matr.set_col_labels( std::vector<std::string>{ "col_1", "col_2", "col_3", "col_4", "col_5" } );
+            matr.set_row_labels( std::vector<std::string>{ "row_1", "row_2", "row_3", "row_4", "row_5" } );
+            matr.set_all( 5 );
+
+            matr( 1, 4 ) = 12;
+            auto matr_t = matr.transpose();
+            auto matr_t_t = matr_t.transpose();
+
+            REQUIRE( matr_t( 4, 1 ) == 12 );
+
+            REQUIRE( ( matr_t_t == matr ) );
+        }
+
+    SECTION( "Transposition of a rectangular matrix", "[matrix]" )
+        {
+            // a non-symmetric function of two variables, x and y,
+            // used because for symmetric F F(x,y) = F(y,x), making it not
+            // useful for testing our transposition operations
+            auto non_symmetric = []( int x, int y ) -> int 
+                {
+                    constexpr int A = 4, B = 8, R = 28;
+                    return ( A * x * x ) + ( B * y * y ) - ( R * R );
+                };
+
+            labeled_matrix<int,std::string> matr{ 8, 2 };
+            matr.set_row_labels( std::vector<std::string>{ "row_1", "row_2", "row_3", "row_4",
+                                                           "row_5", "row_6", "row_7", "row_8"
+                                                         }
+                               );
+
+            matr.set_col_labels( std::vector<std::string>{ "col_1", "col_2" } );
+
+            for( int i = 0; i < 8; ++i )
+                {
+                    for( int j = 0; j < 2; ++j )
+                        {
+                            matr( i, j ) = non_symmetric( i, j );
+                        }
+                }
+
+            auto matr_t = matr.transpose();
+            auto matr_t_t = matr_t.transpose();
+
+            for( int i = 0; i < 8; ++i )
+                {
+                    for( int j = 0; j < 2; ++j )
+                        {
+                            REQUIRE( matr_t( j, i ) == matr( i, j ) );
+                        }
+                }
+
+            REQUIRE( ( matr_t_t == matr ) );
+        }
+
+}
+

@@ -1039,6 +1039,31 @@ class labeled_matrix : public matrix<ValType>
                   && this->col_labels == other.col_labels;
     }
 
+    /**
+     * Transpose this matrix, returning the result.
+     * @returns this^T, the transposition of this matrix.
+     **/
+    labeled_matrix<ValType,LabelType>
+    transpose()
+    {
+        labeled_matrix<ValType,LabelType>
+            ret_val{ this->M,
+                     this->N,
+                     this->col_labels,
+                     this->row_labels
+                   };
+
+        for( std::uint32_t row = 0; row < this->N; ++row )
+            {
+                for( std::uint32_t col = 0; col < this->M; ++col )
+                    {
+                        ret_val( col, row ) = this->operator()( row, col );
+                    }
+            }
+
+        return ret_val;
+    }
+
  private:
     /**
      * The labels for each row of the matrix.
