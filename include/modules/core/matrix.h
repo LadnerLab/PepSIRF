@@ -316,6 +316,29 @@ class matrix
             }
     }
 
+        /**
+         * Determine whether this matrix and other are equal.
+         * For two matrices, A and B, we say A == B if A and B have 
+         * the same shape, and all of the pairwise entries of A are equal
+         * to all of the pairwise entries of B.
+         * @param other The matrix to compare this with.
+         * @returns true if this and other are equal, false otherwise.
+         **/
+        bool operator==( const matrix<ValType>& other ) const
+        {
+            bool same = ( this->M == other.M ) && ( this->N == other.N );
+
+            for( std::uint32_t row = 0; row < this->N && same; ++row )
+                {
+                    for( std::uint32_t col = 0; col < this->M && same; ++col )
+                        {
+                            same = this->operator()( row, col ) == other( row, col );
+                        }
+                }
+            return same;
+        }
+
+
     /**
      * Access the mutable (x,y) element of the array, checking that we will be 
      * performing a check to ensure the access is in bounds.
