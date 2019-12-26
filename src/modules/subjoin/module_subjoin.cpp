@@ -51,6 +51,11 @@ void module_subjoin::run( options *opts )
             std::vector<std::string> peptide_name_list;
             parse_namelist( peptide_name_list, names_list );
         // filter the data, assign to the scores and peptide name list
+            if( s_opts->use_sample_names )
+                {
+                    my_data.scores = my_data.scores.transpose();
+                }
+            
             my_data.scores = my_data.scores.filter_rows( peptide_name_list );
             my_data.pep_names = peptide_name_list;
         }
@@ -68,11 +73,25 @@ void module_subjoin::run( options *opts )
                         .full_outer_join( parsed_score_data[ idx ].scores );
                 }
 
-            output << joined_matrix;
+            if( s_opts->use_sample_names )
+                {
+                    output << joined_matrix.transpose();
+                }
+            else
+                {
+                    output << joined_matrix;
+                }
         }
     else
         {
-            output << parsed_score_data[ 0 ].scores;
+        if( s_opts->use_sample_names )
+                {
+                    output << parsed_score_data[ 0 ].scores.transpose();
+                }
+        else
+            {
+                output << parsed_score_data[ 0 ].scores;
+            }
         }
 
     time.stop();
