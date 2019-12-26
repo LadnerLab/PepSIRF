@@ -13,6 +13,7 @@ class options_subjoin : public options
 {
  public:
 
+    options_subjoin(); 
     /**
      * Returns a string of the arguments provided 
      * to the module.
@@ -25,6 +26,13 @@ class options_subjoin : public options
      * The name of the file to write output to.
      **/
     std::string out_matrix_fname;
+
+    /**
+     * Boolean option to determine whether 
+     * sample names or peptide names should be
+     * used.
+     **/
+    bool use_sample_names;
 };
 
 #endif // OPTIONS_SUBJOIN_HH_INCLUDED
