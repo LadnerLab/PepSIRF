@@ -2,8 +2,26 @@
 #define OPTIONS_SUBJOIN_HH_INCLUDED
 #include <vector>
 #include <string>
+#include <unordered_map>
 
 #include "options.h"
+
+namespace evaluation_strategy
+{
+    enum duplicate_resolution_strategy
+    {
+        COMBINE,
+        INCLUDE,
+        IGNORE
+    };
+
+    extern std::unordered_map<std::string,duplicate_resolution_strategy> drs_string_map;
+    extern std::unordered_map<duplicate_resolution_strategy,std::string> string_drs_map;
+
+    bool is_valid( const std::string& check );
+
+    duplicate_resolution_strategy from_string( const std::string& str );
+};
 
 /**
  * Options for the subjoin module of the 
@@ -33,6 +51,8 @@ class options_subjoin : public options
      * used.
      **/
     bool use_sample_names;
+
+    evaluation_strategy::duplicate_resolution_strategy duplicate_resolution_strategy;
 };
 
 #endif // OPTIONS_SUBJOIN_HH_INCLUDED
