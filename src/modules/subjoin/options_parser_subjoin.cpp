@@ -54,17 +54,23 @@ bool options_parser_subjoin::parse( int argc, char ***argv, options *opts )
                           
                       }
                     ),
-          "Comma-separated filenames (For example: score_matrix.tsv,peptide_names.txt ) "
-          "for a score matrix and a file containing the names of peptides "
+          "Comma-separated filenames (For example: score_matrix.tsv,sample_names.txt ) "
+          "for a score matrix and a file containing the names of samples (or peptides, if specified) "
           "to keep in the score matrix. The score matrix should be of the format output by the "
           "demux module, with sample names on the columns and peptide names on the rows. "
-          "The peptide namelist must have one name per line. To use multiple name lists with multiple "
+          "The namelist must have one name per line. To use multiple name lists with multiple "
           "score matrices, include this argument multiple times.\n"
+        )
+        ( "filter_peptide_names", po::bool_switch( &opts_subjoin->use_sample_names  )->default_value( false )
+          ->notifier( [&]( bool val ){ opts_subjoin->use_sample_names = !val; } ),
+          "Flag to include if the files input to the filter_scores options should be treated as "
+          "peptide names instead of sample names. With the inclusion of this flag, the input files will "
+          "be filtered on peptide names (rows) instead of sample names (column).\n"
         )
         (
          "output", po::value<std::string>( &opts_subjoin->out_matrix_fname )->default_value( "subjoin_output.tsv" ),
          "The name of the file to write output scores to. The output will be in the form of the input, but with only the "
-         "peptides found in the namelists. \n"
+         "specified values (samplenames or peptides) found in the namelists. \n"
         )
         ;
 
