@@ -228,7 +228,8 @@ class matrix
     /**
      * Default constructor.
      **/
-    matrix() = default;
+    matrix()
+        : N{ 0 }, M{ 0 }, arr{ nullptr } {};
 
     /**
      * Construct an N x M matrix
@@ -271,7 +272,7 @@ class matrix
 
         swap( first.arr, second.arr );
         swap( first.M, second.M );
-        swap( first.N, second.M );
+        swap( first.N, second.N );
     }
 
     /**
@@ -563,7 +564,8 @@ class labeled_matrix : public matrix<ValType>
 {
  public:
     
-    labeled_matrix() = default;
+    labeled_matrix()
+        : matrix<ValType>{ 0, 0 } {};
     /**
      * Constructor that initializes the matrix itself without any labels.
      * Initializes in_N \times in_M values of type ValType
@@ -800,7 +802,6 @@ class labeled_matrix : public matrix<ValType>
                                     other( row_lab.first, col_lab.first );
                     }
             }
-
         return joined_matr;
     }
 
