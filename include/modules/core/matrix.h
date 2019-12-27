@@ -747,6 +747,18 @@ class labeled_matrix : public matrix<ValType>
                 }
         }
 
+    const std::unordered_map<LabelType,std::uint32_t>&
+        get_row_labels()
+        {
+            return row_labels;
+        }
+
+    const std::unordered_map<LabelType,std::uint32_t>&
+        get_col_labels()
+        {
+            return col_labels;
+        }
+
     /**
      * Full outer join this matrix with other.
      * Creates a matrix with all of the rows and columns of 
@@ -1081,6 +1093,23 @@ class labeled_matrix : public matrix<ValType>
      **/
     std::unordered_map<LabelType, std::uint32_t>
         col_labels;
+
+    /**
+     * Set a label in one of this class' map members.
+     * @param map The map whose label to set
+     * @param original_label The original label, must be a key in map.
+     * @param new_label The new label to set
+    **/
+    void set_label( std::unordered_map<LabelType,std::uint32_t>&
+                    map,
+                    const LabelType& original_label,
+                    const LabelType& new_label
+                  )
+    {
+        auto original = map.find( original_label );
+        map.erase( original_label );
+        map.emplace( new_label, original->second );
+    }
 
 };
 
