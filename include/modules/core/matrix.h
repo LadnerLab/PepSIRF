@@ -777,8 +777,8 @@ class labeled_matrix : public matrix<ValType>
                            this->col_labels,
                            other.col_labels,
                            setops
-                           ::get_key<LabelType,
-                           std::pair<LabelType,std::uint32_t>
+                           ::get_key<
+                           LabelType,std::uint32_t
                            >()
                          );
 
@@ -788,8 +788,8 @@ class labeled_matrix : public matrix<ValType>
                            this->row_labels,
                            other.row_labels,
                            setops
-                           ::get_key<LabelType,
-                           std::pair<LabelType,std::uint32_t>
+                           ::get_key<
+                           LabelType,std::uint32_t
                            >()
                          );
 
@@ -939,6 +939,51 @@ class labeled_matrix : public matrix<ValType>
 
             ACCESS_MATRIX( row_idx, col_idx );
         }
+
+    /**
+     * Access an item in the matrix, given a label for the row and the index 
+     * of the column.
+     * @param row_lab The label of the row to access
+     * @param col_idx the index of the column to access
+     **/
+    ValType &operator()( const LabelType& row_lab, std::uint32_t col_idx )
+        {
+            std::uint32_t row_idx = row_labels.find( row_lab )->second;
+
+            ACCESS_MATRIX( row_idx, col_idx );
+        }
+
+    /**
+     * Access an item in the matrix, given an index for the row 
+     * and a label for the column.
+     * @param row_idx The index of the row to grab
+     * @param col_lab the label of the column to access
+     **/
+    ValType &operator()( std::uint32_t row_idx, const LabelType& col_lab )
+        {
+            std::uint32_t col_idx = col_labels.find( col_lab )->second;
+            ACCESS_MATRIX( row_idx, col_idx );
+        }
+
+    void set_row_label( const LabelType& orig_label,
+                        const LabelType& new_label
+                      ) 
+    {
+        set_label( this->row_labels,
+                   orig_label,
+                   new_label
+                 );
+    }
+
+    void set_col_label( const LabelType& orig_label,
+                        const LabelType& new_label
+                      ) 
+    {
+        set_label( this->col_labels,
+                   orig_label,
+                   new_label
+                 );
+    }
 
     /**
      * Initialize the locally-stored labels for the matrix.
