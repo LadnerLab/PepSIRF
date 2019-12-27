@@ -29,6 +29,13 @@ namespace evaluation_strategy
         { duplicate_resolution_strategy::INCLUDE, "include" },
         { duplicate_resolution_strategy::IGNORE,  "ignore" }
     };
+
+
+    std::string to_string( duplicate_resolution_strategy strategy )
+    {
+        return string_drs_map.find( strategy )->second;
+    }
+    
 };
 
 options_subjoin::options_subjoin() = default;

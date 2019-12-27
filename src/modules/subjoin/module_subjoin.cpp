@@ -113,6 +113,10 @@ labeled_matrix<double,std::string>
 
     if( !row_intersection.empty() )
         {
+            std::cout << "WARNING: Duplicate names have been encountered, duplicates will "
+                         "be resolved with the '"
+                      << evaluation_strategy::to_string( resolution_strategy )
+                      << "' duplicate resolution strategy.\n";
             setops::set_intersection( col_intersection,
                                       first.scores.get_col_labels(),
                                       second.scores.get_col_labels(),
