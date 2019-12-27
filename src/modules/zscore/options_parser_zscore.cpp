@@ -25,7 +25,7 @@ bool options_parser_zscore::parse( int argc, char ***argv, options *opts )
           "Name of the file to use as input. Should be a score matrix in the "
           "format as output by the demux or subjoin modules.\n"
         )
-        ( "output,o", po::value( &opts_zscore->out_fname ),
+        ( "output,o", po::value( &opts_zscore->out_fname )->default_value( "zscore_output.tsv" ),
           "Name of the file to write output to. In this file, "
           "each peptide will be written with its z-score within "
           "each sample.\n"
