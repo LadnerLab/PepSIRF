@@ -21,6 +21,7 @@ namespace evaluation_strategy
     bool is_valid( const std::string& check );
 
     duplicate_resolution_strategy from_string( const std::string& str );
+    std::string to_string( duplicate_resolution_strategy strategy );
 };
 
 /**
