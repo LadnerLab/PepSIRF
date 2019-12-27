@@ -49,6 +49,12 @@ void module_initializer::initialize( const std::string& mod_name )
             opt_parser  = new options_parser_subjoin();
             mod         = new module_subjoin();
         }
+    else if( !mod_name.compare( "zscore" ) )
+        {
+            opts        = new options_zscore();
+            opt_parser  = new options_parser_zscore();
+            mod         = new module_zscore();
+        }
     else
         {
             throw std::runtime_error( "Invalid module name entered." );
