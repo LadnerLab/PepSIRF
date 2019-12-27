@@ -7,10 +7,10 @@ namespace setops
 {
 
     template<typename K,
-             typename MapIter>
+             typename V>
         struct get_key
         {
-            K operator()( const MapIter& kv_pair )
+            K operator()( const std::pair<K,V>& kv_pair ) const
             {
                 return kv_pair.first;
             }
@@ -42,6 +42,27 @@ namespace setops
                 }
 
         }
+
+    // A - B
+    template<class I, class K, typename Get>
+        void set_intersection( I& dest,
+                               const K& first,
+                               const K& second,
+                               const Get retr
+                             )
+        {
+
+            for( const auto& elem : first )
+                {
+                    if( second.find( retr( elem ) ) != second.end() )
+                        {
+                            dest.insert( dest.end(), retr( elem ) );
+                        }
+                }
+
+        }
+
+
 
     // A - B
     template<class I, class K>

@@ -228,22 +228,8 @@ class matrix
     /**
      * Default constructor.
      **/
-    matrix() = default;
-
-    /**
-     * Assigns the values of this matrix to the values of other.
-     * @param other The matrix to copy.
-     * @note A deep copy of the values in other is made.
-     * @post after a call to this method, this( i, j ) == other( i, j ) 
-     *       for all i, j
-     **/
-    void operator=( const matrix<ValType>& other )
-        {
-            this->arr = (ValType*) malloc( sizeof( ValType ) * other.N * other.M );
-            std::memcpy( this->arr, other.arr, sizeof( ValType ) * other.N * other.M );
-            this->M = other.M;
-            this->N = other.N;
-        }
+    matrix()
+        : N{ 0 }, M{ 0 }, arr{ nullptr } {};
 
     /**
      * Construct an N x M matrix
@@ -262,6 +248,45 @@ class matrix
                 {
                     throw std::bad_alloc();
                 }
+        }
+
+    matrix( const matrix<ValType>& other )
+        : N( other.N ), M( other.M ), arr( new ValType[ N * M ] )
+    {
+        for( std::uint32_t idx = 0; idx < N * M; ++idx )
+            {
+                arr[ idx ] = other.arr[ idx ];
+            }
+    }
+
+    /**
+     * Move constructor, takes ownership of to_move's data.
+     **/
+    matrix( matrix<ValType>&& to_move )
+        : matrix()
+        {
+            swap( *this, to_move );
+        }
+
+    /**
+     * Swap this matrix with another. 
+     **/
+    friend void swap( matrix<ValType>& first, matrix<ValType>& second )
+    {
+        using std::swap;
+
+        swap( first.arr, second.arr );
+        swap( first.M, second.M );
+        swap( first.N, second.N );
+    }
+
+    /**
+     * Assign this matrix to another.
+     **/
+    matrix<ValType>& operator=( matrix<ValType> other )
+        {
+            swap( *this,other );
+            return *this;
         }
 
     /**
@@ -296,6 +321,29 @@ class matrix
                 arr[ idx ] = val;
             }
     }
+
+        /**
+         * Determine whether this matrix and other are equal.
+         * For two matrices, A and B, we say A == B if A and B have 
+         * the same shape, and all of the pairwise entries of A are equal
+         * to all of the pairwise entries of B.
+         * @param other The matrix to compare this with.
+         * @returns true if this and other are equal, false otherwise.
+         **/
+        bool operator==( const matrix<ValType>& other ) const
+        {
+            bool same = ( this->M == other.M ) && ( this->N == other.N );
+
+            for( std::uint32_t row = 0; row < this->N && same; ++row )
+                {
+                    for( std::uint32_t col = 0; col < this->M && same; ++col )
+                        {
+                            same = this->operator()( row, col ) == other( row, col );
+                        }
+                }
+            return same;
+        }
+
 
     /**
      * Access the mutable (x,y) element of the array, checking that we will be 
@@ -521,7 +569,8 @@ class labeled_matrix : public matrix<ValType>
 {
  public:
     
-    labeled_matrix() = default;
+    labeled_matrix()
+        : matrix<ValType>{ 0, 0 } {};
     /**
      * Constructor that initializes the matrix itself without any labels.
      * Initializes in_N \times in_M values of type ValType
@@ -566,6 +615,65 @@ class labeled_matrix : public matrix<ValType>
                    );
 
     }
+
+    /**
+     * Construct a labeled_matrix given row and column labels.
+     **/
+ labeled_matrix( const std::uint32_t in_N, const std::uint32_t in_M,
+                 const std::unordered_map<LabelType,std::uint32_t> row_labels,
+                 const std::unordered_map<LabelType,std::uint32_t> col_labels
+                 )
+     : matrix<ValType>{ in_N, in_M }
+    {
+        this->row_labels = row_labels;
+        this->col_labels = col_labels;
+    }
+
+
+    /**
+     * Swap first and second.
+     **/
+    void friend swap( labeled_matrix<ValType,LabelType>& first,
+                      labeled_matrix<ValType,LabelType>& second
+                    )
+    {
+        using std::swap;
+        swap( static_cast<matrix<ValType>&>( first ),
+              static_cast<matrix<ValType>&>( second )
+            );
+        swap( first.row_labels,
+              second.row_labels
+            );
+        swap( first.col_labels,
+              second.col_labels
+            );
+    }
+    
+    /**
+     * Move constructor.
+     **/
+    labeled_matrix( labeled_matrix<ValType,LabelType>&& to_move )
+        : labeled_matrix() 
+        {
+            swap( *this, to_move );
+        }
+
+    labeled_matrix( const labeled_matrix<ValType,LabelType>& copy )
+        : matrix<ValType>{ static_cast<const matrix<ValType>>( copy ) },
+          row_labels{ copy.row_labels },
+          col_labels{ copy.col_labels }
+    {}
+
+    /**
+     * Assignment operator that uses move-and-swap idiom.
+     **/
+    labeled_matrix<ValType,LabelType>& operator=( labeled_matrix<ValType,LabelType>
+                                                  to_assign
+                                                )
+        {
+            swap( *this, to_assign );
+            return *this;
+        }
 
     using matrix<ValType>::operator();
     using matrix<ValType>::at;
@@ -639,6 +747,18 @@ class labeled_matrix : public matrix<ValType>
                 }
         }
 
+    const std::unordered_map<LabelType,std::uint32_t>&
+        get_row_labels()
+        {
+            return row_labels;
+        }
+
+    const std::unordered_map<LabelType,std::uint32_t>&
+        get_col_labels()
+        {
+            return col_labels;
+        }
+
     /**
      * Full outer join this matrix with other.
      * Creates a matrix with all of the rows and columns of 
@@ -657,8 +777,8 @@ class labeled_matrix : public matrix<ValType>
                            this->col_labels,
                            other.col_labels,
                            setops
-                           ::get_key<LabelType,
-                           std::pair<LabelType,std::uint32_t>
+                           ::get_key<
+                           LabelType,std::uint32_t
                            >()
                          );
 
@@ -668,8 +788,8 @@ class labeled_matrix : public matrix<ValType>
                            this->row_labels,
                            other.row_labels,
                            setops
-                           ::get_key<LabelType,
-                           std::pair<LabelType,std::uint32_t>
+                           ::get_key<
+                           LabelType,std::uint32_t
                            >()
                          );
 
@@ -699,7 +819,6 @@ class labeled_matrix : public matrix<ValType>
                                     other( row_lab.first, col_lab.first );
                     }
             }
-
         return joined_matr;
     }
 
@@ -822,6 +941,51 @@ class labeled_matrix : public matrix<ValType>
         }
 
     /**
+     * Access an item in the matrix, given a label for the row and the index 
+     * of the column.
+     * @param row_lab The label of the row to access
+     * @param col_idx the index of the column to access
+     **/
+    ValType &operator()( const LabelType& row_lab, std::uint32_t col_idx )
+        {
+            std::uint32_t row_idx = row_labels.find( row_lab )->second;
+
+            ACCESS_MATRIX( row_idx, col_idx );
+        }
+
+    /**
+     * Access an item in the matrix, given an index for the row 
+     * and a label for the column.
+     * @param row_idx The index of the row to grab
+     * @param col_lab the label of the column to access
+     **/
+    ValType &operator()( std::uint32_t row_idx, const LabelType& col_lab )
+        {
+            std::uint32_t col_idx = col_labels.find( col_lab )->second;
+            ACCESS_MATRIX( row_idx, col_idx );
+        }
+
+    void set_row_label( const LabelType& orig_label,
+                        const LabelType& new_label
+                      ) 
+    {
+        set_label( this->row_labels,
+                   orig_label,
+                   new_label
+                 );
+    }
+
+    void set_col_label( const LabelType& orig_label,
+                        const LabelType& new_label
+                      ) 
+    {
+        set_label( this->col_labels,
+                   orig_label,
+                   new_label
+                 );
+    }
+
+    /**
      * Initialize the locally-stored labels for the matrix.
      * Stores each label with its corresponding row/column number in label_dest
      * @tparam LabelContainerType the type of the container holding labels.
@@ -898,7 +1062,6 @@ class labeled_matrix : public matrix<ValType>
     std::string to_string() const
         {
             std::stringstream output_str_buf;
-            char digits[ 30 ];
             output_str_buf << "Sequence name\t";
             std::vector<LabelType> row_labs;
             std::vector<LabelType> col_labs;
@@ -918,12 +1081,7 @@ class labeled_matrix : public matrix<ValType>
                     std::uint32_t col_idx = 0;
                     for( const auto& col_lab : col_labs )
                         {
-                            std::sprintf( digits,
-                                          "%.2f",
-                                          this->operator()( row_lab, col_lab )
-                                        );
-
-                            output_str_buf << digits;
+                            output_str_buf << this->operator()( row_lab, col_lab );
 
                             if( col_idx < this->ncols() - 1 )
                                 {
@@ -937,6 +1095,38 @@ class labeled_matrix : public matrix<ValType>
             return output_str_buf.str();
         }
 
+    bool operator==( const labeled_matrix<ValType,LabelType>& other ) const
+    {
+        return matrix<ValType>::operator==( other ) 
+               && this->row_labels == other.row_labels
+                  && this->col_labels == other.col_labels;
+    }
+
+    /**
+     * Transpose this matrix, returning the result.
+     * @returns this^T, the transposition of this matrix.
+     **/
+    labeled_matrix<ValType,LabelType>
+    transpose()
+    {
+        labeled_matrix<ValType,LabelType>
+            ret_val{ this->M,
+                     this->N,
+                     this->col_labels,
+                     this->row_labels
+                   };
+
+        for( std::uint32_t row = 0; row < this->N; ++row )
+            {
+                for( std::uint32_t col = 0; col < this->M; ++col )
+                    {
+                        ret_val( col, row ) = this->operator()( row, col );
+                    }
+            }
+
+        return ret_val;
+    }
+
  private:
     /**
      * The labels for each row of the matrix.
@@ -948,6 +1138,23 @@ class labeled_matrix : public matrix<ValType>
      **/
     std::unordered_map<LabelType, std::uint32_t>
         col_labels;
+
+    /**
+     * Set a label in one of this class' map members.
+     * @param map The map whose label to set
+     * @param original_label The original label, must be a key in map.
+     * @param new_label The new label to set
+    **/
+    void set_label( std::unordered_map<LabelType,std::uint32_t>&
+                    map,
+                    const LabelType& original_label,
+                    const LabelType& new_label
+                  )
+    {
+        auto original = map.find( original_label );
+        map.erase( original_label );
+        map.emplace( new_label, original->second );
+    }
 
 };
 

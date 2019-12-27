@@ -44,6 +44,18 @@ struct peptide_score_data
      * they were found.
      **/
     std::vector<std::string> sample_names;
+
+    /**
+     * The name of the file this peptide_score_data is from.
+     **/
+    std::string file_name;
+
+    peptide_score_data( const peptide_score_data& other )
+    : scores{ other.scores }, pep_names{ other.pep_names },
+      sample_names{ other.sample_names}, file_name{ other.file_name }
+       {};
+
+    peptide_score_data() = default;
 };
 
 namespace peptide_scoring

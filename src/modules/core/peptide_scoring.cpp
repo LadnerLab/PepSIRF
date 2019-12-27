@@ -3,6 +3,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/range/adaptor/transformed.hpp>
+#include <boost/filesystem.hpp>
 
 
 void peptide_scoring::parse_peptide_scores( peptide_score_data_sample_major& dest,
@@ -14,6 +15,9 @@ void peptide_scoring::parse_peptide_scores( peptide_score_data_sample_major& des
 
     std::vector<std::string> lines_from_file;
     std::vector<std::string> split_line;
+    dest.file_name = boost::filesystem::path( ifname )
+                     .filename()
+                     .string();
 
     while( std::getline( in_file, line ).good() )
         {
