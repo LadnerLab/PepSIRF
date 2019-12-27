@@ -1,3 +1,4 @@
+#include <unordered_set>
 #include "module_subjoin.h"
 #include "matrix.h"
 #include <iostream>
@@ -98,3 +99,68 @@ void module_subjoin::run( options *opts )
 
     std::cout << "Took " << time.get_elapsed() << " seconds.\n";
 }
+
+labeled_matrix<double,std::string>
+    module_subjoin::join_with_resolve_strategy( peptide_score_data_sample_major first,
+                                                peptide_score_data_sample_major second,
+                                                evaluation_strategy::duplicate_resolution_strategy
+                                                resolution_strategy
+                                                ) const
+{
+    std::unordered_set<std::string> row_intersection;
+    std::unordered_set<std::string> col_intersection;
+
+    setops::set_intersection( row_intersection,
+                              first.scores.get_row_labels(),
+                              second.scores.get_row_labels(),
+                              setops
+                              ::get_key<std::string,
+                              std::uint32_t
+                              >()
+                            );
+
+    if( !row_intersection.empty() )
+        {
+            setops::set_intersection( col_intersection,
+                                      first.scores.get_col_labels(),
+                                      second.scores.get_col_labels(),
+                                      setops
+                                      ::get_key<
+                                      std::string,std::uint32_t
+                                      >()
+                                    );
+
+            if( evaluation_strategy::duplicate_resolution_strategy::COMBINE
+                == resolution_strategy
+              )
+                {
+                    for( const auto& row_duplicate : row_intersection )
+                        {
+                            for( const auto& col_duplicate : col_intersection )
+                                {
+                                    double first_val = first.scores( row_duplicate, col_duplicate );
+                                    second.scores( row_duplicate, col_duplicate ) += first_val;
+                                }
+                        }
+
+                }
+            else if( evaluation_strategy::duplicate_resolution_strategy::INCLUDE
+                     == resolution_strategy
+                   )
+                {
+                    for( const auto& row_duplicate : row_intersection )
+                        {
+                            first.scores.set_row_label( row_duplicate,
+                                                        row_duplicate + "_" + first.file_name
+                                                      );
+                            second.scores.set_row_label( row_duplicate,
+                                                         row_duplicate + "_" + second.file_name
+                                                      );
+
+                        }
+                }
+        }
+
+    return first.scores.full_outer_join( second.scores );
+}
+
