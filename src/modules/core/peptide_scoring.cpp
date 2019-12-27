@@ -14,6 +14,7 @@ void peptide_scoring::parse_peptide_scores( peptide_score_data_sample_major& des
 
     std::vector<std::string> lines_from_file;
     std::vector<std::string> split_line;
+    dest.file_name = ifname;
 
     while( std::getline( in_file, line ).good() )
         {
