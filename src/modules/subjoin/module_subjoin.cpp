@@ -63,36 +63,28 @@ void module_subjoin::run( options *opts )
 
     std::ofstream output( s_opts->out_matrix_fname, std::ios_base::out );
 
-    if( parsed_score_data.size() > 1 )
+
+    peptide_score_data_sample_major& joined_data =
+        parsed_score_data[ 0 ];
+
+    // join all of the matrices
+    for( uint idx = 1; idx < parsed_score_data.size(); ++idx )
         {
+            joined_data.scores = join_with_resolve_strategy( joined_data,
+                                                             parsed_score_data[ idx ],
+                                                             s_opts->
+                                                             duplicate_resolution_strategy
+                                                             );
 
-            labeled_matrix<double,std::string> joined_matrix;
-            // join all of the matrices
-            for( uint idx = 0; idx < parsed_score_data.size(); ++idx )
-                {
-                    joined_matrix = joined_matrix
-                        .full_outer_join( parsed_score_data[ idx ].scores );
-                }
+        }
 
-            if( s_opts->use_sample_names )
-                {
-                    output << joined_matrix.transpose();
-                }
-            else
-                {
-                    output << joined_matrix;
-                }
+    if( s_opts->use_sample_names )
+        {
+            output << joined_data.scores.transpose();
         }
     else
         {
-        if( s_opts->use_sample_names )
-                {
-                    output << parsed_score_data[ 0 ].scores.transpose();
-                }
-        else
-            {
-                output << parsed_score_data[ 0 ].scores;
-            }
+            output << joined_data.scores;
         }
 
     time.stop();
