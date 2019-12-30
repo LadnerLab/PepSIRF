@@ -28,6 +28,19 @@ class bin_collection
     const_iterator begin() const;
     const_iterator end() const;
 
+    /**
+     * Construct a bin collection from items in the range
+     * [begin, end).
+     * @tparam Iterator the type of iterator to read from
+     * @param begin The first item in the range
+     * @param end the (exclusive) last item in the range
+     **/
+    template<typename Iterator>
+        bin_collection( const Iterator begin,
+                        const Iterator end
+                      )
+        : bins{ begin, end } {}
+        
 
 };
 
