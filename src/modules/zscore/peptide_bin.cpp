@@ -9,6 +9,11 @@ peptide_bin::const_iterator peptide_bin::end() const { return peptide_names.end(
 
 peptide_bin::peptide_bin() = default;
 
+void peptide_bin::add_peptide( value_type to_add )
+{
+    peptide_names.emplace( to_add );
+}
+
 // bin_collection 
 bin_collection::iterator bin_collection::begin() { return bins.begin(); }
 bin_collection::iterator bin_collection::end() { return bins.end(); }

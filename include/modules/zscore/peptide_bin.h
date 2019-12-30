@@ -20,6 +20,22 @@ class peptide_bin
     const_iterator begin() const;
     const_iterator end() const;
 
+    void add_peptide( const value_type to_add );
+
+    /**
+     * Add each peptide in the range [begin,end) to the bin.
+     **/
+    template<typename Iterator>
+        void add_peptides( const Iterator begin,
+                           const Iterator end
+                         )
+        {
+            for( auto x = begin; x != end; ++x )
+                {
+                    add_peptide( *x );
+                }
+        }
+
     /**
      * Construct a peptide bin from items in the range
      * [begin, end).
