@@ -2,11 +2,23 @@
 #define PEPTIDE_BIN_HH_INCLUDED
 #include <iostream>
 #include <vector>
+#include <unordered_set>
 
 class peptide_bin
 {
  public:
 
+    std::unordered_set<std::string> peptide_names;
+
+    using iterator = typename std::unordered_set<std::string>::iterator;
+    using const_iterator = typename std::unordered_set<std::string>::const_iterator;
+    using value_type = std::string;
+
+    iterator begin();
+    iterator end();
+
+    const_iterator begin() const;
+    const_iterator end() const;
 
 };
 
