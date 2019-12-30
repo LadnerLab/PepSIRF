@@ -93,6 +93,7 @@ add_library( modules_subjoin STATIC src/modules/subjoin/options_subjoin.cpp
 add_library( modules_zscore STATIC src/modules/zscore/module_zscore.cpp
 			 src/modules/zscore/options_zscore.cpp
 			 src/modules/zscore/options_parser_zscore.cpp
+			 src/modules/zscore/peptide_bin.cpp
 		   )
 
 
