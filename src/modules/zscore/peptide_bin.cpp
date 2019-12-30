@@ -1,3 +1,5 @@
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/join.hpp>
 #include "peptide_bin.h"
 
 // peptide_bin
@@ -41,6 +43,32 @@ void bin_collection::add_bin( const peptide_bin bin )
 // namespace peptide_bin_io
 bin_collection peptide_bin_io::parse_bins( std::istream& bin_source )
 {
+    std::string line;
+    std::vector<std::string> peptides_in_bin;
+    bin_collection bins;
 
+    while( std::getline( bin_source, line ).good() )
+        {
+            boost::split( peptides_in_bin,
+                          line,
+                          boost::is_any_of( "\t" )
+                        );
 
+            peptide_bin new_bin( peptides_in_bin.begin(),
+                                 peptides_in_bin.end()
+                               );
+            bins.add_bin( new_bin );
+
+        }
+
+    return bins;
+}
+
+void peptide_bin_io::write_bins( std::ostream &dest, const bin_collection &bins )
+{
+    for( const auto& bin : bins )
+        {
+            dest << boost::algorithm::join( bin, "\t" );
+            dest << "\n";
+        }
 }

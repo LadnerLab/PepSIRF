@@ -129,7 +129,11 @@ class bin_collection
 namespace peptide_bin_io
 {
     /**
-     *
+     * Parse bins from the stream bin_source.
+     * Each bin is a tab-separated list of peptide names. 
+     * Bins are separated by newline characters. 
+     * @param bin_source The stream containing bins
+     * @returns A bin_collection containing each bin from bin_source
      **/
     bin_collection parse_bins( std::istream& bin_source );
 
