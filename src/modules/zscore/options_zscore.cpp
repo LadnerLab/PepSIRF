@@ -8,7 +8,8 @@ std::string options_zscore::get_arguments()
 
     std::ostringstream str_stream;
 
-    str_stream << "--input       " << in_fname << "\n "
+    str_stream << "--scores      " << in_fname << "\n "
+               << "--bins        " << in_bins_fname << "\n "
                << "--output      " << out_fname << "\n "
                << "--num_threads " << num_threads << "\n "
                << "\n";
