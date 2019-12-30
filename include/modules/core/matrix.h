@@ -150,7 +150,7 @@ class matrix
          *       same position in the same matrix. See matrix::mutable_iterator::operator==
          * @returns True if !( this == comp ), false otherwise
          **/
-        bool operator!=(  mutable_iterator& comp ) 
+        bool operator!=(  mutable_iterator& comp ) const
         {
             return !( *this == comp );
         }
@@ -162,7 +162,7 @@ class matrix
          *       matrix.
          * @returns True if this == comp, false otherwise.
          **/
-        bool operator==(  mutable_iterator& comp ) 
+        bool operator==(  mutable_iterator& comp ) const
         {
             return this->matr == comp.matr 
                      && this->current_idx == comp.current_idx;
@@ -748,7 +748,7 @@ class labeled_matrix : public matrix<ValType>
      * @param in_M The number of columns the matrix has.
      **/
     labeled_matrix( const std::uint32_t in_N, const std::uint32_t in_M )
-        : matrix<ValType>{ in_N, in_M } {}
+        : matrix<ValType>{ in_N, in_M }, row_labels{}, col_labels{} {}
 
     /**
      * Initialize a labeled matrix with row and column labels.
