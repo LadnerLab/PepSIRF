@@ -64,35 +64,6 @@ class module_normalize : public module
                          );
 
     /**
-     * Compute the geometric mean of a set of data of type T.
-     * @pre T must be a numeric type (std::size_t, double, int, etc.)
-     * @pre all of the values in data are greater than zero
-     * @note Only non-zero values are considered in the calculation, so 
-     *       the 'size' of data is considered the number of non-zero values in 
-     *       data.
-     * @param data The dataset whose geometric mean to compute.
-     **/
-    template <typename Iterator
-             >
-        double geom_mean( const Iterator& begin,
-                          const Iterator& end
-                        )
-        {
-            std::size_t n = 0;
-            double log_sum = 0;
-
-            for( auto index = begin; index != end; ++index )
-                {
-                    log_sum += std::log( *index == 0 ? 1 : *index );
-                    n += *index != 0;
-                }
-
-            log_sum /= (double) n;
-
-            return n == 0 ? 0 : std::exp( log_sum );
-        }
-
-    /**
      * Compute the size factors for each column in a set of data.
      * This method implements equation 5 in Anders and Huber 2010.
      * @param size_factors The location to store the size factors that 

@@ -5,6 +5,7 @@
 #include "module.h"
 #include "options_subjoin.h"
 #include "peptide_scoring.h"
+#include "omp_opt.h"
 
 /**
  * A module to join multiple score matrices into one.

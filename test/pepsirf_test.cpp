@@ -38,6 +38,8 @@
 #include "species_data.h"
 #include "module_normalize.h"
 #include "matrix.h"
+#include "stats.h"
+#include "peptide_bin.h"
 
 using namespace util;
 
@@ -1449,7 +1451,7 @@ TEST_CASE( "score_species_peptides/get_highest_score_per_species", "[module_deco
      REQUIRE( highest_scores[ "species 2" ].get_score() == 0.5 );
 }
 
-TEST_CASE( "geometric means", "[module_normalize]" )
+TEST_CASE( "geometric means", "[stats]" )
 {
     // TODO: RE-implement this test
     module_normalize mod;
@@ -1464,9 +1466,9 @@ TEST_CASE( "geometric means", "[module_normalize]" )
                 }
         }
 
-    double mean = mod.geom_mean( values.row_begin( 1 ),
-                                 values.row_end( 1 )
-                               );
+    double mean = stats::geom_mean( values.row_begin( 1 ),
+                                    values.row_end( 1 )
+                                  );
     double epsilon = 0.0005;
 
     // check that we're sufficiently close, I calculated the
@@ -1474,14 +1476,15 @@ TEST_CASE( "geometric means", "[module_normalize]" )
     REQUIRE( std::abs( mean - 1.81712 ) < epsilon );
 
 
-    mean = mod.geom_mean( values.row_begin( 2 ),
-                          values.row_end( 2 )
-                        );
+    mean = stats::geom_mean( values.row_begin( 2 ),
+                             values.row_end( 2 )
+                           );
+
     REQUIRE( std::abs( mean - 3.63424 ) < epsilon );
 
-    mean = mod.geom_mean( values.row_begin( 0 ),
-                          values.row_end( 0 )
-                        );
+    mean = stats::geom_mean( values.row_begin( 0 ),
+                             values.row_end( 0 )
+                           );
 
     REQUIRE( mean == 0 );
 }
@@ -1674,6 +1677,63 @@ TEST_CASE( "labeled_matrix full outer join", "[matrix]" )
 
 }
 
+TEST_CASE( "median", "[stats]" )
+{
+
+    SECTION( "Median can be found in a vector of odd length" )
+        {
+            std::vector<int> data{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+            auto median = stats::median( data.begin(), data.end() );
+            REQUIRE( median == 5 );
+
+            data = std::vector<int>{ 4, 5, 0, 1, 3, 2, 8, 10, 9, 7, 6 };
+            median = stats::median( data.begin(), data.end() );
+            REQUIRE( median == 5 );
+
+            data = std::vector<int>{ 6, 8, 10, 2, 3, 5, 4, 7, 0, 1, 9 };
+            median = stats::median( data.begin(), data.end() );
+            REQUIRE( median == 5 );
+
+            // data generated with python
+            data = std::vector<int>{ 67,69,94,77,49,89,86,61,23,87,75,80,78,81,1,93,27,22,88,0,11 };
+            median = stats::median( data.begin(), data.end() );
+            REQUIRE( median == 75 );
+
+        }
+
+    SECTION( "Median can be found in a vector of even length" )
+        {
+            std::vector<int> data{ 0, 1, 2, 3, 4, 6, 7, 8, 9, 10 };
+            auto median = stats::median( data.begin(), data.end() );
+            REQUIRE( median == 5 );
+
+            data = std::vector<int>{ 4, 5, 0, 1, 3, 2, 10, 9, 7, 6 };
+            median = stats::median( data.begin(), data.end() );
+            REQUIRE( median == 4.5 );
+
+            data = std::vector<int>{ 6, 8, 10, 2, 3, 5, 4, 7, 1, 9 };
+            median = stats::median( data.begin(), data.end() );
+            REQUIRE( median == 5.5 );
+
+            // data generated with python
+            data = std::vector<int>{ 67,69,94,77,49,89,86,61,23,87,75,80,78,81,1,93,27,22,88,0 };
+            median = stats::median( data.begin(), data.end() );
+            REQUIRE( median == 76 );
+        }
+
+}
+
+TEST_CASE( "Arithmetic mean", "[stats]" )
+{
+
+    SECTION( "Arithmetic mean of vector" )
+        {
+            std::vector<double> data{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+            REQUIRE( stats::arith_mean( data.begin(), data.end() ) == 5.5 );
+        }
+
+}
+
 TEST_CASE( "matrix transposition", "[matrix]" )
 {
     SECTION( "Transposition of a square matrix", "[matrix]" )
@@ -1735,3 +1795,71 @@ TEST_CASE( "matrix transposition", "[matrix]" )
 
 }
 
+TEST_CASE( "Standard deviation", "[stats]" )
+{
+    std::vector<double> data{ 10, 12, 23, 23, 16, 23, 21, 16 };
+
+    double stdev = stats::stdev( data.begin(), data.end() );
+    double epsilon = 0.005;
+    REQUIRE( ( ( stdev - 4.8989 < epsilon ) && ( stdev != 0 ) ) );
+}
+
+TEST_CASE( "z-scores", "[stats]" )
+{
+    std::vector<double> data{ 10, 12, 23, 23, 16, 23, 21, 16 };
+
+    auto verify_vec = [&]( const std::vector<double>& stdev )
+        {
+            REQUIRE( stats::is_close( stdev[ 0 ], -1.63299 ) );
+            REQUIRE( stats::is_close( stdev[ 1 ], -1.22474 ) );
+            REQUIRE( stats::is_close( stdev[ 2 ], 1.02062  ) );
+            REQUIRE( stats::is_close( stdev[ 3 ], 1.02062  ) );
+            REQUIRE( stats::is_close( stdev[ 4 ], -0.40824 ) );
+            REQUIRE( stats::is_close( stdev[ 5 ], 1.02062  ) );
+            REQUIRE( stats::is_close( stdev[ 6 ], 0.61237  ) );
+            REQUIRE( stats::is_close( stdev[ 7 ], -0.40824 ) );
+        };
+
+    SECTION( "Input and output are not the same vector" )
+        {
+            std::vector<double> deviations;
+            deviations.resize( 8 );
+
+            stats::zscore( data.begin(), data.end(), deviations.begin() );
+            verify_vec( deviations );
+        }
+
+    SECTION( "Input and output are the same vector" )
+        {
+            stats::zscore( data.begin(), data.end(), data.begin() );
+            verify_vec( data );
+        }
+}
+
+TEST_CASE( "Parsing/Writing Bins from stream", "[peptide_bin]" )
+{
+    std::stringstream bins_in;
+    bins_in << "pep_1\tpep_2\tpep_3\npep_4\tpep_5\tpep_6\n";
+    bin_collection bin_c = peptide_bin_io::parse_bins( bins_in );
+
+    std::stringstream bins_out;
+
+    peptide_bin_io::write_bins( bins_out, bin_c );
+
+    REQUIRE( ( bin_c == peptide_bin_io::parse_bins( bins_out ) ) );
+
+    auto first_bin = bin_c.begin();
+    REQUIRE( first_bin->contains( "pep_1" ) );
+    REQUIRE( first_bin->contains( "pep_2" ) );
+    REQUIRE( first_bin->contains( "pep_3" ) );
+    REQUIRE( !( first_bin->contains( "pep_4" ) ) );
+
+    auto second_bin = first_bin + 1;
+    REQUIRE( second_bin->contains( "pep_4" ) );
+    REQUIRE( second_bin->contains( "pep_5" ) );
+    REQUIRE( second_bin->contains( "pep_6" ) );
+    REQUIRE( !( second_bin->contains( "pep_9" ) ) );
+
+
+
+}

@@ -48,6 +48,161 @@ class matrix
      * An iterator providing functionality for iterating over rows/columns 
      * of a matrix.
      **/
+    class mutable_iterator
+    {
+
+    public:
+        /**
+         * Initialize the mutable_iterator with a matrix, 
+         * sets mutable_iterator pointer to zero.
+         **/
+    mutable_iterator(  ::matrix<ValType> *matr ) 
+            : matr( matr ),
+              current_idx( 0 )
+              {}
+
+        /**
+         * Initialize with a matrix and starting (row, column) position.
+         * @param matr The matrix to iterate over.
+         * @param start_row The row to begin iteration on
+         * @param start_col the column to begin iteration on
+         **/
+    mutable_iterator(  ::matrix<ValType> *matr,
+              std::size_t start_row,
+              std::size_t start_col
+                       ) 
+            : matr( matr ),
+              current_idx( matr->access_to_1d( start_row, start_col ) )
+              {}
+
+        
+        /**
+         * Determines whether the mutable_iterator has reached 
+         * at least the end of the matrix.
+         * @returns boolean True if the current pointer is greater than 
+         *          the size of the matrix, False otherwise.
+         **/
+        bool end()
+        {
+            return current_idx >=
+                 this->matr.access_to_1d( this->matr.N, this->matr.M );
+        }
+        
+        /**
+         * ant access to the current value pointed to by the 
+         * mutable_iterator.
+         * @returns ant reference to the current iterated value
+         **/
+         ValType& operator*() 
+        {
+            return this->matr->operator()( this->current_idx );
+        }
+
+        /**
+         * In-place advance the mutable_iterator forward.
+         * @param advance The number of positions to 
+         *        advance.
+         **/
+        void operator+=( int advance )
+        {
+            current_idx += advance;
+        }
+
+        /**
+         * Increment in-place, return reference to 
+         * this mutable_iterator.
+         **/
+        mutable_iterator &operator++()
+            {
+                *this += 1; return *this;
+            }
+
+        /**
+         * Advance forward an entire row from the 
+         * current position. 
+         * @note This does not advance to the beginning of 
+         *       the row, but advances to the current position in 
+         *       the next row.
+         **/
+        mutable_iterator& next_row()
+            {
+                this += this->matr.M;
+                return *this;
+            }
+
+        /**
+         * Advance forward an entire column from the 
+         * current position. 
+         * @note This does not advance to the beginning of 
+         *       the column, but advances to the current position in 
+         *       the next column.
+         **/
+        mutable_iterator &next_col()
+            {
+                this += this->matr.N;
+                return *this;
+            }
+
+        /**
+         * Determines whether this mutable_iterator is NOT equal to 
+         * another.
+         * @note We say two mutable_iterators are equal if they point to the 
+         *       same position in the same matrix. See matrix::mutable_iterator::operator==
+         * @returns True if !( this == comp ), false otherwise
+         **/
+        bool operator!=(  mutable_iterator& comp ) const
+        {
+            return !( *this == comp );
+        }
+        
+        /**
+         * Determine whether two mutable_iterators are equal.
+         * @note We define two mutable_iterators as equivalent if 
+         *       they point to the same position in the same 
+         *       matrix.
+         * @returns True if this == comp, false otherwise.
+         **/
+        bool operator==(  mutable_iterator& comp ) const
+        {
+            return this->matr == comp.matr 
+                     && this->current_idx == comp.current_idx;
+        }
+
+        /**
+         * Assign this mutable_iterator to another.
+         * @param other The mutable_iterator to copy.
+         * @note After calling this method, this == other will be true,
+         *       and it is thus important to note that this method does not
+         *       copy the matrix pointed to by other, it copies only its 
+         *       pointer.
+         **/
+        void operator=( const typename matrix<ValType>::mutable_iterator& other )
+            {
+                this->matr = other.matr;
+                this->current_idx = other.current_idx;
+            }
+    
+        using difference_type = std::ptrdiff_t;
+        using iterator_category	= std::forward_iterator_tag;
+        using value_type = ValType;
+        using pointer = ValType*; 
+        using reference = ValType&;
+
+    private:
+        /**
+         * The matrix being iterated over.
+         **/
+         ::matrix<ValType> *matr;
+
+        /**
+         * The current location of the mutable_iterator. 
+         **/
+        std::size_t current_idx;
+
+
+    };
+
+
     class iterator
     {
 
@@ -176,7 +331,7 @@ class matrix
          *       copy the matrix pointed to by other, it copies only its 
          *       pointer.
          **/
-        void operator=( const matrix<ValType>& other )
+        void operator=( const typename matrix<ValType>::iterator& other )
             {
                 this->matr = other.matr;
                 this->current_idx = other.current_idx;
@@ -224,6 +379,21 @@ class matrix
     {
         return iterator( this, row, 0 );
     }
+
+
+    const mutable_iterator row_end( std::size_t row ) 
+    {
+        return mutable_iterator( this, row + 1, 0 );
+    }
+
+    /**
+     * Get an iterator to the beginning of the n'th row.
+     **/
+    const mutable_iterator row_begin( std::size_t row ) 
+    {
+        return mutable_iterator( this, row, 0 );
+    }
+
 
     /**
      * Default constructor.
@@ -578,7 +748,7 @@ class labeled_matrix : public matrix<ValType>
      * @param in_M The number of columns the matrix has.
      **/
     labeled_matrix( const std::uint32_t in_N, const std::uint32_t in_M )
-        : matrix<ValType>{ in_N, in_M } {}
+        : matrix<ValType>{ in_N, in_M }, row_labels{}, col_labels{} {}
 
     /**
      * Initialize a labeled matrix with row and column labels.

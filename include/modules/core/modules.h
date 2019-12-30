@@ -13,7 +13,8 @@ namespace modules
      * A set of module names, each with a corresponding module.
      **/
     const std::unordered_set<std::string> module_names = { "demux", "deconv",
-                                                           "norm", "subjoin"
+                                                           "norm", "subjoin",
+                                                           "zscore"
                                                          };
 
     // a 'StringLike' is something that is string-constructible, i.e.
