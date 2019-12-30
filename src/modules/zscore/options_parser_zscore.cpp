@@ -21,16 +21,21 @@ bool options_parser_zscore::parse( int argc, char ***argv, options *opts )
         (
          "help,h", "Produce help message\n"
         )
-        ( "input,i", po::value( &opts_zscore->in_fname ),
+        ( "scores,s", po::value( &opts_zscore->in_fname )->required(),
           "Name of the file to use as input. Should be a score matrix in the "
           "format as output by the demux or subjoin modules.\n"
+        )
+        ( "bins,b", po::value( &opts_zscore->in_bins_fname )->required(),
+          "Name of the file containing bins, one bin per line. "
+          "Each bin contains a tab-separated list of peptide names.\n"
         )
         ( "output,o", po::value( &opts_zscore->out_fname )->default_value( "zscore_output.tsv" ),
           "Name of the file to write output to. In this file, "
           "each peptide will be written with its z-score within "
           "each sample.\n"
         )
-        ( "num_threads,t", po::value( &opts_zscore->num_threads ),
+        ( "num_threads,t", po::value( &opts_zscore->num_threads )
+          ->default_value( opts_zscore->DEFAULT_NUM_THREADS ),
           "The number of threads to use for analyses.\n"
         )
         ;
