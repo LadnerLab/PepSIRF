@@ -14,6 +14,7 @@ class options_zscore : public options
     std::string in_bins_fname;
     std::string out_fname;
 
+    double trim_percent;
 };
 
 #endif // OPTIONS_ZSCORE_HH_INCLUDED
