@@ -22,6 +22,8 @@ class peptide_bin
 
     void add_peptide( const value_type to_add );
 
+    bool contains( const value_type& look_for );
+
     /**
      * Determine whether this bin equals other.
      * @param other the bin to compare this with.

@@ -1848,4 +1848,18 @@ TEST_CASE( "Parsing/Writing Bins from stream", "[peptide_bin]" )
 
     REQUIRE( ( bin_c == peptide_bin_io::parse_bins( bins_out ) ) );
 
+    auto first_bin = bin_c.begin();
+    REQUIRE( first_bin->contains( "pep_1" ) );
+    REQUIRE( first_bin->contains( "pep_2" ) );
+    REQUIRE( first_bin->contains( "pep_3" ) );
+    REQUIRE( !( first_bin->contains( "pep_4" ) ) );
+
+    auto second_bin = first_bin + 1;
+    REQUIRE( second_bin->contains( "pep_4" ) );
+    REQUIRE( second_bin->contains( "pep_5" ) );
+    REQUIRE( second_bin->contains( "pep_6" ) );
+    REQUIRE( !( second_bin->contains( "pep_9" ) ) );
+
+
+
 }

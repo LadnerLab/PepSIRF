@@ -21,6 +21,11 @@ void peptide_bin::add_peptide( value_type to_add )
     peptide_names.emplace( to_add );
 }
 
+bool peptide_bin::contains( const value_type& look_for )
+{
+    return peptide_names.find( look_for ) != peptide_names.end();
+}
+
 // bin_collection 
 bin_collection::iterator bin_collection::begin() { return bins.begin(); }
 bin_collection::iterator bin_collection::end() { return bins.end(); }
