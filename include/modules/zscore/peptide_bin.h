@@ -13,11 +13,21 @@ class peptide_bin
 class bin_collection
 {
  public:
-    std::vector<peptide_bin> bins;
-    using iterator = typename std::vector<peptide_bin>::iterator;
 
-    iterator begin() { return bins.begin(); }
-    iterator end() { return bins.end(); }
+    /**
+     * Actual store of our bins
+     **/
+    std::vector<peptide_bin> bins;
+
+    using iterator = typename std::vector<peptide_bin>::iterator;
+    using const_iterator = typename std::vector<peptide_bin>::const_iterator;
+
+    iterator begin();
+    iterator end();
+
+    const_iterator begin() const;
+    const_iterator end() const;
+
 
 };
 
