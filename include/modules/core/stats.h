@@ -63,8 +63,8 @@ namespace stats
      **/
     template <typename Iterator
              >
-        double geom_mean( const Iterator& begin,
-                          const Iterator& end
+        double geom_mean( Iterator begin,
+                          Iterator end
                         )
         {
             std::size_t n = 0;
