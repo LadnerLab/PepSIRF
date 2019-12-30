@@ -29,6 +29,26 @@ bool options_parser_zscore::parse( int argc, char ***argv, options *opts )
           "Name of the file containing bins, one bin per line. "
           "Each bin contains a tab-separated list of peptide names.\n"
         )
+        ( "trim", po::value( &opts_zscore->trim_percent )
+          ->default_value( 2.5 )
+          ->notifier( []( const double& val )
+                      {
+                          if( !( val >= 0.0 && val <= 100.00 ) )
+                              {
+
+                                  throw po::validation_error(
+                                    po::validation_error::invalid_option_value,
+                                    "filter_scores",
+                                    std::to_string( val )
+                                                             );
+                              }
+   
+                      }
+                      ),
+          "Percentile of lowest and highest counts within a bin to ignore "
+          "when calculating the mean and standard deviation. This value must be "
+          "in the range [0.00,100.0].\n"
+        )
         ( "output,o", po::value( &opts_zscore->out_fname )->default_value( "zscore_output.tsv" ),
           "Name of the file to write output to. In this file, "
           "each peptide will be written with its z-score within "
