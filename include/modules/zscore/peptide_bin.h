@@ -32,6 +32,8 @@ class peptide_bin
                      const Iterator end
                    )
         : peptide_names{ begin, end } {}
+
+    peptide_bin();
 };
 
 class bin_collection
@@ -54,6 +56,26 @@ class bin_collection
     const_iterator end() const;
 
     /**
+     * Add a single bin to the bin_collection.
+     **/
+    void add_bin( const peptide_bin bin );
+
+    /**
+     * Add each bin in the range [begin,end) to the
+     * collection.
+     **/
+    template<typename Iterator>
+        void add_bins( const Iterator begin,
+                       const Iterator end
+                     )
+        {
+            for( auto x = begin; x != end; ++x )
+                {
+                    add_bin( *x );
+                }
+        }
+
+    /**
      * Construct a bin collection from items in the range
      * [begin, end).
      * @tparam Iterator the type of iterator to read from
@@ -65,13 +87,22 @@ class bin_collection
                         const Iterator end
                       )
         : bins{ begin, end } {}
+
+    bin_collection();
         
 
 };
 
 namespace peptide_bin_io
 {
+    /**
+     *
+     **/
     bin_collection parse_bins( std::istream& bin_source );
+
+    /**
+     *
+     **/
     void write_bins( std::ostream& dest, const bin_collection& bins );
 };
 
