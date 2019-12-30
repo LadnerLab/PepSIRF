@@ -20,6 +20,18 @@ class peptide_bin
     const_iterator begin() const;
     const_iterator end() const;
 
+    /**
+     * Construct a peptide bin from items in the range
+     * [begin, end).
+     * @tparam Iterator the type of iterator to read from
+     * @param begin The first item in the range
+     * @param end the (exclusive) last item in the range
+     **/
+    template<typename Iterator>
+        peptide_bin( const Iterator begin,
+                     const Iterator end
+                   )
+        : peptide_names{ begin, end } {}
 };
 
 class bin_collection
@@ -33,6 +45,7 @@ class bin_collection
 
     using iterator = typename std::vector<peptide_bin>::iterator;
     using const_iterator = typename std::vector<peptide_bin>::const_iterator;
+    using value_type = peptide_bin;
 
     iterator begin();
     iterator end();
