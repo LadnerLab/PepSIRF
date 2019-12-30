@@ -113,6 +113,15 @@ class bin_collection
         : bins{ begin, end } {}
 
     bin_collection();
+
+    /**
+     * Determine whether bin collections are equal.
+     * @param other The bin to compare this with.
+     * @returns true if every bin in this collection is  
+     *          equal to every bin in other. 
+     * @note order of the bins matters.
+     **/
+    bool operator==( const bin_collection& other ) const;
         
 
 };

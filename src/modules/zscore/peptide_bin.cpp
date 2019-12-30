@@ -28,6 +28,11 @@ bin_collection::const_iterator bin_collection::end() const { return bins.end(); 
 
 bin_collection::bin_collection() = default;
 
+bool bin_collection::operator==( const bin_collection& other ) const
+{
+    return bins == other.bins;
+}
+
 void bin_collection::add_bin( const peptide_bin bin )
 {
     bins.emplace_back( bin );
