@@ -19,16 +19,28 @@ void module_zscore::run( options *opts )
 
     peptide_scoring::parse_peptide_scores( input, z_opts->in_fname );
 
+    std::ifstream bins_file( z_opts->in_bins_fname, std::ios_base::in );
+    bin_collection peptide_bins = peptide_bin_io::parse_bins( bins_file );
+
     // transpose the input matrix
     input.scores = input.scores.transpose();
+    auto& zscore_matrix = input.scores;
+    omp_set_num_threads( z_opts->num_threads );
+    std::uint32_t sample_idx = 0;
 
-    // calculate the zscores
-    for( std::uint32_t row_idx = 0; row_idx < input.scores.nrows(); ++row_idx )
+    // for each sample
+    #pragma omp parallel for private( sample_idx ) \
+            shared( zscore_matrix, peptide_bins ) schedule( dynamic )
+    for( sample_idx = 0;
+         sample_idx < zscore_matrix.nrows();
+         ++sample_idx
+           )
         {
-            stats::zscore( input.scores.row_begin( row_idx ),
-                           input.scores.row_end( row_idx ),
-                           input.scores.row_begin( row_idx )
-                         );
+            calculate_zscores( peptide_bins,
+                               z_opts->trim_percent,
+                               zscore_matrix,
+                               sample_idx
+                             );
         }
 
     // transpose the output matrix
