@@ -9,6 +9,11 @@ peptide_bin::const_iterator peptide_bin::end() const { return peptide_names.end(
 
 peptide_bin::peptide_bin() = default;
 
+bool peptide_bin::operator==( const peptide_bin& other ) const
+{
+    return peptide_names == other.peptide_names;
+}
+
 void peptide_bin::add_peptide( value_type to_add )
 {
     peptide_names.emplace( to_add );

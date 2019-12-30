@@ -23,6 +23,14 @@ class peptide_bin
     void add_peptide( const value_type to_add );
 
     /**
+     * Determine whether this bin equals other.
+     * @param other the bin to compare this with.
+     * @returns true if this and other contain the same 
+     *          peptides, false otherwise.
+     **/
+    bool operator==( const peptide_bin& other ) const;
+
+    /**
      * Add each peptide in the range [begin,end) to the bin.
      **/
     template<typename Iterator>
