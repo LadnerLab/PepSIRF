@@ -92,7 +92,7 @@ namespace stats
                            Iterator end
                          )
         {
-            double sum = std::accumulate( begin, end, 0 );
+            double sum = std::accumulate( begin, end, 0.0 );
             return sum / std::distance( begin, end );
         }
 
@@ -154,12 +154,12 @@ namespace stats
         }
 
     /**
-     * Given the population mean, calculate the population 
+     * Given the sample mean, calculate the sample 
      * standard deviation of the items in the range [begin, end).
      * @param begin The first item in the range
      * @param end The last item in the range
      * @param the arithmetic mean of the items in the range [begin, end)
-     * @returns the population standard deviation.
+     * @returns the sample standard deviation.
      **/
     template<typename Iterator>
         double stdev( Iterator begin,
@@ -169,7 +169,7 @@ namespace stats
         {
             double diff = squared_diff( begin, end, mean );
             std::size_t N = std::distance( begin, end );
-            return std::sqrt( ( 1 / (double) N ) * diff );
+            return std::sqrt( ( 1 / ((double) N-1) ) * diff );
         }
 
     /**
