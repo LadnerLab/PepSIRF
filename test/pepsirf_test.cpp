@@ -39,6 +39,7 @@
 #include "module_normalize.h"
 #include "matrix.h"
 #include "stats.h"
+#include "peptide_bin.h"
 
 using namespace util;
 
@@ -1833,4 +1834,18 @@ TEST_CASE( "z-scores", "[stats]" )
             stats::zscore( data.begin(), data.end(), data.begin() );
             verify_vec( data );
         }
+}
+
+TEST_CASE( "Parsing/Writing Bins from stream", "[peptide_bin]" )
+{
+    std::stringstream bins_in;
+    bins_in << "pep_1\tpep_2\tpep_3\npep_4\tpep_5\tpep_6\n";
+    bin_collection bin_c = peptide_bin_io::parse_bins( bins_in );
+
+    std::stringstream bins_out;
+
+    peptide_bin_io::write_bins( bins_out, bin_c );
+
+    REQUIRE( ( bin_c == peptide_bin_io::parse_bins( bins_out ) ) );
+
 }
