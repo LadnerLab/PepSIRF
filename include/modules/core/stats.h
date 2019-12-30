@@ -230,8 +230,18 @@ namespace stats
      * @param src_begin The first item in the range.
      * @param src_end The last item in the range
      * @param output The output iterator. 
+     * @note only used when Iterator, OutputIterator have '*', '++' operators defined
      **/
-    template<typename Iterator, typename OutputIterator>
+    template<typename Iterator, typename OutputIterator,
+        typename = decltype( *std::declval<Iterator&>(),
+                             void(),
+                             ++std::declval<Iterator&>(), void()
+                             ),
+        typename = decltype( *std::declval<OutputIterator&>(),
+                             void(),
+                             ++std::declval<OutputIterator&>(), void()
+                           )
+        >
         void zscore( Iterator src_begin,
                      Iterator src_end,
                      OutputIterator output
