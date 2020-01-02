@@ -19,6 +19,7 @@ include_directories(include/modules/demux)
 include_directories(include/modules/deconv)
 include_directories(include/modules/subjoin)
 include_directories(include/modules/zscore)
+include_directories(include/modules/bin)
 include_directories(lib/parallel_hashmap)
 add_compile_options( "-Wall" "-std=c++11" "-Wextra" "-fvisibility=hidden"
                      "-fvisibility-inlines-hidden"
@@ -93,11 +94,12 @@ add_library( modules_subjoin STATIC src/modules/subjoin/options_subjoin.cpp
 add_library( modules_zscore STATIC src/modules/zscore/module_zscore.cpp
 			 src/modules/zscore/options_zscore.cpp
 			 src/modules/zscore/options_parser_zscore.cpp
-			 src/modules/zscore/peptide_bin.cpp
+			 src/modules/bin/peptide_bin.cpp
 		   )
 add_library( modules_bin STATIC src/modules/bin/options_bin.cpp 
 			 src/modules/bin/options_bin.cpp
 			 src/modules/bin/options_parser_bin.cpp
+			 src/modules/bin/peptide_bin.cpp
            )
 
 
