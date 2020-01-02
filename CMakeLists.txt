@@ -27,7 +27,7 @@ add_compile_options( "-Wall" "-std=c++11" "-Wextra" "-fvisibility=hidden"
                    )
 
 
-set(PepSIRF_MODULES pepsirf_common modules_demux modules_deconv modules_normalize modules_subjoin modules_zscore )                
+set(PepSIRF_MODULES pepsirf_common modules_demux modules_deconv modules_normalize modules_subjoin modules_zscore modules_bin )                
 
 if(OpenMP_FOUND)
   message( "OpenMP enabled" )
@@ -95,6 +95,10 @@ add_library( modules_zscore STATIC src/modules/zscore/module_zscore.cpp
 			 src/modules/zscore/options_parser_zscore.cpp
 			 src/modules/zscore/peptide_bin.cpp
 		   )
+add_library( modules_bin STATIC src/modules/bin/options_bin.cpp 
+			 src/modules/bin/options_bin.cpp
+			 src/modules/bin/options_parser_bin.cpp
+           )
 
 
 option( BUILD_TESTS "Determines whether to build tests." ON )
