@@ -96,7 +96,7 @@ add_library( modules_zscore STATIC src/modules/zscore/module_zscore.cpp
 			 src/modules/zscore/options_parser_zscore.cpp
 			 src/modules/bin/peptide_bin.cpp
 		   )
-add_library( modules_bin STATIC src/modules/bin/options_bin.cpp 
+add_library( modules_bin STATIC src/modules/bin/module_bin.cpp 
 			 src/modules/bin/options_bin.cpp
 			 src/modules/bin/options_parser_bin.cpp
 			 src/modules/bin/peptide_bin.cpp
