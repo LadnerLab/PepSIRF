@@ -1800,8 +1800,7 @@ TEST_CASE( "Standard deviation", "[stats]" )
     std::vector<double> data{ 10, 12, 23, 23, 16, 23, 21, 16 };
 
     double stdev = stats::stdev( data.begin(), data.end() );
-    double epsilon = 0.005;
-    REQUIRE( ( ( stdev - 4.8989 < epsilon ) && ( stdev != 0 ) ) );
+    REQUIRE( ( stdev && stats::is_close( stdev, 5.237 ) ) );
 }
 
 TEST_CASE( "z-scores", "[stats]" )
@@ -1810,14 +1809,14 @@ TEST_CASE( "z-scores", "[stats]" )
 
     auto verify_vec = [&]( const std::vector<double>& stdev )
         {
-            REQUIRE( stats::is_close( stdev[ 0 ], -1.63299 ) );
-            REQUIRE( stats::is_close( stdev[ 1 ], -1.22474 ) );
-            REQUIRE( stats::is_close( stdev[ 2 ], 1.02062  ) );
-            REQUIRE( stats::is_close( stdev[ 3 ], 1.02062  ) );
-            REQUIRE( stats::is_close( stdev[ 4 ], -0.40824 ) );
-            REQUIRE( stats::is_close( stdev[ 5 ], 1.02062  ) );
-            REQUIRE( stats::is_close( stdev[ 6 ], 0.61237  ) );
-            REQUIRE( stats::is_close( stdev[ 7 ], -0.40824 ) );
+            REQUIRE( stats::is_close( stdev[ 0 ], -1.528 ) );
+            REQUIRE( stats::is_close( stdev[ 1 ], -1.1456 ) );
+            REQUIRE( stats::is_close( stdev[ 2 ], 0.9547  ) );
+            REQUIRE( stats::is_close( stdev[ 3 ], 0.9547  ) );
+            REQUIRE( stats::is_close( stdev[ 4 ], -0.38189 ) );
+            REQUIRE( stats::is_close( stdev[ 5 ], 0.9547  ) );
+            REQUIRE( stats::is_close( stdev[ 6 ], 0.5728  ) );
+            REQUIRE( stats::is_close( stdev[ 7 ], -0.38189 ) );
         };
 
     SECTION( "Input and output are not the same vector" )
