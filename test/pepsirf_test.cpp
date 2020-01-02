@@ -40,6 +40,7 @@
 #include "matrix.h"
 #include "stats.h"
 #include "peptide_bin.h"
+#include "module_bin.h"
 
 using namespace util;
 
@@ -1861,4 +1862,32 @@ TEST_CASE( "Parsing/Writing Bins from stream", "[peptide_bin]" )
 
 
 
+}
+
+TEST_CASE( "Summing Counts of items in a matrix", "[module_bin]" )
+{
+    module_bin mod;
+    std::vector<std::string> row_labels{ "row_1", "row_2", "row_3" };
+    std::vector<std::string> col_labels{ "col_1", "col_2", "col_3" };
+    
+    labeled_matrix<double,std::string>
+        matrix{ 3,
+                3,
+                row_labels,
+                col_labels
+              };
+
+    matrix.set_all( 4 );
+
+    auto summed_counts = mod.sum_counts( matrix );
+
+    REQUIRE( summed_counts[ 0 ] == 12 );
+    REQUIRE( summed_counts[ 1 ] == 12 );
+    REQUIRE( summed_counts[ 2 ] == 12 );
+
+    matrix( 2, 2 ) = 11.5;
+    summed_counts = mod.sum_counts( matrix );
+
+    REQUIRE( summed_counts[ 2 ] == 19.5 );
+    REQUIRE( summed_counts[ 0 ] == 12 );
 }
