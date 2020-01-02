@@ -55,6 +55,12 @@ void module_initializer::initialize( const std::string& mod_name )
             opt_parser  = new options_parser_zscore();
             mod         = new module_zscore();
         }
+    else if( !mod_name.compare( "bin" ) )
+        {
+            opts        = new options_bin();
+            opt_parser  = new options_parser_bin();
+            mod         = new module_bin();
+        }
     else
         {
             throw std::runtime_error( "Invalid module name entered." );
