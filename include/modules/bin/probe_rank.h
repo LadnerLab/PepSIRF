@@ -45,7 +45,7 @@ class probe_rank
                    );
 
     /**
-     * Get an iterator to the probes with rank.
+     * Get a mutable iterator to the probes with rank.
      * @note Returns rank_track_type::end if rank is valid
      * @note rounds rank to this::rounding_factor before looking 
      * @param rank The rank to find the probes of
@@ -55,6 +55,19 @@ class probe_rank
      **/
     rank_track_type::iterator
         get_probes_with_rank( const score_type rank );
+
+    /**
+     * Get a const iterator to the probes with rank.
+     * @note Returns rank_track_type::end if rank is valid
+     * @note rounds rank to this::rounding_factor before looking 
+     * @param rank The rank to find the probes of
+     * @returns rank_track_type::const_iterator pointing to the result of 
+     *          looking for the rank. If the rank is not found, the result is 
+     *          equal to this::get_probe_ranks::end.
+     **/
+    rank_track_type::const_iterator
+        get_probes_with_rank( const score_type rank ) const;
+
 
     /**
      * Get a constant reference to this object's probe ranks.
