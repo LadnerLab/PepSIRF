@@ -11,6 +11,11 @@ class probe_rank
 {
  public:
 
+    using score_type = double;
+    using probe_type = std::string;
+    using rank_track_type = std::unordered_map<score_type,
+                            std::vector<probe_type>>;
+
     /**
      * Default constructor, sets rounding factor to zero.
      **/
@@ -24,10 +29,6 @@ class probe_rank
     probe_rank( const std::size_t rounding_factor )
         : rounding_factor{ rounding_factor } {}
 
-    using key_type = double;
-    using val_type = std::string;
-    using rank_track_type = std::unordered_map<key_type,
-                            std::vector<val_type>>;
 
  private:
     rank_track_type ranked_probes;
