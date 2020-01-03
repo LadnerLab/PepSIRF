@@ -23,3 +23,11 @@ void probe_rank::rank_probe( const score_type score,
 
     insert_loc.first->second.emplace_back( probe );
 }
+
+
+probe_rank::rank_track_type::iterator
+probe_rank::get_probes_with_rank( const score_type rank )
+{
+    return ranked_probes.find( round_to_factor( rank ) );
+}
+
