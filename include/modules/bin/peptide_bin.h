@@ -13,6 +13,7 @@ class peptide_bin
     using iterator = typename std::unordered_set<std::string>::iterator;
     using const_iterator = typename std::unordered_set<std::string>::const_iterator;
     using value_type = std::string;
+    using size_type = std::unordered_set<std::string>::size_type;
 
     iterator begin();
     iterator end();
@@ -31,6 +32,12 @@ class peptide_bin
      *          peptides, false otherwise.
      **/
     bool operator==( const peptide_bin& other ) const;
+
+    /**
+     * Get the size of the bin.
+     * @returns the number of peptides in the bin
+     **/
+    size_type size() const;
 
     /**
      * Add each peptide in the range [begin,end) to the bin.
@@ -74,6 +81,7 @@ class bin_collection
     using iterator = typename std::vector<peptide_bin>::iterator;
     using const_iterator = typename std::vector<peptide_bin>::const_iterator;
     using value_type = peptide_bin;
+    using size_type = std::vector<peptide_bin>::size_type;
 
     iterator begin();
     iterator end();
@@ -100,6 +108,12 @@ class bin_collection
                     add_bin( *x );
                 }
         }
+
+    /**
+     * Get the size of the bin_collection.
+     * @returns the number of bins in the collection.
+     **/
+    size_type size() const;
 
     /**
      * Construct a bin collection from items in the range
