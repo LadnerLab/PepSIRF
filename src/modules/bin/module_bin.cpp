@@ -21,6 +21,22 @@ void module_bin::run( options *opts )
                                          );
 
     auto peptide_counts = sum_counts( input_data.scores );
+    std::unordered_map<std::string,double> scored_probes;
+
+    for( std::vector<double>::size_type idx = 0;
+         idx < peptide_counts.size();
+         ++idx
+       )
+        {
+            scored_probes.emplace( std::make_pair( input_data.pep_names[ idx ],
+                                                   peptide_counts[ idx ]
+                                                 )
+                                 );
+        }
+
+    auto ranked_probes = rank_probes( scored_probes,
+                                      b_opts->rounding_factor
+                                    );
 
     timer.stop();
 
@@ -45,3 +61,18 @@ module_bin::sum_counts( const labeled_matrix<double,std::string>& data )
     return ret_counts;
 }
 
+probe_rank module_bin::rank_probes( const std::unordered_map<std::string,double>&
+                                    probes_with_scores,
+                                    const std::size_t rounding_factor
+                                  )
+{
+    probe_rank ret_val{ rounding_factor };
+
+    for( const auto& scored_probe : probes_with_scores )
+        {
+            ret_val.rank_probe( scored_probe.second,
+                                scored_probe.first
+                              );
+        }
+    return ret_val;
+}

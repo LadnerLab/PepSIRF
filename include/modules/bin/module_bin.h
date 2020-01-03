@@ -1,10 +1,13 @@
 #ifndef MODULE_BIN_HH_INCLUDED
 #define MODULE_BIN_HH_INCLUDED
+#include <vector>
+#include <unordered_map>
+#include <string>
 
 #include "peptide_scoring.h"
 #include "module.h"
 #include "options_bin.h"
-#include <vector>
+#include "probe_rank.h"
 
 class module_bin : public module
 {
@@ -27,7 +30,18 @@ class module_bin : public module
     std::vector<double>
     sum_counts( const labeled_matrix<double,std::string>& data );
 
-
+    /**
+     * Rank probes based upon their scores and the rounding factor.
+     * @param probes_with_scores An unordered map containing 
+     *        probe : score pairs.
+     * @param rounding_factor the rounding factor to use when calculating 
+     *        the rank of a probe from its score.
+     * @returns A probe_rank containing the ranked probes.
+     **/
+    probe_rank rank_probes( const std::unordered_map<std::string,double>&
+                            probes_with_scores,
+                            const std::size_t rounding_factor
+                          );
 };
 
 #endif // MOUDLE_BIN_HH_INCLUDED
