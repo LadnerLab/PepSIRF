@@ -2,8 +2,9 @@
 
 #include "module_bin.h"
 #include "omp_opt.h"
-#include "peptide_bin.h"
 #include "time_keep.h"
+#include <fstream>
+#include <iomanip>
 
 module_bin::module_bin() = default;
 
@@ -38,16 +39,78 @@ void module_bin::run( options *opts )
                                       b_opts->rounding_factor
                                     );
 
+    auto probe_bins = bin_ranked_probes( ranked_probes,
+                                         b_opts->min_bin_size
+                                       );
+
+    std::ofstream output_file( b_opts->output_bins_fname,
+                               std::ios_base::out
+                             );
+
+    peptide_bin_io::write_bins( output_file, probe_bins );
+
     timer.stop();
 
 
     std::cout << "Took " << timer.get_elapsed() << " seconds.\n";
 }
 
+bin_collection module_bin::bin_ranked_probes( const probe_rank& ranked_probes,
+                                              const std::size_t min_size
+                                            )
+{
+    std::vector<double> keys;
+    keys.reserve( ranked_probes.get_probe_ranks().size() );
+
+    for( const auto& kv_pair : ranked_probes.get_probe_ranks() )
+        {
+            keys.emplace_back( kv_pair.first );
+        }
+
+    std::sort( keys.begin(),
+               keys.end(),
+               []( const double a, const double b ) -> bool
+               { return a > b; }
+             );
+
+    bin_collection bins;
+    auto current_bin = bins.end();
+
+    for( const auto key : keys )
+        {
+            const auto& current_rank_peptides = ranked_probes
+                                                .get_probe_ranks()
+                                                .find( key )->second;
+
+            if( current_bin == bins.end() )
+                {
+                    bins.add_bin( peptide_bin() );
+                    current_bin = bins.end() - 1;
+                }
+
+            current_bin->add_peptides( current_rank_peptides.begin(),
+                                       current_rank_peptides.end()
+                                     );
+
+            if( current_bin->size() 
+                >= min_size
+              )
+                {
+
+                    current_bin = bins.end();
+                }
+            
+        }
+
+    return bins;
+}
+    
+
 std::vector<double>
 module_bin::sum_counts( const labeled_matrix<double,std::string>& data )
 {
     std::vector<double> ret_counts;
+    ret_counts.reserve( data.nrows() );
 
     for( std::size_t row_idx = 0; row_idx < data.nrows(); ++row_idx )
         {

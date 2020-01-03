@@ -8,6 +8,7 @@
 #include "module.h"
 #include "options_bin.h"
 #include "probe_rank.h"
+#include "peptide_bin.h"
 
 class module_bin : public module
 {
@@ -42,6 +43,11 @@ class module_bin : public module
                             probes_with_scores,
                             const std::size_t rounding_factor
                           );
+
+    bin_collection bin_ranked_probes( const probe_rank& ranked_probes,
+                                      const std::size_t min_size
+                                    );
+
 };
 
 #endif // MOUDLE_BIN_HH_INCLUDED
