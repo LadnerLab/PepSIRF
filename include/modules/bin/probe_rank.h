@@ -56,6 +56,10 @@ class probe_rank
     rank_track_type::iterator
         get_probes_with_rank( const score_type rank );
 
+    /**
+     * Get a constant reference to this object's probe ranks.
+     **/
+    const rank_track_type& get_probe_ranks() const;
 
  private:
     rank_track_type ranked_probes;

@@ -31,3 +31,8 @@ probe_rank::get_probes_with_rank( const score_type rank )
     return ranked_probes.find( round_to_factor( rank ) );
 }
 
+const probe_rank::rank_track_type&
+    probe_rank::get_probe_ranks() const
+    {
+        return ranked_probes;
+    }

@@ -41,6 +41,7 @@
 #include "stats.h"
 #include "peptide_bin.h"
 #include "module_bin.h"
+#include "probe_rank.h"
 
 using namespace util;
 
@@ -1890,4 +1891,73 @@ TEST_CASE( "Summing Counts of items in a matrix", "[module_bin]" )
 
     REQUIRE( summed_counts[ 2 ] == 19.5 );
     REQUIRE( summed_counts[ 0 ] == 12 );
+}
+
+TEST_CASE( "Ranking Probes based upon their scores", "[probe_rank]" )
+{
+    std::unordered_map<std::string,double> probe_scores
+    {
+        { "p1", 1.445 },
+        { "p2", 4.655 },
+        { "p3", 1.045 },
+        { "p4", 156.095 }
+    };
+
+    auto rank_probes = [&]( probe_rank& pr ) 
+        {
+            // we want to force an order here 
+            pr.rank_probe( 1.445, "p1" );
+            pr.rank_probe( 4.655, "p2" );
+            pr.rank_probe( 1.045, "p3" );
+            pr.rank_probe( 156.095, "p4" );
+        };
+
+    SECTION( "Rounding to the nearest integer" )
+        {
+            probe_rank int_probe_rank{ 0 };
+            rank_probes( int_probe_rank );
+            decltype( int_probe_rank )::rank_track_type
+                expected_values
+            {
+                { 1.0, { "p1", "p3" } },
+                { 5.0, { "p2" } },
+                { 156.0, { "p4" } },
+            }
+                ;
+            REQUIRE( int_probe_rank.get_probe_ranks() == expected_values );
+        }
+
+    SECTION( "Rounding to the tenth's place" )
+        {
+            probe_rank int_probe_rank{ 1 };
+            rank_probes( int_probe_rank );
+            decltype( int_probe_rank )::rank_track_type
+                expected_values
+            {
+                { 1.0, { "p3" } },
+                { 1.4, { "p1" } },
+                { 4.7, { "p2" } },
+                { 156.09999999999999, { "p4" } }, // hard-coded value, found by inspecting
+                                                  // values in debugger.
+            }
+                ;
+            REQUIRE( int_probe_rank.get_probe_ranks() == expected_values );
+        }
+
+    SECTION( "Rounding to the hundredth's place" )
+        {
+            probe_rank int_probe_rank{ 2 };
+            rank_probes( int_probe_rank );
+            decltype( int_probe_rank )::rank_track_type
+                expected_values
+            {
+                { 1.05, { "p3" } },
+                { 1.45, { "p1" } },
+                { 4.66, { "p2" } },
+                { 156.10, { "p4" } }, 
+            };
+            REQUIRE( int_probe_rank.get_probe_ranks() == expected_values );
+        }
+
+
 }
