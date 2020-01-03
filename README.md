@@ -1,5 +1,4 @@
 # PepSIRF: Peptide-based Serological Immune Response Framework  
-![pepsirf logo](img/logo.jpg)
 
 ### Dependencies
 - cmake version 3.9 or higher.
