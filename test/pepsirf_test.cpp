@@ -40,6 +40,8 @@
 #include "matrix.h"
 #include "stats.h"
 #include "peptide_bin.h"
+#include "module_bin.h"
+#include "probe_rank.h"
 
 using namespace util;
 
@@ -1800,8 +1802,7 @@ TEST_CASE( "Standard deviation", "[stats]" )
     std::vector<double> data{ 10, 12, 23, 23, 16, 23, 21, 16 };
 
     double stdev = stats::stdev( data.begin(), data.end() );
-    double epsilon = 0.005;
-    REQUIRE( ( ( stdev - 4.8989 < epsilon ) && ( stdev != 0 ) ) );
+    REQUIRE( ( stdev && stats::is_close( stdev, 5.237 ) ) );
 }
 
 TEST_CASE( "z-scores", "[stats]" )
@@ -1810,14 +1811,14 @@ TEST_CASE( "z-scores", "[stats]" )
 
     auto verify_vec = [&]( const std::vector<double>& stdev )
         {
-            REQUIRE( stats::is_close( stdev[ 0 ], -1.63299 ) );
-            REQUIRE( stats::is_close( stdev[ 1 ], -1.22474 ) );
-            REQUIRE( stats::is_close( stdev[ 2 ], 1.02062  ) );
-            REQUIRE( stats::is_close( stdev[ 3 ], 1.02062  ) );
-            REQUIRE( stats::is_close( stdev[ 4 ], -0.40824 ) );
-            REQUIRE( stats::is_close( stdev[ 5 ], 1.02062  ) );
-            REQUIRE( stats::is_close( stdev[ 6 ], 0.61237  ) );
-            REQUIRE( stats::is_close( stdev[ 7 ], -0.40824 ) );
+            REQUIRE( stats::is_close( stdev[ 0 ], -1.528 ) );
+            REQUIRE( stats::is_close( stdev[ 1 ], -1.1456 ) );
+            REQUIRE( stats::is_close( stdev[ 2 ], 0.9547  ) );
+            REQUIRE( stats::is_close( stdev[ 3 ], 0.9547  ) );
+            REQUIRE( stats::is_close( stdev[ 4 ], -0.38189 ) );
+            REQUIRE( stats::is_close( stdev[ 5 ], 0.9547  ) );
+            REQUIRE( stats::is_close( stdev[ 6 ], 0.5728  ) );
+            REQUIRE( stats::is_close( stdev[ 7 ], -0.38189 ) );
         };
 
     SECTION( "Input and output are not the same vector" )
@@ -1860,6 +1861,103 @@ TEST_CASE( "Parsing/Writing Bins from stream", "[peptide_bin]" )
     REQUIRE( second_bin->contains( "pep_6" ) );
     REQUIRE( !( second_bin->contains( "pep_9" ) ) );
 
+
+
+}
+
+TEST_CASE( "Summing Counts of items in a matrix", "[module_bin]" )
+{
+    module_bin mod;
+    std::vector<std::string> row_labels{ "row_1", "row_2", "row_3" };
+    std::vector<std::string> col_labels{ "col_1", "col_2", "col_3" };
+    
+    labeled_matrix<double,std::string>
+        matrix{ 3,
+                3,
+                row_labels,
+                col_labels
+              };
+
+    matrix.set_all( 4 );
+
+    auto summed_counts = mod.sum_counts( matrix );
+
+    REQUIRE( summed_counts[ 0 ] == 12 );
+    REQUIRE( summed_counts[ 1 ] == 12 );
+    REQUIRE( summed_counts[ 2 ] == 12 );
+
+    matrix( 2, 2 ) = 11.5;
+    summed_counts = mod.sum_counts( matrix );
+
+    REQUIRE( summed_counts[ 2 ] == 19.5 );
+    REQUIRE( summed_counts[ 0 ] == 12 );
+}
+
+TEST_CASE( "Ranking Probes based upon their scores", "[probe_rank]" )
+{
+    std::unordered_map<std::string,double> probe_scores
+    {
+        { "p1", 1.445 },
+        { "p2", 4.655 },
+        { "p3", 1.045 },
+        { "p4", 156.095 }
+    };
+
+    auto rank_probes = [&]( probe_rank& pr ) 
+        {
+            // we want to force an order here 
+            pr.rank_probe( 1.445, "p1" );
+            pr.rank_probe( 4.655, "p2" );
+            pr.rank_probe( 1.045, "p3" );
+            pr.rank_probe( 156.095, "p4" );
+        };
+
+    SECTION( "Rounding to the nearest integer" )
+        {
+            probe_rank int_probe_rank{ 0 };
+            rank_probes( int_probe_rank );
+            decltype( int_probe_rank )::rank_track_type
+                expected_values
+            {
+                { 1.0, { "p1", "p3" } },
+                { 5.0, { "p2" } },
+                { 156.0, { "p4" } },
+            }
+                ;
+            REQUIRE( int_probe_rank.get_probe_ranks() == expected_values );
+        }
+
+    SECTION( "Rounding to the tenth's place" )
+        {
+            probe_rank int_probe_rank{ 1 };
+            rank_probes( int_probe_rank );
+            decltype( int_probe_rank )::rank_track_type
+                expected_values
+            {
+                { 1.0, { "p3" } },
+                { 1.4, { "p1" } },
+                { 4.7, { "p2" } },
+                { 156.09999999999999, { "p4" } }, // hard-coded value, found by inspecting
+                                                  // values in debugger.
+            }
+                ;
+            REQUIRE( int_probe_rank.get_probe_ranks() == expected_values );
+        }
+
+    SECTION( "Rounding to the hundredth's place" )
+        {
+            probe_rank int_probe_rank{ 2 };
+            rank_probes( int_probe_rank );
+            decltype( int_probe_rank )::rank_track_type
+                expected_values
+            {
+                { 1.05, { "p3" } },
+                { 1.45, { "p1" } },
+                { 4.66, { "p2" } },
+                { 156.10, { "p4" } }, 
+            };
+            REQUIRE( int_probe_rank.get_probe_ranks() == expected_values );
+        }
 
 
 }

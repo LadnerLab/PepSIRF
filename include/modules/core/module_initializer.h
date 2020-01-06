@@ -13,6 +13,7 @@
 #include "options_normalize.h"
 #include "options_subjoin.h"
 #include "options_zscore.h"
+#include "options_bin.h"
 
 // options parsers for each module
 #include "options_parser_deconv.h"
@@ -20,6 +21,7 @@
 #include "options_parser_normalize.h"
 #include "options_parser_subjoin.h"
 #include "options_parser_zscore.h"
+#include "options_parser_bin.h"
 
 // the modules themselves
 #include "module_deconv.h"
@@ -27,6 +29,7 @@
 #include "module_normalize.h"
 #include "module_subjoin.h"
 #include "module_zscore.h"
+#include "module_bin.h"
 
 
 /**

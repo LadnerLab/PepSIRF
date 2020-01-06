@@ -11,6 +11,11 @@ peptide_bin::const_iterator peptide_bin::end() const { return peptide_names.end(
 
 peptide_bin::peptide_bin() = default;
 
+peptide_bin::size_type peptide_bin::size() const
+{
+    return peptide_names.size();
+}
+
 bool peptide_bin::operator==( const peptide_bin& other ) const
 {
     return peptide_names == other.peptide_names;
@@ -43,6 +48,11 @@ bool bin_collection::operator==( const bin_collection& other ) const
 void bin_collection::add_bin( const peptide_bin bin )
 {
     bins.emplace_back( bin );
+}
+
+bin_collection::size_type bin_collection::size() const
+{
+    return bins.size();
 }
 
 // namespace peptide_bin_io
