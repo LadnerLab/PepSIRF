@@ -12,7 +12,6 @@ void module_bin::run( options *opts )
 {
     options_bin *b_opts = (options_bin*) opts;
     time_keep::timer timer;
-    omp_set_num_threads( 4 );
 
     timer.start();
 
@@ -24,6 +23,7 @@ void module_bin::run( options *opts )
     auto peptide_counts = sum_counts( input_data.scores );
     std::unordered_map<std::string,double> scored_probes;
 
+    // associate each probe with its score
     for( std::vector<double>::size_type idx = 0;
          idx < peptide_counts.size();
          ++idx
@@ -51,7 +51,6 @@ void module_bin::run( options *opts )
 
     timer.stop();
 
-
     std::cout << "Took " << timer.get_elapsed() << " seconds.\n";
 }
 
@@ -74,19 +73,15 @@ bin_collection module_bin::bin_ranked_probes( const probe_rank& ranked_probes,
              );
 
     bin_collection bins;
-    auto current_bin = bins.end();
+
+    bins.add_bin( peptide_bin() );
+    auto current_bin = bins.end() - 1;
 
     for( const auto key : keys )
         {
             const auto& current_rank_peptides = ranked_probes
                                                 .get_probe_ranks()
                                                 .find( key )->second;
-
-            if( current_bin == bins.end() )
-                {
-                    bins.add_bin( peptide_bin() );
-                    current_bin = bins.end() - 1;
-                }
 
             current_bin->add_peptides( current_rank_peptides.begin(),
                                        current_rank_peptides.end()
@@ -96,8 +91,8 @@ bin_collection module_bin::bin_ranked_probes( const probe_rank& ranked_probes,
                 >= min_size
               )
                 {
-
-                    current_bin = bins.end();
+                    bins.add_bin( peptide_bin() );
+                    current_bin = bins.end() - 1;
                 }
             
         }
@@ -116,7 +111,7 @@ module_bin::sum_counts( const labeled_matrix<double,std::string>& data )
         {
             double sum = std::accumulate( data.row_begin( row_idx ),
                                           data.row_end( row_idx ),
-                                          0.0
+                                          static_cast<double>( 0.0 )
                                         );
 
             ret_counts.emplace_back( sum );
