@@ -1,11 +1,22 @@
 #include "probe_rank.h"
 #include <cmath>
 
-
 double probe_rank::round_to_factor( const double value ) const
 {
-    if( !rounding_factor ){ return std::ceil( value - 0.5 ); }
+    // round to half even
+    if( value + 0.5 == std::ceil( value ) )
+        {
+            double rounded = std::ceil( value - 0.5 );
 
+            if( !std::fmod( rounded, 2.0 ) )
+                {
+                    return rounded;
+                }
+            return std::floor( value + 0.5 );
+        }
+
+    if( !rounding_factor ){ return std::ceil( value - 0.5 ); }
+    
     const int adjustment = std::pow( 10, rounding_factor );
     return std::floor( value * ( adjustment ) + 0.5 ) / adjustment;
 }
