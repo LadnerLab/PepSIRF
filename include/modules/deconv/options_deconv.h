@@ -100,18 +100,6 @@ class options_deconv : public options
     bool score_filtering;
 
     /**
-     * Bool to determine whether to 
-     * create linkage.
-     **/
-    bool create_linkage;
-
-    /**
-     * Name of the fasta file containing 
-     * protein sequences
-     **/
-    std::string prot_file_fname;
-
-    /**
      * Name of the fasta file containing peptide
      * sequences.
      **/
