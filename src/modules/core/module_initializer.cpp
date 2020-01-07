@@ -61,6 +61,12 @@ void module_initializer::initialize( const std::string& mod_name )
             opt_parser  = new options_parser_bin();
             mod         = new module_bin();
         }
+    else if( !mod_name.compare( "link" ) )
+        {
+            opts        = new options_link();
+            opt_parser  = new options_parser_link();
+            mod         = new module_link();
+        }
     else
         {
             throw std::runtime_error( "Invalid module name entered." );

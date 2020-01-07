@@ -1005,8 +1005,6 @@ TEST_CASE( "Deconv end_to_end", "[module_deconv]" )
     module_deconv mod;
     options_deconv opts;
 
-    opts.create_linkage = false;
-
     opts.linked_fname = std::string( "../test/test_pep_linkages.tsv" );
     opts.output_fname = std::string( "../test/test_deconv_output.tsv" );
     opts.enriched_fname = std::string( "../test/test_enriched_file.tsv" );

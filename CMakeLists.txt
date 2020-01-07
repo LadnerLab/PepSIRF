@@ -20,6 +20,7 @@ include_directories(include/modules/deconv)
 include_directories(include/modules/subjoin)
 include_directories(include/modules/zscore)
 include_directories(include/modules/bin)
+include_directories(include/modules/link)
 include_directories(lib/parallel_hashmap)
 add_compile_options( "-Wall" "-std=c++11" "-Wextra" "-fvisibility=hidden"
                      "-fvisibility-inlines-hidden"
@@ -28,7 +29,11 @@ add_compile_options( "-Wall" "-std=c++11" "-Wextra" "-fvisibility=hidden"
                    )
 
 
-set(PepSIRF_MODULES pepsirf_common modules_demux modules_deconv modules_normalize modules_subjoin modules_zscore modules_bin )                
+set(PepSIRF_MODULES pepsirf_common modules_demux modules_deconv 
+                    modules_normalize modules_subjoin 
+					modules_zscore modules_bin 
+					modules_link
+   )                
 
 if(OpenMP_FOUND)
   message( "OpenMP enabled" )
@@ -102,6 +107,11 @@ add_library( modules_bin STATIC src/modules/bin/module_bin.cpp
 			 src/modules/bin/peptide_bin.cpp
 			 src/modules/bin/probe_rank.cpp
            )
+
+add_library( modules_link STATIC src/modules/link/module_link.cpp
+				src/modules/link/options_link.cpp
+				src/modules/link/options_parser_link.cpp
+		   )
 
 
 option( BUILD_TESTS "Determines whether to build tests." ON )
