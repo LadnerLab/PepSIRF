@@ -21,6 +21,7 @@ include_directories(include/modules/subjoin)
 include_directories(include/modules/zscore)
 include_directories(include/modules/bin)
 include_directories(include/modules/link)
+include_directories(include/modules/s_enrich)
 include_directories(lib/parallel_hashmap)
 add_compile_options( "-Wall" "-std=c++11" "-Wextra" "-fvisibility=hidden"
                      "-fvisibility-inlines-hidden"
@@ -33,6 +34,7 @@ set(PepSIRF_MODULES pepsirf_common modules_demux modules_deconv
                     modules_normalize modules_subjoin 
 					modules_zscore modules_bin 
 					modules_link
+					modules_s_enrich
    )                
 
 if(OpenMP_FOUND)
@@ -111,6 +113,10 @@ add_library( modules_bin STATIC src/modules/bin/module_bin.cpp
 add_library( modules_link STATIC src/modules/link/module_link.cpp
 				src/modules/link/options_link.cpp
 				src/modules/link/options_parser_link.cpp
+		   )
+add_library( modules_s_enrich STATIC src/modules/s_enrich/module_s_enrich.cpp
+				src/modules/s_enrich/options_s_enrich.cpp
+				src/modules/s_enrich/options_parser_s_enrich.cpp
 		   )
 
 
