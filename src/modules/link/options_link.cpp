@@ -2,6 +2,8 @@
 
 #include "options_link.h"
 
+options_link::options_link() = default;
+
 std::string options_link::get_arguments()
 {
     std::ostringstream str_stream;
@@ -11,7 +13,7 @@ std::string options_link::get_arguments()
         { return opt == true ? "true" : "false"; };
 
             str_stream << 
-                          " --protein_file                   " << prot_file_fname <<  "\n" <<
+                          "--protein_file                   " << prot_file_fname <<  "\n" <<
                           " --peptide_file                   " << peptide_file_fname <<  "\n" <<
                           " --tax_id_index                   " << id_index << "\n" <<
                           " --kmer_redundancy_control        " << bool_str( penalize_kmers )  << "\n" <<
