@@ -14,6 +14,7 @@
 #include "options_subjoin.h"
 #include "options_zscore.h"
 #include "options_bin.h"
+#include "options_link.h"
 
 // options parsers for each module
 #include "options_parser_deconv.h"
@@ -22,6 +23,7 @@
 #include "options_parser_subjoin.h"
 #include "options_parser_zscore.h"
 #include "options_parser_bin.h"
+#include "options_parser_link.h"
 
 // the modules themselves
 #include "module_deconv.h"
@@ -30,6 +32,7 @@
 #include "module_subjoin.h"
 #include "module_zscore.h"
 #include "module_bin.h"
+#include "module_link.h"
 
 
 /**
