@@ -78,6 +78,7 @@ void peptide_scoring::parse_peptide_scores( peptide_score_data_sample_major& des
 
     dest.scores.set_row_labels( dest.pep_names );
     dest.scores.set_col_labels( dest.sample_names );
+    dest.scores = dest.scores.transpose();
 
 }
     void peptide_scoring::write_peptide_scores( std::string dest_fname,
@@ -86,6 +87,7 @@ void peptide_scoring::parse_peptide_scores( peptide_score_data_sample_major& des
 {
     std::ofstream out_file( dest_fname, std::ios_base::out );
     char digits[ 30 ];
+    data.scores = data.scores.transpose();
 
     out_file << "Sequence name\t";
 
