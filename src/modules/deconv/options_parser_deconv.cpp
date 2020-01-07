@@ -17,26 +17,21 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
     namespace po = boost::program_options;
     po::variables_map vm;
 
-    po::options_description desc( "PepSIRF: Peptide-based Serological Immune Response Framework species deconvolution module. \n"
-                                  "This module has two different modes: scoring species and creating a linkage file. Each of \n"
-                                  "these modes has its own set of arguments and parameters. The description of each module is \n"
-                                  "followed by the mode for which this command is, in brackets. For example, if the description is \n"
-                                  "followed by [scoring_species], then this argument is for the scoring species mode. Similarly, \n"
-                                  "[create_linkage] is followed by linkage creation arguments. Arguments pertinent to both \n"
-                                  "modes are followed by [scoring_species,create_linkage].\n"
+    po::options_description desc( "PepSIRF: Peptide-based Serological Immune Response "
+                                  "Framework species deconvolution module. \n"
                                 );
     desc.add_options()
         ( "help,h", "Produce help message\n" )
         ( "linked,l", po::value<std::string>( &opts_deconv->linked_fname ),
-          "Name of file containing peptide to species linkages. [scoring_species]\n"
+          "Name of file containing peptide to species linkages. \n"
         )
         ( "threshold,t", po::value<std::size_t>( &opts_deconv->threshold ),
-          "Threshold number of peptides for a species to be considered. [scoring_species]\n"
+          "Threshold number of peptides for a species to be considered. \n"
         )
         ( "output,o", po::value<std::string>( &opts_deconv->output_fname )->default_value( "deconv_output.tsv" ),
           "Name of the file to write output to. Output will be in the form of "
           "a tab-delimited file with a header. Each entry will be of the form:\n"
-          "species_id\\tcount\n [create_linkage,scoring_species]\n"
+          "species_id\\tcount\n "
         )
         ( "scores_per_round", po::value<std::string>( &opts_deconv->orig_scores_dname )->default_value( "" )
           ->notifier( [&]( const std::string& val )
@@ -67,11 +62,11 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "The original scores will be written to '$dir/round_0'. A new file will be written to the \n"
           "directory after each subsequent round. If this flag is included \n"
           "and the specified directory exists, the program will exit with an error. "
-          "[scoring_species\n"
+          "\n"
         )
         ( "single_threaded", po::bool_switch( &opts_deconv->single_threaded )->default_value( false ),
           "By default this module uses two threads. Include this option with no arguments if you only want "
-          " one thread to be used. [create_linkage,scoring_species]\n"
+          " one thread to be used. \n"
         )
         ( "fractional_scoring", po::bool_switch( &opts_deconv->fractional_scoring )->default_value( false ),
           "Use fractional instead of integer scoring. For integer scoring the score of each species is "
@@ -80,12 +75,12 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "a peptide shares a 7mer with. In this method of scoring "
           "peptides with fewer species are worth more. Note that if neither this flag nor --summation_scoring "
           "are included, integer scoring will be used. In integer scoring each species is scored by the "
-          "number of peptides it shares a kmer with. [scoring_species]\n" 
+          "number of peptides it shares a kmer with. \n" 
         )
         ( "summation_scoring", po::bool_switch( &opts_deconv->summation_scoring )->default_value( false ),
           "Include this flag (without any arguments) if you want summation scoring to be used instead of "
           "fractional or integer scoring. For summation scoring, the --linked file passed must be of the "
-          "form created by --create_linkage. This means a file of tab-delimited values, one per line. \n"
+          "form created by the link module. This means a file of tab-delimited values, one per line. \n"
           "Each line is of the form peptide_name TAB id:score,id:score, and so on. Undefined behavior "
           "will result if input is not in this format. For summation scoring, each species is scored "
           "based on the number of kmers it shares with each peptide with which it shares a kmer.\n "
@@ -94,12 +89,12 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "Both species '123' and '543' will receive a score of 4 and 8 respectively."
           "Note that if neither this flag nor --summation_scoring "
           "are included, integer scoring will be used. In integer scoring each species is scored by the "
-          "number of peptides it shares a kmer with. [scoring_species]\n" 
+          "number of peptides it shares a kmer with. \n" 
         )
         ( "enriched,e", po::value<std::string>( &opts_deconv->enriched_fname ),
           "File containing the names of enriched peptides, one per line. "
           "Each file in this file should have a corresponding entry in the "
-          "file provided by the --linked option. [scoring_species]\n"
+          "file provided by the --linked option. \n"
         )
         ( "score_filtering", po::bool_switch( &opts_deconv->score_filtering )->default_value( false ),
           "Include this flag if you want filtering to be done by the score of each species. Note that score is "
@@ -107,7 +102,7 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "that any species whose score falls below --threshold "
           "will be removed from consideration. Note that for integer scoring, both score filtering and count filtering "
           "are the same. If this flag is not included, then any species whose count falls below --threshold will "
-          "be removed from consideration. Score filtering is best suited for the summation scoring algorithm. [scoring_species]\n"
+          "be removed from consideration. Score filtering is best suited for the summation scoring algorithm. \n"
         )
         ( "peptide_assignment_map", po::value<std::string>( &opts_deconv->species_peptides_out ),
           "If specified, a map detailing which peptides were assigned to which species will be "
@@ -116,7 +111,7 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "The third column will be a list of the species the peptide originally shared "
           "a kmer with. \n"
           "Note that the second column will only contain multiple values in the event of "
-          "a tie. [scoring_species]\n"
+          "a tie. \n"
         )
         ( "score_tie_threshold", po::value<double>( &opts_deconv->score_tie_threshold )->default_value( 0.00 )
           ->notifier( [&]( const double val ) {
@@ -140,13 +135,13 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "then this flag must be provided with value >= 4/5 = 0.8 for the species to be considered tied. "
           "Note that any values provided to this flag that are in the set { x: x >= 1 } - Z, where Z is the set of "
           "integers, will result in an error. So 4.45 is not a valid value, but both 4 and 0.45 are. "
-          "[scoring_species] \n"
+          " \n"
         )
         ( "id_name_map", po::value<std::string>( &opts_deconv->id_name_map_fname )->default_value( "" ),
           "File containing mappings from taxonomic id to name. This file should be formatted like the "
           "file 'rankedlineage.dmp' from NCBI. It is recommended to either use this file or a subset of this file "
           "that at least contains the species ids of the designed peptides. If included, the output will contain "
-          "a column denoting the name of the species as well as the id. [scoring_species]\n"
+          "a column denoting the name of the species as well as the id. \n"
         )
         ( "score_overlap_threshold", po::value<double>( &opts_deconv->score_overlap_threshold )->default_value( 1.0 )
           ->notifier( [&]( const double val ) {
@@ -169,47 +164,9 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "of its peptides with species 1. To use integer tie evaluation, where species must share an integer number of "
           "peptides, not a ratio of their total peptides, provide this argument with a value in the interval [1, inf). "
           "These two will only be reported together if score_overlap_threshold "
-          "<= 0.1. [scoring_species] \n" 
+          "<= 0.1.  \n" 
         )
-        ( "create_linkage", po::bool_switch( &opts_deconv->create_linkage )->default_value( false ),
-          "Boolean switch to create the linkage file that is used as input for "
-          "the species deconvolution process. If this option is included "
-          "then 'protein_file' and 'peptide_file' must also be included. [create_linkage]\n"
-        )
-        ( "protein_file", po::value<std::string>( &opts_deconv->prot_file_fname ),
-          "Name of fasta file containing protein sequences from which a design was "
-          "created. [create_linkage]\n"
-        )
-        ( "peptide_file", po::value<std::string>( &opts_deconv->peptide_file_fname ),
-          "Name of fasta file containing aa peptides that have been designed as part "
-          "of a library. [create_linkage]\n"
-        )
-        ( "tax_id_index", po::value<std::size_t>( &opts_deconv->id_index )->default_value( 1 )
-          ->notifier( [&]( const std::size_t val ) {
-                  if( val > 3 )
-                      {
-                          throw boost::program_options::invalid_option_value( "tax_id_index must be one of either 0, "
-                                                                             "1, 2, or 3."
-                                                                           );
-
-                      }
-              } ),
-          "The index (0-based, valid values include 0-3) of the tax id to use for "
-          "linking peptides and species. For example, if this argument is passed with the value 1, \n"
-          "the species ID will be used. (2 for genus, 3 for family. 0 can vary depending upon the \n"
-          "method used for assigning the 0'th ID. [create_linkage]\n"
-        )
-        ( "kmer_redundancy_control", po::bool_switch( &opts_deconv->penalize_kmers )->default_value( false ),
-          "Control for kmer redundancy when creating the peptide linkage map. Instead of a peptide receiving "
-          "one point for each kmer it receives for a species, it recieves 1 / ( the number of times the kmer "
-          "appears in the original design ) points. [create_linkage] \n"
-        )
-        ( "kmer_size,k", po::value<std::size_t>( &opts_deconv->k ), "Kmer size to use when creating "
-          "the linkage map. Entries in the linkage file will contain peptides and the species ids of "
-          "species that share a kmer with this peptide. For example, if k is 7 and there exists a line "
-          "in the linkage file of the form: \n 'peptide_1 TAB 455:12,423:10'\n then peptide_1 "
-          "shares 12 7-mers with the species with id '455', and 10 7-mers with the species that has id 423. [create_linkage]\n"
-        );
+        ;
 
     po::store( po::command_line_parser( argc, *argv ).options( desc ).run(), vm);
 
