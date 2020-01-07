@@ -25,6 +25,8 @@ void module_subjoin::run( options *opts )
     parsed_score_data.resize( s_opts->matrix_name_pairs.size() );
     std::uint32_t idx = 0;
 
+    bool use_peptide_names = !s_opts->use_sample_names;
+
     time_keep::timer time;
 
     time.start();
@@ -52,7 +54,7 @@ void module_subjoin::run( options *opts )
             std::vector<std::string> peptide_name_list;
             parse_namelist( peptide_name_list, names_list );
         // filter the data, assign to the scores and peptide name list
-            if( s_opts->use_sample_names )
+            if( use_peptide_names )
                 {
                     my_data.scores = my_data.scores.transpose();
                 }
@@ -78,13 +80,13 @@ void module_subjoin::run( options *opts )
 
         }
 
-    if( s_opts->use_sample_names )
+    if( use_peptide_names )
         {
-            output << joined_data.scores.transpose();
+            output << joined_data.scores;
         }
     else
         {
-            output << joined_data.scores;
+            output << joined_data.scores.transpose();
         }
 
     time.stop();
