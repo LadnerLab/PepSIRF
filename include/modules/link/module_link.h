@@ -2,6 +2,13 @@
 #define MODULE_LINK_HH_INCLUDED 
 #include "module.h"
 #include "options_link.h"
+#include "scored_entity.h"
+#include "sequence.h"
+
+#include <vector>
+#include <unordered_set>
+#include <unordered_map>
+
 
 class module_link : public module
 {
@@ -14,6 +21,104 @@ class module_link : public module
      **/
     void run( options *opts );
 
+    /**
+     * Create a map linking kmers to the species that they 
+     * appear in. Each kmer in the sequences in 'sequences' is 
+     * given a count for each species that the kmer appears in.
+     * @note After completion of this function 'map' will contain 
+     *       mappings of the form: 'kmer' -> 'scored_entity, where 
+     *       the scored_entity represents the score of a species.
+     * @param scores_map The map that will store mappings of kmer -> scored_entity.
+     * @param sequences The sequences to analyze.
+     * @param id_index The index (0-based) of id to choose.
+     * @param k The kmer size to use when creating the map. 
+     *        A species will be linked to a peptide if a peptide shares a
+     *        kmer with that species.
+     **/
+    void create_prot_map( std::unordered_map<std::string,
+                          std::unordered_set<scored_entity<std::string,double>>>&
+                          scores_map,
+                          std::vector<sequence>& sequences,
+                          std::size_t k,
+                          std::size_t id_index
+                        );
+
+    /**
+     * Create a map that maps peptides to the 
+     * number of times that peptide shares a kmer with
+     * a certain species.
+     * @param kmer_sp_map Map populated by module_deconv::create_prot_map,
+     *        mapping kmers to species identifiers.
+     * @param peptide_sp_vec vector to which output will be 
+     *        written.
+     * @param peptides Vector containing peptides to 
+     *        analyze.
+     * @param k The kmer size to use. Each peptide in the 
+     *        peptides vector will be broken down into its 
+     *        component kmers.
+     **/
+    void create_pep_map( std::unordered_map<std::string,
+                         std::unordered_set<scored_entity<std::string,double>>>&
+                         kmer_sp_map,
+                         std::vector<std::tuple<std::string,
+                         std::unordered_set<scored_entity<std::string,double>>>>&
+                         peptide_sp_vec,
+                         std::vector<sequence>&
+                         peptides,
+                         std::size_t k
+                       );
+    /**
+     * Create a map that scores peptides based 
+     * on the scores of its component kmers. Here, the score of a kmer is 
+     * the 1 / ( the number of times the kmer appears in the 'peptides' vector )
+     * @param kmer_sp_map Map populated by module_deconv::create_prot_map,
+     *        mapping kmers to species identifiers.
+     * @param peptide_sp_vec vector to which output will be 
+     *        written.
+     * @param peptides Vector containing peptides to 
+     *        analyze.
+     * @param k The kmer size to use. Each peptide in the 
+     *        peptides vector will be broken down into its 
+     *        component kmers.
+     **/
+    void create_pep_map_with_kmer_penalty( std::unordered_map<std::string,
+                                           std::unordered_set<scored_entity<std::string,double>>>&
+                                           kmer_sp_map,
+                                           std::vector<std::tuple<std::string,
+                                           std::unordered_set<scored_entity<std::string,double>>>>&
+                                           peptide_sp_vec,
+                                           std::vector<sequence>&
+                                           peptides,
+                                           std::size_t k
+                                         );
+
+    /**
+     * Get the species ID from a name that matches
+     * the pattern 'OXX=([0-9]+),([0-9]*),([0-9]*),([0-9])',
+     * i.e. 'OXX=' followed by some ids.
+     * @param name The name from which to grab the id. 
+     * @param id_index The index (0-based) of id to choose.
+     * @note The species id is the second group of the 
+     *       above regex.
+     **/
+    std::string get_id( std::string name, std::size_t id_index );
+
+    /**
+     * Write outputs for the linkage file generation. 
+     * @param fname The name of the file to write output to.
+     * @param peptide_sp_vec vector containing the information to write 
+     *        file output to. 
+     * @note Writes a header to the file.
+     * @note Each peptide will get a line in the file. Each line follows
+     *       this format: 
+     *       pep_name\tid:score,id:score,id:score
+     **/
+    void write_outputs( std::string fname,
+                        std::vector<std::tuple<std::string,
+                        std::unordered_set<scored_entity<std::string,double>>>>&
+                        peptide_sp_vec
+                      );
 };
+
 
 #endif // MODULE_LINK_HH_INCLUDED
