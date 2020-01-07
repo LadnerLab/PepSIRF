@@ -22,8 +22,6 @@ void module_zscore::run( options *opts )
     std::ifstream bins_file( z_opts->in_bins_fname, std::ios_base::in );
     bin_collection peptide_bins = peptide_bin_io::parse_bins( bins_file );
 
-    // transpose the input matrix
-    input.scores = input.scores.transpose();
     auto& zscore_matrix = input.scores;
     omp_set_num_threads( z_opts->num_threads );
     std::uint32_t sample_idx = 0;
@@ -42,10 +40,6 @@ void module_zscore::run( options *opts )
                                sample_idx
                              );
         }
-
-    // transpose the output matrix
-    input.scores = input.scores.transpose();
-
 
     // write output
     peptide_scoring::write_peptide_scores( z_opts->out_fname, input );
