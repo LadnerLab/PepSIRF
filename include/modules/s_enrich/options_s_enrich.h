@@ -11,18 +11,49 @@ class options_s_enrich : public options
 
     std::string get_arguments();
 
+    /**
+     * Name of the directory to write 
+     * output files to.
+     **/
     std::string out_dirname;
 
+    /**
+     * Name of the score matrix containing zscores 
+     * for peptides in samples
+     **/
     std::string in_zscore_fname;
 
+    /**
+     * Name of the file containing normalized 
+     * scores for peptides.
+     **/
     std::string in_norm_score_fname;
 
+    /**
+     * Name of the file containing raw count data.
+     **/
     std::string in_raw_count_fname;
 
+    /**
+     * The minimum zscore a peptide must 
+     * have in a sample to be considered 
+     * enriched
+     **/
     double min_zscore;
-    double min_norm_score;
-    double min_raw_count;
 
+    /**
+     * The minimum normalized score a peptide must 
+     * have in a sample to be considered 
+     * enriched
+     **/
+    double min_norm_score;
+
+    /**
+     * The minimum raw count a peptide must 
+     * have in a sample to be considered 
+     * enriched
+     **/
+    double min_raw_count;
 };
 
 
