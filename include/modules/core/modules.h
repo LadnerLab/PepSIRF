@@ -14,7 +14,7 @@ namespace modules
      **/
     const std::unordered_set<std::string> module_names = { "demux", "deconv",
                                                            "norm", "subjoin",
-                                                           "zscore",
+                                                           "zscore", "link",
                                                            "bin"
                                                          };
 

@@ -3,6 +3,8 @@
 
 #include <boost/program_options.hpp>
 
+options_parser_link::options_parser_link() = default;
+
 bool options_parser_link::parse( int argc, char ***argv, options *opts )
 {
     options_link *opts_link = (options_link*) opts;
