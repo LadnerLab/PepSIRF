@@ -42,6 +42,7 @@
 #include "peptide_bin.h"
 #include "module_bin.h"
 #include "probe_rank.h"
+#include "module_s_enrich.h"
 
 using namespace util;
 
@@ -1959,3 +1960,38 @@ TEST_CASE( "Ranking Probes based upon their scores", "[probe_rank]" )
 
 
 }
+
+TEST_CASE( "Unary Predicate Reduction", "[module_s_enrich]" )
+{
+    auto positive = []( const int x ) -> bool { return x > 0; };
+    auto gt_10 = []( const int x ) -> bool { return x > 10; };
+    auto lt_100 = []( const int x ) -> bool { return x < 100; };
+    auto odd = []( const int x ) -> bool { return x % 2; };
+
+    // assert 5 is positive
+    REQUIRE( value_constrained_by( 5, positive ) );
+
+    // -5 is not positive
+    REQUIRE( !value_constrained_by( -5, positive ) );
+
+    // 51 is positive, greater than 10, less than 100,
+    // and odd
+    REQUIRE( value_constrained_by( 51,
+                                   positive,
+                                   gt_10,
+                                   lt_100,
+                                   odd
+                                  )
+             );
+
+    // 51 is not odd
+    REQUIRE( !value_constrained_by( 50,
+                                    positive,
+                                    gt_10,
+                                    lt_100,
+                                    odd
+                                  )
+             );
+
+}
+
