@@ -1995,3 +1995,26 @@ TEST_CASE( "Unary Predicate Reduction", "[module_s_enrich]" )
 
 }
 
+TEST_CASE( "Valid For", "[module_s_enrich]" )
+{
+    std::vector<int> vals{ 1, 2, 3, 4, 5 };
+
+    auto lt_100 = []( const int x ) -> bool { return x < 100; };
+    auto positive = []( const int x ) -> bool { return x > 0; };
+
+    auto dest = valid_for( vals.begin(), vals.end(), vals.begin(), lt_100 );
+
+    REQUIRE( dest == vals.end() );
+
+    std::vector<int> vals2{ 1, -1, 3, 4, 5 };
+    std::vector<int> vals_result{ 0, 0, 0, 0, 0 };
+    dest = valid_for( vals2.begin(),
+                      vals2.end(),
+                      vals_result.begin(),
+                      positive
+                    );
+
+    // the expression will have been false for one value
+    REQUIRE( std::distance( vals_result.begin(), dest ) == 4 );
+    REQUIRE( std::find( vals_result.begin(), dest, -1 ) == dest );
+}

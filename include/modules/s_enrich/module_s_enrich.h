@@ -37,6 +37,52 @@ bool value_constrained_by( const Val& arg,
     return funct( arg ) && value_constrained_by( arg, preds... );
 }
 
+/**
+ * Capture the values in the range [begin, end) for which 
+ * pred returns true.
+ * @tparam InputIterator The type of the iterator used as input
+ * @tparam OutputIterator the type of the iterator used as output
+ * @tparam Pred the predicate used to perform the test for each value
+ * @pre Pred has a signature 
+ *      equivalent to pred( InputIterator::value_type )->bool
+ * @param begin The first item in the range [begin,end)
+ * @param end The last item in the range [begin,end)
+ * @param dest The location to store the values for which pred is true,
+ * @note Behavoir undefined if dest is not large enoughto hold all values for which 
+ *       pred is true.
+ * @returns OutputIterator pointing after the last item that was evaluated 
+ *          as true 
+ **/
+template<typename InputIterator,
+         typename OutputIterator,
+         typename Pred
+         >
+OutputIterator valid_for( const InputIterator begin,
+                          const InputIterator end,
+                          OutputIterator dest,
+                          const Pred pred
+                        )
+{
+    using iter_val = typename InputIterator::value_type;
+    using pred_ret_type = decltype( pred( std::declval<iter_val>() ) );
+
+    static_assert( std::is_same<pred_ret_type,
+                                bool>::value,
+                   "Pred must be a unary predicate that returns bool."
+                 );
+
+    for( auto curr = begin; curr != end; ++curr )
+        {
+            if( pred( *curr ) )
+                {
+                    *dest = *curr;
+                    ++dest;
+                }
+            
+        }
+    return dest;
+}
+
 class module_s_enrich : public module
 {
 public:
