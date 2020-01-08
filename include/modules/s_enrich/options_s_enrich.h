@@ -18,6 +18,11 @@ class options_s_enrich : public options
     std::string out_dirname;
 
     /**
+     * Suffix to append to output files.
+     **/
+    std::string out_suffix;
+
+    /**
      * Name of the score matrix containing zscores 
      * for peptides in samples
      **/
