@@ -2007,14 +2007,14 @@ TEST_CASE( "Valid For", "[module_s_enrich]" )
     REQUIRE( dest == vals.end() );
 
     std::vector<int> vals2{ 1, -1, 3, 4, 5 };
-    std::vector<int> vals_result{ 0, 0, 0, 0, 0 };
-    dest = valid_for( vals2.begin(),
-                      vals2.end(),
-                      vals_result.begin(),
-                      positive
-                    );
+    std::vector<int> vals_result{};
+     valid_for( vals2.begin(),
+                vals2.end(),
+                std::back_inserter( vals_result ),
+                positive
+              );
 
     // the expression will have been false for one value
-    REQUIRE( std::distance( vals_result.begin(), dest ) == 4 );
-    REQUIRE( std::find( vals_result.begin(), dest, -1 ) == dest );
+    REQUIRE( std::distance( vals_result.begin(), vals_result.end() ) == 4 );
+    REQUIRE( std::find( vals_result.begin(), vals_result.end(), -1 ) == vals_result.end() );
 }
