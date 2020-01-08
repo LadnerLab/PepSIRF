@@ -4,6 +4,26 @@
 #include "options_subjoin.h"
 
 
+namespace std
+{
+    // template specialization of std::hash
+    // for evaluation_strategy::duplicate_resolution_strategy
+
+    using strategy = evaluation_strategy::duplicate_resolution_strategy;
+
+    template<>
+    struct hash<strategy>
+    {
+        std::size_t operator()( const strategy strat ) const
+        {
+            return static_cast<std::size_t>( strat );
+        }
+    };
+
+}; // namespace std 
+
+
+
 namespace evaluation_strategy
 {
     duplicate_resolution_strategy from_string( const std::string& str )
