@@ -75,6 +75,19 @@ bool options_parser_s_enrich
           "The sum of each probe's raw count in a sample must be at least this "
           "value in order for the sample to be considered.\n"
         )
+        ( "outfile_suffix",
+          po::value( &opts_s_enrich->out_suffix )
+          ->default_value( "" ),
+          "Suffix to add to the names of the samples "
+          "written to output. For example, '_enriched.txt' can be used. "
+          "By default, no suffix is used.\n"
+        ) 
+        ( "output,o", po::value( &opts_s_enrich->out_dirname )
+          ->default_value( "single" ),
+          "Name of the directory to write output files to. "
+          "Each sample with at least one enriched peptide will "
+          "receive a file in the output directory.\n"
+        )
         ;
 
     po::store( po::command_line_parser( argc, *argv ).options( desc ).run(), vm);
