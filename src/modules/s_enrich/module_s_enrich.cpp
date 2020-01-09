@@ -44,6 +44,34 @@ void module_s_enrich::run( options *opts )
                       << "colliding filenames will be overwritten!\n";
         }
 
+    using sample_name_set = std::unordered_set<std::string>;
+    sample_name_set zscore_sample_names{ zscores.sample_names.begin(),
+                                         zscores.sample_names.end()
+                                        };
+
+    sample_name_set norm_score_sample_names{ norm_scores.sample_names.begin(),
+                                             norm_scores.sample_names.end()
+                                           };
+
+    sample_name_set raw_score_sample_names{ raw_scores.sample_names.begin(),
+                                            raw_scores.sample_names.end()
+                                          };
+
+    // ensure zscore_sample_names and norm_score_sample_names are
+    // equal. If included, raw_count_sample_names must also equal
+    // zscore equal names, otherwise we do not care.
+    if( zscore_sample_names != norm_score_sample_names
+        && ( !raw_counts_included
+             || ( zscore_sample_names == raw_score_sample_names
+                )
+           )
+      )
+        {
+            throw std::runtime_error( "The samplenames provided in each input file are "
+                                      "not the same"
+                                    );
+        }
+
     
     timer.stop();
     std::cout << "Took " << timer.get_elapsed() << " seconds.\n";
