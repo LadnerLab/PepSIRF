@@ -25,6 +25,41 @@ void module_s_enrich::run( options *opts )
     
     std::cout << "Took " << timer.get_elapsed() << " seconds.\n";
 }
+
+std::vector<peptide_score<std::string>>
+module_s_enrich::get_enrichment_candidates( const peptide_score_data_sample_major *zscore_data,
+                                            const peptide_score_data_sample_major *norm_score_data,
+                                            const peptide_score_data_sample_major *raw_score_data,
+                                            const std::size_t sample_idx
+                                          )
+{
+    std::vector<peptide_score<std::string>> ret_val;
+    std::size_t pep_idx = 0;
+
+    for( pep_idx = 0; pep_idx < zscore_data->pep_names.size(); ++pep_idx )
+        {
+            std::string pep_name = zscore_data->pep_names[ pep_idx ];
+
+            double pep_zscore = zscore_data->scores( sample_idx, pep_idx );
+            double pep_norm_score = norm_score_data->scores( sample_idx, pep_idx );
+            double pep_raw_score = 0;
+
+            if( raw_score_data != nullptr )
+                {
+                    pep_raw_score = raw_score_data->scores( sample_idx, pep_idx );
+                }
+
+            ret_val.emplace_back( peptide_score<std::string>( pep_name,
+                                                              pep_zscore,
+                                                              pep_norm_score,
+                                                              pep_raw_score
+                                                            )
+                                );
+        }
+
+    return ret_val;
+}
+
 void module_s_enrich::write_probe_names( std::ostream &stream,
                                          const std::vector<peptide_score<std::string>>& probes
                                        )
