@@ -81,9 +81,15 @@ bin_collection peptide_bin_io::parse_bins( std::istream& bin_source )
 
 void peptide_bin_io::write_bins( std::ostream &dest, const bin_collection &bins )
 {
-    for( const auto& bin : bins )
+    for( auto bin = bins.begin();
+         bin != bins.end();
+         ++bin
+       )
         {
-            dest << boost::algorithm::join( bin, "\t" );
-            dest << "\n";
+            dest << boost::algorithm::join( *bin, "\t" );
+            if( ( bin + 1 ) != bins.end() )
+                {
+                    dest << "\n";
+                }
         }
 }
