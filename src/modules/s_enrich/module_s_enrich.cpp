@@ -72,6 +72,32 @@ void module_s_enrich::run( options *opts )
                                     );
         }
 
+    auto zscore_enriched = [=]( const peptide_score<std::string> val ) -> bool
+        {
+            return val.zscore >= e_opts->min_zscore;
+        };
+
+    auto norm_score_enriched = [=]( const peptide_score<std::string> val ) -> bool
+        {
+            return val.norm_score >= e_opts->min_norm_score;
+        };
+
+    auto enriched = [=]( const peptide_score<std::string> val ) -> bool
+    {
+        return value_constrained_by( val,
+                                     zscore_enriched,
+                                     norm_score_enriched
+                                   );
+    };
+
+
+    if( zscore_sample_names != norm_score_sample_names )
+        {
+            throw std::runtime_error( "The specified score "
+                                       "files must contain the same samples"
+                                    );
+        }
+    
     
     timer.stop();
     std::cout << "Took " << timer.get_elapsed() << " seconds.\n";
