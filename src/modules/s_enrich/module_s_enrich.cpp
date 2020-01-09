@@ -16,13 +16,36 @@ void module_s_enrich::run( options *opts )
 
     peptide_score_data_sample_major zscores;
     peptide_score_data_sample_major norm_scores;
+    peptide_score_data_sample_major raw_scores;
+
+    peptide_score_data_sample_major *zscores_ptr = &zscores;
+    peptide_score_data_sample_major *norm_scores_ptr = &zscores;
+    peptide_score_data_sample_major *raw_scores_ptr = nullptr;
 
     peptide_scoring::parse_peptide_scores( zscores, e_opts->in_zscore_fname );
-    peptide_scoring::parse_peptide_scores( zscores, e_opts->in_norm_score_fname );
+    peptide_scoring::parse_peptide_scores( norm_scores, e_opts->in_norm_score_fname );
 
-    timer.stop();
+    bool raw_counts_included = !e_opts->in_raw_count_fname.empty();
+
+    if( raw_counts_included )
+        {
+            peptide_scoring::parse_peptide_scores( raw_scores,
+                                                   e_opts->in_raw_count_fname
+                                                 );
+            raw_scores_ptr = &raw_scores;
+        }
+
+    auto output_path = fs_tools::path( e_opts->out_dirname );
+    bool dir_exists = !fs_tools::create_directories( output_path );
+
+    if( dir_exists )
+        {
+            std::cout << "WARNING: '" << e_opts->out_dirname << "' Exists, any files with " 
+                      << "colliding filenames will be overwritten!\n";
+        }
 
     
+    timer.stop();
     std::cout << "Took " << timer.get_elapsed() << " seconds.\n";
 }
 
