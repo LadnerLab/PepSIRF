@@ -2,6 +2,10 @@
 #define MODULE_S_ENRICH_HH_INCLUDED
 #include "module.h"
 #include "options_s_enrich.h"
+#include "peptide_score.h"
+#include "peptide_scoring.h"
+#include <vector>
+#include <fstream>
 
 /**
  * Base case for value_constrained_by
@@ -126,6 +130,17 @@ class module_s_enrich : public module
 public:
 
     void run( options *opts );
+
+    /**
+     * Write the names of probes to an output stream, one per line..
+     * @param stream The stream to write probe names to
+     * @param probes A vector of peptide_scores to whose names
+     *        should be written to the stream.
+     **/
+    void write_probe_names( std::ostream &stream,
+                            const std::vector<peptide_score<std::string>>& probes
+                          );
+
 
 };
 
