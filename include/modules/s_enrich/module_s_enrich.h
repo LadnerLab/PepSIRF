@@ -64,7 +64,44 @@ OutputIterator valid_for( const InputIterator begin,
                         )
 {
     using iter_val = typename InputIterator::value_type;
-    using pred_ret_type = decltype( pred( std::declval<iter_val>() ) );
+    auto get = []( const iter_val& val ) -> const iter_val& { return val; };
+    return valid_for( begin, end, dest, pred, get );
+}
+
+
+/**
+ * Capture the values in the range [begin, end) for which 
+ * pred returns true, passing the return value of get to pred.
+ * @tparam InputIterator The type of the iterator used as input
+ * @tparam OutputIterator the type of the iterator used as output
+ * @tparam Pred the predicate used to perform the test for each value
+ * @tparam Get A function that taks a value of type InputIterator::value_type
+ *         and returns a member of a type for which pred is defined.
+ * @pre Pred has a signature 
+ *      equivalent to pred( InputIterator::value_type )->bool
+ * @param begin The first item in the range [begin,end)
+ * @param end The last item in the range [begin,end)
+ * @param dest The location to store the values for which pred is true,
+ * @note Behavoir undefined if dest is not large enoughto hold all values for which 
+ *       pred is true.
+ * @returns OutputIterator pointing after the last item that was evaluated 
+ *          as true 
+ **/
+template<typename InputIterator,
+         typename OutputIterator,
+         typename Pred,
+         typename Get
+         >
+OutputIterator valid_for( const InputIterator begin,
+                          const InputIterator end,
+                          OutputIterator dest,
+                          const Pred pred,
+                          Get get
+                        )
+{
+    using iter_val = typename InputIterator::value_type;
+    using get_ret_type = decltype( get( std::declval<iter_val>() ) );
+    using pred_ret_type = decltype( pred( std::declval<get_ret_type>() ) );
 
     static_assert( std::is_same<pred_ret_type,
                                 bool>::value,
@@ -73,7 +110,7 @@ OutputIterator valid_for( const InputIterator begin,
 
     for( auto curr = begin; curr != end; ++curr )
         {
-            if( pred( *curr ) )
+            if( pred( get( *curr ) ) )
                 {
                     *dest = *curr;
                     ++dest;
@@ -82,6 +119,7 @@ OutputIterator valid_for( const InputIterator begin,
         }
     return dest;
 }
+
 
 class module_s_enrich : public module
 {

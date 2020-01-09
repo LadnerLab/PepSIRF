@@ -2001,20 +2001,59 @@ TEST_CASE( "Valid For", "[module_s_enrich]" )
 
     auto lt_100 = []( const int x ) -> bool { return x < 100; };
     auto positive = []( const int x ) -> bool { return x > 0; };
+    auto even = []( const int x ) -> bool { return x % 2 == 0; };
 
-    auto dest = valid_for( vals.begin(), vals.end(), vals.begin(), lt_100 );
+    SECTION( "Default function, no use of special 'get' function" )
 
-    REQUIRE( dest == vals.end() );
+        {
+            auto dest = valid_for( vals.begin(),
+                                   vals.end(),
+                                   vals.begin(),
+                                   lt_100
+                                 );
 
-    std::vector<int> vals2{ 1, -1, 3, 4, 5 };
-    std::vector<int> vals_result{};
-     valid_for( vals2.begin(),
-                vals2.end(),
-                std::back_inserter( vals_result ),
-                positive
-              );
+            REQUIRE( dest == vals.end() );
 
-    // the expression will have been false for one value
-    REQUIRE( std::distance( vals_result.begin(), vals_result.end() ) == 4 );
-    REQUIRE( std::find( vals_result.begin(), vals_result.end(), -1 ) == vals_result.end() );
+            std::vector<int> vals2{ 1, -1, 3, 4, 5 };
+            std::vector<int> vals_result{};
+            valid_for( vals2.begin(),
+                       vals2.end(),
+                       std::back_inserter( vals_result ),
+                       positive
+                       );
+
+            // the expression will have been false for one value
+            REQUIRE( std::distance( vals_result.begin(), vals_result.end() ) == 4 );
+            REQUIRE( std::find( vals_result.begin(), vals_result.end(), -1 ) == vals_result.end() );
+        }
+
+    SECTION( "Use of custom get function" )
+        {
+            using pair_t = std::pair<int,std::string>;
+            std::vector<pair_t>
+                values{
+                        { 5, "str1" },
+                        { 6, "str2" },
+                        { 9, "str3" },
+                        { 1, "str4" },
+                       };
+            auto get_first = []( const pair_t& val )
+                -> double
+                {
+                    return val.first;
+                };
+
+            std::vector<pair_t> result;
+            std::vector<pair_t> expected{ { 6, "str2" } };
+
+            valid_for( values.begin(),
+                       values.end(),
+                       std::back_inserter( result ),
+                       even, 
+                       get_first
+                     );
+
+            REQUIRE( result.size() == 1 );
+            REQUIRE( result == expected );
+        }
 }
