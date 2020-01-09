@@ -98,6 +98,38 @@ void module_s_enrich::run( options *opts )
                                     );
         }
     
+    for( std::size_t sample_idx = 0;
+         sample_idx < norm_scores.scores.nrows();
+         ++sample_idx
+       )
+        {
+            auto enrichment_candidates = get_enrichment_candidates( zscores_ptr,
+                                                                    norm_scores_ptr,
+                                                                    raw_scores_ptr,
+                                                                    sample_idx
+                                                                  );
+
+            std::vector<peptide_score<std::string>> enriched_probes;
+
+            valid_for( enrichment_candidates.begin(),
+                       enrichment_candidates.end(),
+                       std::back_inserter( enriched_probes ),
+                       enriched
+                     );
+
+            if( !enriched_probes.empty() )
+                {
+                    std::string outf_name = e_opts->out_dirname + '/'
+                                            + zscores.sample_names[ sample_idx ]
+                                            + e_opts->out_suffix;
+
+                    std::ofstream out_file{ outf_name, std::ios_base::out };
+
+                    write_probe_names( out_file,
+                                       enriched_probes
+                                     );
+                }
+        }
     
     timer.stop();
     std::cout << "Took " << timer.get_elapsed() << " seconds.\n";
