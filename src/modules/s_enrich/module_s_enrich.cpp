@@ -1,6 +1,7 @@
 #include <iostream>
 #include <unordered_set>
 #include <stdexcept>
+#include <numeric>
 
 #include "module_s_enrich.h"
 #include "time_keep.h"
@@ -105,23 +106,49 @@ void module_s_enrich::run( options *opts )
 
             std::vector<peptide_score<std::string>> enriched_probes;
 
-            valid_for( enrichment_candidates.begin(),
-                       enrichment_candidates.end(),
-                       std::back_inserter( enriched_probes ),
-                       enriched
-                     );
+            // only compute the raw_sum if necessary
+            double raw_sum = raw_counts_included
+                              ? std::accumulate( enriched_probes.begin(),
+                                                 enriched_probes.end(),
+                                                 static_cast<double>( 0 ),
+                                                 []( const double& a,
+                                                     const peptide_score<std::string>& b
+                                                     ) -> double
+                                                 { return a + b.raw_score; }
+                                               )
+                              : static_cast<double>( 0.0 );
 
-            if( !enriched_probes.empty() )
+            // if raw_counts is not included, we are automatically enriched
+            // otherwise, we must check that the column sum is at least the
+            // specified threshold
+            bool colsum_enriched = !raw_counts_included
+                                   || ( raw_counts_included
+                                         && raw_sum >= e_opts->min_raw_count
+                                      );
+
+            // always true if raw_counts not included
+            if( colsum_enriched )
                 {
-                    std::string outf_name = e_opts->out_dirname + '/'
-                                            + zscores.sample_names[ sample_idx ]
-                                            + e_opts->out_suffix;
 
-                    std::ofstream out_file{ outf_name, std::ios_base::out };
 
-                    write_probe_names( out_file,
-                                       enriched_probes
-                                     );
+                    valid_for( enrichment_candidates.begin(),
+                               enrichment_candidates.end(),
+                               std::back_inserter( enriched_probes ),
+                               enriched
+                             );
+
+                    if( !enriched_probes.empty() )
+                        {
+                            std::string outf_name = e_opts->out_dirname + '/'
+                                + zscores.sample_names[ sample_idx ]
+                                + e_opts->out_suffix;
+
+                            std::ofstream out_file{ outf_name, std::ios_base::out };
+
+                            write_probe_names( out_file,
+                                               enriched_probes
+                                               );
+                        }
                 }
         }
     
