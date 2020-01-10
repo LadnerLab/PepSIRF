@@ -90,14 +90,6 @@ void module_s_enrich::run( options *opts )
                                    );
     };
 
-
-    if( zscore_sample_names != norm_score_sample_names )
-        {
-            throw std::runtime_error( "The specified score "
-                                       "files must contain the same samples"
-                                    );
-        }
-    
     for( std::size_t sample_idx = 0;
          sample_idx < zscores.scores.nrows();
          ++sample_idx
