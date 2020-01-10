@@ -41,7 +41,8 @@ void module_s_enrich::run( options *opts )
 
     if( dir_exists )
         {
-            std::cout << "WARNING: '" << e_opts->out_dirname << "' Exists, any files with " 
+            std::cout << "WARNING: the directory '" << e_opts->out_dirname
+                      << "' exists, any files with " 
                       << "colliding filenames will be overwritten!\n";
         }
 
