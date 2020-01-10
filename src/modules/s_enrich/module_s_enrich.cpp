@@ -108,10 +108,10 @@ void module_s_enrich::run( options *opts )
 
             // only compute the raw_sum if necessary
             double raw_sum = raw_counts_included
-                              ? std::accumulate( enriched_probes.begin(),
-                                                 enriched_probes.end(),
+                              ? std::accumulate( enrichment_candidates.begin(),
+                                                 enrichment_candidates.end(),
                                                  static_cast<double>( 0 ),
-                                                 []( const double& a,
+                                                 []( const double a,
                                                      const peptide_score<std::string>& b
                                                      ) -> double
                                                  { return a + b.raw_score; }
