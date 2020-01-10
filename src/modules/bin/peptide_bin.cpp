@@ -87,9 +87,6 @@ void peptide_bin_io::write_bins( std::ostream &dest, const bin_collection &bins 
        )
         {
             dest << boost::algorithm::join( *bin, "\t" );
-            if( ( bin + 1 ) != bins.end() )
-                {
-                    dest << "\n";
-                }
+            dest << "\n";
         }
 }
