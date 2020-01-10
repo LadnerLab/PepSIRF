@@ -15,8 +15,8 @@ std::string options_s_enrich::get_arguments()
 
     if( !in_raw_count_fname.empty() )
         {
-            str_stream << " --raw_counts             " << in_raw_count_fname << "\n " 
-                       << " --min_raw_count          " << min_raw_count << "\n "
+            str_stream << " --raw_scores             " << in_raw_count_fname << "\n " 
+                       << " --min_raw_score          " << min_raw_count << "\n "
                        ;
         }
 

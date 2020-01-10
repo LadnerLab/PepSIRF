@@ -46,13 +46,13 @@ bool options_parser_s_enrich
           "The minimum normalized score a probe must have in a sample "
           "in order to be considered enriched.\n"
         )
-        ( "raw_counts", po::value( &opts_s_enrich->in_raw_count_fname )
+        ( "raw_scores", po::value( &opts_s_enrich->in_raw_count_fname )
           ->default_value( "" ),
           "Optionally, a raw count matrix can be included. This matrix must "
           "contain the raw counts of each probe. If included, 'min_raw_count' "
           "must also be specified.\n"
         )
-        ( "min_raw_count", po::value( &opts_s_enrich->min_raw_count )
+        ( "min_raw_scores", po::value( &opts_s_enrich->min_raw_count )
           ->default_value( static_cast<double>( 0 ) )
           ->notifier( [&]( const double val ) -> void
                       {
