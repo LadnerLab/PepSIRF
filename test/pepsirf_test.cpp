@@ -4,7 +4,6 @@
 #include <iostream>
 #include <stdexcept>
 #include <fstream>
-#include <omp.h>
 #include <algorithm>
 #include <vector>
 #include <unordered_map>
