@@ -150,7 +150,7 @@ class matrix
          *       same position in the same matrix. See matrix::mutable_iterator::operator==
          * @returns True if !( this == comp ), false otherwise
          **/
-        bool operator!=(  mutable_iterator& comp ) const
+        bool operator!=(  const mutable_iterator& comp ) const
         {
             return !( *this == comp );
         }
@@ -162,7 +162,7 @@ class matrix
          *       matrix.
          * @returns True if this == comp, false otherwise.
          **/
-        bool operator==(  mutable_iterator& comp ) const
+        bool operator==( const mutable_iterator& comp ) const
         {
             return this->matr == comp.matr 
                      && this->current_idx == comp.current_idx;
