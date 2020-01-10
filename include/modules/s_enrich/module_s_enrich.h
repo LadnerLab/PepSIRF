@@ -147,7 +147,7 @@ public:
     get_enrichment_candidates( const peptide_score_data_sample_major *zscore_data,
                                const peptide_score_data_sample_major *norm_score_data,
                                const peptide_score_data_sample_major *raw_score_data,
-                               const std::size_t sample_idx
+                               const std::string sample_id
                              );
 
     /**

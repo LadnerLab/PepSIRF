@@ -47,7 +47,7 @@ void module_s_enrich::run( options *opts )
     using sample_name_set = std::unordered_set<std::string>;
     sample_name_set zscore_sample_names{ zscores.sample_names.begin(),
                                          zscores.sample_names.end()
-                                        };
+                                       };
 
     sample_name_set norm_score_sample_names{ norm_scores.sample_names.begin(),
                                              norm_scores.sample_names.end()
@@ -99,14 +99,16 @@ void module_s_enrich::run( options *opts )
         }
     
     for( std::size_t sample_idx = 0;
-         sample_idx < norm_scores.scores.nrows();
+         sample_idx < zscores.scores.nrows();
          ++sample_idx
        )
         {
+            auto sample_id = norm_scores.sample_names[ sample_idx ];
+
             auto enrichment_candidates = get_enrichment_candidates( zscores_ptr,
                                                                     norm_scores_ptr,
                                                                     raw_scores_ptr,
-                                                                    sample_idx
+                                                                    sample_id
                                                                   );
 
             std::vector<peptide_score<std::string>> enriched_probes;
@@ -139,7 +141,7 @@ std::vector<peptide_score<std::string>>
 module_s_enrich::get_enrichment_candidates( const peptide_score_data_sample_major *zscore_data,
                                             const peptide_score_data_sample_major *norm_score_data,
                                             const peptide_score_data_sample_major *raw_score_data,
-                                            const std::size_t sample_idx
+                                            const std::string sample_id
                                           )
 {
     std::vector<peptide_score<std::string>> ret_val;
@@ -149,13 +151,13 @@ module_s_enrich::get_enrichment_candidates( const peptide_score_data_sample_majo
         {
             std::string pep_name = zscore_data->pep_names[ pep_idx ];
 
-            double pep_zscore = zscore_data->scores( sample_idx, pep_idx );
-            double pep_norm_score = norm_score_data->scores( sample_idx, pep_idx );
+            double pep_zscore = zscore_data->scores( sample_id, pep_name );
+            double pep_norm_score = norm_score_data->scores( sample_id, pep_name );
             double pep_raw_score = 0;
 
             if( raw_score_data != nullptr )
                 {
-                    pep_raw_score = raw_score_data->scores( sample_idx, pep_idx );
+                    pep_raw_score = raw_score_data->scores( sample_id, pep_name );
                 }
 
             ret_val.emplace_back( peptide_score<std::string>( pep_name,
