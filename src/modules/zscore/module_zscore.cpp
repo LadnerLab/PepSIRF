@@ -20,6 +20,14 @@ void module_zscore::run( options *opts )
     peptide_scoring::parse_peptide_scores( input, z_opts->in_fname );
 
     std::ifstream bins_file( z_opts->in_bins_fname, std::ios_base::in );
+
+    if( bins_file.fail() )
+        {
+            throw std::runtime_error( "Unable to open the "
+                                      "specified bins file for reading"
+                                    );
+        }
+        
     bin_collection peptide_bins = peptide_bin_io::parse_bins( bins_file );
 
     auto& zscore_matrix = input.scores;
