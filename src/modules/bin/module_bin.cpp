@@ -20,7 +20,7 @@ void module_bin::run( options *opts )
                                            b_opts->input_scores_fname
                                          );
 
-    auto peptide_counts = sum_counts( input_data.scores );
+    auto peptide_counts = sum_counts( input_data.scores.transpose() );
     std::unordered_map<std::string,double> scored_probes;
 
     // associate each probe with its score
