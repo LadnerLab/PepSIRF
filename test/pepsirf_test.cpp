@@ -42,6 +42,7 @@
 #include "module_bin.h"
 #include "probe_rank.h"
 #include "module_s_enrich.h"
+#include "predicate.h"
 
 using namespace util;
 
@@ -2055,4 +2056,23 @@ TEST_CASE( "Valid For", "[module_s_enrich]" )
             REQUIRE( result.size() == 1 );
             REQUIRE( result == expected );
         }
+}
+
+TEST_CASE( "Use of predicate logic", "[predicate]" )
+{
+    bool p = true;
+    bool q = false;
+
+    REQUIRE( !predicate::implication( p, q ) );
+    REQUIRE(  predicate::implication( q, p ) );
+
+    REQUIRE( predicate::disjunction( p, q ) );
+    REQUIRE( predicate::disjunction( q, p ) );
+
+    REQUIRE( !predicate::conjunction( p, q ) );
+    REQUIRE( !predicate::conjunction( q, p ) );
+
+    REQUIRE( predicate::biconditional( !p, q ) );
+    REQUIRE( predicate::biconditional( !q, p ) );
+
 }
