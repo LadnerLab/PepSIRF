@@ -69,6 +69,7 @@ add_library(pepsirf_common STATIC src/modules/parsers/options_parser.cpp src/mod
             src/modules/core/cli_validator.cpp
             src/modules/core/modules.cpp
 			src/modules/core/peptide_scoring.cpp
+			src/modules/core/predicate.cpp
            )
 
 add_library(modules_demux STATIC src/modules/demux/options_demux.cpp src/modules/demux/options_parser_demux.cpp src/modules/parsers/options_parser.cpp 
