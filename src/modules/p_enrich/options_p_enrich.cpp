@@ -8,7 +8,8 @@ std::string options_p_enrich::get_arguments()
     using namespace std;
     
     std::ostringstream stream;
-    stream << "--zscores               " << in_zscore_fname << "\n "
+    stream << "--samples               " << in_samples_fname << "\n "
+           << "--zscores               " << in_zscore_fname << "\n "
            << "--zscore_constraint     " << zscore_params << "\n "
            << "--norm_scores           " << in_norm_scores_fname << "\n "
            << "--norm_score_constraint " << norm_scores_params << "\n "

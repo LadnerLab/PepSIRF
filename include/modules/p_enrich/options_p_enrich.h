@@ -18,6 +18,8 @@ class options_p_enrich : public options
 
     std::string get_arguments();
 
+    std::string in_samples_fname;
+
     std::string in_zscore_fname;
     score_pair zscore_params;
 

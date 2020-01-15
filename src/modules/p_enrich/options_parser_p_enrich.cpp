@@ -28,6 +28,12 @@ bool options_parser_p_enrich::parse( int argc, char ***argv, options *opts )
                                 );
     desc.add_options()
         ( "help,h", "Produce help message and exit.\n" )
+        ( "samples,s", po::value( &opts_p_enrich->in_samples_fname )
+          ->required(),
+          "The name of the file containing sample pairs, denoting which "
+          "samples are in duplicate. This file must be tab-delimited with "
+          "one pair or samples per line.\n"
+        )
         ( "zscores", po::value( &opts_p_enrich->in_zscore_fname )
           ->required(),
           "A matrix containing the zscores of each probe in every sample. "
