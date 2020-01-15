@@ -4,7 +4,7 @@ PepSIRF: Peptide-based Serological Immune Response Framework species Single-Repl
   -h [ --help ]                 Produce help message and exit.
                                 This module determines which probes in a sample
                                 are enriched, as determined by various 
-                                numerical thresholds that. Note that a probe 
+                                numerical thresholds. Note that a probe 
                                 must meet each specified numeric threshold in 
                                 order to be considered enriched.
                                 
