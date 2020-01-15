@@ -73,6 +73,12 @@ void module_initializer::initialize( const std::string& mod_name )
             opt_parser  = new options_parser_s_enrich();
             mod         = new module_s_enrich();
         }
+    else if( !mod_name.compare( "p_enrich" ) )
+        {
+            opts        = new options_p_enrich();
+            opt_parser  = new options_parser_p_enrich();
+            mod         = new module_p_enrich();
+        }
     else
         {
             throw std::runtime_error( "Invalid module name entered." );
