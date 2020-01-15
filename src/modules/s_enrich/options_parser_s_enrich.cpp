@@ -52,19 +52,19 @@ bool options_parser_s_enrich
           "contain the raw counts of each probe. If included, 'min_raw_count' "
           "must also be specified.\n"
         )
-        ( "min_raw_scores", po::value( &opts_s_enrich->min_raw_count )
+        ( "min_raw_score", po::value( &opts_s_enrich->min_raw_count )
           ->default_value( static_cast<double>( 0 ) )
           ->notifier( [&]( const double val ) -> void
                       {
-                          if( !iff( vm[ "raw_counts" ].defaulted(),
-                                    vm[ "min_raw_count" ].defaulted()
+                          if( !iff( vm[ "raw_scores" ].defaulted(),
+                                    vm[ "min_raw_score" ].defaulted()
                                  )
                               // dirty hack to ensure the argument is used
                               && val < std::numeric_limits<double>::max()
                               )
                               {
-                                  throw std::runtime_error( "If either 'raw_counts' "
-                                                            "or 'min_raw_count' options "
+                                  throw std::runtime_error( "If either 'raw_scores' "
+                                                            "or 'min_raw_score' options "
                                                             "are included, BOTH must be."
                                                             );
                               }
