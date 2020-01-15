@@ -2,6 +2,7 @@
 #define MODULE_P_ENRICH_HH_INCLUDED
 #include "module.h"
 #include "options_p_enrich.h"
+#include "peptide_scoring.h"
 
 class module_p_enrich : public module
 {
