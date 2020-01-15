@@ -125,6 +125,7 @@ add_library( modules_s_enrich STATIC src/modules/s_enrich/module_s_enrich.cpp
 add_library( modules_p_enrich STATIC src/modules/p_enrich/module_p_enrich.cpp
 				src/modules/p_enrich/options_p_enrich.cpp
 				src/modules/p_enrich/options_parser_p_enrich.cpp
+				src/modules/core/predicate.cpp
 		   )
 
 option( BUILD_TESTS "Determines whether to build tests." ON )
