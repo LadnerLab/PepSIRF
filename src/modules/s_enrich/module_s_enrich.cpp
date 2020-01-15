@@ -7,6 +7,7 @@
 #include "time_keep.h"
 #include "omp_opt.h"
 #include "fs_tools.h"
+#include "predicate.h"
 
 void module_s_enrich::run( options *opts )
 {
@@ -86,10 +87,10 @@ void module_s_enrich::run( options *opts )
 
     auto enriched = [=]( const peptide_score<std::string> val ) -> bool
     {
-        return value_constrained_by( val,
-                                     zscore_enriched,
-                                     norm_score_enriched
-                                   );
+        return predicate::value_constrained_by( val,
+                                                zscore_enriched,
+                                                norm_score_enriched
+                                              );
     };
 
     for( std::size_t sample_idx = 0;
@@ -132,11 +133,11 @@ void module_s_enrich::run( options *opts )
                 {
 
 
-                    valid_for( enrichment_candidates.begin(),
-                               enrichment_candidates.end(),
-                               std::back_inserter( enriched_probes ),
-                               enriched
-                             );
+                    predicate::valid_for( enrichment_candidates.begin(),
+                                          enrichment_candidates.end(),
+                                          std::back_inserter( enriched_probes ),
+                                          enriched
+                                        );
 
                     if( !enriched_probes.empty() )
                         {

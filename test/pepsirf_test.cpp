@@ -1963,6 +1963,8 @@ TEST_CASE( "Ranking Probes based upon their scores", "[probe_rank]" )
 
 TEST_CASE( "Unary Predicate Reduction", "[module_s_enrich]" )
 {
+    using namespace predicate;
+    
     auto positive = []( const int x ) -> bool { return x > 0; };
     auto gt_10 = []( const int x ) -> bool { return x > 10; };
     auto lt_100 = []( const int x ) -> bool { return x < 100; };
@@ -2002,6 +2004,7 @@ TEST_CASE( "Valid For", "[module_s_enrich]" )
     auto lt_100 = []( const int x ) -> bool { return x < 100; };
     auto positive = []( const int x ) -> bool { return x > 0; };
     auto even = []( const int x ) -> bool { return x % 2 == 0; };
+    using namespace predicate; 
 
     SECTION( "Default function, no use of special 'get' function" )
 
