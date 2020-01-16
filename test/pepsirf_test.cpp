@@ -2101,3 +2101,33 @@ TEST_CASE( "Parsing samples file", "[module_p_enrich]" )
 
 }
 
+TEST_CASE( "Meeting the threshold for a pair", "[module_p_enrich]" )
+{
+    module_p_enrich mod;
+    auto mp = []( const int a, const int b ) -> std::pair<int,int>
+        {
+            return std::make_pair( a, b );
+        };
+
+    bool met = mod.pair_threshold_met(  mp( 1, 2 ),
+                                        mp( 3, 4 )
+                                     );
+    REQUIRE( !met );
+
+    met = mod.pair_threshold_met(  mp( 1, 2 ),
+                                   mp( 2, 1 )
+                                );
+    REQUIRE( met );
+
+    met = mod.pair_threshold_met(  mp( 15, 4 ),
+                                   mp( 16, 3 )
+                                );
+    REQUIRE( !met );
+
+    met = mod.pair_threshold_met(  mp( 10, 20 ),
+                                   mp( 3, 4 )
+                                );
+    REQUIRE( met );
+
+}
+
