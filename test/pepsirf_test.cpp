@@ -42,6 +42,7 @@
 #include "module_bin.h"
 #include "probe_rank.h"
 #include "module_s_enrich.h"
+#include "module_p_enrich.h"
 #include "predicate.h"
 
 using namespace util;
@@ -2079,3 +2080,24 @@ TEST_CASE( "Use of predicate logic", "[predicate]" )
     REQUIRE( predicate::biconditional( !q, p ) );
 
 }
+
+TEST_CASE( "Parsing samples file", "[module_p_enrich]" )
+{
+    module_p_enrich mod;
+    std::string input_str;
+    input_str = "sample1\tsample2\nsample3\tsample4\n";
+
+    std::istringstream file;
+    file.str( input_str );
+    auto samples = mod.parse_samples( file );
+
+    REQUIRE( samples.size() == 2 );
+
+    file.clear();
+
+    file.str( "sample1\tsample2\tsample3\nsample4\tsample5\n" );
+
+    REQUIRE_THROWS( mod.parse_samples( file ) );
+
+}
+
