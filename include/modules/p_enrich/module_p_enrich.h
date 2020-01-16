@@ -4,6 +4,7 @@
 #include "options_p_enrich.h"
 #include "peptide_scoring.h"
 #include <string>
+#include "paired_score.h"
 
 class module_p_enrich : public module
 {
@@ -55,6 +56,14 @@ public:
 
         return at_least && !not_less;
     }
+
+    std::vector<std::string>
+    get_enrichment_candidates( const peptide_score_data_sample_major *zscore_data,
+                               const peptide_score_data_sample_major *norm_score_data,
+                               const peptide_score_data_sample_major *raw_score_data,
+                               const std::pair<std::string,std::string> sample_names
+                             );
+
 };
 
 #endif // MODULE_P_ENRICH_HH_ENCLUDED

@@ -126,3 +126,13 @@ module_p_enrich::parse_samples( std::istream& file )
 
     return return_val;
 }
+
+std::vector<paired_score>
+module_p_enrich::get_enrichment_candidates( const peptide_score_data_sample_major *zscore_data,
+                                            const peptide_score_data_sample_major *norm_score_data,
+                                            const peptide_score_data_sample_major *raw_score_data,
+                                            const std::pair<std::string,std::string> sample_names
+                                          )
+{
+
+}
