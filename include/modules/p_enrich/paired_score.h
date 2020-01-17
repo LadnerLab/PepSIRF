@@ -1,28 +1,36 @@
 #ifndef PAIRED_SCORE_HH_INCLUDED
 #define PAIRED_SCORE_HH_INCLUDED
+
 #include <utility>
+#include <string>
 
 class paired_score
 {
 
  public:
     using pair = std::pair<double,double>;
+
+    std::string pep_name;
     pair zscore;
     pair norm_score;
     pair raw_score;
 
- paired_score( const pair& zscore,
+ paired_score( const std::string pep_name,
+               const pair& zscore,
                const pair& norm_score,
                const pair& raw_score
              )
-     : zscore{ zscore },
+     : pep_name{ pep_name },
+       zscore{ zscore },
        norm_score{ norm_score },
        raw_score{ raw_score } {}
 
- paired_score( const pair& zscore,
+ paired_score( const std::string& pep_name,
+               const pair& zscore,
                const pair& norm_score
              )
-     : paired_score{ zscore,
+     : paired_score{ pep_name,
+                     zscore,
                      norm_score,
                      { 0.0, 0.0 }
                    } {}
