@@ -113,7 +113,64 @@ void module_p_enrich::run( options *opts )
                                                    );
         };
 
+    for( std::size_t sample_idx = 0;
+         sample_idx < sample_pairs.size();
+         ++sample_idx
+       )
+        {
+            auto enrichment_candidates =
+                get_enrichment_candidates( zscores_ptr,
+                                           norm_scores_ptr,
+                                           raw_scores_ptr,
+                                           sample_pairs[ sample_idx ]
+                                         );
 
+            std::vector<paired_score> enriched_probes;
+            enriched_probes.reserve( enrichment_candidates.size() );
+
+            // only attempt to get the column sum if raw counts
+            // have been specified
+            std::pair<double,double>
+                col_sums{ 0.0, 0.0 };
+
+            if( raw_counts_included )
+                {
+                    col_sums = get_raw_sums( enrichment_candidates.begin(),
+                                             enrichment_candidates.end()
+                                           );
+                }
+
+            bool raw_count_enriched = raw_counts_included
+                ? pair_threshold_met( col_sums, p_opts->raw_scores_params )
+                : true;
+
+            if( raw_count_enriched )
+                {
+                    predicate::valid_for( enrichment_candidates.begin(),
+                                          enrichment_candidates.end(),
+                                          std::back_inserter( enriched_probes ),
+                                          enriched
+                                        );
+
+                    if( !enriched_probes.empty() )
+                        {
+                            std::string outf_name =
+                                p_opts->out_dirname + '/'
+                                + sample_pairs[ sample_idx ].first
+                                + p_opts->out_fname_join
+                                + sample_pairs[ sample_idx ].second
+                                + p_opts->out_suffix;
+                            std::ofstream out_file{ outf_name, std::ios_base::out };
+
+                            pepsirf_io::write_file( out_file,
+                                                    enriched_probes.begin(),
+                                                    enriched_probes.end(),
+                                                    "\n"
+                                                   );
+                            
+                        }
+                }
+        }
 }
 
 
