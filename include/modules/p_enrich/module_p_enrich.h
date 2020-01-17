@@ -87,10 +87,10 @@ public:
 
         std::pair<double,double> sums{ 0.0, 0.0 };
 
-        for( auto current = begin; current != end; ++begin )
+        for( auto current = begin; current != end; ++current )
             {
-                sums.first  += begin->raw_score.first;
-                sums.second += begin->raw_score.second;
+                sums.first  += current->raw_score.first;
+                sums.second += current->raw_score.second;
             }
 
         return sums;
