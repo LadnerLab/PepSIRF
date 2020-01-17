@@ -22,6 +22,7 @@ std::string options_p_enrich::get_arguments()
         }
 
     stream << "--outfile_suffix        " << out_suffix << "\n "
+           << "--join_on               " << out_fname_join << "\n "
            << "--output                " << out_dirname << "\n "
            << "\n"
         ;

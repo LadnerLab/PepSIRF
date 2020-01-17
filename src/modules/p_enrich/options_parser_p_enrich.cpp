@@ -93,6 +93,14 @@ bool options_parser_p_enrich::parse( int argc, char ***argv, options *opts )
           "written to output. For example, '_enriched.txt' can be used. "
           "By default, no suffix is used.\n"
         ) 
+        ( "join_on,j",
+          po::value( &opts_p_enrich->out_fname_join )
+          ->default_value( "~" ),
+          "A character or string to join output sample names on. "
+          "For a sample pair of samples A and B, the resulting file will "
+          "have the name 'A~B' if this flag is not given. Otherwise, "
+          "the given value will be used.\n"
+         )
         ( "output,o", po::value( &opts_p_enrich->out_dirname )
           ->default_value( "paired" ),
           "Name of the directory to write output files to. "
