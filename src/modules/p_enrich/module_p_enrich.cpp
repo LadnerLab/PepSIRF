@@ -32,9 +32,7 @@ void module_p_enrich::run( options *opts )
 
     std::ifstream pairs_file;
 
-    pairs_file.exceptions( std::ios::badbit
-                           | std::ios::failbit
-                         );
+    pairs_file.exceptions( std::ios::badbit );
 
     try
         {
