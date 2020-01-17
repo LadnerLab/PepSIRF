@@ -96,6 +96,17 @@ public:
         return sums;
     }
 
+    /**
+     * Get enrichment candidates for peptides in a sample pair. 
+     * @param zscore_data pointer to data containing zscores for both samples in 
+     *        the sample_names pair.
+     * @param norm_score_data pointer to data containing normalized scores.
+     * @param raw_score_data pointer to data containing raw scores. If this is 
+     *        a nullptr, raw scores will be written as zero.
+     * @param sample_names the pair of samples to get enrichment candidates for.
+     * @param returns a vector of paired score values for each peptide in the pair of 
+     *        samples.
+     **/
     std::vector<paired_score>
     get_enrichment_candidates( const peptide_score_data_sample_major *zscore_data,
                                const peptide_score_data_sample_major *norm_score_data,

@@ -134,5 +134,45 @@ module_p_enrich::get_enrichment_candidates( const peptide_score_data_sample_majo
                                             const std::pair<std::string,std::string> sample_names
                                           )
 {
+    std::vector<paired_score> candidates;
+    std::size_t pep_idx = 0;
 
+    using pair = std::pair<double,double>;
+
+    for( pep_idx = 0; pep_idx < zscore_data->pep_names.size(); ++pep_idx )
+        {
+            std::string pep_name = zscore_data->pep_names[ pep_idx ];
+            
+            // get zscore in each of the sample
+            pair zscores = { zscore_data->scores( sample_names.first, pep_name ),
+                             zscore_data->scores( sample_names.second, pep_name )
+                           };
+
+            pair norm_scores = { norm_score_data
+                                 ->scores( sample_names.first, pep_name ),
+                                 norm_score_data
+                                 ->scores( sample_names.second, pep_name )
+                               };
+
+            pair raw_scores = { 0.0, 0.0 };
+
+            if( raw_score_data != nullptr)
+                {
+                    raw_scores = { raw_score_data
+                                   ->scores( sample_names.first, pep_name ),
+                                   raw_score_data
+                                   ->scores( sample_names.second, pep_name )
+                                 };
+                }
+
+            paired_score candidate{ pep_name,
+                                    zscores,
+                                    norm_scores,
+                                    raw_scores
+                                  };
+
+            candidates.emplace_back( candidate );
+        }
+
+    return candidates;
 }
