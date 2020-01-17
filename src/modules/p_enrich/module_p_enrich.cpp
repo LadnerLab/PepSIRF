@@ -9,6 +9,7 @@
 #include "omp_opt.h"
 #include "fs_tools.h"
 #include "predicate.h"
+#include "file_io.h"
 
 
 void module_p_enrich::run( options *opts )
@@ -89,6 +90,28 @@ void module_p_enrich::run( options *opts )
                                       "not the same"
                                     );
         }
+
+    auto zscore_enriched = [=]( const paired_score& val ) -> bool
+        {
+            return pair_threshold_met( val.zscore,
+                                       p_opts->zscore_params
+                                     );
+        };
+
+    auto norm_score_enriched = [=]( const paired_score& val ) -> bool
+        {
+            return pair_threshold_met( val.norm_score,
+                                       p_opts->norm_scores_params
+                                     );
+        };
+
+    auto enriched = [=]( const paired_score& val ) -> bool
+        {
+            return predicate::value_constrained_by( val,
+                                                    zscore_enriched,
+                                                    norm_score_enriched
+                                                   );
+        };
 
 
 }
