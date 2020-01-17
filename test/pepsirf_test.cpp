@@ -42,6 +42,8 @@
 #include "module_bin.h"
 #include "probe_rank.h"
 #include "module_s_enrich.h"
+#include "module_p_enrich.h"
+#include "predicate.h"
 
 using namespace util;
 
@@ -1962,6 +1964,8 @@ TEST_CASE( "Ranking Probes based upon their scores", "[probe_rank]" )
 
 TEST_CASE( "Unary Predicate Reduction", "[module_s_enrich]" )
 {
+    using namespace predicate;
+    
     auto positive = []( const int x ) -> bool { return x > 0; };
     auto gt_10 = []( const int x ) -> bool { return x > 10; };
     auto lt_100 = []( const int x ) -> bool { return x < 100; };
@@ -2001,6 +2005,7 @@ TEST_CASE( "Valid For", "[module_s_enrich]" )
     auto lt_100 = []( const int x ) -> bool { return x < 100; };
     auto positive = []( const int x ) -> bool { return x > 0; };
     auto even = []( const int x ) -> bool { return x % 2 == 0; };
+    using namespace predicate; 
 
     SECTION( "Default function, no use of special 'get' function" )
 
@@ -2056,3 +2061,73 @@ TEST_CASE( "Valid For", "[module_s_enrich]" )
             REQUIRE( result == expected );
         }
 }
+
+TEST_CASE( "Use of predicate logic", "[predicate]" )
+{
+    bool p = true;
+    bool q = false;
+
+    REQUIRE( !predicate::implication( p, q ) );
+    REQUIRE(  predicate::implication( q, p ) );
+
+    REQUIRE( predicate::disjunction( p, q ) );
+    REQUIRE( predicate::disjunction( q, p ) );
+
+    REQUIRE( !predicate::conjunction( p, q ) );
+    REQUIRE( !predicate::conjunction( q, p ) );
+
+    REQUIRE( predicate::biconditional( !p, q ) );
+    REQUIRE( predicate::biconditional( !q, p ) );
+
+}
+
+TEST_CASE( "Parsing samples file", "[module_p_enrich]" )
+{
+    module_p_enrich mod;
+    std::string input_str;
+    input_str = "sample1\tsample2\nsample3\tsample4\n";
+
+    std::istringstream file;
+    file.str( input_str );
+    auto samples = mod.parse_samples( file );
+
+    REQUIRE( samples.size() == 2 );
+
+    file.clear();
+
+    file.str( "sample1\tsample2\tsample3\nsample4\tsample5\n" );
+
+    REQUIRE_THROWS( mod.parse_samples( file ) );
+
+}
+
+TEST_CASE( "Meeting the threshold for a pair", "[module_p_enrich]" )
+{
+    module_p_enrich mod;
+    auto mp = []( const int a, const int b ) -> std::pair<int,int>
+        {
+            return std::make_pair( a, b );
+        };
+
+    bool met = mod.pair_threshold_met(  mp( 1, 2 ),
+                                        mp( 3, 4 )
+                                     );
+    REQUIRE( !met );
+
+    met = mod.pair_threshold_met(  mp( 1, 2 ),
+                                   mp( 2, 1 )
+                                );
+    REQUIRE( met );
+
+    met = mod.pair_threshold_met(  mp( 15, 4 ),
+                                   mp( 16, 3 )
+                                );
+    REQUIRE( !met );
+
+    met = mod.pair_threshold_met(  mp( 10, 20 ),
+                                   mp( 3, 4 )
+                                );
+    REQUIRE( met );
+
+}
+
