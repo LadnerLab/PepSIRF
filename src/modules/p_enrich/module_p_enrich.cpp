@@ -50,6 +50,12 @@ void module_p_enrich::run( options *opts )
 
     bool raw_counts_included = !p_opts->in_raw_scores_fname.empty();
 
+    if( raw_counts_included )
+        {
+            peptide_scoring::parse_peptide_scores( raw_scores, p_opts->in_raw_scores_fname );
+            raw_scores_ptr = &raw_scores;
+        }
+
     auto output_path = fs_tools::path( p_opts->out_dirname );
     bool dir_exists = !fs_tools::create_directories( output_path );
 
