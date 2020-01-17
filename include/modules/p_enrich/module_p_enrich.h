@@ -1,9 +1,11 @@
 #ifndef MODULE_P_ENRICH_HH_INCLUDED
 #define MODULE_P_ENRICH_HH_INCLUDED
+#include <string>
+#include <type_traits>
+
 #include "module.h"
 #include "options_p_enrich.h"
 #include "peptide_scoring.h"
-#include <string>
 #include "paired_score.h"
 
 class module_p_enrich : public module
@@ -57,7 +59,44 @@ public:
         return at_least && !not_less;
     }
 
-    std::vector<std::string>
+    /**
+     * Get the sums for raw scores in a sequence of 
+     * paired_scores.
+     * @note Statically checks that Iterator iterates over 
+     *       values of type paired_score.
+     * @tparam Iterator an iterator with operator++ over wich 
+     *         to evaluate items.
+     * @param begin The first item in the range [begin, end)
+     * @param end the last item in the range [begin, end)
+     * @returns a pair of doubles, the first being the sum of each 
+     *          item's raw_score.first value. The second value 
+     *          is similarly the sum of each item's raw_score.second
+     **/
+    template<typename Iterator>
+    std::pair<double,double> get_raw_sums( Iterator begin,
+                                           Iterator end
+                                         )
+    {
+        // ensure we have the correct type of iterator
+        static_assert( std::is_same<typename Iterator::value_type,
+                                    paired_score>
+                       ::value,
+                       "get_raw_sums is only valid for Iterators of "
+                       "paired_score type"
+                     );
+
+        std::pair<double,double> sums{ 0.0, 0.0 };
+
+        for( auto current = begin; current != end; ++begin )
+            {
+                sums.first  += begin->raw_score.first;
+                sums.second += begin->raw_score.second;
+            }
+
+        return sums;
+    }
+
+    std::vector<paired_score>
     get_enrichment_candidates( const peptide_score_data_sample_major *zscore_data,
                                const peptide_score_data_sample_major *norm_score_data,
                                const peptide_score_data_sample_major *raw_score_data,
