@@ -35,6 +35,14 @@ class paired_score
                      { 0.0, 0.0 }
                    } {}
 
+       friend std::ostream& operator<<( std::ostream& stream,
+                                        const paired_score& pair
+                                      )
+       {
+           stream << pair.pep_name;
+           return stream;
+       }
+
 };
 
 #endif // PAIRED_SCORE_HH_INCLUDED
