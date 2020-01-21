@@ -62,8 +62,6 @@ namespace pepsirf_io
                     OutputIterator end
                   )
     {
-        using parsed_type = typename OutputIterator::value_type;
-
         std::vector<std::string> split_line;
         std::string current_line;
 
