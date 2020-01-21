@@ -13,6 +13,7 @@
 #include <fstream>
 #include <streambuf>
 #include <boost/lexical_cast.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include "test_utils.h"
 #include "overlap_data.h"
@@ -44,6 +45,7 @@
 #include "module_s_enrich.h"
 #include "module_p_enrich.h"
 #include "predicate.h"
+#include "file_io.h"
 
 using namespace util;
 
@@ -2131,3 +2133,38 @@ TEST_CASE( "Meeting the threshold for a pair", "[module_p_enrich]" )
 
 }
 
+
+TEST_CASE( "File IO write_file function", "[file_io]" )
+{
+    std::istringstream stream;
+    stream.str( "First\t0.45\nSecond\t0.58\n" );
+    auto create_fn = []( typename std::vector<std::string>::iterator begin,
+                         typename std::vector<std::string>::iterator end
+                         ) -> std::pair<std::string,double>
+        {
+            std::string first = *begin;
+            std::string second = *(++begin);
+            double second_double = 0.0;
+
+            if( begin != end )
+                {
+                    second_double = std::strtod( second.c_str(), nullptr );
+                }
+
+            return std::make_pair( first, second_double );
+        };
+
+    std::vector<std::pair<std::string,double>> values;
+
+    pepsirf_io::read_file( stream,
+                           boost::is_any_of( "\t" ),
+                           create_fn,
+                           std::back_inserter( values )
+                         );
+
+    REQUIRE( values.size() == 2 );
+    REQUIRE( values[ 0 ] == std::pair<std::string,double>( "First", 0.45 ) );
+    REQUIRE( values[ 1 ] == std::pair<std::string,double>( "Second", 0.58 ) );
+
+
+}
