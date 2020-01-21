@@ -1,4 +1,5 @@
 #include "options_parser_subjoin.h"
+#include "file_io.h"
 #include <boost/algorithm/string.hpp>
 options_parser_subjoin::options_parser_subjoin() = default;
 
@@ -9,7 +10,6 @@ bool options_parser_subjoin::parse( int argc, char ***argv, options *opts )
     namespace po = boost::program_options;
     po::variables_map vm;
     std::vector<std::string> matrix_name_list_pairs;
-
 
     po::options_description desc( "PepSIRF: Peptide-based Serological Immune "
                                   "Response Framework subjoin module"
@@ -31,25 +31,50 @@ bool options_parser_subjoin::parse( int argc, char ***argv, options *opts )
                                                 boost::is_any_of( "," )
                                               );
 
-                                  if( split_output.size() != 2 )
+                                  if( split_output.size() == 2 )
                                       {
-                                          std::cout << split_output.size() << std::endl;
+                                          boost::trim( split_output[ 0 ] );
+                                          boost::trim( split_output[ 1 ] );
+
+                                          opts_subjoin
+                                              ->matrix_name_pairs.push_back( std::make_pair
+                                                                             ( split_output[ 0 ],
+                                                                               split_output[ 1 ]
+                                                                               )
+                                                                             );
+
+                                      }
+                                  else if( split_output.size() == 1 )
+                                      {
+                                          std::ifstream input_f{ split_output[ 0 ] };
+                                          if( input_f.fail() )
+                                              {
+                                                  throw std::runtime_error( "Unable to open input file for reading" );
+                                              }
+
+                                          pepsirf_io::read_file( input_f,
+                                                                 boost::is_any_of( "\t" ),
+                                                                 []( typename std::vector<std::string>::iterator a,
+                                                                     typename std::vector<std::string>::iterator end
+                                                                   )
+                                                                 -> std::pair<std::string,std::string>
+                                                                 { std::string f = *a;
+                                                                     if( a != end )
+                                                                         ++a;
+                                                                   return std::make_pair( f, *a ); },
+                                                                 std::back_inserter( opts_subjoin->matrix_name_pairs )
+                                                               );
+                                      }
+                                  else
+                                      {
                                           throw po::validation_error(
                                           po::validation_error::invalid_option_value,
                                           "filter_scores",
                                           provided_value
-                                                                     );                                         
+                                          );                                         
+
                                       }
 
-                                  boost::trim( split_output[ 0 ] );
-                                  boost::trim( split_output[ 1 ] );
-
-                                  opts_subjoin
-                                  ->matrix_name_pairs.push_back( std::make_pair
-                                                                 ( split_output[ 0 ],
-                                                                   split_output[ 1 ]
-                                                                 )
-                                                               );
                               }
                           
                       }
