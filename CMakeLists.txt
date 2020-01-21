@@ -54,7 +54,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 include_directories(${Boost_INCLUDE_DIRS})
-add_executable(pep_sirf src/main.cpp)
+add_executable(pepsirf src/main.cpp)
 
 # Library common to all modules
 add_library(pepsirf_common STATIC src/modules/parsers/options_parser.cpp src/modules/core/options.cpp 
@@ -145,7 +145,7 @@ endif()
 endif()
 
 if(OpenMP_FOUND)
-  target_link_libraries(pep_sirf PUBLIC OpenMP::OpenMP_CXX ${PepSIRF_MODULES} ${Boost_LIBRARIES} )
+  target_link_libraries(pepsirf PUBLIC OpenMP::OpenMP_CXX ${PepSIRF_MODULES} ${Boost_LIBRARIES} )
 else()
-  target_link_libraries(pep_sirf PUBLIC ${PepSIRF_MODULES} ${Boost_LIBRARIES} )
+  target_link_libraries(pepsirf PUBLIC ${PepSIRF_MODULES} ${Boost_LIBRARIES} )
 endif()

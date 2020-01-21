@@ -9,7 +9,7 @@
 mkdir build
 cd build
 cmake -DCMAKE_BUILD_TYPE=Release ..
-make pep_sirf
+make pepsirf
 ```
 
 Alternatively, one can use the included build script.
