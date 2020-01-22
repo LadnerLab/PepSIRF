@@ -1,15 +1,16 @@
 #ifndef OPTIONS_PARSER_INFO_HH_INCLUDED
 #define OPTIONS_PARSER_INFO_HH_INCLUDED
-#include <boost/program_options.hpp>
 
-#include "options_info.h"
 #include "options_parser.h"
+#include "options_info.h"
 
 class options_parser_info : public options_parser
 {
 
 public:
-    options_parser_info() = default;
+
+    options_parser_info();
+    ~options_parser_info();
 
     bool parse( int argc, char ***argv, options *opts );
 
