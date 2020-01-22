@@ -2134,7 +2134,7 @@ TEST_CASE( "Meeting the threshold for a pair", "[module_p_enrich]" )
 }
 
 
-TEST_CASE( "File IO write_file function", "[file_io]" )
+TEST_CASE( "File IO read_file function", "[file_io]" )
 {
     std::istringstream stream;
     stream.str( "First\t0.45\nSecond\t0.58\n" );
@@ -2155,6 +2155,22 @@ TEST_CASE( "File IO write_file function", "[file_io]" )
         };
 
     std::vector<std::pair<std::string,double>> values;
+
+    pepsirf_io::read_file( stream,
+                           boost::is_any_of( "\t" ),
+                           create_fn,
+                           std::back_inserter( values )
+                         );
+
+    REQUIRE( values.size() == 2 );
+    REQUIRE( values[ 0 ] == std::pair<std::string,double>( "First", 0.45 ) );
+    REQUIRE( values[ 1 ] == std::pair<std::string,double>( "Second", 0.58 ) );
+
+    stream.str( "" );
+    stream.clear();
+    values.clear();
+
+    stream.str( "First\t0.45\nSecond\t0.58" );
 
     pepsirf_io::read_file( stream,
                            boost::is_any_of( "\t" ),

@@ -65,7 +65,7 @@ namespace pepsirf_io
         std::vector<std::string> split_line;
         std::string current_line;
 
-        while( std::getline( input, current_line ).good() )
+        while( std::getline( input, current_line ) )
             {
                 boost::algorithm::split( split_line, current_line, split );
                 *end = init_pred( split_line.begin(), split_line.end() );

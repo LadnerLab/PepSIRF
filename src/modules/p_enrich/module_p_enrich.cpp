@@ -224,7 +224,7 @@ module_p_enrich::parse_samples( std::istream& file )
     // reserve the expected amount
     values.reserve( 2 );
 
-    while( std::getline( file, current_line ).good() )
+    while( std::getline( file, current_line ) )
         {
             boost::split( values,
                           current_line,

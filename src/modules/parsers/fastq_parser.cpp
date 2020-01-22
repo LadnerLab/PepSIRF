@@ -24,14 +24,14 @@ bool fastq_parser::parse( std::istream& input_file,
     max = max == 0 ? std::numeric_limits<size_t>::max() : max;
 
     std::string strings[ STRINGS_PER_RECORD ];
-    while( count < max && input_file.good() )
+    while( count < max && input_file )
         {
             std::getline( input_file, strings[ SEQUENCE_NAME ] );
             std::getline( input_file, strings[ SEQUENCE ] );
             std::getline( input_file, strings[ SEQUENCE_REPEAT ] );
             std::getline( input_file, strings[ SEQUENCE_SCORE ] );
 
-            if( input_file.good() )
+            if( input_file )
                 {
                     seq_vector.emplace_back( strings[ 0 ],
                                              strings[ 1 ],

@@ -62,7 +62,7 @@ bin_collection peptide_bin_io::parse_bins( std::istream& bin_source )
     std::vector<std::string> peptides_in_bin;
     bin_collection bins;
 
-    while( std::getline( bin_source, line ).good() )
+    while( std::getline( bin_source, line ) )
         {
             boost::split( peptides_in_bin,
                           line,

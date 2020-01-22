@@ -11,7 +11,7 @@ void module_subjoin::parse_namelist( std::vector<std::string>& dest,
                                    )
 {
     std::string line;
-    while( std::getline( file, line ).good() )
+    while( std::getline( file, line ) )
         {
             dest.push_back( line );
         }
