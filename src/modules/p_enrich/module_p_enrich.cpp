@@ -10,6 +10,7 @@
 #include "fs_tools.h"
 #include "predicate.h"
 #include "file_io.h"
+#include "setops.h"
 
 
 void module_p_enrich::run( options *opts )
@@ -68,6 +69,8 @@ void module_p_enrich::run( options *opts )
 
     using sample_name_set = std::unordered_set<std::string>;
 
+    sample_name_set name_union;
+
     sample_name_set zscore_sample_names{ zscores.sample_names.begin(),
             zscores.sample_names.end()
             };
@@ -80,12 +83,17 @@ void module_p_enrich::run( options *opts )
             raw_scores.sample_names.end()
             };
 
+    setops::set_union( name_union, norm_score_sample_names, zscore_sample_names );
+    setops::set_union( name_union, raw_score_sample_names, name_union );
+
     // ensure zscore_sample_names and norm_score_sample_names are
     // equal. If included, raw_count_sample_names must also equal
     // zscore equal names, otherwise we do not care.
-    if( zscore_sample_names != norm_score_sample_names
-        && ( !raw_counts_included
-             || ( zscore_sample_names == raw_score_sample_names
+    if( zscore_sample_names.size() != name_union.size()
+        || norm_score_sample_names.size() != name_union.size()
+          ||
+        ( raw_counts_included
+          && ( raw_score_sample_names.size() != name_union.size()  
                   )
              )
         )
@@ -93,6 +101,34 @@ void module_p_enrich::run( options *opts )
             throw std::runtime_error( "The samplenames provided in each input file are "
                                       "not the same"
                                     );
+        }
+
+    for( const auto& sname_pair : sample_pairs )
+        {
+            bool first_in = zscore_sample_names.find( sname_pair.first )
+                != zscore_sample_names.end();
+            bool second_in = zscore_sample_names.find( sname_pair.second )
+                != zscore_sample_names.end();
+
+            if( first_in ^ second_in )
+                {
+                    std::string not_found = first_in ? sname_pair.second 
+                        : sname_pair.first;
+                    std::string error_msg = "The sample '"
+                        + not_found + "'" 
+                        + " was not found in any of the matrix files. ";
+
+                    throw std::runtime_error( error_msg );
+                }
+            else if( !( first_in && second_in ) )
+                {
+                    std::cout << "WARNING: the samples '" 
+                        << sname_pair.first
+                        << "' and '"
+                        << sname_pair.second
+                        << "' were not in any of the input "
+                        << "files and will be skipped. \n";
+                }
         }
 
     auto zscore_enriched = [=]( const paired_score& val ) -> bool
