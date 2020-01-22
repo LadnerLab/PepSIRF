@@ -1,7 +1,10 @@
 #include "options_info.h"
 #include <sstream>
 
-std::string get_arguments()
+options_info::options_info() = default;
+options_info::~options_info() = default;
+
+std::string options_info::get_arguments()
 {
     std::ostringstream stream;
 

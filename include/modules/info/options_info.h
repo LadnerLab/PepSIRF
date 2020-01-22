@@ -8,7 +8,9 @@ class options_info : public options
 {
 
 public:
-    options_info() = default;
+
+    options_info();
+    ~options_info();
 
     std::string get_arguments();
 
