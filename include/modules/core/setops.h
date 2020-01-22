@@ -1,6 +1,7 @@
 #ifndef SETOPS_HH_INCLUDED
 #define SETOPS_HH_INCLUDED
 #include <vector>
+#include <unordered_set>
 #include "maps.h" // used internally
 
 namespace setops
@@ -149,7 +150,7 @@ namespace setops
                         const K& second
                       )
     {
-        sequential_set<K> union_set;
+        std::unordered_set<typename K::value_type> union_set;
 
         for( const auto& f : first )
             {
