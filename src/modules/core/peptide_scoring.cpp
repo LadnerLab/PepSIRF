@@ -27,7 +27,7 @@ void peptide_scoring::parse_peptide_scores( peptide_score_data_sample_major& des
                      .filename()
                      .string();
 
-    while( std::getline( in_file, line ).good() )
+    while( std::getline( in_file, line ) )
         {
             boost::trim_right( line );
             lines_from_file.emplace_back( line );

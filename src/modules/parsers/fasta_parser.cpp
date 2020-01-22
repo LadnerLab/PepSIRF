@@ -13,7 +13,7 @@ std::vector<sequence> fasta_parser::parse( std::string filename )
     std::string line;
     std::ifstream input_file( filename, std::ios_base::in );
 
-    while( std::getline( input_file, line ).good() )
+    while( std::getline( input_file, line ) )
         {
             boost::trim_right( line );
             // skip any empty lines
