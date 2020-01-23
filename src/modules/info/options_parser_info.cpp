@@ -31,9 +31,9 @@ bool options_parser_info
           "Name of the file to write sample names to. Output will be "
           "in the form of a file with no header, one sample name per line.\n"
         )
-        ( "get_names", po::value( &opts_info->out_pep_names_fname ),
-          "Name of the file to write peptide names to. Output will be "
-          "in the form of a file with no header, one peptide name per line.\n"
+        ( "get_probes", po::value( &opts_info->out_pep_names_fname ),
+          "Name of the file to write probe names to. Output will be "
+          "in the form of a file with no header, one probe name per line.\n"
         )
         ( "col_sums", po::value( &opts_info->out_col_sums_fname ),
           "Name of the file to write the sum of column scores to. "
