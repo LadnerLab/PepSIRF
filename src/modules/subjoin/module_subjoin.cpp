@@ -1,4 +1,5 @@
 #include <unordered_set>
+#include <boost/algorithm/string/trim.hpp>
 #include "module_subjoin.h"
 #include "matrix.h"
 #include <iostream>
@@ -13,7 +14,11 @@ void module_subjoin::parse_namelist( std::vector<std::string>& dest,
     std::string line;
     while( std::getline( file, line ) )
         {
-            dest.push_back( line );
+            boost::trim( line );
+            if( line.size() )
+                {
+                    dest.push_back( line );
+                }
         }
 }
 
