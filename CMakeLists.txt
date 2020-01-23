@@ -23,6 +23,7 @@ include_directories(include/modules/bin)
 include_directories(include/modules/link)
 include_directories(include/modules/s_enrich)
 include_directories(include/modules/p_enrich)
+include_directories(include/modules/info)
 include_directories(lib/parallel_hashmap)
 add_compile_options( "-Wall" "-std=c++11" "-Wextra" "-fvisibility=hidden"
                      "-fvisibility-inlines-hidden"
@@ -37,6 +38,7 @@ set(PepSIRF_MODULES pepsirf_common modules_demux modules_deconv
 					modules_link
 					modules_s_enrich
 					modules_p_enrich
+					modules_info
    )                
 
 if(OpenMP_FOUND)
@@ -127,6 +129,12 @@ add_library( modules_p_enrich STATIC src/modules/p_enrich/module_p_enrich.cpp
 				src/modules/p_enrich/options_parser_p_enrich.cpp
 				src/modules/core/predicate.cpp
 		   )
+
+add_library( modules_info STATIC src/modules/info/module_info.cpp
+			 src/modules/info/options_info.cpp
+			 src/modules/info/options_parser_info.cpp
+		   )
+
 
 option( BUILD_TESTS "Determines whether to build tests." ON )
 if(BUILD_TESTS)
