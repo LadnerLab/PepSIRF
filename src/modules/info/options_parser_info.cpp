@@ -12,7 +12,7 @@ bool options_parser_info
     po::variables_map vm;
 
     po::options_description desc( "PepSIRF: Peptide-based Serological Immune "
-                                  "Response Framework info module.\n"
+                                  "Response Framework info module"
                                 );
 
     desc.add_options()
@@ -20,11 +20,27 @@ bool options_parser_info
          "help,h", "Produce help message and exit.\n"
          "This module is used to gather information about a score matrix. "
          "By default, the number of samples and peptides in the matrix will be output. "
-         "Additional flags may be used to output different information.\n"
+         "Additional flags may be used to perform different analyses. "
+         "For each input flag included, one output file will be written.\n"
         )
-
-
-
+        ( "input,i", po::value( &opts_info->in_fname )->required(),
+          "An input score matrix to gather information from.\n"
+        )
+        ( "get_samples", po::value( &opts_info->out_samples_fname )
+          ->default_value( "" ),
+          "Name of the file to write sample names to. Output will be "
+          "in the form of a file with no header, one sample name per line.\n"
+        )
+        ( "get_names", po::value( &opts_info->out_pep_names_fname ),
+          "Name of the file to write peptide names to. Output will be "
+          "in the form of a file with no header, one peptide name per line.\n"
+        )
+        ( "col_sums", po::value( &opts_info->out_col_sums_fname ),
+          "Name of the file to write the sum of column scores to. "
+          "Output will be a tab-delimited file with a header. The first "
+          "entry in each column will be the name of the sample, and the second "
+          "will be the sum of the scores each peptide had for the sample.\n"
+        )
         ;
 
     po::store( po::command_line_parser( argc, *argv ).options( desc ).run(), vm);
