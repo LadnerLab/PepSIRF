@@ -49,6 +49,7 @@ namespace pepsirf_io
      * @param split a split predicate, as described above.
      * @param init_pred the IteratorInitializer, as described above.
      * @param end the output iterator
+     * @note Empty lines in the input are consumed and ignored.
      **/
     template
         <
@@ -67,9 +68,13 @@ namespace pepsirf_io
 
         while( std::getline( input, current_line ) )
             {
-                boost::algorithm::split( split_line, current_line, split );
-                *end = init_pred( split_line.begin(), split_line.end() );
-                ++end;
+                boost::algorithm::trim( current_line );
+                if( !current_line.empty() )
+                    {
+                        boost::algorithm::split( split_line, current_line, split );
+                        *end = init_pred( split_line.begin(), split_line.end() );
+                        ++end;
+                    }
             }
     }
 
