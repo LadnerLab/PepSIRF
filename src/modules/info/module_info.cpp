@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <numeric>
+#include <iomanip>
 
 #include "module_info.h"
 #include "peptide_scoring.h"
@@ -47,12 +48,11 @@ void module_info::run( options *opts )
             peptide_names << "Sample name\tSum of probe scores\n";
 
             auto& matr = scores.scores;
-            std::size_t sample_idx = 0;
 
             for( const auto sample_n : matr.get_row_labels() )
                 {
-                    double sum = std::accumulate( matr.row_begin( sample_idx ),
-                                                  matr.row_end( sample_idx ),
+                    double sum = std::accumulate( matr.row_begin( sample_n.second ),
+                                                  matr.row_end( sample_n.second ),
                                                   static_cast<double>( 0.0 )
                                                 );
 
@@ -60,7 +60,6 @@ void module_info::run( options *opts )
                                   << "\t"
                                   << sum
                                   << "\n";
-                    ++sample_idx;
                 }
 
         }
