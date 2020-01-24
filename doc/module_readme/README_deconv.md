@@ -1,6 +1,6 @@
 #### Module Deconv
 ```
-PepSIRF: Peptide-based Serological Immune Response Framework species deconvolution module. 
+PepSIRF: Peptide-based Serological Immune Response Framework species deconvolution module. This module has two modes: batch and singular. In batch mode, the input given to '--enriched' is a directory containing files of enriched peptides for each sample. Output is a directory where the output deconvolution reports will be written. In singular mode, both '--enriched' and '--output' are treated as files. The chosen mode is determined by the type of the argument to '--enriched'. If a directory is specified, batch mode will be used. If a file is specified, singular mode will be used.
 :
   -h [ --help ]                         Produce help message
                                         
@@ -10,13 +10,22 @@ PepSIRF: Peptide-based Serological Immune Response Framework species deconvoluti
   -t [ --threshold ] arg                Threshold number of peptides for a 
                                         species to be considered. 
                                         
+  --outfile_suffix arg                  Used for batch mode only. When 
+                                        specified, each file written to the 
+                                        output will have this suffix.
+                                        
   -o [ --output ] arg (=deconv_output.tsv)
-                                        Name of the file to write output to. 
-                                        Output will be in the form of a 
-                                        tab-delimited file with a header. Each 
-                                        entry will be of the form:
+                                        Name of the directory or file to write 
+                                        output to. Output will be in the form 
+                                        of either one file or a directory 
+                                        containing files, each a tab-delimited 
+                                        file with a header. Each entry will be 
+                                        of the form:
                                         species_id\tcount
-                                         
+                                         Note that in batch mode, the default 
+                                        output directory will be 
+                                        'deconv_output'.
+                                        
   --scores_per_round arg                Name of directory to write 
                                         counts/scores to after every round. If 
                                         included, 
@@ -85,11 +94,12 @@ PepSIRF: Peptide-based Serological Immune Response Framework species deconvoluti
                                         scored by the number of peptides it 
                                         shares a kmer with. 
                                         
-  -e [ --enriched ] arg                 File containing the names of enriched 
-                                        peptides, one per line. Each file in 
-                                        this file should have a corresponding 
-                                        entry in the file provided by the 
-                                        --linked option. 
+  -e [ --enriched ] arg                 Name of a directory containing files, 
+                                        or a single file containing the names 
+                                        of enriched peptides, one per line. 
+                                        Each file in this file should have a 
+                                        corresponding entry in the file 
+                                        provided by the --linked option. 
                                         
   --score_filtering                     Include this flag if you want filtering
                                         to be done by the score of each 
@@ -109,8 +119,11 @@ PepSIRF: Peptide-based Serological Immune Response Framework species deconvoluti
                                         
   --peptide_assignment_map arg          If specified, a map detailing which 
                                         peptides were assigned to which species
-                                        will be written. This map will be a 
-                                        tab-delimited file with the first 
+                                        will be written. If deconv is used in 
+                                        batch mode, this will be used as a 
+                                        directory name for the peptide maps to 
+                                        be stored. This map will be a 
+                                        tab-delimited file with the  first 
                                         column peptide names, the second column
                                         is a comma-separated list of species 
                                         the peptide was assigned to. The third 
@@ -121,6 +134,9 @@ PepSIRF: Peptide-based Serological Immune Response Framework species deconvoluti
                                         contain multiple values in the event of
                                         a tie. 
                                         
+  --mapfile_suffix arg                  In batch mode, add a suffix to the 
+                                        filenames written to the 
+                                        peptide_assignment_map directory. 
   --score_tie_threshold arg (=0)        Threshold for two species to be 
                                         evaluated as a tie. Note that this 
                                         value can be either an integer or a 
