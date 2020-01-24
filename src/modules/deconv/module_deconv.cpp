@@ -7,6 +7,7 @@
 #include <boost/regex.hpp>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/range/adaptor/transformed.hpp>
+#include <boost/range/iterator_range.hpp>
 #include <algorithm>
 
 #include "fs_tools.h"
@@ -33,7 +34,45 @@ void module_deconv::run( options *opts )
 
     timer.start();
 
-    choose_kmers( d_opts );
+    fs_tools::path input_base{ d_opts->enriched_fname };
+
+    if( fs_tools::is_directory( input_base ) )
+        {
+            if( d_opts->output_fname == "deconv_output.tsv" )
+                {
+                    d_opts->output_fname = "deconv_output";
+                }
+
+            fs_tools::path output_base{ d_opts->output_fname };
+            bool output_existed = !fs_tools::create_directory( output_base );
+
+            if( output_existed )
+                {
+                    std::cout << "WARNING: Output directory '"
+                              << output_base.string()
+                              << "' already exists. Any "
+                              << "files with colliding names will be "
+                              << "overwritten.\n";
+                }
+
+            auto in_dir_iter = fs_tools::directory_iterator( input_base );
+
+            for( auto& input_f : boost::make_iterator_range( in_dir_iter, {} ) )
+                {
+                    std::string file_name = input_f.path().filename().string();
+                    fs_tools::path in_path = input_f;
+                    fs_tools::path out_path = output_base/( file_name + d_opts->outfile_suffix );
+
+                    d_opts->enriched_fname = in_path.string();
+                    d_opts->output_fname   = out_path.string();
+
+                    choose_kmers( d_opts );
+                }
+        }
+    else
+        {
+            choose_kmers( d_opts );
+        }
 
     timer.stop();
 
