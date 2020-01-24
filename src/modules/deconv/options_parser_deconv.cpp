@@ -18,7 +18,14 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
     po::variables_map vm;
 
     po::options_description desc( "PepSIRF: Peptide-based Serological Immune Response "
-                                  "Framework species deconvolution module. \n"
+                                  "Framework species deconvolution module. This module has "
+                                  "two modes: batch and singular. In batch mode, the input "
+                                  "given to '--enriched' is a directory containing files of enriched "
+                                  "peptides for each sample. Output is a directory where the output "
+                                  "deconvolution reports will be written. In singular mode, both '--enriched' "
+                                  "and '--output' are treated as files. The chosen mode is determined by the type "
+                                  "of the argument to '--enriched'. If a directory is specified, batch mode will be used. "
+                                  "If a file is specified, singular mode will be used.\n"
                                 );
     desc.add_options()
         ( "help,h", "Produce help message\n" )
@@ -28,10 +35,16 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
         ( "threshold,t", po::value<std::size_t>( &opts_deconv->threshold ),
           "Threshold number of peptides for a species to be considered. \n"
         )
+        ( "outfile_suffix", po::value( &opts_deconv->outfile_suffix )
+          ->default_value( "" ),
+          "Used for batch mode only. When specified, each file written to the output will "
+          "have this suffix.\n"
+        )
         ( "output,o", po::value<std::string>( &opts_deconv->output_fname )->default_value( "deconv_output.tsv" ),
-          "Name of the file to write output to. Output will be in the form of "
+          "Name of the directory or file to write output to. Output will be in the form of "
+          "either one file or a directory containing files, each "
           "a tab-delimited file with a header. Each entry will be of the form:\n"
-          "species_id\\tcount\n "
+          "species_id\\tcount\n Note that in batch mode, the default output directory will be 'deconv_output'.\n"
         )
         ( "scores_per_round", po::value<std::string>( &opts_deconv->orig_scores_dname )->default_value( "" )
           ->notifier( [&]( const std::string& val )
@@ -92,7 +105,8 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "number of peptides it shares a kmer with. \n" 
         )
         ( "enriched,e", po::value<std::string>( &opts_deconv->enriched_fname ),
-          "File containing the names of enriched peptides, one per line. "
+          "Name of a directory containing files, or a single file containing the "
+          "names of enriched peptides, one per line. "
           "Each file in this file should have a corresponding entry in the "
           "file provided by the --linked option. \n"
         )
