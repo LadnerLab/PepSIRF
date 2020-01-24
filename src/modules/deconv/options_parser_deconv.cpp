@@ -46,6 +46,12 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "a tab-delimited file with a header. Each entry will be of the form:\n"
           "species_id\\tcount\n Note that in batch mode, the default output directory will be 'deconv_output'.\n"
         )
+        ( "remove_file_types", po::bool_switch( &opts_deconv->remove_file_types )
+          ->default_value( false ),
+          "Remove the existing file extensions from files before adding new suffixes. "
+          "For example, 'enriched_probes.txt' becomes 'enriched_probes'. A suffix can then be used "
+          "that adds a new file extension, e.g. 'enriched_probes.map'. Not used in single mode."
+        )
         ( "scores_per_round", po::value<std::string>( &opts_deconv->orig_scores_dname )->default_value( "" )
           ->notifier( [&]( const std::string& val )
                       {

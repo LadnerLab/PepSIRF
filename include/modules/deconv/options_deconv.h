@@ -47,6 +47,8 @@ class options_deconv : public options
      **/
     bool penalize_kmers;
 
+    bool remove_file_types;
+
     /**
      * Name of file that contains names of enriched peptides,
      * one per line.

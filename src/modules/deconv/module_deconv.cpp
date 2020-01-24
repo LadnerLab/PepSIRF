@@ -67,6 +67,11 @@ void module_deconv::run( options *opts )
             for( auto& input_f : boost::make_iterator_range( in_dir_iter, {} ) )
                 {
                     std::string file_name = input_f.path().filename().string();
+                    if( d_opts->remove_file_types )
+                        {
+                            file_name = input_f.path().filename().stem().string();
+                        }
+
                     fs_tools::path in_path = input_f;
                     fs_tools::path out_path = output_base/( file_name + d_opts->outfile_suffix );
 
