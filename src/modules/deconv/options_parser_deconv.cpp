@@ -129,6 +129,10 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "Note that the second column will only contain multiple values in the event of "
           "a tie. \n"
         )
+        ( "mapfile_suffix", po::value( &opts_deconv->map_suffix )
+          ->default_value( "" ),
+          "In batch mode, add a suffix to the filenames written to the peptide_assignment_map directory. "
+        )
         ( "score_tie_threshold", po::value<double>( &opts_deconv->score_tie_threshold )->default_value( 0.00 )
           ->notifier( [&]( const double val ) {
                   if( val > 1 && !util::is_integer( val ) )
