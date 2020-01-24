@@ -120,7 +120,9 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
         )
         ( "peptide_assignment_map", po::value<std::string>( &opts_deconv->species_peptides_out ),
           "If specified, a map detailing which peptides were assigned to which species will be "
-          "written. This map will be a tab-delimited file with the first column peptide names, "
+          "written. If deconv is used in batch mode, this will be used as a directory name for "
+          "the peptide maps to be stored. This map will be a tab-delimited file with the "
+          " first column peptide names, "
           "the second column is a comma-separated list of species the peptide was assigned to. "
           "The third column will be a list of the species the peptide originally shared "
           "a kmer with. \n"

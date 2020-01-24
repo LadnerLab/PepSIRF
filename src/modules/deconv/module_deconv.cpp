@@ -44,6 +44,13 @@ void module_deconv::run( options *opts )
                 }
 
             fs_tools::path output_base{ d_opts->output_fname };
+            fs_tools::path assign_map_base{ d_opts->species_peptides_out };
+
+            if( !assign_map_base.empty() )
+                {
+                    fs_tools::create_directory( assign_map_base );
+                }
+
             bool output_existed = !fs_tools::create_directory( output_base );
 
             if( output_existed )
@@ -62,6 +69,13 @@ void module_deconv::run( options *opts )
                     std::string file_name = input_f.path().filename().string();
                     fs_tools::path in_path = input_f;
                     fs_tools::path out_path = output_base/( file_name + d_opts->outfile_suffix );
+
+                    if( !assign_map_base.empty() )
+                        {
+                            fs_tools::path map_path = assign_map_base/file_name;
+
+                            d_opts->species_peptides_out = map_path.string();
+                        }
 
                     d_opts->enriched_fname = in_path.string();
                     d_opts->output_fname   = out_path.string();
