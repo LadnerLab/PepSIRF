@@ -72,7 +72,7 @@ void module_deconv::run( options *opts )
 
                     if( !assign_map_base.empty() )
                         {
-                            fs_tools::path map_path = assign_map_base/file_name;
+                            fs_tools::path map_path = assign_map_base/( file_name + d_opts->map_suffix );
 
                             d_opts->species_peptides_out = map_path.string();
                         }
