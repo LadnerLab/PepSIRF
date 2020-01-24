@@ -26,6 +26,12 @@ class options_deconv : public options
     std::size_t id_index;
 
     /**
+     * Suffix to add to files written to 
+     * output directory in batch mode.
+     **/
+    std::string outfile_suffix;
+
+    /**
      * Name of the file to write output to.
      **/
     std::string output_fname;
