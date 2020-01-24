@@ -32,6 +32,11 @@ class options_deconv : public options
     std::string outfile_suffix;
 
     /**
+     * Suffix to add to map files.
+     **/
+    std::string map_suffix;
+
+    /**
      * Name of the file to write output to.
      **/
     std::string output_fname;
