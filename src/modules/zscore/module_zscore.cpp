@@ -2,6 +2,8 @@
 #include "time_keep.h"
 #include "stats.h"
 #include "omp_opt.h"
+
+#include <limits>
 #include <iostream>
 #include <fstream>
 
@@ -94,8 +96,15 @@ module_zscore::calculate_zscores( const bin_collection& peptide_bins,
                 {
 
                     auto &current_value = scores( sample_num, peptide );
-                    double zscore = stats::zscore( current_value, mean, stdev );
-                    current_value = zscore;
+                    if( mean == static_cast<double>( 0.0 ) )
+                        {
+                            current_value = std::numeric_limits<double>::quiet_NaN();
+                        }
+                    else
+                        {
+                            double zscore = stats::zscore( current_value, mean, stdev );
+                            current_value = zscore;
+                        }
                 }
 
             current_row_counts.clear();
