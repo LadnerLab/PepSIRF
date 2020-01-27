@@ -54,6 +54,15 @@ bool options_parser_zscore::parse( int argc, char ***argv, options *opts )
           "each peptide will be written with its z-score within "
           "each sample.\n"
         )
+        (
+         "nan_report", po::value( &opts_zscore->nan_report_fname )->default_value( "" ),
+         "Name of the file to write out information regarding peptides that are given a zscore of 'nan'. "
+         "This can happen in one of two ways when all of the peptides in a bin have a score of zero. "
+         "This will be a tab-delimited file, with three columns per line. The first column will "
+         "contain the name of the probe, the second will be the name of the sample, and the third "
+         "the bin number of the probe. This bin number corresponds to the line in the bins file "
+         "the probe was found in.\n"
+        )
         ( "num_threads,t", po::value( &opts_zscore->num_threads )
           ->default_value( opts_zscore->DEFAULT_NUM_THREADS ),
           "The number of threads to use for analyses.\n"
