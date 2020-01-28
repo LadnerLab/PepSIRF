@@ -23,6 +23,20 @@ PepSIRF: Peptide-based Serological Immune Response Framework zscore module:
                                         this file, each peptide will be written
                                         with its z-score within each sample.
                                         
+  --nan_report arg                      Name of the file to write out 
+                                        information regarding peptides that are
+                                        given a zscore of 'nan'. This can 
+                                        happen in one of two ways when all of 
+                                        the peptides in a bin have a score of 
+                                        zero. This will be a tab-delimited 
+                                        file, with three columns per line. The 
+                                        first column will contain the name of 
+                                        the probe, the second will be the name 
+                                        of the sample, and the third the bin 
+                                        number of the probe. This bin number 
+                                        corresponds to the line in the bins 
+                                        file the probe was found in.
+                                        
   -t [ --num_threads ] arg (=2)         The number of threads to use for 
                                         analyses.
 ```
