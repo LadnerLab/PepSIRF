@@ -12,6 +12,7 @@ std::string options_zscore::get_arguments()
                << "--bins        " << in_bins_fname << "\n "
                << "--trim        " << trim_percent << "\n "
                << "--output      " << out_fname << "\n "
+               << "--nan_report  " << nan_report_fname << "\n "
                << "--num_threads " << num_threads << "\n "
                << "\n";
           

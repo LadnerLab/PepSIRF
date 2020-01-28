@@ -13,6 +13,7 @@ class options_zscore : public options
     std::string in_fname;
     std::string in_bins_fname;
     std::string out_fname;
+    std::string nan_report_fname;
 
     double trim_percent;
 };
