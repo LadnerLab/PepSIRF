@@ -2,6 +2,8 @@
 #include "time_keep.h"
 #include "stats.h"
 #include "omp_opt.h"
+#include "noop_iterator.h"
+#include "file_io.h"
 
 #include <limits>
 #include <iostream>
@@ -34,79 +36,36 @@ void module_zscore::run( options *opts )
 
     auto& zscore_matrix = input.scores;
     omp_set_num_threads( z_opts->num_threads );
-    std::uint32_t sample_idx = 0;
+    std::vector<nan_report> nan_values;
 
     // for each sample
-    #pragma omp parallel for private( sample_idx ) \
-            shared( zscore_matrix, peptide_bins ) schedule( dynamic )
-    for( sample_idx = 0;
-         sample_idx < zscore_matrix.nrows();
-         ++sample_idx
-           )
+    for( const auto sample_pair : zscore_matrix.get_row_labels() )
         {
+            std::string sample_name = sample_pair.first;
+
             calculate_zscores( peptide_bins,
                                z_opts->trim_percent,
                                zscore_matrix,
-                               sample_idx
+                               sample_name,
+                               std::back_inserter( nan_values )
                              );
         }
 
     // write output
     peptide_scoring::write_peptide_scores( z_opts->out_fname, input );
 
+    if( !z_opts->nan_report_fname.empty() )
+        {
+            std::ofstream report_file{ z_opts->nan_report_fname };
+            report_file << "Probe name\tSample Name\tBin Number\n";
+            pepsirf_io::write_file( report_file,
+                                    nan_values.begin(),
+                                    nan_values.end(),
+                                    "\n"
+                                  );
+        }
+
     time.stop();
 
     std::cout << "Took " << time.get_elapsed() << " seconds.\n";
-}
-void
-module_zscore::calculate_zscores( const bin_collection& peptide_bins,
-                                  const double trim_percent,
-                                  labeled_matrix<double,std::string>& scores,
-                                  const std::uint32_t sample_num
-                                )
-{
-    std::vector<double> current_row_counts;
-
-    for( const auto& bin : peptide_bins )
-        {
-            // get the counts for the peptides in this group
-            for( const auto& peptide : bin )
-                {
-                    current_row_counts.emplace_back( scores( sample_num, peptide ) );
-                }
-
-            std::sort( current_row_counts.begin(),
-                       current_row_counts.end()
-                     );
-
-            std::size_t trim_length = current_row_counts.size() * ( 0.01 * trim_percent );
-            auto new_begin = current_row_counts.begin() + trim_length;
-            auto new_end = current_row_counts.end() - trim_length;
-
-            double mean = stats::arith_mean( new_begin,
-                                             new_end
-                                           );
-
-            double stdev = stats::stdev( new_begin,
-                                         new_end,
-                                         mean
-                                       );
-
-            for( const auto& peptide : bin )
-                {
-
-                    auto &current_value = scores( sample_num, peptide );
-                    if( mean == static_cast<double>( 0.0 ) )
-                        {
-                            current_value = std::numeric_limits<double>::quiet_NaN();
-                        }
-                    else
-                        {
-                            double zscore = stats::zscore( current_value, mean, stdev );
-                            current_value = zscore;
-                        }
-                }
-
-            current_row_counts.clear();
-        }
 }
