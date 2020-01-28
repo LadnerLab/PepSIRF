@@ -33,12 +33,13 @@ public:
     {
         return probe_name + join_char
             + sample_name + join_char
-            + std::to_string( bin_number) + join_char;
+            + std::to_string( bin_number);
     }
 
 };
 
-std::ostream& operator<<( std::ostream& stream, const nan_report& rep )
+template<typename Stream>
+Stream& operator<<( Stream& stream, const nan_report& rep )
 {
     stream << rep.to_string();
     return stream;
