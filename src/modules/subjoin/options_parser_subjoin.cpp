@@ -86,7 +86,10 @@ bool options_parser_subjoin::parse( int argc, char ***argv, options *opts )
           "containing the names of samples (or peptides, if specified) "
           "to keep in the score matrix. The score matrix should be of the format output by the "
           "demux module, with sample names on the columns and peptide names on the rows. "
-          "The namelist must have one name per line. To use multiple name lists with multiple "
+          "The namelist must have one name per line, but can optionally have 2. If "
+          "2 tab-delimited names are included on one line, the name in the second "
+          "column will be output.. "
+          "To use multiple name lists with multiple "
           "score matrices, include this argument multiple times.\n"
         )
         ( "filter_peptide_names", po::bool_switch( &opts_subjoin->use_sample_names  )->default_value( false )

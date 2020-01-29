@@ -5,7 +5,7 @@ PepSIRF: Peptide-based Serological Immune Response Framework subjoin module:
                                         
   --filter_scores arg                   Either comma-separated filenames (For 
                                         example: score_matrix.tsv,sample_names.
-                                        txt ) or the name of a tab-delimited 
+                                        txt ), or the name of a tab-delimited 
                                         file containing score_matrix and sample
                                         name list filename pairs, one per line.
                                         Each of these pairs must be a score 
@@ -16,9 +16,12 @@ PepSIRF: Peptide-based Serological Immune Response Framework subjoin module:
                                         by the demux module, with sample names 
                                         on the columns and peptide names on the
                                         rows. The namelist must have one name 
-                                        per line. To use multiple name lists 
-                                        with multiple score matrices, include 
-                                        this argument multiple times.
+                                        per line, but can optionally have 2. If
+                                        2 tab-delimited names are included on 
+                                        one line, the name in the second column
+                                        will be output.. To use multiple name 
+                                        lists with multiple score matrices, 
+                                        include this argument multiple times.
                                         
   --filter_peptide_names                Flag to include if the files input to 
                                         the filter_scores options should be 
