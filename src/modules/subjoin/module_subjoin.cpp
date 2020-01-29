@@ -1,5 +1,6 @@
 #include <unordered_set>
 #include <boost/algorithm/string/trim.hpp>
+#include <boost/algorithm/string/split.hpp>
 #include "module_subjoin.h"
 #include "matrix.h"
 #include <iostream>
@@ -12,12 +13,23 @@ void module_subjoin::parse_namelist( std::vector<std::string>& dest,
                                    )
 {
     std::string line;
+    std::vector<std::string> split_line;
     while( std::getline( file, line ) )
         {
             boost::trim( line );
             if( line.size() )
                 {
-                    dest.push_back( line );
+                    boost::split( split_line, line, boost::is_any_of( "\t" ) );
+
+                    // replace the old name with the new
+                    if( split_line.size() == 2 && split_line[ 1 ].length() > 0 )
+                        {
+                            dest.emplace_back( split_line[ 1 ] );
+                        }
+                    else
+                        {
+                            dest.emplace_back( line );
+                        }
                 }
         }
 }
