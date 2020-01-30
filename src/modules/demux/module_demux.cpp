@@ -337,7 +337,13 @@ void module_demux::add_seqs_to_map( parallel_map<sequence, std::vector<std::size
     for( index = 0; index < seqs.size(); ++index )
         {
             input_map[ seqs[ index ] ] = new std::vector<std::size_t>( num_samples );
-            _zero_vector( input_map[ seqs[ index ] ] );
+        }
+    for( auto& x : input_map )
+        {
+            std::fill( x.second->begin(),
+                       x.second->end(),
+                       0
+                     );
         }
 }
 
