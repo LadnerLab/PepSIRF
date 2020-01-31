@@ -333,7 +333,7 @@ void module_demux::add_seqs_to_map( parallel_map<sequence, std::vector<std::size
 
     input_map.reserve( seqs.size() );
 
-    #pragma omp parallel for private( index ) shared ( seqs, input_map, num_samples )
+    // #pragma omp parallel for private( index ) shared ( seqs, input_map, num_samples )
     for( index = 0; index < seqs.size(); ++index )
         {
             input_map[ seqs[ index ] ] = new std::vector<std::size_t>( num_samples );
