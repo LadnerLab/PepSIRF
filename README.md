@@ -2,7 +2,7 @@
 
 ### Dependencies
 - cmake version 3.9 or higher.
-- boost version 1.6 or higher.
+- boost version 1.66 or higher.
 
 ### Compiling/Building 
 ```
