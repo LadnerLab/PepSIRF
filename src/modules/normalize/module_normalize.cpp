@@ -38,6 +38,8 @@ void module_normalize::run( options *opts )
 
     peptide_scoring::parse_peptide_scores( original_scores, scores_fname );
 
+    original_scores.scores = original_scores.scores.transpose();
+
     std::vector<double> norm_factors( original_scores.sample_names.size(), 0 );
 
     if( n_opts->size_factors_norm )
