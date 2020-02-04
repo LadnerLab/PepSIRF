@@ -55,6 +55,8 @@ void module_normalize::run( options *opts )
     // normalize the counts
     normalize_counts( original_scores.scores, norm_factors );
 
+    original_scores.scores = original_scores.scores.transpose();
+
     peptide_scoring::write_peptide_scores( n_opts->output_fname, original_scores );
 
     timer.stop();
