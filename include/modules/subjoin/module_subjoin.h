@@ -55,6 +55,8 @@ class module_subjoin : public module
                                     resolution_strategy
                                   ) const ;
 
+    std::string get_name();
+
 };
 
 #endif // MODULE_SUBJOIN_HH_INCLUDED

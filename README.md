@@ -17,7 +17,7 @@ Alternatively, one can use the included build script.
 chmod +x build.sh
 ./build.sh
 ```
-Both of these options will create a ```pep_sirf``` executable in the build directory.
+Both of these options will create a ```pepsirf``` executable in the build directory.
 
 ### Running Tests
 ```
@@ -38,8 +38,8 @@ cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
 ### Usage
 PepSIRF is a module-based program, and each module has its own set of arguments. 
 ```
-USAGE: pep_sirf [ --help | module_name <module_args*> ] 
---help, -h displays this message, while 'pep_sirf module_name --help' will display the help for the module module_name.
+USAGE: pepsirf [ --help | module_name <module_args*> ] 
+--help, -h displays this message, while 'pepsirf module_name --help' will display the help for the module module_name.
 ```
 To see usage information for each module, check out [this page](doc/module_readme).
 

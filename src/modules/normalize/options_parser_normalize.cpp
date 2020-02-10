@@ -50,7 +50,7 @@ bool options_parser_normalize::parse( int argc, char ***argv, options *opts )
     po::store( po::command_line_parser( argc, *argv ).options( desc ).run(), vm);
 
     if( vm.count( "help" )
-        || argc == 2 // argc == 2 when 'pep_sirf norm' is called
+        || argc == 2 // argc == 2 when 'pepsirf norm' is called
       )
         {
             std::cout << desc << std::endl;

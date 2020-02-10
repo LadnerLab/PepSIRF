@@ -54,7 +54,7 @@ void options_demux::set_info( std::tuple<std::size_t, std::size_t, std::size_t>
     if( matches.size() != NUM_REQUIRED_ITEMS )
         {
             throw std::runtime_error( "Incorrect number of comma-separated values "
-                                      "provided. Please try ./pep_sirf demux -h for help"
+                                      "provided. Please try ./pepsirf demux -h for help"
                                     );
         }
 
