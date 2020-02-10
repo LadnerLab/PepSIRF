@@ -179,3 +179,7 @@ labeled_matrix<double,std::string>
     return first.scores.full_outer_join( second.scores );
 }
 
+std::string module_subjoin::get_name()
+{
+    return "Subjoin";
+}
