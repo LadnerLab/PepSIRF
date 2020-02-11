@@ -1,6 +1,26 @@
 #include "options_parser.h"
+#include <sys/ioctl.h>
 
-options_parser::options_parser() = default;
+options_parser::options_parser() 
+{
+
+    #ifdef TIOCGSIZE
+
+    struct ttysize ts;
+    ioctl( STDIN_FILENO, TIOCGSIZE, &ts );
+    line_width = ts.ts_lines;
+
+    #elif defined( TIOCGWINSZ )
+
+    struct winsize ts;
+    ioctl( STDIN_FILENO, TIOCGWINSZ, &ts );
+    line_width = ts.ws_col;
+
+    #endif 
+
+
+}
+
 options_parser::~options_parser() = default;
 
 bool options_parser::parse( int argc, char ***argv, options *opts )
