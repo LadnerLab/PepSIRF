@@ -12,7 +12,8 @@ bool options_parser_subjoin::parse( int argc, char ***argv, options *opts )
     std::vector<std::string> matrix_name_list_pairs;
 
     po::options_description desc( "PepSIRF: Peptide-based Serological Immune "
-                                  "Response Framework subjoin module"
+                                  "Response Framework subjoin module",
+                                  line_width
                                 );
 
     desc.add_options()

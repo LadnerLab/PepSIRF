@@ -16,7 +16,8 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
                                   "<= max_mismatches we say that r and s are similar. Note that if for some read q D( r, s ) <= max_mismatches and D( r, q ) "
                                   "<= max_mismatches, then we say that the sequence whose distance is the minimum between D( r, s ) and D( r, q ) maps to "
                                   "reference r. Additionally if D( r, s ) == D( r, q ) then we discard the read as we cannot "
-                                  "say whether r maps to s or q. \n"
+                                  "say whether r maps to s or q. \n",
+                                  line_width
                                 );
     desc.add_options()
         ( "help,h", "Produce help message" )

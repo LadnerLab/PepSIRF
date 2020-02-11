@@ -19,7 +19,7 @@ bool options_parser_normalize::parse( int argc, char ***argv, options *opts )
     namespace po = boost::program_options;
     po::variables_map vm;
 
-    po::options_description desc( "PepSIRF: Peptide-based Serological Immune Response Framework score normalization module. \n"
+    po::options_description desc( "PepSIRF: Peptide-based Serological Immune Response Framework score normalization module. \n", line_width
                                 );
 
     desc.add_options()

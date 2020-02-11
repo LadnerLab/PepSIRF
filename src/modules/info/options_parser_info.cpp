@@ -12,7 +12,8 @@ bool options_parser_info
     po::variables_map vm;
 
     po::options_description desc( "PepSIRF: Peptide-based Serological Immune "
-                                  "Response Framework info module"
+                                  "Response Framework info module",
+                                  line_width
                                 );
 
     desc.add_options()

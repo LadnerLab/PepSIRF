@@ -25,7 +25,8 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
                                   "deconvolution reports will be written. In singular mode, both '--enriched' "
                                   "and '--output' are treated as files. The chosen mode is determined by the type "
                                   "of the argument to '--enriched'. If a directory is specified, batch mode will be used. "
-                                  "If a file is specified, singular mode will be used.\n"
+                                  "If a file is specified, singular mode will be used.\n",
+                                  line_width
                                 );
     desc.add_options()
         ( "help,h", "Produce help message\n" )
@@ -137,7 +138,7 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
         )
         ( "mapfile_suffix", po::value( &opts_deconv->map_suffix )
           ->default_value( "" ),
-          "In batch mode, add a suffix to the filenames written to the peptide_assignment_map directory. "
+          "In batch mode, add a suffix to the filenames written to the peptide_assignment_map directory.\n"
         )
         ( "score_tie_threshold", po::value<double>( &opts_deconv->score_tie_threshold )->default_value( 0.00 )
           ->notifier( [&]( const double val ) {

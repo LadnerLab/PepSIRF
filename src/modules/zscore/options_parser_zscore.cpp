@@ -14,7 +14,8 @@ bool options_parser_zscore::parse( int argc, char ***argv, options *opts )
 
 
     po::options_description desc( "PepSIRF: Peptide-based Serological Immune "
-                                  "Response Framework zscore module"
+                                  "Response Framework zscore module",
+                                  line_width
                                 );
 
     desc.add_options()

@@ -24,7 +24,8 @@ bool options_parser_p_enrich::parse( int argc, char ***argv, options *opts )
                                   "to be met, each individual threshold in the pair must be met by at least "
                                   "one of the probes under consideration, independent of order. "
                                   "Note that a probe must meet each specified numeric threshold in order "
-                                  "to be considered enriched.\n"
+                                  "to be considered enriched.\n",
+                                  line_width
                                 );
     desc.add_options()
         ( "help,h", "Produce help message and exit.\n" )

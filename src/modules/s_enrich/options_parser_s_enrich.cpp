@@ -17,7 +17,8 @@ bool options_parser_s_enrich
     po::variables_map vm;
 
     po::options_description desc( "PepSIRF: Peptide-based Serological Immune Response "
-                                  "Framework species Single-Replicate Enrichment module"
+                                  "Framework species Single-Replicate Enrichment module",
+                                  line_width
                                 );
     desc.add_options()
         ( "help,h", "Produce help message and exit.\n"

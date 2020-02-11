@@ -12,7 +12,8 @@ bool options_parser_link::parse( int argc, char ***argv, options *opts )
     po::variables_map vm;
 
     po::options_description desc( "PepSIRF: Peptide-based Serological Immune "
-                                  "Response Framework link module.\n"
+                                  "Response Framework link module.\n",
+                                  line_width
                                   );
 
     desc.add_options()
