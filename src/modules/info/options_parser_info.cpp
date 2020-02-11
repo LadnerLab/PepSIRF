@@ -26,16 +26,16 @@ bool options_parser_info
         ( "input,i", po::value( &opts_info->in_fname )->required(),
           "An input score matrix to gather information from.\n"
         )
-        ( "get_samples", po::value( &opts_info->out_samples_fname )
+        ( "get_samples,s", po::value( &opts_info->out_samples_fname )
           ->default_value( "" ),
           "Name of the file to write sample names to. Output will be "
           "in the form of a file with no header, one sample name per line.\n"
         )
-        ( "get_probes", po::value( &opts_info->out_pep_names_fname ),
+        ( "get_probes,p", po::value( &opts_info->out_pep_names_fname ),
           "Name of the file to write probe names to. Output will be "
           "in the form of a file with no header, one probe name per line.\n"
         )
-        ( "col_sums", po::value( &opts_info->out_col_sums_fname ),
+        ( "col_sums,c", po::value( &opts_info->out_col_sums_fname ),
           "Name of the file to write the sum of column scores to. "
           "Output will be a tab-delimited file with a header. The first "
           "entry in each column will be the name of the sample, and the second "

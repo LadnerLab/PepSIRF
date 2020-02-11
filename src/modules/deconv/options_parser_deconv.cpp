@@ -46,13 +46,13 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "a tab-delimited file with a header. Each entry will be of the form:\n"
           "species_id\\tcount\n Note that in batch mode, the default output directory will be 'deconv_output'.\n"
         )
-        ( "remove_file_types", po::bool_switch( &opts_deconv->remove_file_types )
+        ( "remove_file_types,r", po::bool_switch( &opts_deconv->remove_file_types )
           ->default_value( false ),
           "Remove the existing file extensions from files before adding new suffixes. "
           "For example, 'enriched_probes.txt' becomes 'enriched_probes'. A suffix can then be used "
           "that adds a new file extension, e.g. 'enriched_probes.map'. Not used in single mode."
         )
-        ( "scores_per_round", po::value<std::string>( &opts_deconv->orig_scores_dname )->default_value( "" )
+        ( "scores_per_round,s", po::value<std::string>( &opts_deconv->orig_scores_dname )->default_value( "" )
           ->notifier( [&]( const std::string& val )
                       {
                           // check that a directory was actually supplied
@@ -124,7 +124,7 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "are the same. If this flag is not included, then any species whose count falls below --threshold will "
           "be removed from consideration. Score filtering is best suited for the summation scoring algorithm. \n"
         )
-        ( "peptide_assignment_map", po::value<std::string>( &opts_deconv->species_peptides_out ),
+        ( "peptide_assignment_map,p", po::value<std::string>( &opts_deconv->species_peptides_out ),
           "If specified, a map detailing which peptides were assigned to which species will be "
           "written. If deconv is used in batch mode, this will be used as a directory name for "
           "the peptide maps to be stored. This map will be a tab-delimited file with the "
