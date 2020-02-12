@@ -56,29 +56,36 @@ class module_zscore : public module
 
                     double mean = stats::arith_mean( new_begin,
                                                      new_end
-                                                     );
+                                                   );
 
                     double stdev = stats::stdev( new_begin,
                                                  new_end,
                                                  mean
                                                  );
 
+
                     for( const auto& peptide : bin )
                         {
 
-                            auto &current_value = scores( sample_name, peptide );
-                            if( mean == static_cast<double>( 0.0 ) )
+                            auto& current_value = scores( sample_name, peptide );
+                            double zscore = static_cast<double>( 0.0 );
+
+                            if( static_cast<double>( 0.0 ) == mean )
                                 {
                                     current_value = std::numeric_limits<double>::quiet_NaN();
                                     *nan_report_location = nan_report( peptide,
                                                                        sample_name,
                                                                        bin_id
-                                                                     );
+                                                                       );
                                     ++nan_report_location;
+                                }
+                            else if( stdev == 0.0 && mean != 0.0 )
+                                {
+                                    current_value = 0.0;
                                 }
                             else
                                 {
-                                    double zscore = stats::zscore( current_value, mean, stdev );
+                                    zscore = stats::zscore( current_value, mean, stdev );
                                     current_value = zscore;
                                 }
                         }
