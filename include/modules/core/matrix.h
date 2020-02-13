@@ -1213,7 +1213,7 @@ class labeled_matrix : public matrix<ValType>
 
             for( const auto& row_lab : row_labels )
                 {
-                    std::uint32_t row_idx_original = this->row_labels[ row_lab ];
+                    std::uint32_t row_idx_original = this->row_labels.at( row_lab );
                     const ValType *row_ptr = this->get_row_ptr( row_idx_original );
 
                     for( std::uint32_t row_val = 0; row_val < this->M; ++row_val )
@@ -1322,8 +1322,9 @@ class labeled_matrix : public matrix<ValType>
                   )
     {
         auto original = map.find( original_label );
+        auto value = original->second;
         map.erase( original_label );
-        map.emplace( new_label, original->second );
+        map.emplace( new_label, value );
     }
 
 };
