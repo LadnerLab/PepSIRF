@@ -4,16 +4,21 @@
 #include "module_subjoin.h"
 #include "matrix.h"
 #include <iostream>
+#include <stdexcept>
+#include <algorithm>
 #include "time_keep.h" 
 
 module_subjoin::module_subjoin() = default;
 
-void module_subjoin::parse_namelist( std::vector<std::string>& dest,
-                                     std::istream& file
-                                   )
+module_subjoin::name_replacement_list
+module_subjoin::parse_namelist( std::vector<std::string>& dest,
+                                std::istream& file
+                              )
 {
     std::string line;
     std::vector<std::string> split_line;
+    name_replacement_list ret_val;
+
     while( std::getline( file, line ) )
         {
             boost::trim( line );
@@ -25,6 +30,10 @@ void module_subjoin::parse_namelist( std::vector<std::string>& dest,
                     if( split_line.size() == 2 && split_line[ 1 ].length() > 0 )
                         {
                             dest.emplace_back( split_line[ 1 ] );
+                            ret_val.emplace_back( std::make_pair( split_line[ 0 ],
+                                                                  split_line[ 1 ]
+                                                                )
+                                                );
                         }
                     else
                         {
@@ -32,6 +41,7 @@ void module_subjoin::parse_namelist( std::vector<std::string>& dest,
                         }
                 }
         }
+    return ret_val;
 }
 
 void module_subjoin::run( options *opts )

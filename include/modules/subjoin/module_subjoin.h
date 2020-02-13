@@ -16,6 +16,8 @@ class module_subjoin : public module
  public:
     module_subjoin();
 
+    using name_replacement_list = std::vector<std::pair<std::string,std::string>>;
+
     /**
      * Run the subjoin module.
      **/
@@ -28,10 +30,15 @@ class module_subjoin : public module
      *        this method will store items found in file at 
      *        the end of the vector.
      * @param file A stream to read names from.
+     * @returns a list of the names that should be replaced in 
+     *          the output. Each entry in the list will be 
+     *          a pair of strings, with the first being the original name
+     *          and the second the new value.
      **/
-    void parse_namelist( std::vector<std::string>& dest,
-                         std::istream& file
-                       );
+    name_replacement_list
+        parse_namelist( std::vector<std::string>& dest,
+                        std::istream& file
+                      );
 
 
     /**
