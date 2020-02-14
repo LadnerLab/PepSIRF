@@ -16,6 +16,7 @@ int main( int argc, char **argv )
 
     bool help_msg_only = false;
 	int ret_code = EXIT_SUCCESS;
+    const std::string version_no = "1.0.0";
 
     try
         {
@@ -40,7 +41,9 @@ int main( int argc, char **argv )
             if( !help_msg_only )
                 {
 				    // run PepSIRF with options parsed from command-line
-                    std::cout << "Starting module "
+                    std::cout << "PepSIRF (v"
+                              << version_no << ") \n"
+                              << "Starting module "
                               << init.get_module()->get_name()
                               << " with arguments: \n "
                               << init.get_opts()->get_arguments();
