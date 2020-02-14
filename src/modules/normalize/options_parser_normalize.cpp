@@ -19,12 +19,12 @@ bool options_parser_normalize::parse( int argc, char ***argv, options *opts )
     namespace po = boost::program_options;
     po::variables_map vm;
 
-    po::options_description desc( "PepSIRF: Peptide-based Serological Immune Response Framework score normalization module. \n"
+    po::options_description desc( "PepSIRF: Peptide-based Serological Immune Response Framework score normalization module. \n", line_width
                                 );
 
     desc.add_options()
         ( "help,h", "Produce help message\n" )
-        ( "peptide_scores", po::value<std::string>( &opts_normalize->peptide_scores_fname ),
+        ( "peptide_scores,p", po::value<std::string>( &opts_normalize->peptide_scores_fname ),
           "Name of file containing peptide scores. This file should be tab-delimited "
           "with the first column being peptide names, and every next column should be \n"
           "the peptide's score within a given sample (the first item in the column). "

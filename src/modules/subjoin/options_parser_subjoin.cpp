@@ -12,14 +12,15 @@ bool options_parser_subjoin::parse( int argc, char ***argv, options *opts )
     std::vector<std::string> matrix_name_list_pairs;
 
     po::options_description desc( "PepSIRF: Peptide-based Serological Immune "
-                                  "Response Framework subjoin module"
+                                  "Response Framework subjoin module",
+                                  line_width
                                 );
 
     desc.add_options()
         (
          "help,h", "Produce help message\n"
         )
-        ( "filter_scores", po::value( &matrix_name_list_pairs )->required()
+        ( "filter_scores,f", po::value( &matrix_name_list_pairs )->required()
           ->notifier( [&]( const std::vector<std::string>& name_pairs )
                       {
                           std::vector<std::string> split_output;
@@ -98,7 +99,7 @@ bool options_parser_subjoin::parse( int argc, char ***argv, options *opts )
           "peptide names instead of sample names. With the inclusion of this flag, the input files will "
           "be filtered on peptide names (rows) instead of sample names (column).\n"
         )
-        ( "duplicate_evaluation", po::value<std::string>()->default_value( "include" )
+        ( "duplicate_evaluation,d", po::value<std::string>()->default_value( "include" )
           ->notifier( [&]( const std::string& provided_value )
                       {
                           if( evaluation_strategy::is_valid( provided_value ) )
@@ -126,7 +127,7 @@ bool options_parser_subjoin::parse( int argc, char ***argv, options *opts )
           " Possible options include combine, include, and ignore.\n"
         )
         (
-         "output", po::value<std::string>( &opts_subjoin->out_matrix_fname )->default_value( "subjoin_output.tsv" ),
+         "output,o", po::value<std::string>( &opts_subjoin->out_matrix_fname )->default_value( "subjoin_output.tsv" ),
          "The name of the file to write output scores to. The output will be in the form of the input, but with only the "
          "specified values (samplenames or peptides) found in the namelists. \n"
         )

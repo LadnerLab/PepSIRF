@@ -14,7 +14,8 @@ bool options_parser_zscore::parse( int argc, char ***argv, options *opts )
 
 
     po::options_description desc( "PepSIRF: Peptide-based Serological Immune "
-                                  "Response Framework zscore module"
+                                  "Response Framework zscore module",
+                                  line_width
                                 );
 
     desc.add_options()
@@ -29,7 +30,7 @@ bool options_parser_zscore::parse( int argc, char ***argv, options *opts )
           "Name of the file containing bins, one bin per line. "
           "Each bin contains a tab-separated list of peptide names.\n"
         )
-        ( "trim", po::value( &opts_zscore->trim_percent )
+        ( "trim,t", po::value( &opts_zscore->trim_percent )
           ->default_value( 2.5 )
           ->notifier( []( const double& val )
                       {
@@ -55,7 +56,7 @@ bool options_parser_zscore::parse( int argc, char ***argv, options *opts )
           "each sample.\n"
         )
         (
-         "nan_report", po::value( &opts_zscore->nan_report_fname )->default_value( "" ),
+         "nan_report,n", po::value( &opts_zscore->nan_report_fname )->default_value( "" ),
          "Name of the file to write out information regarding peptides that are given a zscore of 'nan'. "
          "This can happen in one of two ways when all of the peptides in a bin have a score of zero. "
          "This will be a tab-delimited file, with three columns per line. The first column will "
@@ -63,7 +64,7 @@ bool options_parser_zscore::parse( int argc, char ***argv, options *opts )
          "the bin number of the probe. This bin number corresponds to the line in the bins file "
          "the probe was found in.\n"
         )
-        ( "num_threads,t", po::value( &opts_zscore->num_threads )
+        ( "num_threads", po::value( &opts_zscore->num_threads )
           ->default_value( opts_zscore->DEFAULT_NUM_THREADS ),
           "The number of threads to use for analyses.\n"
         )

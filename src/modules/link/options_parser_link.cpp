@@ -12,7 +12,8 @@ bool options_parser_link::parse( int argc, char ***argv, options *opts )
     po::variables_map vm;
 
     po::options_description desc( "PepSIRF: Peptide-based Serological Immune "
-                                  "Response Framework link module.\n"
+                                  "Response Framework link module.\n",
+                                  line_width
                                   );
 
     desc.add_options()
@@ -34,7 +35,7 @@ bool options_parser_link::parse( int argc, char ***argv, options *opts )
           "Name of fasta file containing aa peptides that have been designed as part "
           "of a library.\n"
         )
-        ( "tax_id_index", po::value<std::size_t>( &opts_link->id_index )->default_value( 1 )
+        ( "tax_id_index,t", po::value<std::size_t>( &opts_link->id_index )->default_value( 1 )
           ->notifier( [&]( const std::size_t val ) {
                   if( val > 3 )
                       {
@@ -49,7 +50,7 @@ bool options_parser_link::parse( int argc, char ***argv, options *opts )
           "the species ID will be used. (2 for genus, 3 for family. 0 can vary depending upon the \n"
           "method used for assigning the 0'th ID.\n"
         )
-        ( "kmer_redundancy_control", po::bool_switch( &opts_link->penalize_kmers )->default_value( false ),
+        ( "kmer_redundancy_control,r", po::bool_switch( &opts_link->penalize_kmers )->default_value( false ),
           "Control for kmer redundancy when creating the peptide linkage map. Instead of a peptide receiving "
           "one point for each kmer it receives for a species, it recieves 1 / ( the number of times the kmer "
           "appears in the original design ) points.\n"

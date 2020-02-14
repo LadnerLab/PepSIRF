@@ -13,7 +13,8 @@ bool options_parser_bin::parse( int argc, char ***argv, options *opts )
     po::variables_map vm;
 
     po::options_description desc( "PepSIRF: Peptide-based Serological Immune "
-                                  "Response Framework bin module.\n"
+                                  "Response Framework bin module.\n",
+                                  line_width
                                 );
 
     desc.add_options()

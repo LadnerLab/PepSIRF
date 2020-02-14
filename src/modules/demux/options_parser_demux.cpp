@@ -16,7 +16,8 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
                                   "<= max_mismatches we say that r and s are similar. Note that if for some read q D( r, s ) <= max_mismatches and D( r, q ) "
                                   "<= max_mismatches, then we say that the sequence whose distance is the minimum between D( r, s ) and D( r, q ) maps to "
                                   "reference r. Additionally if D( r, s ) == D( r, q ) then we discard the read as we cannot "
-                                  "say whether r maps to s or q. \n"
+                                  "say whether r maps to s or q. \n",
+                                  line_width
                                 );
     desc.add_options()
         ( "help,h", "Produce help message" )
@@ -24,7 +25,7 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
         ( "input_r2", po::value<std::string>( &opts_demux->input_r2_fname ), "Input reverse reads fastq file to parse. Note that if this argument is "
           "not supplied only forward indices will be used to identify samples.\n"
         )
-        ( "index", po::value<std::string>( &opts_demux->index_fname )->required(), "Name of fasta file containing forward and (potentially) reverse index sequences.\n")
+        ( "index,i", po::value<std::string>( &opts_demux->index_fname )->required(), "Name of fasta file containing forward and (potentially) reverse index sequences.\n")
         ( "library,l", po::value<std::string>( &opts_demux->library_fname )->required(), "Designed library containing nucleic acid peptides. "
                                                              "Library should be in fasta format and should contain "
                                                              "sequences that were used to design input_r1.\n"
@@ -75,7 +76,7 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
           "12, grab the next 12 characters, and if a perfect match is not found for these grabbed characters we look for a match to "
           "the reverse index sequences with up to two allowed mismatches.\n."
         )       
-        ( "concatemer", po::value<std::string>( &opts_demux->concatemer ), "Concatenated primer sequences. If this concatemer is found within a read, we know that a potential sequence "
+        ( "concatemer,c", po::value<std::string>( &opts_demux->concatemer ), "Concatenated primer sequences. If this concatemer is found within a read, we know that a potential sequence "
           "from the designed library was not included. The number of times this concatemer is recorded in the input file is reported.\n"
         )
         ( "output,o", po::value<std::string>( &opts_demux->output_fname )->default_value( opts_demux->DEFAULT_OUTPUT_FNAME ), "The name of the output file to write counts to. "

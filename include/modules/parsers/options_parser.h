@@ -26,6 +26,11 @@ public:
     virtual ~options_parser();
 
     /**
+     * Line width of the terminal.
+     **/
+    int line_width;
+
+    /**
      * Parse command-line arguments, store parsed options in the 
      * members of the opts item.
      * @param argc The number of arguments passed from the command-line.

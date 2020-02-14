@@ -2,6 +2,9 @@
 
 <img src="./img/logo.png" alt="Your image title" width="1024"/>
 
+
+### Current Version: v1.0.0
+
 ### Dependencies
 - cmake version 3.9 or higher.
 - boost version 1.66 or higher.

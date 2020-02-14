@@ -24,7 +24,8 @@ bool options_parser_p_enrich::parse( int argc, char ***argv, options *opts )
                                   "to be met, each individual threshold in the pair must be met by at least "
                                   "one of the probes under consideration, independent of order. "
                                   "Note that a probe must meet each specified numeric threshold in order "
-                                  "to be considered enriched.\n"
+                                  "to be considered enriched.\n",
+                                  line_width
                                 );
     desc.add_options()
         ( "help,h", "Produce help message and exit.\n" )
@@ -34,7 +35,7 @@ bool options_parser_p_enrich::parse( int argc, char ***argv, options *opts )
           "samples are in duplicate. This file must be tab-delimited with "
           "one pair or samples per line.\n"
         )
-        ( "zscores", po::value( &opts_p_enrich->in_zscore_fname )
+        ( "zscores,z", po::value( &opts_p_enrich->in_zscore_fname )
           ->required(),
           "A matrix containing the zscores of each probe in every sample. "
           "This should be in the format output by the zscore module, with "
@@ -46,7 +47,7 @@ bool options_parser_p_enrich::parse( int argc, char ***argv, options *opts )
           "These scores will be evaluated as specified in the module description. "
           "Example: '--zscore_constraint 3.5,4.0'. \n"
         )
-        ( "norm_scores", po::value( &opts_p_enrich->in_norm_scores_fname )
+        ( "norm_scores,n", po::value( &opts_p_enrich->in_norm_scores_fname )
           ->required(),
           "A matrix containing normalized scores for each probe in each sample.\n"
         )
@@ -56,7 +57,7 @@ bool options_parser_p_enrich::parse( int argc, char ***argv, options *opts )
           "These scores will be evaluated as specified in the module description. "
           "Example: '--norm_score_constraint 5.5,6.0'. \n"
         )
-        ( "raw_scores", po::value( &opts_p_enrich->in_raw_scores_fname )
+        ( "raw_scores,r", po::value( &opts_p_enrich->in_raw_scores_fname )
           ->default_value( "" ),
           "Optionally, a raw count matrix can be included. This matrix must "
           "contain the raw counts of each probe. If included, 'min_raw_count' "
@@ -86,7 +87,7 @@ bool options_parser_p_enrich::parse( int argc, char ***argv, options *opts )
           "The sum of each probe's raw count in each sample must be at least either of these "
           "values in order for the sample to be considered.\n"
         )
-        ( "outfile_suffix",
+        ( "outfile_suffix,s",
           po::value( &opts_p_enrich->out_suffix )
           ->default_value( "" ),
           "Suffix to add to the names of the samples "

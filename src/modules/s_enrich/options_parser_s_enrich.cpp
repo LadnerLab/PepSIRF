@@ -17,7 +17,8 @@ bool options_parser_s_enrich
     po::variables_map vm;
 
     po::options_description desc( "PepSIRF: Peptide-based Serological Immune Response "
-                                  "Framework species Single-Replicate Enrichment module"
+                                  "Framework species Single-Replicate Enrichment module",
+                                  line_width
                                 );
     desc.add_options()
         ( "help,h", "Produce help message and exit.\n"
@@ -26,7 +27,7 @@ bool options_parser_s_enrich
           "Note that a probe must meet each specified numeric threshold in order "
           "to be considered enriched.\n"
         )
-        ( "zscores", po::value( &opts_s_enrich->in_zscore_fname )
+        ( "zscores,z", po::value( &opts_s_enrich->in_zscore_fname )
           ->required(),
           "A matrix containing the zscores of each probe in every sample. "
           "This should be in the format output by the zscore module, with "
@@ -37,7 +38,7 @@ bool options_parser_s_enrich
           "The minimum zscore a probe must have in order to be considered "
           "enriched.\n"
         )
-        ( "norm_scores", po::value( &opts_s_enrich->in_norm_score_fname )
+        ( "norm_scores,n", po::value( &opts_s_enrich->in_norm_score_fname )
           ->required(),
           "A matrix containing normalized scores for each probe in each sample.\n"
         )
@@ -46,7 +47,7 @@ bool options_parser_s_enrich
           "The minimum normalized score a probe must have in a sample "
           "in order to be considered enriched.\n"
         )
-        ( "raw_scores", po::value( &opts_s_enrich->in_raw_count_fname )
+        ( "raw_scores,r", po::value( &opts_s_enrich->in_raw_count_fname )
           ->default_value( "" ),
           "Optionally, a raw count matrix can be included. This matrix must "
           "contain the raw counts of each probe. If included, 'min_raw_count' "
@@ -75,7 +76,7 @@ bool options_parser_s_enrich
           "The sum of each probe's raw count in a sample must be at least this "
           "value in order for the sample to be considered.\n"
         )
-        ( "outfile_suffix",
+        ( "outfile_suffix,s",
           po::value( &opts_s_enrich->out_suffix )
           ->default_value( "" ),
           "Suffix to add to the names of the samples "
