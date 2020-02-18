@@ -33,6 +33,20 @@ class et_seq_search
 public:
     using FrequencyVal = typename FrequencyMap::iterator;
 
+    /**
+     * Initialize the object. 
+     * @param ref_idx reference to ref_idx object. 
+     *        This indexer should contain at least 
+     *        the sequences in the FrequencyMap.
+     * @param A map that associates sequences with an ordered 
+     *        container of counts for that sequence, one per 
+     *        sample.
+     * @note To avoid expensive copying of large data structures,
+     *       the et_seq_seqrch only maintains references, and does 
+     *       NOT maintain the lifetime of the data structures it uses.
+     *       It is important to ensure this object does not try to access 
+     *       any deleted objects.
+     **/
     et_seq_search( const sequence_indexer& ref_idx,
                    FrequencyMap& counts
                  )
