@@ -55,7 +55,20 @@ public:
     {}
 
     /**
-     *
+     * Determine whether multiple best matches for a 
+     * sequence have been found. Multiple best matches 
+     * means that a single match candidate has two
+     * equally-good reference sequences. 
+     * @tparam Iterator the iterator type to search 
+     *         between.
+     * @tparam Get a method that can be used to get items within 
+     *         the range [begin, end). For example, if these 
+     *         items are pair, a Get method can be implemented that 
+     *         retrieves the first item from each pair.
+     * @param begin The first item in the range [begin,end)
+     * @param end The last item in the range [begin,end)
+     * @param ret A method to retrieve items in the range 
+     *            [begin,end). 
      **/
     template<typename Iterator,
              typename Get
@@ -70,11 +83,124 @@ public:
             ret( *begin ) == ret( *(++begin) );
     }
 
+    /**
+     * Reference-dependent demultiplexing. For this mode,
+     * a reference is used to facilitate error-tolerant demultiplexing.
+     * @tparam ref_dep Boolean SFINAE paramater to decide whether reference-independent
+     *         demultiplexing should be used. 
+     * @param probe The probe to find a match for. This is likely a read from 
+     *        the FASTQ file.
+     * @param hamming_tol Hamming distance to tolerate when performing the search.
+     * @param start The start (0-based) index of the expected read.
+     * @param len The length of the expected read.
+     * @returns FrequencyVal (FrequencyMap::iterator) pointing to either the 
+     *          found sequence in FrequencyMap, or FrequencyMap.end() if the 
+     *          reference sequence was not found.
+     **/
+    template<bool ref_dep = reference_dependent>
+    FrequencyVal find( typename std::enable_if<ref_dep, const sequence>::type&
+                       probe,
                        std::size_t hamming_tol,
                        std::size_t start,
                        std::size_t len
-                       )
+                     )
     {
+        sequence_indexer::query_result
+            query_matches;
+        sequence *best_match = nullptr;
+        sequence seq_temp;
+
+        std::uint32_t num_matches; 
+
+        std::string substr = probe.seq.substr( start, len );
+
+        // Note: hash( sequence& seq ) = hash( seq.seq )
+        auto temp = counts.find( sequence( "", substr ) );
+
+        // first check for an exact match in the expected location
+        if( temp != counts.end() )
+            {
+                return temp;
+            }
+
+        if( start > 0 )
+            {
+                substr = probe.seq.substr( start - 1, len );
+                temp = counts.find( sequence( "", substr ) );
+
+                if( temp == counts.end()
+                    && start > 1
+                  )
+                    {
+                        substr = probe.seq.substr( start - 2, len );
+                        temp = counts.find( sequence( "", substr ) );
+                    }
+
+                if( temp != counts.end() )
+                    {
+                        return temp;
+                    }
+            }
+
+            // shift one to the right, look for exact match.
+            // but only if we have enough substring to search
+            if( start + 1 + len <= probe.seq.length() )
+                {
+                    substr = probe.seq.substr( start + 1, len );
+                    temp = counts.find( sequence( "", substr ) );
+                }
+
+            // look for a match at the expected coordinates within
+            // the number of mismatches that are tolerated
+            if( hamming_tol > 0 && temp == counts.end() )
+                {
+                    substr = probe.seq.substr( start, len );
+                    seq_temp = sequence( "", substr );
+                    num_matches = idx.query( query_matches,
+                                             seq_temp,
+                                             hamming_tol
+                                           );
+                    if( num_matches
+                        && multiple_best_matches( query_matches.begin(),
+                                                  query_matches.end(),
+                                                  []( const typename
+                                                      sequence_indexer
+                                                      ::query_result
+                                                      ::value_type& a
+                                                    )
+                                                  -> std::size_t
+                                                  {
+                                                      return a.second;
+                                                  }
+                                                )
+                      )
+                        {
+                            best_match = query_matches[ 0 ].first;
+                            temp = counts.find( *best_match );
+                        }
+                    else if( num_matches )
+                        {
+                            temp = counts.find( *(query_matches[ 0 ].first) );
+                        }
+                }
+
+            return temp;
+    }
+
+                       std::size_t hamming_tol,
+                       std::size_t start,
+                       std::size_t len
+                     )
+    {
+        std::string sub_str = probe.seq.substr( start, len );
+
+        // stupid hack to the interface doesn't change between
+        // reference independent/dependent and we do not get warned
+        // about unused parameter
+        if( hamming_tol > std::numeric_limits<std::size_t>::max() )
+            {
+                return counts.end();
+            }
 
     }
 
