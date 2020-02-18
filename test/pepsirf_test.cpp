@@ -280,6 +280,46 @@ TEST_CASE( "Test String Indexing", "[string_indexer]" )
 
 }
 
+TEST_CASE( "Reference-independent Demultiplexing" )
+{
+    std::vector<sequence>
+        values
+    {
+        sequence{ "", "AAAA" },
+        sequence{ "", "AAAT" },
+        sequence{ "", "AAAG" },
+        sequence{ "", "AAAC" }
+    };
+
+    sequence_indexer si;
+
+    si.index( values );
+
+    SECTION( "Value-based value-items in the map" )
+        {
+            using mapped_t = std::vector<std::size_t>;
+            using map_t = std::unordered_map<sequence,
+                                             mapped_t
+                                            >;
+
+            map_t map;
+
+            std::for_each( values.begin(),
+                           values.end() - 1,
+                           [&]( const sequence& seq )
+                           {
+                               mapped_t val{ 5, 0 };
+                               map.emplace( seq, val );
+                           }
+                         );
+            et_seq_search<map_t, false> search{ si, map };
+            
+
+            
+        }
+
+}
+
 TEST_CASE( "Test Count Generation", "[module_demux]" )
 {
 
