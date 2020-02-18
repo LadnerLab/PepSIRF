@@ -187,6 +187,26 @@ public:
             return temp;
     }
 
+    /**
+     * Reference-independent demultiplexing. For this mode, no 
+     * reference is used to determine which sequence a read maps to. 
+     * Because of this, each read can map to any two sequences:
+     * (i) a sequence that's already in the map, and (ii) itself.
+     * @tparam ref_dep SFINAE parameter that determines whether 
+     *         reference-independent demultiplexing should be used.
+     * @param probe The probe whose match in the reference should be found. 
+     * @param hamming_tol Dummy parameter, not used. 
+     * @param start The start (0-based) index of the expected read.
+     * @param len The length of the expected read.
+     * @note The hamming distance parameter is ignored, but is maintained so 
+     *       reference-independent/dependent demux have the same interface.
+     * @returns FrequencyVal (FrequencyMap::iterator) pointing to either the 
+     *          found sequence in FrequencyMap, or FrequencyMap.end() if the 
+     *          reference sequence was not found.
+     **/
+    template<bool ref_dep = reference_dependent>
+    FrequencyVal find( typename std::enable_if<!ref_dep, const sequence>::type&
+                       probe,
                        std::size_t hamming_tol,
                        std::size_t start,
                        std::size_t len
@@ -202,12 +222,34 @@ public:
                 return counts.end();
             }
 
+        auto iter = counts.find( sequence( "", sub_str ) );
+        if( iter == counts.end() )
+            {
+                using mapped_t = typename FrequencyMap::mapped_type;
+                mapped_t new_val;
+
+                if( std::is_pointer<mapped_t>::value )
+                    {
+                        new_val = new typename std::remove_pointer<mapped_t>::type();
+                    }
+                else
+                    {
+                        new_val = mapped_t();
+                    }
+
+                auto x = counts.emplace( sequence( "", sub_str ),
+                                         new_val
+                                       );
+                iter = x.first;
+            }
+        return iter;
     }
+
 
 
 private:
     const sequence_indexer& idx;
-    FrequencyMap counts;
+    FrequencyMap& counts;
 
 };
 
