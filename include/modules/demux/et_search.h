@@ -1,11 +1,29 @@
 #ifndef ET_SEARCH_HH_INCLUDED
 #define ET_SEARCH_HH_INCLUDED
 #include "sequence_indexer.h"
+#include <type_traits>
 
 /**
  * Error-tolerant (et) sequence search mechanism that 
  * allows for the searching of a data structure with 
  * error tolerance. 
+ * @tparam Frequencymap the type of map that is used to 
+ *         track the sequence occurrence frequency in each sample.
+ *         Should implement an interface compatible with std::unordered_map
+ * @tparam reference_dependent Boolean specifying whether reference-dependent 
+ *         demultiplexing should be done.
+ *         For reference-dependent mode, at most 6 attempts are made to match 
+ *         A sequence to a read region to a reference. They are as follows:
+ *         1. Perfect match in the expected region.
+ *         2. Perfect match 1 to the left
+ *         3. Perfect match 2 to the left
+ *         4. Perfect match 1 to the right
+ *         5. Perfect match 2 to the right
+ *         6. Hamming distance based at expected location.
+ *         In reference independent mode, no reference is checked, 
+ *         an item is either inserted into the frequency map and its iterator 
+ *         is returned, or the iterator of the existing iterator is returned.
+ *         
  **/
 template<typename FrequencyMap,
          bool reference_dependent = true
