@@ -19,7 +19,7 @@ void sequence_indexer::index( std::vector<sequence>& seqs )
 
 unsigned int sequence_indexer::query( std::vector<std::pair<sequence*,int>>& results,
                                       sequence& query_seq, std::size_t max_dist
-                                    )
+                                    ) const
 {
     unsigned int matches = 0;
 
