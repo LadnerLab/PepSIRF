@@ -194,6 +194,7 @@ public:
      * (i) a sequence that's already in the map, and (ii) itself.
      * @tparam ref_dep SFINAE parameter that determines whether 
      *         reference-independent demultiplexing should be used.
+     * @pre Each entry in the count map must be the same size. 
      * @param probe The probe whose match in the reference should be found. 
      * @param hamming_tol Dummy parameter, not used. 
      * @param start The start (0-based) index of the expected read.
@@ -227,15 +228,20 @@ public:
             {
                 using mapped_t = typename FrequencyMap::mapped_type;
                 mapped_t new_val;
+                auto value_size = counts.begin()->second.size();
 
                 if( std::is_pointer<mapped_t>::value )
                     {
-                        new_val = new typename std::remove_pointer<mapped_t>::type();
+                        new_val = new typename
+                            std::remove_pointer<mapped_t>
+                            ::type();
                     }
                 else
                     {
                         new_val = mapped_t();
                     }
+
+                new_val.resize( value_size, 0 );
 
                 auto x = counts.emplace( sequence( "", sub_str ),
                                          new_val
