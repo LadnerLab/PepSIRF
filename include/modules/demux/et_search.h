@@ -187,6 +187,59 @@ public:
             return temp;
     }
 
+template<typename T>
+T *ptr( T& obj )
+{
+    return &obj;
+}
+
+template<typename T>
+T *ptr( T *obj )
+{
+    return obj;
+}
+
+/**
+ * SFINAE function to enable the return of a 
+ * 'indirectionable' object. This means that 
+ * performing indirection on the returned value will 
+ * return a value of type ptr_maybe. 
+ * This may be useful when you need to call the 
+ * indirection operator and may need either a pointer to a pointer
+ * (when ptr_maybe is a pointer), or a plain pointer (when ptr_maybe is not a pointer). 
+ * @tparam ptr_maybe A type that may or may not be pointer. 
+ *         
+ **/
+template<typename ptr_maybe>
+    ptr_maybe *make_indirectionable( typename std
+                              ::enable_if<std
+                              ::is_pointer<ptr_maybe>::value,
+                              typename
+                              std::remove_pointer<ptr_maybe>::type>::type*&
+                              arg
+                            )
+{
+    return &arg;
+}
+
+/**
+ *
+ **/
+template<typename ptr_maybe>
+    ptr_maybe *make_indirectionable( typename std
+                             ::enable_if<!std
+                             ::is_pointer<ptr_maybe>::value,
+                             typename
+                             std::remove_pointer<ptr_maybe>::type>::type*&
+                             arg
+                           )
+{
+    return arg;
+}
+
+
+
+
     /**
      * Reference-independent demultiplexing. For this mode, no 
      * reference is used to determine which sequence a read maps to. 
@@ -226,25 +279,26 @@ public:
         auto iter = counts.find( sequence( "", sub_str ) );
         if( iter == counts.end() )
             {
-                using mapped_t = typename FrequencyMap::mapped_type;
-                mapped_t new_val;
-                auto value_size = counts.begin()->second.size();
+                using mapped_t_ptr_maybe = typename FrequencyMap::mapped_type;
+                using mapped_t = typename std
+                    ::remove_pointer<mapped_t_ptr_maybe>::type;
 
-                if( std::is_pointer<mapped_t>::value )
-                    {
-                        new_val = new typename
-                            std::remove_pointer<mapped_t>
-                            ::type();
-                    }
-                else
-                    {
-                        new_val = mapped_t();
-                    }
+                mapped_t *new_val;
 
-                new_val.resize( value_size, 0 );
+                std::allocator<mapped_t>
+                    alloc;
+                auto value_size = ptr( counts.begin()->second )->size();
+
+                new_val = alloc.allocate( 1 );
+
+                alloc.construct( new_val,
+                                 value_size, 0
+                               );
 
                 auto x = counts.emplace( sequence( "", sub_str ),
-                                         new_val
+                                         *make_indirectionable
+                                         <mapped_t_ptr_maybe>
+                                         (new_val)
                                        );
                 iter = x.first;
             }
