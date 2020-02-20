@@ -313,9 +313,55 @@ TEST_CASE( "Reference-independent Demultiplexing" )
                            }
                          );
             et_seq_search<map_t, false> search{ si, map };
+            auto iter = search.find( sequence( "", "AAAA" ), 4, 0, 4 );
+
+            REQUIRE( iter != map.end() );
+            iter = search.find( sequence( "", "BAAA" ), 4, 0, 4 );
+            REQUIRE( iter != map.end() );
+            REQUIRE( map.size() == 4 );
+
+            auto it = map[ sequence( "", "BAAA" ) ];
+            REQUIRE( it.size() == 2 );
+            REQUIRE( it[ 0 ] == 0 );
+            REQUIRE( it[ 1 ] == 0 );
             
 
             
+        }
+
+    SECTION( "Pointer-based value-items in the map" )
+        {
+            using mapped_t = std::vector<std::size_t>*;
+            using map_t = std::unordered_map<sequence,
+                                             mapped_t
+                                            >;
+
+            map_t map;
+
+            std::for_each( values.begin(),
+                           values.end() - 1,
+                           [&]( const sequence& seq )
+                           {
+                               mapped_t val = new std::vector<std::size_t>();
+                               val->resize( 2 );
+                               val->at( 0 ) = 5;
+                               val->at( 1 ) = 0;
+                               map.emplace( seq, val );
+                           }
+                         );
+            et_seq_search<map_t, false> search{ si, map };
+            auto iter = search.find( sequence( "", "AAAA" ), 4, 0, 4 );
+
+            REQUIRE( iter != map.end() );
+            iter = search.find( sequence( "", "BAAA" ), 4, 0, 4 );
+            REQUIRE( iter != map.end() );
+            REQUIRE( map.size() == 4 );
+
+            auto it = map[ sequence( "", "BAAA" ) ];
+            REQUIRE( it->size() == 2 );
+            REQUIRE( it->at( 0 ) == 0 );
+            REQUIRE( it->at( 1 ) == 0 );
+
         }
 
 }
