@@ -295,7 +295,7 @@ template<typename ptr_maybe>
                                  value_size, 0
                                );
 
-                auto x = counts.emplace( sequence( "", sub_str ),
+                auto x = counts.emplace( sequence( sub_str, sub_str ),
                                          *make_indirectionable
                                          <mapped_t_ptr_maybe>
                                          (new_val)
