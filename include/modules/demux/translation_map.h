@@ -1,0 +1,9 @@
+#ifndef TRANSLATION_MAP_HH_INCLUDED
+#define TRANSLATION_MAP_HH_INCLUDED
+
+class standard_nt_aa_map
+{
+
+};
+
+#endif // TRANSLATION_MAP_HH_INCLUDED
