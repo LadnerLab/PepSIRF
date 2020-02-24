@@ -312,7 +312,7 @@ TEST_CASE( "Reference-independent Demultiplexing" )
                                map.emplace( seq, val );
                            }
                          );
-            et_seq_search<map_t, false> search{ si, map };
+            et_seq_search<map_t, false> search{ si, map, 2 };
             auto iter = search.find( sequence( "", "AAAA" ), 4, 0, 4 );
 
             REQUIRE( iter != map.end() );
@@ -349,7 +349,7 @@ TEST_CASE( "Reference-independent Demultiplexing" )
                                map.emplace( seq, val );
                            }
                          );
-            et_seq_search<map_t, false> search{ si, map };
+            et_seq_search<map_t, false> search{ si, map, 2 };
             auto iter = search.find( sequence( "", "AAAA" ), 4, 0, 4 );
 
             REQUIRE( iter != map.end() );
@@ -399,7 +399,7 @@ TEST_CASE( "Test Count Generation", "[module_demux]" )
     mod.add_seqs_to_map( my_map, vec, num_samples );
 
     et_seq_search<map_t>
-    searcher{ lib_idx, my_map };
+        searcher{ lib_idx, my_map, num_samples };
 
     parallel_map<sequence, std::vector<std::size_t>*>::iterator seq_match;
 
