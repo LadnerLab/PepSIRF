@@ -25,6 +25,11 @@ class sequence_indexer
     sequence_indexer();
 
     /**
+     * The result of a query.
+     **/
+    using query_result = std::vector<std::pair<sequence*,int>>;
+
+    /**
      * Index a vector of sequences. Sequences are placed a bk-tree in order of their 
      * distance to the first sequence added to the gree.
      * @param seqs Reference to vector holding sequences to be copied.
@@ -57,9 +62,9 @@ class sequence_indexer
      * @note This method is thread safe with respect to the internal data structures of 
      *       sequence_indexer, but not with respect to the results vector.
      **/
-    unsigned int query( std::vector<std::pair<sequence*,int>>& results,
+    unsigned int query( query_result& results,
                         sequence& query_seq, std::size_t max_dist
-                      );
+                      ) const;
 
     /**
      * A node class, these nodes are stored in a vector used internally by 

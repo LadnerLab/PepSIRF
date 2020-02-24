@@ -26,9 +26,12 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
           "not supplied only forward indices will be used to identify samples.\n"
         )
         ( "index,i", po::value<std::string>( &opts_demux->index_fname )->required(), "Name of fasta file containing forward and (potentially) reverse index sequences.\n")
-        ( "library,l", po::value<std::string>( &opts_demux->library_fname )->required(), "Designed library containing nucleic acid peptides. "
+        ( "library,l", po::value<std::string>( &opts_demux->library_fname )->default_value( "" ), "Designed library containing nucleic acid peptides. "
                                                              "Library should be in fasta format and should contain "
-                                                             "sequences that were used to design input_r1.\n"
+                                                             "sequences that were used to design input_r1 "
+          "If this flag is not included, reference-independent demultiplexing will be performed. "
+          "In this mode, each probe in the region specified by '--seq' will be considered its own reference. "
+          "The count of each probe will be the number of times it has appeared.\n"
         )
         ( "read_per_loop,r", po::value<long int>( &opts_demux->read_per_loop )->default_value( opts_demux->DEFAULT_READ_PER_LOOP ), "The number of fastq "
           "records read a time. A higher value will result in more memory usage by the program, but will also result in fewer disk accesses, "
