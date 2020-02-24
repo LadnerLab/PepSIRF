@@ -2,6 +2,7 @@
 #define ET_SEARCH_HH_INCLUDED
 #include "sequence_indexer.h"
 #include <type_traits>
+#include <cstdint>
 
 /**
  * Error-tolerant (et) sequence search mechanism that 
@@ -41,6 +42,8 @@ public:
      * @param A map that associates sequences with an ordered 
      *        container of counts for that sequence, one per 
      *        sample.
+     * @param num_samples The number of samples that are stored in 
+     *        each entry of the frequencymap.
      * @note To avoid expensive copying of large data structures,
      *       the et_seq_seqrch only maintains references, and does 
      *       NOT maintain the lifetime of the data structures it uses.
@@ -48,9 +51,11 @@ public:
      *       any deleted objects.
      **/
     et_seq_search( const sequence_indexer& ref_idx,
-                   FrequencyMap& counts
+                   FrequencyMap& counts,
+                   const std::size_t num_samples
                  )
-        : idx{ ref_idx }, counts{ counts }
+        : idx{ ref_idx }, counts{ counts },
+          num_samples{ num_samples }
           
     {}
 
@@ -287,7 +292,7 @@ template<typename ptr_maybe>
 
                 std::allocator<mapped_t>
                     alloc;
-                auto value_size = ptr( counts.begin()->second )->size();
+                auto value_size = this->num_samples;
 
                 new_val = alloc.allocate( 1 );
 
@@ -310,6 +315,8 @@ template<typename ptr_maybe>
 private:
     const sequence_indexer& idx;
     FrequencyMap& counts;
+    const std::size_t num_samples;
+
 
 };
 
