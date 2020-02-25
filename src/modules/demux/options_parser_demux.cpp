@@ -89,7 +89,13 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
         )
         ( "aa_counts,a", po::value<std::string>( &opts_demux->aggregate_fname )->default_value( "" ),
           "The name of the file to write aggregated counts to when aa sequences from a designed library "
-          "have multiple different nt encodings. If this option is included, names of sequences in the file supplied "
+          "have multiple different nt encodings. By default, translation-based aggregation is used, "
+          "where nucleotide sequences that translate into the same AA sequence are considered to have been "
+          "made from the same AA sequence.\n"
+        )
+        ( "name_aggregates", po::bool_switch( &opts_demux->name_aggregation )->default_value( false ),
+          "Include this flag if the counts written to the file provided in the 'aa_counts' flag should be aggregated based upon their names. "
+          "If this option is included, names of sequences in the file supplied "
           "by the --library flag MUST be of the form ID-NUM, where ID can contain any characters but '-', and NUM "
           "represents the id of this encoding. ID and NUM MUST be separated by a single dash '-' character. If supplied "
           "aggregated counts for each sequence will be written to this file. For example, suppose we have TG1_1-1 and TG1_1-2 "
