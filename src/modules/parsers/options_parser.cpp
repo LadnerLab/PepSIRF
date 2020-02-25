@@ -8,7 +8,7 @@ options_parser::options_parser()
 
     struct ttysize ts;
     ioctl( STDIN_FILENO, TIOCGSIZE, &ts );
-    line_width = ts.ts_lines;
+    line_width = ts.ts_cols;
 
     #elif defined( TIOCGWINSZ )
 
