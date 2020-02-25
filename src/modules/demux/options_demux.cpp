@@ -9,22 +9,22 @@ std::string options_demux::get_arguments()
 {
     std::ostringstream str_stream;
 
-    str_stream << "--input_r1         " << input_r1_fname << "\n" <<
-                  " --input_r2         " << input_r2_fname << "\n" << 
-                  " --output           " << output_fname << "\n" <<
-                  " --aa_counts        " << aggregate_fname << "\n" << 
-                  " --name_aggregates  " << std::boolalpha << name_aggregation  << "\n" << 
-                  " --index            " << index_fname << "\n" << 
-                  " --samplelist       " << samplelist_fname << "\n"
-                  " --library          " << library_fname << "\n" <<
-                  " --read_per_loop    " << read_per_loop << "\n" <<
-                  " --num_threads      " << num_threads << "\n" <<
-                  " --seq              " << tup_to_string( seq_data ) << "\n" <<
-                  " --f_index_data     " << tup_to_string( f_index_data ) << "\n" <<
-                  " --r_index_data     " << tup_to_string( r_index_data ) << "\n" <<
-                  " --phred_base       " << phred_base << "\n" <<
-                  " --phred_min_score  " << min_phred_score << "\n" <<
-                  " --concatemer       " << concatemer << "\n" << 
+    str_stream << "--input_r1              " << input_r1_fname << "\n" <<
+                  " --input_r2              " << input_r2_fname << "\n" << 
+                  " --output                " << output_fname << "\n" <<
+                  " --aa_counts             " << aggregate_fname << "\n" << 
+                  " --translate_aggregates  " << std::boolalpha << translation_aggregation  << "\n" << 
+                  " --index                 " << index_fname << "\n" << 
+                  " --samplelist            " << samplelist_fname << "\n"
+                  " --library               " << library_fname << "\n" <<
+                  " --read_per_loop         " << read_per_loop << "\n" <<
+                  " --num_threads           " << num_threads << "\n" <<
+                  " --seq                   " << tup_to_string( seq_data ) << "\n" <<
+                  " --f_index_data          " << tup_to_string( f_index_data ) << "\n" <<
+                  " --r_index_data          " << tup_to_string( r_index_data ) << "\n" <<
+                  " --phred_base            " << phred_base << "\n" <<
+                  " --phred_min_score       " << min_phred_score << "\n" <<
+                  " --concatemer            " << concatemer << "\n" << 
                   "\n";
 
     return str_stream.str();

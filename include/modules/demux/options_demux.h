@@ -28,7 +28,7 @@ public:
     int phred_base;
     int min_phred_score;
 
-    bool name_aggregation;
+    bool translation_aggregation;
 
     /**
      * The number of fastq records to read per loop. A higher value here will result in higher memory usage by the program.
