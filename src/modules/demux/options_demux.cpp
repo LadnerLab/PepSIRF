@@ -13,6 +13,7 @@ std::string options_demux::get_arguments()
                   " --input_r2         " << input_r2_fname << "\n" << 
                   " --output           " << output_fname << "\n" <<
                   " --aa_counts        " << aggregate_fname << "\n" << 
+                  " --name_aggregates  " << std::boolalpha << name_aggregation  << "\n" << 
                   " --index            " << index_fname << "\n" << 
                   " --samplelist       " << samplelist_fname << "\n"
                   " --library          " << library_fname << "\n" <<
