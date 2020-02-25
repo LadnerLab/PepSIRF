@@ -28,6 +28,8 @@ public:
     int phred_base;
     int min_phred_score;
 
+    bool translation_aggregation;
+
     /**
      * The number of fastq records to read per loop. A higher value here will result in higher memory usage by the program.
      * However, higher values can also result in better performance as fewer disk accesses are performed.

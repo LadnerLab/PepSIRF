@@ -47,6 +47,8 @@
 #include "module_p_enrich.h"
 #include "predicate.h"
 #include "file_io.h"
+#include "translation_map.h"
+#include "nt_aa_translator.h"
 
 using namespace util;
 
@@ -2279,5 +2281,34 @@ TEST_CASE( "File IO read_file function", "[file_io]" )
     REQUIRE( values[ 0 ] == std::pair<std::string,double>( "First", 0.45 ) );
     REQUIRE( values[ 1 ] == std::pair<std::string,double>( "Second", 0.58 ) );
 
+
+}
+
+TEST_CASE( "Testing Codon -> AA maps", "[nt_aa_map]" )
+{
+
+    auto mapped = codon_aa_mappings::default_codon_aa_map( "TCC" );
+    REQUIRE( mapped == 'S' );
+
+    mapped = codon_aa_mappings::default_codon_aa_map( "GTC" );
+
+    REQUIRE( mapped == 'V' );
+}
+
+TEST_CASE( "Testing nt->aa translation", "[nt_aa_translator]" )
+{
+    nt_aa_translator<codon_aa_mappings::default_map_type>
+        translator( codon_aa_mappings::default_codon_aa_map );
+
+    sequence nt_seq{ "Seq1", "AAAATACCC" };
+
+    sequence translated = translator( nt_seq );
+
+    REQUIRE( translated.seq == "KIP" );
+
+    nt_seq.seq = "TAGTAATGATTT";
+    translated = translator( nt_seq );
+    
+    REQUIRE( translated.seq == "___F" );
 
 }

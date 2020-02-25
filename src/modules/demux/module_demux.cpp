@@ -5,6 +5,7 @@
 #include "fastq_sequence.h"
 #include "fastq_score.h"
 #include "et_search.h"
+#include "nt_aa_translator.h"
 
 module_demux::module_demux() 
 {
@@ -316,7 +317,23 @@ void module_demux::run( options *opts )
         {
             parallel_map<sequence, std::vector<std::size_t>*> agg_map;
 
-            aggregate_counts( agg_map, reference_counts, samplelist.size() );
+            if( d_opts->translation_aggregation )
+                {
+                    nt_aa_translator<codon_aa_mappings::default_map_type>
+                        translator( codon_aa_mappings::default_codon_aa_map );
+
+                    aggregate_translated_counts( translator,
+                                                 agg_map,
+                                                 reference_counts,
+                                                 samplelist.size()
+                                               );
+
+                }
+            else
+                {
+                    aggregate_counts( agg_map, reference_counts, samplelist.size() );
+                }
+            
             write_outputs( d_opts->aggregate_fname,
                            agg_map,
                            samplelist

@@ -41,10 +41,15 @@ sequence for each sample. Later we reference the 'distance' between sequences. F
                                        the header will be the sample name of sample i. If we traverse this column, we will see the count of this sample for each sequence. 
                                        
   -a [ --aa_counts ] arg               The name of the file to write aggregated counts to when aa sequences from a designed library have multiple different nt encodings. If this option is 
-                                       included, names of sequences in the file supplied by the --library flag MUST be of the form ID-NUM, where ID can contain any characters but '-', and 
-                                       NUM represents the id of this encoding. ID and NUM MUST be separated by a single dash '-' character. If supplied aggregated counts for each sequence 
-                                       will be written to this file. For example, suppose we have TG1_1-1 and TG1_1-2 in our library, which says that we generated two encodings for TG1_1. 
-                                       If included, the file will have a single TG1_1 entry, where the count in column i is the sum of the value of column i from TG1_1-1 and TG1_1-2.
+                                       included without the 'translate_aggregates' flag, names of sequences in the file supplied by the --library flag MUST be of the form ID-NUM, where ID 
+                                       can contain any characters but '-', and NUM represents the id of this encoding. ID and NUM MUST be separated by a single dash '-' character. If 
+                                       supplied aggregated counts for each sequence will be written to this file. For example, suppose we have TG1_1-1 and TG1_1-2 in our library, which says
+                                       that we generated two encodings for TG1_1. If included, the file will have a single TG1_1 entry, where the count in column i is the sum of the value 
+                                       of column i from TG1_1-1 and TG1_1-2.
+                                       
+  --translate_aggregates               Include this flag to use translation-based aggregation. In this mode, nucleotide sequences that translate into the same AA sequence are considered to 
+                                       have been made from the same AA sequence. Note: When this mode is used, the name of the aggregate sequence will be the sequence that was a result of 
+                                       the translation.
                                        
   -s [ --samplelist ] arg              A tab-delimited list of samples, one sample per line. If the samples are already indexed by I2 only the forward index (I1) and the sample name are 
                                        required. The first item in each tab-delimited line is the forward (I1) index, the second (if included) is the reverse (I2) index, and the third is 
@@ -56,4 +61,5 @@ sequence for each sample. Later we reference the 'distance' between sequences. F
                                        a read at the expected locations of a library sequence is not at least this value then the read will be discarded.
                                        
   -t [ --num_threads ] arg (=2)        Number of threads to use for analyses.
+                                       
 ```

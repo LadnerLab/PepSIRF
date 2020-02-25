@@ -232,6 +232,62 @@ class module_demux : public module
                            std::size_t num_samples
                          );
 
+    /**
+     * Aggregate output counts, creating count data at the aa-level.
+     * When multiple encodings are created for each nt sequence, output 
+     * is reported at the aa-level. By summing the counts for each encoding of 
+     * each aa in the design, we get counts at the aa-level. 
+     * @param agg_map Reference to map where aggregate counts will be stored. 
+     * @param count_map Reference to map that contains counts at the nt-level.
+     * @param num_samples The number of samples for which the design has been 
+     *        sequenced. This is equivalent to the number of lines in the samplelist
+     *        file.
+     * @note This method renames sequences to have the name of the sequences that 
+     *       resulted from the translation.
+     **/
+    template<typename Translator,
+             typename Map
+        >
+        void aggregate_translated_counts( const Translator& translator,
+                                          Map& agg_map,
+                                          Map& count_map,
+                                          size_t num_samples
+                                        )
+        {
+            sequence current;
+            std::vector<std::size_t> *current_vec_agg   = nullptr;
+            std::vector<std::size_t> *current_vec_count = nullptr;
+            sequential_map<std::string, std::vector<std::size_t>*> ptr_map;
+
+            for( auto iter = count_map.begin(); iter != count_map.end(); ++iter )
+                {
+
+                    current = translator( iter->first );
+                    current.name = current.seq;
+
+                    // if the new name not in agg_map
+                    if( ptr_map.find( current.name ) == ptr_map.end() )
+                        {
+                            // add the sequence to agg_map, initialize its data
+                            agg_map[ current ] = new std::vector<std::size_t>( num_samples );
+                            ptr_map[ current.name ] = agg_map[ current ];
+                            std::fill( agg_map[ current ]->begin(), agg_map[ current ]->end(), 0 );
+                        }
+
+                    current_vec_agg   = ptr_map[ current.name ];
+                    current_vec_count = iter->second;
+
+                    // add the counts from the untrimmed count_map entry to
+                    // the trimmed agg_map entry
+                    for( std::size_t index = 0; index < num_samples; ++index )
+                        {
+                            current_vec_agg->at( index ) += current_vec_count->at( index );
+                        }
+                }
+
+
+        }
+
 };
 
 
