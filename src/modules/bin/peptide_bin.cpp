@@ -1,5 +1,6 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/join.hpp>
+#include <boost/algorithm/string/trim.hpp>
 #include "peptide_bin.h"
 
 // peptide_bin
@@ -64,15 +65,21 @@ bin_collection peptide_bin_io::parse_bins( std::istream& bin_source )
 
     while( std::getline( bin_source, line ) )
         {
+
+            boost::algorithm::trim( line );
+
             boost::split( peptides_in_bin,
                           line,
                           boost::is_any_of( "\t" )
                         );
+            if( !( line.empty() || peptides_in_bin.empty() ) )
+                {
 
-            peptide_bin new_bin( peptides_in_bin.begin(),
-                                 peptides_in_bin.end()
-                               );
-            bins.add_bin( new_bin );
+                    peptide_bin new_bin( peptides_in_bin.begin(),
+                                         peptides_in_bin.end()
+                                         );
+                    bins.add_bin( new_bin );
+                }
 
         }
 

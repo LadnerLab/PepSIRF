@@ -1,5 +1,8 @@
 # PepSIRF: Peptide-based Serological Immune Response Framework  
 
+<img src="./img/logo.png" alt="Your image title" width="1024"/>
+
+
 ### Current Version: v1.0.0
 
 ### Dependencies
