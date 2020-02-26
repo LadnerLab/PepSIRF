@@ -4,6 +4,8 @@
 #include "module_demux.h"
 #include "fastq_sequence.h"
 #include "fastq_score.h"
+#include "et_search.h"
+#include "nt_aa_translator.h"
 
 module_demux::module_demux() 
 {
@@ -60,11 +62,24 @@ void module_demux::run( options *opts )
             r2_reads.open( d_opts->input_r2_fname, std::ios_base::in );
         }
 
-    library_seqs   = fasta_p.parse( d_opts->library_fname );
+    const bool reference_dependent = !d_opts->library_fname.empty();
+
+    if( reference_dependent )
+        {
+            library_seqs   = fasta_p.parse( d_opts->library_fname );
+        }
+    else
+        {
+            std::cout << "WARNING: A set of reference sequences was not provided. "
+                      << "Demux will be run in reference-independent mode, where each "
+                      << "read is treated as its own reference.\n";
+        }
+
     index_seqs     = fasta_p.parse( d_opts->index_fname );
 
     create_index_map( index_map, index_seqs, samplelist );
     sequential_map<sequence, sample> sample_table;
+    sequential_map<sequence,sample>::size_type num_samples = index_map.size();
 
     add_seqs_to_map( reference_counts, library_seqs, samplelist.size() );
 
@@ -182,41 +197,91 @@ void module_demux::run( options *opts )
                         && quality_match()
                       )
                         {
-                            parallel_map<sequence, std::vector<std::size_t>*>::iterator
-                                seq_match = _find_with_shifted_mismatch( reference_counts, reads[ read_index ],
-                                                                         lib_idx, std::get<2>( d_opts->seq_data ),
-                                                                         seq_start, seq_length
-                                                                       );
 
-                            if( reverse_length == 0
-                                && seq_match != reference_counts.end()
-                              )
+                            using seq_map = parallel_map<sequence, std::vector<std::size_t>*>;
+
+                            if( reference_dependent )
                                 {
-                                    sample_id = f_idx_match->second.id;
-                                    seq_match->second->at( sample_id )++;
-                                    ++processed_success;
-                                }
-                            else if( reverse_length != 0
-                                      && seq_match != reference_counts.end()
-                              )
-                                {
-                                    std::string concat_idx = f_idx_match->first.seq
-                                                           + r_idx_match->first.seq;
+                                    et_seq_search<seq_map,true> library_searcher( lib_idx, reference_counts, num_samples );
 
-                                    auto d_id = index_map.find( sequence( "", concat_idx ) );
 
-                                    if( d_id != index_map.end() )
+                                    auto seq_match = library_searcher.find( reads[ read_index ],
+                                                                            std::get<2>( d_opts->seq_data ),
+                                                                            seq_start,
+                                                                            seq_length
+                                                                          );
+                                    if( reverse_length == 0
+                                        && seq_match != reference_counts.end()
+                                        )
                                         {
-                                            sample_id = d_id->second.id;
+                                            sample_id = f_idx_match->second.id;
                                             seq_match->second->at( sample_id )++;
                                             ++processed_success;
                                         }
+                                    else if( reverse_length != 0
+                                             && seq_match != reference_counts.end()
+                                             )
+                                        {
+                                            std::string concat_idx = f_idx_match->first.seq
+                                                + r_idx_match->first.seq;
+
+                                            auto d_id = index_map.find( sequence( "", concat_idx ) );
+
+                                            if( d_id != index_map.end() )
+                                                {
+                                                    sample_id = d_id->second.id;
+                                                    seq_match->second->at( sample_id )++;
+                                                    ++processed_success;
+                                                }
+                                        }
+                                    else if( seq_match == reference_counts.end()
+                                             && found_concatemer() )
+                                        {
+                                            ++concatemer_found;
+                                        }
                                 }
-                            else if( seq_match == reference_counts.end()
-                                     && found_concatemer() )
+                            else
                                 {
-                                    ++concatemer_found;
+                                    et_seq_search<seq_map,false> library_searcher( lib_idx, reference_counts, num_samples );
+
+
+                                    auto seq_match = library_searcher.find( reads[ read_index ],
+                                                                            std::get<2>( d_opts->seq_data ),
+                                                                            seq_start,
+                                                                            seq_length
+                                                                            );
+                                    if( reverse_length == 0
+                                        && seq_match != reference_counts.end()
+                                        )
+                                        {
+                                            sample_id = f_idx_match->second.id;
+                                            seq_match->second->at( sample_id )++;
+                                            ++processed_success;
+                                        }
+                                    else if( reverse_length != 0
+                                             && seq_match != reference_counts.end()
+                                             )
+                                        {
+                                            std::string concat_idx = f_idx_match->first.seq
+                                                + r_idx_match->first.seq;
+
+                                            auto d_id = index_map.find( sequence( "", concat_idx ) );
+
+                                            if( d_id != index_map.end() )
+                                                {
+                                                    sample_id = d_id->second.id;
+                                                    seq_match->second->at( sample_id )++;
+                                                    ++processed_success;
+                                                }
+                                        }
+                                    else if( seq_match == reference_counts.end()
+                                             && found_concatemer() )
+                                        {
+                                            ++concatemer_found;
+                                        }
+
                                 }
+
                         }
                     // record the number of records that are processed
                     ++processed_total;
@@ -252,7 +317,23 @@ void module_demux::run( options *opts )
         {
             parallel_map<sequence, std::vector<std::size_t>*> agg_map;
 
-            aggregate_counts( agg_map, reference_counts, samplelist.size() );
+            if( d_opts->translation_aggregation )
+                {
+                    nt_aa_translator<codon_aa_mappings::default_map_type>
+                        translator( codon_aa_mappings::default_codon_aa_map );
+
+                    aggregate_translated_counts( translator,
+                                                 agg_map,
+                                                 reference_counts,
+                                                 samplelist.size()
+                                               );
+
+                }
+            else
+                {
+                    aggregate_counts( agg_map, reference_counts, samplelist.size() );
+                }
+            
             write_outputs( d_opts->aggregate_fname,
                            agg_map,
                            samplelist

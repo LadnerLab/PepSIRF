@@ -21,6 +21,7 @@
 #include "sequence_indexer.h"
 #include "sequence.h"
 #include "fastq_sequence.h"
+#include "et_search.h"
 #include "maps.h"
 #include "distance_matrix.h"
 #include "fastq_parser.h"
@@ -46,6 +47,8 @@
 #include "module_p_enrich.h"
 #include "predicate.h"
 #include "file_io.h"
+#include "translation_map.h"
+#include "nt_aa_translator.h"
 
 using namespace util;
 
@@ -279,6 +282,92 @@ TEST_CASE( "Test String Indexing", "[string_indexer]" )
 
 }
 
+TEST_CASE( "Reference-independent Demultiplexing" )
+{
+    std::vector<sequence>
+        values
+    {
+        sequence{ "", "AAAA" },
+        sequence{ "", "AAAT" },
+        sequence{ "", "AAAG" },
+        sequence{ "", "AAAC" }
+    };
+
+    sequence_indexer si;
+
+    si.index( values );
+
+    SECTION( "Value-based value-items in the map" )
+        {
+            using mapped_t = std::vector<std::size_t>;
+            using map_t = std::unordered_map<sequence,
+                                             mapped_t
+                                            >;
+
+            map_t map;
+
+            std::for_each( values.begin(),
+                           values.end() - 1,
+                           [&]( const sequence& seq )
+                           {
+                               mapped_t val{ 5, 0 };
+                               map.emplace( seq, val );
+                           }
+                         );
+            et_seq_search<map_t, false> search{ si, map, 2 };
+            auto iter = search.find( sequence( "", "AAAA" ), 4, 0, 4 );
+
+            REQUIRE( iter != map.end() );
+            iter = search.find( sequence( "", "BAAA" ), 4, 0, 4 );
+            REQUIRE( iter != map.end() );
+            REQUIRE( map.size() == 4 );
+
+            auto it = map[ sequence( "", "BAAA" ) ];
+            REQUIRE( it.size() == 2 );
+            REQUIRE( it[ 0 ] == 0 );
+            REQUIRE( it[ 1 ] == 0 );
+            
+
+            
+        }
+
+    SECTION( "Pointer-based value-items in the map" )
+        {
+            using mapped_t = std::vector<std::size_t>*;
+            using map_t = std::unordered_map<sequence,
+                                             mapped_t
+                                            >;
+
+            map_t map;
+
+            std::for_each( values.begin(),
+                           values.end() - 1,
+                           [&]( const sequence& seq )
+                           {
+                               mapped_t val = new std::vector<std::size_t>();
+                               val->resize( 2 );
+                               val->at( 0 ) = 5;
+                               val->at( 1 ) = 0;
+                               map.emplace( seq, val );
+                           }
+                         );
+            et_seq_search<map_t, false> search{ si, map, 2 };
+            auto iter = search.find( sequence( "", "AAAA" ), 4, 0, 4 );
+
+            REQUIRE( iter != map.end() );
+            iter = search.find( sequence( "", "BAAA" ), 4, 0, 4 );
+            REQUIRE( iter != map.end() );
+            REQUIRE( map.size() == 4 );
+
+            auto it = map[ sequence( "", "BAAA" ) ];
+            REQUIRE( it->size() == 2 );
+            REQUIRE( it->at( 0 ) == 0 );
+            REQUIRE( it->at( 1 ) == 0 );
+
+        }
+
+}
+
 TEST_CASE( "Test Count Generation", "[module_demux]" )
 {
 
@@ -307,8 +396,12 @@ TEST_CASE( "Test Count Generation", "[module_demux]" )
     lib_idx.index( vec );
 
     parallel_map<sequence, std::vector<std::size_t>*> my_map;
+    using map_t = decltype( my_map );
 
     mod.add_seqs_to_map( my_map, vec, num_samples );
+
+    et_seq_search<map_t>
+        searcher{ lib_idx, my_map, num_samples };
 
     parallel_map<sequence, std::vector<std::size_t>*>::iterator seq_match;
 
@@ -317,10 +410,13 @@ TEST_CASE( "Test Count Generation", "[module_demux]" )
     // perfect matches
     for( index = 0; index < my_map.size(); ++index )
         {
-                seq_match = mod._find_with_shifted_mismatch( my_map, vec[ index ],
-                                                             lib_idx, num_mismatches,
-                                                             seq_start, seq_length
-                                                           );
+            sequence a = sequence( "", vec[ index ].seq );
+
+            seq_match = searcher.find( a,
+                                       num_mismatches,
+                                       seq_start,
+                                       seq_length
+                                     );
             REQUIRE( seq_match != my_map.end() );
             REQUIRE( seq_match->second->size() == 1 );
 
@@ -332,28 +428,31 @@ TEST_CASE( "Test Count Generation", "[module_demux]" )
     sequence seq =
     sequence( "", "AGCCAGCTTGCGGCAAAACTGCGTAACCGTCTTCTCGTTCTCTAAAAACCATTTTTCGTCCCCTTCGGGGCGGTGGTCTATAGTGTTATTAATATCAAGTTGGGGGAGCACATTGTAGCATTGTGCCAATTCATCCATTAACTTCTCAGT" );
 
-    seq_match = mod._find_with_shifted_mismatch( my_map, seq,
-                                                 lib_idx, num_mismatches,
-                                                 seq_start, seq_length
-                                                 );
+    seq_match = searcher.find( seq,
+                               num_mismatches,
+                               seq_start,
+                               seq_length
+                             );
+
     REQUIRE( seq_match == my_map.end() );
 
-    seq_match = mod._find_with_shifted_mismatch( my_map, seq,
-                                                 lib_idx, 1,
-                                                 seq_start, seq_length
-                                                 );
+    seq_match = searcher.find( seq,
+                               1,
+                               seq_start,
+                               seq_length
+                             );
+
     REQUIRE( seq_match != my_map.end() );
     seq =
     sequence( "", "AGCCAGCTTGCGGCAAAACTGCGTAACCGTCTTCTCGTTCTCTAAAAACCATTTTTCGTCCCCTTCGGGGCGGTGGTCTATAGTGTTATTAATATCAAGTTGGGGGAGCACATTGTAGCATTGTGCCAATTCATCCATTAACTTCGCAAT" );
 
-    seq_match = mod._find_with_shifted_mismatch( my_map, seq,
-                                                 lib_idx, 3,
-                                                 seq_start, seq_length
-                                                 );
+    seq_match = searcher.find( seq,
+                               3,
+                               seq_start,
+                               seq_length
+                             );
+
     REQUIRE( seq_match != my_map.end() );
-
-
-
 
 }
 
@@ -2182,5 +2281,34 @@ TEST_CASE( "File IO read_file function", "[file_io]" )
     REQUIRE( values[ 0 ] == std::pair<std::string,double>( "First", 0.45 ) );
     REQUIRE( values[ 1 ] == std::pair<std::string,double>( "Second", 0.58 ) );
 
+
+}
+
+TEST_CASE( "Testing Codon -> AA maps", "[nt_aa_map]" )
+{
+
+    auto mapped = codon_aa_mappings::default_codon_aa_map( "TCC" );
+    REQUIRE( mapped == 'S' );
+
+    mapped = codon_aa_mappings::default_codon_aa_map( "GTC" );
+
+    REQUIRE( mapped == 'V' );
+}
+
+TEST_CASE( "Testing nt->aa translation", "[nt_aa_translator]" )
+{
+    nt_aa_translator<codon_aa_mappings::default_map_type>
+        translator( codon_aa_mappings::default_codon_aa_map );
+
+    sequence nt_seq{ "Seq1", "AAAATACCC" };
+
+    sequence translated = translator( nt_seq );
+
+    REQUIRE( translated.seq == "KIP" );
+
+    nt_seq.seq = "TAGTAATGATTT";
+    translated = translator( nt_seq );
+    
+    REQUIRE( translated.seq == "___F" );
 
 }

@@ -16,7 +16,7 @@ int main( int argc, char **argv )
 
     bool help_msg_only = false;
 	int ret_code = EXIT_SUCCESS;
-    const std::string version_no = "1.0.0";
+    const std::string version_no = "1.1.0";
 
     try
         {
