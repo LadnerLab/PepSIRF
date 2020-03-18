@@ -9,6 +9,7 @@ set(Boost_USE_STATIC_RUNTIME OFF)
 set(CMAKE_CXX_STANDARD 11)
 
 find_package(OpenMP)
+find_package(ZLIB)
 
 find_package(Boost REQUIRED COMPONENTS program_options regex filesystem)
 
@@ -24,7 +25,8 @@ include_directories(include/modules/link)
 include_directories(include/modules/s_enrich)
 include_directories(include/modules/p_enrich)
 include_directories(include/modules/info)
-include_directories(lib/parallel_hashmap)
+include_directories(lib)
+
 add_compile_options( "-Wall" "-std=c++11" "-Wextra" "-fvisibility=hidden"
                      "-fvisibility-inlines-hidden"
                      "$<$<CONFIG:DEBUG>:-O0;-g>" 
@@ -41,8 +43,14 @@ set(PepSIRF_MODULES pepsirf_common modules_demux modules_deconv
 					modules_info
    )                
 
+list( APPEND PepSIRF_LINK_LIBS
+  ${PepSIRF_MODULES}
+  ${Boost_LIBRARIES}
+)
+
 if(OpenMP_FOUND)
   message( "OpenMP enabled" )
+  list( APPEND PepSIRF_LINK_LIBS OpenMP::OpenMP_CXX )
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
   add_definitions( -DENABLE_OPENMP )
 
@@ -51,11 +59,19 @@ else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-pragmas -Wno-unused-value")
 endif()
 
+if(ZLIB_FOUND)
+  add_definitions( -DZLIB_ENABLED )
+  list( APPEND PepSIRF_LINK_LIBS ZLIB::ZLIB )
+else()
+  message( "WARNING: ZLIB was not found, demux cannot process gzipped files." )
+endif()
+
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
 
 include_directories(${Boost_INCLUDE_DIRS})
+
 add_executable(pepsirf src/main.cpp)
 
 # Library common to all modules
@@ -137,23 +153,16 @@ add_library( modules_info STATIC src/modules/info/module_info.cpp
 
 
 option( BUILD_TESTS "Determines whether to build tests." ON )
+
 if(BUILD_TESTS)
+
   add_executable(pepsirf_test test/pepsirf_test.cpp)
   add_definitions( -DMATRIX_CHECK_BOUNDS )
   include_directories(pepsirf_test lib)
   enable_testing()
-if(OpenMP_FOUND)
-  target_link_libraries(pepsirf_test PUBLIC OpenMP::OpenMP_CXX ${PepSIRF_MODULES} ${Boost_LIBRARIES} )
-
-else()
-  target_link_libraries(pepsirf_test PUBLIC ${PepSIRF_MODULES} ${Boost_LIBRARIES} )
-endif()
-
+  target_link_libraries(pepsirf_test PUBLIC ${PepSIRF_LINK_LIBS} )
   add_test( NAME test COMMAND pepsirf_test ) 
+
 endif()
 
-if(OpenMP_FOUND)
-  target_link_libraries(pepsirf PUBLIC OpenMP::OpenMP_CXX ${PepSIRF_MODULES} ${Boost_LIBRARIES} )
-else()
-  target_link_libraries(pepsirf PUBLIC ${PepSIRF_MODULES} ${Boost_LIBRARIES} )
-endif()
+target_link_libraries(pepsirf PRIVATE ${PepSIRF_LINK_LIBS} )
