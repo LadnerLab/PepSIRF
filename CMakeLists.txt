@@ -11,7 +11,7 @@ set(CMAKE_CXX_STANDARD 11)
 find_package(OpenMP)
 find_package(ZLIB)
 
-find_package(Boost REQUIRED COMPONENTS program_options regex filesystem)
+find_package(Boost REQUIRED COMPONENTS program_options regex filesystem iostreams)
 
 include_directories(include/modules/core)
 include_directories(include/modules/normalize)
