@@ -96,6 +96,8 @@ namespace pepsirf_io
 
     using gzip_reader_filter =
         boost::iostreams::filtering_streambuf<boost::iostreams::input>;
+    using gzip_writer_filter =
+        boost::iostreams::filtering_streambuf<boost::iostreams::output>;
 
     /**
      * A class that is used to read gzipped data from an istream.
@@ -177,6 +179,56 @@ namespace pepsirf_io
 
     };
 
+    /**
+     * A class that is used to write gzipped data to an ostream.
+     * Provides methods to write data to the internal stream.
+     **/
+    class gzip_writer : public std::ostream
+    {
+        /**
+         * Filter that is used to compress data written to files.
+         **/
+        gzip_writer_filter filter;
+
+        /**
+         * Pointer to the stream that data will actually be written to.
+         **/
+        std::unique_ptr<std::ostream>
+            stream_ptr;
+
+    public:
+
+        /**
+         * Construct the writer with an output stream.
+         * @param output the stream to which gzipped data will be written to.
+         **/
+        gzip_writer( std::ostream& output )
+            {
+                using namespace boost::iostreams;
+                filter.push( gzip_compressor() );
+                filter.push( output );
+                stream_ptr = std::unique_ptr<std::ostream>( new std::ostream( &filter ) );
+            }
+
+        /**
+         * Write data to the output stream, compressing it before writing.
+         * @pre the output stream must be open in binary write mode.
+         * @post The output stream will have the gzip-compressed version of the data
+         *       written to it.
+         * @param par The data to write to the output stream.
+         **/
+        template<typename Args>
+            gzip_writer& operator<<( Args&& par )
+            {
+                std::operator<<( *(this->stream_ptr),
+                                 std::forward<Args>( par )
+                               );
+                return *this;
+            }
+
+        std::ostream& get_raw_stream();
+
+    };
 
 #endif 
 
