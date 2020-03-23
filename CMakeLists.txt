@@ -34,13 +34,15 @@ add_compile_options( "-Wall" "-std=c++11" "-Wextra" "-fvisibility=hidden"
                    )
 
 
-set(PepSIRF_MODULES pepsirf_common modules_demux modules_deconv 
-                    modules_normalize modules_subjoin 
-					modules_zscore modules_bin 
-					modules_link
-					modules_s_enrich
-					modules_p_enrich
-					modules_info
+set(PepSIRF_MODULES
+    pepsirf_common
+    modules_demux modules_deconv 
+    modules_normalize modules_subjoin 
+	modules_zscore modules_bin 
+	modules_link
+	modules_s_enrich
+	modules_p_enrich
+	modules_info
    )                
 
 list( APPEND PepSIRF_LINK_LIBS
@@ -93,6 +95,7 @@ add_library(pepsirf_common STATIC src/modules/parsers/options_parser.cpp src/mod
 
 add_library(modules_demux STATIC src/modules/demux/options_demux.cpp src/modules/demux/options_parser_demux.cpp src/modules/parsers/options_parser.cpp 
             src/modules/core/options.cpp 
+            src/modules/core/file_io.cpp 
 			src/modules/core/module.cpp src/modules/demux/module_demux.cpp
 			src/modules/parsers/fasta_parser.cpp src/modules/parsers/fastq_parser.cpp
             src/modules/core/sequence.cpp 
@@ -166,4 +169,4 @@ if(BUILD_TESTS)
 
 endif()
 
-target_link_libraries(pepsirf PRIVATE ${PepSIRF_LINK_LIBS} )
+target_link_libraries(pepsirf PUBLIC ${PepSIRF_LINK_LIBS} )
