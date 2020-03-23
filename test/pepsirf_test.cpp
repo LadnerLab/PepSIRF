@@ -2332,7 +2332,8 @@ TEST_CASE( "Reading/Writing Gzipped information", "[pepsirf_io]" )
         write << data;
     }
 
-    std::ifstream in{ "test.gz", std::ios_base::in | std::ios_base::binary };
+    std::ifstream in{ "test.gz", std::ios_base::in };
+
     pepsirf_io::gzip_reader read{ in };
 
     std::string comp;
@@ -2342,3 +2343,13 @@ TEST_CASE( "Reading/Writing Gzipped information", "[pepsirf_io]" )
 }
 
 #endif // ZLIB_ENABLED
+
+TEST_CASE( "Determining whether a file is gzipped.", "[pepsirf_io]" )
+{
+    std::ifstream true_expected{ "test.gz" };
+
+    REQUIRE( pepsirf_io::is_gzipped( true_expected ) );
+
+    std::ifstream false_expected{ "../test/test.fasta" };
+    REQUIRE( !pepsirf_io::is_gzipped( false_expected ) );
+}
