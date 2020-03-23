@@ -1,6 +1,7 @@
 #include <sstream>
 #include <stdexcept>
 
+#include "file_io.h"
 #include "module_demux.h"
 #include "fastq_sequence.h"
 #include "fastq_score.h"
@@ -57,7 +58,9 @@ void module_demux::run( options *opts )
     std::ifstream reads_file( d_opts->input_r1_fname, std::ios_base::in );
     std::ifstream r2_reads;
 
-    if( d_opts->input_r2_fname.length() > 0 )
+    bool r2_reads_included = d_opts->input_r2_fname.length() > 0;
+
+    if( r2_reads_included )
         {
             r2_reads.open( d_opts->input_r2_fname, std::ios_base::in );
         }
@@ -107,15 +110,56 @@ void module_demux::run( options *opts )
     sequential_map<sequence, sample>::iterator r_idx_match;
     sequential_map<sequence, sample>::iterator f_idx_match;
 
-    // while we still have reads to process, loop terminates when no fastq records
-    // are read from the file
-    while( fastq_p.parse( reads_file, reads, d_opts->read_per_loop  ) )
+    std::istream *reads_ptr = &reads_file;
+    std::istream *r2_reads_ptr = &r2_reads;
+
+    if( pepsirf_io::is_gzipped( reads_file ) )
         {
 
-            if( d_opts->input_r2_fname.length() > 0 )
+    #ifdef ZLIB_ENABLED
+            pepsirf_io::gzip_reader gzip_r1_reader( reads_file );
+
+            reads_ptr = &gzip_r1_reader;
+    #else
+            throw std::runtime_error( "A gzipped file was supplied, but "
+                                      "boost zlib is not available. "
+                                      "Please either configure boost with zlib "
+                                      "or unzip the file before attempting to demux."
+                                    );
+    #endif 
+        }
+
+    if( r2_reads_included
+        && pepsirf_io::is_gzipped( r2_reads )
+      )
+        {
+
+    #ifdef ZLIB_ENABLED
+            pepsirf_io::gzip_reader gzip_r2_reader( r2_reads );
+
+            r2_reads_ptr = &gzip_r2_reader;
+    #else
+            throw std::runtime_error( "A gzipped file was required, but "
+                                      "boost zlib is not available. "
+                                      "Please either configure boost with zlib "
+                                      "or unzip the file before attempting to demux."
+                                    );
+    #endif 
+        }
+
+
+    std::istream& reads_file_ref = *reads_ptr;
+    std::istream& r2_reads_ref   = *r2_reads_ptr;
+
+    // while we still have reads to process, loop terminates when no fastq records
+    // are read from the file
+    while( fastq_p.parse( reads_file_ref, reads, d_opts->read_per_loop  ) )
+        {
+
+            if( r2_reads_included )
                 {
                     // get the index sequences for this set of sequences
-                    fastq_p.parse( r2_reads, r2_seqs, d_opts->read_per_loop );
+                    fastq_p.parse( r2_reads_ref, r2_seqs, d_opts->read_per_loop );
                 }
 
            #pragma omp parallel for private( seq_iter, nuc_seq, read_index, index_str, adapter, sample_id,  \
@@ -288,19 +332,11 @@ void module_demux::run( options *opts )
                 }
 
             reads.clear();
+            r2_seqs.clear();
 
-            if( r2_seqs.size() )
-                {
-                    r2_seqs.clear();
-                }
         }
 
     total_time.stop();
-
-    if( d_opts->input_r2_fname.length() > 0 )
-        {
-            r2_reads.close();
-        }
 
     std::cout << "Processed " << processed_total << " records in " << time_keep::get_elapsed( total_time ) << " seconds.\n";
     std::cout << processed_success << " records were found to be a match out of "
