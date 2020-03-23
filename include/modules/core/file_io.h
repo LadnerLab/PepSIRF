@@ -3,6 +3,7 @@
 #include <fstream>
 #include <boost/algorithm/string.hpp>
 #include <vector>
+#include <iostream>
 #include <string>
 
 #ifdef ZLIB_ENABLED
@@ -11,7 +12,6 @@
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
 #include <memory>
-#include <iostream>
 
 #endif 
 
@@ -89,6 +89,19 @@ namespace pepsirf_io
                     }
             }
     }
+
+    /**
+     * Check to see whether an istreamjk is gzipped.
+     * @note False positives are positive, as this method simply performs a 
+     *       check for the 'magic number' (0x1F8B) at the beginning of a gzipped file.
+     *       Any file beginning with this magic number will be found to be gzipped 
+     *       by this function. However, the likelihood that a non-gzipped file, 
+     *       especially one used by PepSIRF, is rather small.
+     * @param to_check The stream that we want to check for gzip-edness.
+     * @post istream is ready to begin at the first item in the file.
+     * @returns true if to_check is gzipped, false otherwise.
+     **/
+    bool is_gzipped( std::istream& to_check );
 
 // double check that we can use ZLIB, otherwise
 // this is not useful
