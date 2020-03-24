@@ -62,6 +62,7 @@ else()
 endif()
 
 if(ZLIB_FOUND)
+  message( "Gzip file manipulation enabled." )
   add_definitions( -DZLIB_ENABLED )
   list( APPEND PepSIRF_LINK_LIBS ZLIB::ZLIB )
 else()
