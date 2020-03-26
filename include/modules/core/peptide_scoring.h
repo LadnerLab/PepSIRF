@@ -94,6 +94,8 @@ namespace peptide_scoring
      * Output will be written in a score matrix where an entry 
      * (x, y) in the score matrix is the the score of peptide x 
      * in sample y.
+     * @note equivalent to opening an output file stream 
+     *       on dest_fname and calling write_peptide_scores( std::ostream*... )
      * @param dest_fname The name of file to write output to
      * @param data the peptide score data to write output to
      **/

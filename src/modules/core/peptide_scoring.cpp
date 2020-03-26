@@ -94,7 +94,7 @@ void peptide_scoring::parse_peptide_scores( peptide_score_data_sample_major& des
                                                 )
 {
     std::ofstream out_file( dest_fname, std::ios_base::out );
-    char digits[ 30 ];
+    write_peptide_scores( out_file, data ); 
 }
 
 void peptide_scoring::write_peptide_scores( std::ostream& output,
