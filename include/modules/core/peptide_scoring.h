@@ -76,6 +76,19 @@ namespace peptide_scoring
     void parse_peptide_scores( peptide_score_data_sample_major& dest,
                                std::string ifname
                              );
+
+    /**
+     * Write peptide scores from data to an output stream.. 
+     * Output will be written in a score matrix where an entry 
+     * (x, y) in the score matrix is the the score of peptide x 
+     * in sample y.
+     * @param output The output stream to write peptide scores to.
+     * @param data the peptide score data to write output to
+     **/
+    void write_peptide_scores( std::ostream& output,
+                               peptide_score_data_sample_major& data
+                             );
+
     /**
      * Write peptide scores from data to a file. 
      * Output will be written in a score matrix where an entry 
