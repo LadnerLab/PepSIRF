@@ -39,6 +39,12 @@ bool options_parser_normalize::parse( int argc, char ***argv, options *opts )
           "Normalize the counts using the size factors method (Anders and Huber 2010). Note that if this "
           "flag is included, the value of col_sum will be ignored.\n"
         )
+        ( "precision,p", po::value( &opts_normalize->precision_digits )
+          ->default_value( static_cast<std::size_t>( 2 ) ),
+          "Output score precision. The scores written to the output will be output to this "
+          "many decimal places. For example, a value of 2 will result in values output in the form "
+          "'23.45', and a value of 3 will result in output of the form '23.449.\n"
+        )
         ( "output,o", po::value<std::string>( &opts_normalize->output_fname )
           ->default_value( "norm_output.tsv" ),
           "The name of the file to write output to. The output is formatted in the same "
