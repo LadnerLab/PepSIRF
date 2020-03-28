@@ -2332,11 +2332,14 @@ TEST_CASE( "Reading/Writing Gzipped information", "[pepsirf_io]" )
         write << data;
     }
 
-    std::ifstream in{ "test.gz", std::ios_base::in };
+    std::ifstream in{ "test.gz",
+                      std::ios_base::in | std::ios_base::binary
+                    };
 
     pepsirf_io::gzip_reader read{ in };
 
     std::string comp;
+
     std::getline( read, comp );
 
     REQUIRE( comp == data );
