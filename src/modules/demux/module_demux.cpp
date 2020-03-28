@@ -113,12 +113,18 @@ void module_demux::run( options *opts )
     std::istream *reads_ptr = &reads_file;
     std::istream *r2_reads_ptr = &r2_reads;
 
+    #ifdef ZLIB_ENABLED
+
+    pepsirf_io::gzip_reader gzip_r1_reader( reads_file );
+    pepsirf_io::gzip_reader gzip_r2_reader( r2_reads );
+
+
+    #endif 
+
     if( pepsirf_io::is_gzipped( reads_file ) )
         {
 
     #ifdef ZLIB_ENABLED
-            pepsirf_io::gzip_reader gzip_r1_reader( reads_file );
-
             reads_ptr = &gzip_r1_reader;
     #else
             throw std::runtime_error( "A gzipped file was supplied, but "
@@ -135,8 +141,6 @@ void module_demux::run( options *opts )
         {
 
     #ifdef ZLIB_ENABLED
-            pepsirf_io::gzip_reader gzip_r2_reader( r2_reads );
-
             r2_reads_ptr = &gzip_r2_reader;
     #else
             throw std::runtime_error( "A gzipped file was required, but "
