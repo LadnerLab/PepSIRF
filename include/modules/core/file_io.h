@@ -2,6 +2,18 @@
 #define FILE_IO_HH_INCLUDED
 #include <fstream>
 #include <boost/algorithm/string.hpp>
+#include <vector>
+#include <iostream>
+#include <string>
+
+#ifdef ZLIB_ENABLED
+
+#include <boost/iostreams/filtering_streambuf.hpp>
+#include <boost/iostreams/copy.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
+#include <memory>
+
+#endif 
 
 namespace pepsirf_io
 {
@@ -78,6 +90,99 @@ namespace pepsirf_io
             }
     }
 
+    /**
+     * Check to see whether an istreamjk is gzipped.
+     * @note False positives are positive, as this method simply performs a 
+     *       check for the 'magic number' (0x1F8B) at the beginning of a gzipped file.
+     *       Any file beginning with this magic number will be found to be gzipped 
+     *       by this function. However, the likelihood that a non-gzipped file, 
+     *       especially one used by PepSIRF, is rather small.
+     * @param to_check The stream that we want to check for gzip-edness.
+     * @post istream is ready to begin at the first item in the file.
+     * @returns true if to_check is gzipped, false otherwise.
+     **/
+    bool is_gzipped( std::istream& to_check );
+
+// double check that we can use ZLIB, otherwise
+// this is not useful
+#ifdef ZLIB_ENABLED
+
+    using gzip_reader_filter =
+        boost::iostreams::filtering_streambuf<boost::iostreams::input>;
+    using gzip_writer_filter =
+        boost::iostreams::filtering_streambuf<boost::iostreams::output>;
+
+    /**
+     * A class that is used to read gzipped data from an istream.
+     * Provides methods to retrieve data from the internal stream.
+     **/
+    class gzip_reader
+        : public std::istream
+    {
+
+        /**
+         * Filter that allows us to read gzipped data.
+         **/
+        gzip_reader_filter read_filter;
+
+    public:
+
+        /**
+         * Argument constructor. 
+         * @param input The input stream to read gzipped data from.
+         **/
+        gzip_reader( std::istream& input )
+            {
+                using namespace boost::iostreams;
+                read_filter.push( gzip_decompressor() );
+                read_filter.push( input );
+
+                this->rdbuf( &read_filter );
+            }
+
+        /**
+         * Ensure the stream is closed.
+         **/
+        ~gzip_reader()
+            {
+                boost::iostreams::close( read_filter );
+            }
+    };
+
+    /**
+     * A class that is used to write gzipped data to an ostream.
+     **/
+    class gzip_writer : public std::ostream
+    {
+        /**
+         * Filter that is used to compress data written to files.
+         **/
+        gzip_writer_filter write_filter;
+
+    public:
+
+        /**
+         * Construct the writer with an output stream.
+         * @param output the stream to which gzipped data will be written to.
+         **/
+        gzip_writer( std::ostream& output )
+            {
+                using namespace boost::iostreams;
+                write_filter.push( gzip_compressor() );
+                write_filter.push( output );
+                this->rdbuf( &write_filter );
+            }
+
+        /**
+         * Destructor to ensure the stream is closed.
+         **/
+        ~gzip_writer()
+            {
+                boost::iostreams::close( write_filter );
+            }
+    };
+
+#endif 
 
 }; // namespace pepsirf_io
 

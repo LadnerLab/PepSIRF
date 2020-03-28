@@ -2312,3 +2312,47 @@ TEST_CASE( "Testing nt->aa translation", "[nt_aa_translator]" )
     REQUIRE( translated.seq == "___F" );
 
 }
+
+#ifdef ZLIB_ENABLED
+
+TEST_CASE( "Reading/Writing Gzipped information", "[pepsirf_io]" )
+{
+    std::string data = "One banana, two banana, three banana, split!";
+
+
+    // I'm not certain why this needs its own block.
+    // Trying to close/flush the output stream manually does not work,
+    // but allowing it to be closed by the destructor DOES
+    // This is only a problem when reading/writing in the same
+    // breath, typically only reading or writing will be done, and this will
+    // not be a problem.
+    {
+        std::ofstream out{ "test.gz", std::ios_base::out | std::ios_base::binary };
+        pepsirf_io::gzip_writer write{ out };
+        write << data;
+    }
+
+    std::ifstream in{ "test.gz",
+                      std::ios_base::in | std::ios_base::binary
+                    };
+
+    pepsirf_io::gzip_reader read{ in };
+
+    std::string comp;
+
+    std::getline( read, comp );
+
+    REQUIRE( comp == data );
+}
+
+#endif // ZLIB_ENABLED
+
+TEST_CASE( "Determining whether a file is gzipped.", "[pepsirf_io]" )
+{
+    std::ifstream true_expected{ "test.gz" };
+
+    REQUIRE( pepsirf_io::is_gzipped( true_expected ) );
+
+    std::ifstream false_expected{ "../test/test.fasta" };
+    REQUIRE( !pepsirf_io::is_gzipped( false_expected ) );
+}

@@ -21,8 +21,18 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
                                 );
     desc.add_options()
         ( "help,h", "Produce help message" )
-        ( "input_r1", po::value<std::string>( &opts_demux->input_r1_fname )->required(), "Input forward reads fastq file to parse.\n")
-        ( "input_r2", po::value<std::string>( &opts_demux->input_r2_fname ), "Input reverse reads fastq file to parse. Note that if this argument is "
+        ( "input_r1",
+          po::value<std::string>( &opts_demux->input_r1_fname )->required(),
+          "Input forward reads fastq file to parse. "
+          "If PepSIRF was compiled with Zlib support, this file can be a regular fastq text file, or "
+          "can be a fastq file that is compressed using gzip. The file format will be automatically determined.\n"
+          )
+        ( "input_r2",
+          po::value<std::string>( &opts_demux->input_r2_fname ),
+          "Input reverse reads fastq file to parse. "
+          "If PepSIRF was compiled with Zlib support, this file can be a regular fastq text file, or "
+          "can be a fastq file that is compressed using gzip. The file format will be automatically determined.\n"
+          "Note that if this argument is "
           "not supplied only forward indices will be used to identify samples.\n"
         )
         ( "index,i", po::value<std::string>( &opts_demux->index_fname )->required(), "Name of fasta file containing forward and (potentially) reverse index sequences.\n")
