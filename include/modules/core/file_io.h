@@ -121,93 +121,43 @@ namespace pepsirf_io
     {
 
         /**
-         * Pointer to the istream object that contains the filter that 
-         * will be used for reading. 
+         * Filter that allows us to read gzipped data.
          **/
-        std::unique_ptr<std::istream>
-            stream_ptr;
-
-        /**
-         * A filter to read gzipped data.
-         **/
-        gzip_reader_filter filter;
+        gzip_reader_filter read_filter;
 
     public:
 
         /**
-         * Construct the gzip reader, given an input stream.
-         * @note input does not have to be open at the time of construction, 
-         *       but MUST be opened before any reading is attempted.
-         * @param input The istream to read from. This will be used internally 
-         *        as the source of gzipped content for the gzip_reader.
+         * Argument constructor. 
+         * @param input The input stream to read gzipped data from.
          **/
         gzip_reader( std::istream& input )
             {
                 using namespace boost::iostreams;
-                filter.push( gzip_decompressor() );
-                filter.push( input );
-                stream_ptr = std::unique_ptr<std::istream>( new std::istream( &filter ) );
+                read_filter.push( gzip_decompressor() );
+                read_filter.push( input );
+
+                this->rdbuf( &read_filter );
             }
 
         /**
-         * Get a line from the gzipped stream.
-         * @note follows the semantics of istream::getline
-         * @note Requires the parameters that are necessary for a call to 
-         *       istream::getline.
+         * Ensure the stream is closed.
          **/
-        template<typename... Args>
-        gzip_reader& getline( Args&&... par )
+        ~gzip_reader()
             {
-            this
-                ->stream_ptr
-                ->getline( std::forward<Args>( par )... );
-            return *this;
-
+                boost::iostreams::close( read_filter );
             }
-
-        /**
-         * Get a character from the stream.
-         * @note follows the semantics of istream::getline.
-         **/
-        template<typename... Args>
-        gzip_reader& get( Args&&... par )
-        {
-            return this
-                ->stream_ptr
-                ->get( std::forward<Args>( par )... );
-        }
-
-        /**
-         * Extract formatted data from the gzip_reader.
-         * @note follows semantics of std::operator>>
-         **/
-        template<typename Args>
-            gzip_reader& operator>>( Args&& par )
-            {
-                std::operator>>( *(this->stream_ptr),
-                                 std::forward<Args>( par )
-                               );
-                return *this;
-            }
-
     };
 
     /**
      * A class that is used to write gzipped data to an ostream.
-     * Provides methods to write data to the internal stream.
      **/
     class gzip_writer : public std::ostream
     {
         /**
          * Filter that is used to compress data written to files.
          **/
-        gzip_writer_filter filter;
-
-        /**
-         * Pointer to the stream that data will actually be written to.
-         **/
-        std::unique_ptr<std::ostream>
-            stream_ptr;
+        gzip_writer_filter write_filter;
 
     public:
 
@@ -218,53 +168,22 @@ namespace pepsirf_io
         gzip_writer( std::ostream& output )
             {
                 using namespace boost::iostreams;
-                filter.push( gzip_compressor() );
-                filter.push( output );
-                stream_ptr = std::unique_ptr<std::ostream>( new std::ostream( &filter ) );
+                write_filter.push( gzip_compressor() );
+                write_filter.push( output );
+                this->rdbuf( &write_filter );
             }
 
         /**
-         * Write data to the output stream, compressing it before writing.
-         * @pre the output stream must be open in binary write mode.
-         * @post The output stream will have the gzip-compressed version of the data
-         *       written to it.
-         * @param par The data to write to the output stream.
+         * Destructor to ensure the stream is closed.
          **/
-        template<typename Args>
-            gzip_writer& operator<<( Args&& par )
+        ~gzip_writer()
             {
-                std::operator<<( *(this->stream_ptr),
-                                 std::forward<Args>( par )
-                               );
-                return *this;
+                boost::iostreams::close( write_filter );
             }
-
-        std::ostream& get_raw_stream();
-
     };
 
 #endif 
 
 }; // namespace pepsirf_io
-
-#ifdef ZLIB_ENABLED
-
-namespace std
-{
-    /**
-     * Override the getline method when a gzip_reader is used. 
-     * This allows us to ensure the gzip_decompressor filter is used when 
-     * reading the data. Otherwise, behavior would be undefined.
-     * @note follows semantics of std::getline for regular std::istream.
-     *       The only difference is that this method first decompresses the data
-     *       that is referred to by the stream
-     * @param zip The gzip reader to get a line from.
-     * @param s The location to store the unzipped line from the file.
-     * @returns zip, the original gzip_reader that was passed in.
-     **/
-    pepsirf_io::gzip_reader& getline( pepsirf_io::gzip_reader& zip, string& s );
-};
-
-#endif
 
 #endif // FILE_IO_HH_INCLUDED
