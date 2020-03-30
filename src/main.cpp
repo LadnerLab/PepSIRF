@@ -7,6 +7,7 @@
 #include "module.h"
 #include "cli_validator.h"
 #include "module_initializer.h"
+#include "pepsirf_version.h"
 
 int main( int argc, char **argv )
 {
@@ -16,7 +17,7 @@ int main( int argc, char **argv )
 
     bool help_msg_only = false;
 	int ret_code = EXIT_SUCCESS;
-    const std::string version_no = "1.1.0";
+    const std::string version_no = PEPSIRF_VERSION;
 
     try
         {
@@ -36,6 +37,7 @@ int main( int argc, char **argv )
             // help are passed
             // help_msg_only = !parser->parse( argc, &argv, opts );
             help_msg_only = !init.get_options_parser()
+                             ->set_version( version_no )
                              ->parse( argc, &argv, init.get_opts() );
 
             if( !help_msg_only )
