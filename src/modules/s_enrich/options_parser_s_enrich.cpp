@@ -16,7 +16,9 @@ bool options_parser_s_enrich
     namespace po = boost::program_options;
     po::variables_map vm;
 
-    po::options_description desc( "PepSIRF: Peptide-based Serological Immune Response "
+    po::options_description desc( "PepSIRF "
+                                  + format_version_string()
+                                  + ": Peptide-based Serological Immune Response "
                                   "Framework species Single-Replicate Enrichment module",
                                   line_width
                                 );
