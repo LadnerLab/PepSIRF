@@ -31,6 +31,11 @@ public:
     int line_width;
 
     /**
+     * The current version of PepSIRF
+     **/
+    std::string version_no;
+
+    /**
      * Parse command-line arguments, store parsed options in the 
      * members of the opts item.
      * @param argc The number of arguments passed from the command-line.
@@ -42,6 +47,14 @@ public:
      *          false otherwise.
      **/
     virtual bool parse( int argc, char ***argv, options *opts );
+
+    /**
+     * Set the version number of PepSIRF.
+     * @return a pointer to this
+     **/
+    options_parser *set_version( const std::string version_no );
+
+    std::string format_version_string();
 };
 
 

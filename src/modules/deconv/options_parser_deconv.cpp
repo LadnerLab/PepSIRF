@@ -17,7 +17,9 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
     namespace po = boost::program_options;
     po::variables_map vm;
 
-    po::options_description desc( "PepSIRF: Peptide-based Serological Immune Response "
+    po::options_description desc( "PepSIRF "
+                                  + format_version_string()
+                                  + ": Peptide-based Serological Immune Response "
                                   "Framework species deconvolution module. This module has "
                                   "two modes: batch and singular. In batch mode, the input "
                                   "given to '--enriched' is a directory containing files of enriched "

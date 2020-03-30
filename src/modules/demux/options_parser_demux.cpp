@@ -9,7 +9,9 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
     namespace po = boost::program_options;
     po::variables_map vm;
 
-    po::options_description desc( "PepSIRF: Peptide-based Serological Immune Response Framework demultiplexing module. \n"
+    po::options_description desc( "PepSIRF "
+                                  + format_version_string()
+                                  + ": Peptide-based Serological Immune Response Framework demultiplexing module. \n"
                                   "This module takes the following parameters and outputs the counts of each reference \n"
                                   "sequence for each sample. Later we reference the 'distance' between sequences. For this "
                                   "module we define distance by the Hamming distance D between a reference sequence r and a read sequence s. If D( r, s ) "

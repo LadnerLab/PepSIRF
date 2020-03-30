@@ -1,9 +1,11 @@
 #include "cli_validator.h"
 #include <iostream>
 #include <algorithm>
+#include <sstream>
 #include <string>
 #include <unordered_set>
 #include "modules.h"
+#include "pepsirf_version.h"
 
 cli_validator::cli_validator() = default;
 
@@ -11,7 +13,10 @@ bool cli_validator::validate( int argc, char ***argv )
 {
     char **argv_loc = *argv;
  
-    std::string desc = "PepSIRF: Peptide-based Serological Immune Response Framework";
+    std::ostringstream stream;
+    
+    stream << "PepSIRF (v" << PEPSIRF_VERSION << ")"
+           << ": Peptide-based Serological Immune Response Framework";
     std::string arg;
     if( argc >= 2 )
         {
@@ -22,7 +27,7 @@ bool cli_validator::validate( int argc, char ***argv )
                 !arg.compare( "--help" )
               )
                 {
-                    std::cout << desc << "\n";
+                    std::cout << stream.str() << "\n";
                     std::cout << "\nUSAGE: pepsirf [ --help | module_name <module_args*> ] " << "\n";
                     std::cout << "The currently available modules are:\n";
                     std::cout << modules::join_names( " - ", "\n" );
