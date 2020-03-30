@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <functional>
 #include <numeric>
+#include <iomanip>
 
 #include "module_normalize.h"
 #include "options_normalize.h"
@@ -57,7 +58,13 @@ void module_normalize::run( options *opts )
 
     original_scores.scores = original_scores.scores.transpose();
 
-    peptide_scoring::write_peptide_scores( n_opts->output_fname, original_scores );
+    std::ofstream output_file( n_opts->output_fname, std::ios_base::out );
+    output_file
+        << std::fixed
+        << std::showpoint
+        << std::setprecision( n_opts->precision_digits );
+
+    peptide_scoring::write_peptide_scores( output_file, original_scores );
 
     timer.stop();
     

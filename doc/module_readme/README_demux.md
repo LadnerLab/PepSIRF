@@ -5,9 +5,12 @@ This module takes the following parameters and outputs the counts of each refere
 sequence for each sample. Later we reference the 'distance' between sequences. For this module we define distance by the Hamming distance D between a reference sequence r and a read sequence s. If D( r, s ) <= max_mismatches we say that r and s are similar. Note that if for some read q D( r, s ) <= max_mismatches and D( r, q ) <= max_mismatches, then we say that the sequence whose distance is the minimum between D( r, s ) and D( r, q ) maps to reference r. Additionally if D( r, s ) == D( r, q ) then we discard the read as we cannot say whether r maps to s or q. 
 :
   -h [ --help ]                        Produce help message
-  --input_r1 arg                       Input forward reads fastq file to parse.
+  --input_r1 arg                       Input forward reads fastq file to parse. If PepSIRF was compiled with Zlib support, this file can be a regular fastq text file, or can be a fastq file
+                                       that is compressed using gzip. The file format will be automatically determined.
                                        
-  --input_r2 arg                       Input reverse reads fastq file to parse. Note that if this argument is not supplied only forward indices will be used to identify samples.
+  --input_r2 arg                       Input reverse reads fastq file to parse. If PepSIRF was compiled with Zlib support, this file can be a regular fastq text file, or can be a fastq file
+                                       that is compressed using gzip. The file format will be automatically determined.
+                                       Note that if this argument is not supplied only forward indices will be used to identify samples.
                                        
   -i [ --index ] arg                   Name of fasta file containing forward and (potentially) reverse index sequences.
                                        
@@ -61,5 +64,4 @@ sequence for each sample. Later we reference the 'distance' between sequences. F
                                        a read at the expected locations of a library sequence is not at least this value then the read will be discarded.
                                        
   -t [ --num_threads ] arg (=2)        Number of threads to use for analyses.
-                                       
 ```

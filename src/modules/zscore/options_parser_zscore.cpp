@@ -13,7 +13,9 @@ bool options_parser_zscore::parse( int argc, char ***argv, options *opts )
     std::vector<std::string> matrix_name_list_pairs;
 
 
-    po::options_description desc( "PepSIRF: Peptide-based Serological Immune "
+    po::options_description desc( "PepSIRF "
+                                  + format_version_string()
+                                  + ": Peptide-based Serological Immune "
                                   "Response Framework zscore module",
                                   line_width
                                 );

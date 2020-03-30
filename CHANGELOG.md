@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2020-03-30
+- Updated the help text of each module to display the current version number.
+- Fixed demux flag names that were inconsistent between the CLI input and standard output.
+- Demux can now read from gzipped fastq files
+- Added a precision argument to norm that enables the specification of numeric precision in the output.
+- Fixed bug caused by an incomplete Codon -> AA translation map
+
 ## [1.1.0] - 2020-02-26
 - 2020-02-25: [General] Module help information now fills the entire line width on MacOS.
 - 2020-02-25: [Demux] Added support for translation-based count aggregation.

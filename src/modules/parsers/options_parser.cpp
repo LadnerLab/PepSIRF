@@ -21,6 +21,12 @@ options_parser::options_parser()
 
 }
 
+options_parser *options_parser::set_version( const std::string version_no )
+{
+    this->version_no = version_no;
+    return this;
+}
+
 options_parser::~options_parser() = default;
 
 bool options_parser::parse( int argc, char ***argv, options *opts )
@@ -29,7 +35,10 @@ bool options_parser::parse( int argc, char ***argv, options *opts )
     char **argv_loc = *argv;
     po::variables_map vm;
 
-    po::options_description desc( "PepSIRF: Peptide-based Serological Immune Response Framework" );
+    po::options_description desc( "PepSIRF "
+                                  + format_version_string()
+                                  + ": Peptide-based Serological Immune Response Framework"
+                                );
     desc.add_options()
         ( "help,h", "Produce help message" )
         ( "num_threads,t", po::value<int>( &opts->num_threads )->default_value( opts->DEFAULT_NUM_THREADS ), "Number of threads to use for analyses." );
@@ -46,3 +55,8 @@ bool options_parser::parse( int argc, char ***argv, options *opts )
     return true;
 }
 
+
+std::string options_parser::format_version_string()
+{
+    return "(v" + version_no + ")";
+}

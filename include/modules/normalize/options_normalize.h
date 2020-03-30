@@ -36,6 +36,11 @@ class options_normalize : public options
     bool col_sum_norm;
     bool size_factors_norm;
 
+    /**
+     * Number of digits of precision for the output.
+     **/
+    std::size_t precision_digits;
+
 
 };
 

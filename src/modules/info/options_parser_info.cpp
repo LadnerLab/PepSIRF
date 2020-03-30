@@ -11,7 +11,9 @@ bool options_parser_info
     namespace po = boost::program_options;
     po::variables_map vm;
 
-    po::options_description desc( "PepSIRF: Peptide-based Serological Immune "
+    po::options_description desc( "PepSIRF "
+                                  + format_version_string()
+                                  + ": Peptide-based Serological Immune "
                                   "Response Framework info module",
                                   line_width
                                 );

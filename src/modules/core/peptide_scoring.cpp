@@ -94,30 +94,36 @@ void peptide_scoring::parse_peptide_scores( peptide_score_data_sample_major& des
                                                 )
 {
     std::ofstream out_file( dest_fname, std::ios_base::out );
-    char digits[ 30 ];
+    write_peptide_scores( out_file, data ); 
+}
+
+void peptide_scoring::write_peptide_scores( std::ostream& output,
+                                            peptide_score_data_sample_major& data
+                                          )
+{
     data.scores = data.scores.transpose();
 
-    out_file << "Sequence name\t";
+    output << "Sequence name\t";
 
-    out_file << boost::algorithm::join( data.sample_names, "\t" ) << "\n";
+    output << boost::algorithm::join( data.sample_names, "\t" ) << "\n";
 
     for( std::size_t index = 0; index < data.scores.nrows(); ++index )
         {
-            out_file << data.pep_names[ index ] << "\t";
+            output << data.pep_names[ index ] << "\t";
                         
             std::size_t inner_index = 0;
 
             for( inner_index = 0; inner_index < data.sample_names.size(); ++inner_index )
                 {
-                    std::sprintf( digits, "%.2f", data.scores( index, inner_index ) );
-                    out_file << digits;
+                    output << data.scores( index, inner_index );
 
                     if( inner_index < data.sample_names.size() - 1 )
                         {
-                            out_file << "\t";
+                            output << "\t";
                         }
                 }
-            out_file << "\n";
+            output << "\n";
         }
 }
+
 

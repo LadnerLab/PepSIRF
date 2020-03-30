@@ -16,7 +16,9 @@ bool options_parser_p_enrich::parse( int argc, char ***argv, options *opts )
     namespace po = boost::program_options;
     po::variables_map vm;
 
-    po::options_description desc( "PepSIRF: Peptide-based Serological Immune Response "
+    po::options_description desc( "PepSIRF "
+                                  + format_version_string()
+                                  + ": Peptide-based Serological Immune Response "
                                   "Framework species Paired (Duplicate) Enrichment module. "
                                   "This module determines which probes in samples done in duplicate are "
                                   "enriched, as determined by various numerical thresholds. "

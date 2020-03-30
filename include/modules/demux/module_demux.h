@@ -262,8 +262,15 @@ class module_demux : public module
             for( auto iter = count_map.begin(); iter != count_map.end(); ++iter )
                 {
 
-                    current = translator( iter->first );
-                    current.name = current.seq;
+                    try
+                        {
+                            current = translator( iter->first );
+                            current.name = current.seq;
+                        }
+                    catch( std::out_of_range& e )
+                        {
+                            continue;
+                        }
 
                     // if the new name not in agg_map
                     if( ptr_map.find( current.name ) == ptr_map.end() )
