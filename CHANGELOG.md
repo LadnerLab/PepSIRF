@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.2.0] - 2020-03-30
 - Updated the help text of each module to display the current version number.
 - Fixed demux flag names that were inconsistent between the CLI input and standard output.
 - Demux can now read from gzipped fastq files
