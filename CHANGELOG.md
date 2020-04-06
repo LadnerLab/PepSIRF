@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.1] - 2020-04-06
+- (Demux) Fixed a bug that allowed reads who had a forward index match but no reverse index match be output with a score of zero.
+- (Demux) Fixed a bug causing a difference in scores between aggregate and translation-based non-aggregate scores.
 ## [1.2.0] - 2020-03-30
 - Updated the help text of each module to display the current version number.
 - Fixed demux flag names that were inconsistent between the CLI input and standard output.
