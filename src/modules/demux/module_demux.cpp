@@ -317,6 +317,9 @@ void module_demux::run( options *opts )
 
                                             if( d_id != index_map.end() )
                                                 {
+                                                    std::size_t n_found = reads[ read_index ].seq.find( "N" );
+                                                    if( n_found == std::string::npos )
+                                                        {
                                                             auto seq_match = library_searcher.find( reads[ read_index ],
                                                                                                     std::get<2>( d_opts->seq_data ),
                                                                                                     seq_start,
@@ -328,6 +331,7 @@ void module_demux::run( options *opts )
                                                                     sample_id = d_id->second.id;
                                                                     seq_match->second->at( sample_id )++;
                                                                     ++processed_success;
+                                                                }
                                                         }
                                                 }
                                         }
@@ -508,6 +512,7 @@ void module_demux::write_outputs( std::string outfile_name,
         {
             const sequence& curr = seq_iter->first;
             const std::vector<std::size_t> *curr_counts = seq_iter->second;
+
 
             outfile << curr.name << DELIMITER;
 
