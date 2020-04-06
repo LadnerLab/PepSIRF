@@ -293,22 +293,22 @@ void module_demux::run( options *opts )
                                     et_seq_search<seq_map,false> library_searcher( lib_idx, reference_counts, num_samples );
 
 
-                                    auto seq_match = library_searcher.find( reads[ read_index ],
-                                                                            std::get<2>( d_opts->seq_data ),
-                                                                            seq_start,
-                                                                            seq_length
-                                                                            );
-                                    if( reverse_length == 0
-                                        && seq_match != reference_counts.end()
-                                        )
+                                    if( reverse_length == 0 )
                                         {
-                                            sample_id = f_idx_match->second.id;
-                                            seq_match->second->at( sample_id )++;
-                                            ++processed_success;
+                                            auto seq_match = library_searcher.find( reads[ read_index ],
+                                                                                    std::get<2>( d_opts->seq_data ),
+                                                                                    seq_start,
+                                                                                    seq_length
+                                                                                    );
+
+                                            if( seq_match != reference_counts.end() )
+                                                {
+                                                    sample_id = f_idx_match->second.id;
+                                                    seq_match->second->at( sample_id )++;
+                                                    ++processed_success;
+                                                }
                                         }
-                                    else if( reverse_length != 0
-                                             && seq_match != reference_counts.end()
-                                             )
+                                    else if( reverse_length != 0 )
                                         {
                                             std::string concat_idx = f_idx_match->first.seq
                                                 + r_idx_match->first.seq;
@@ -317,13 +317,25 @@ void module_demux::run( options *opts )
 
                                             if( d_id != index_map.end() )
                                                 {
-                                                    sample_id = d_id->second.id;
-                                                    seq_match->second->at( sample_id )++;
-                                                    ++processed_success;
+                                                    std::size_t n_found = reads[ read_index ].seq.find( "N" );
+                                                    if( n_found == std::string::npos )
+                                                        {
+                                                            auto seq_match = library_searcher.find( reads[ read_index ],
+                                                                                                    std::get<2>( d_opts->seq_data ),
+                                                                                                    seq_start,
+                                                                                                    seq_length
+                                                                                                    );
+                                                            if( seq_match != reference_counts.end() )
+                                                                {
+
+                                                                    sample_id = d_id->second.id;
+                                                                    seq_match->second->at( sample_id )++;
+                                                                    ++processed_success;
+                                                                }
+                                                        }
                                                 }
                                         }
-                                    else if( seq_match == reference_counts.end()
-                                             && found_concatemer() )
+                                    else if( found_concatemer() )
                                         {
                                             ++concatemer_found;
                                         }
@@ -500,6 +512,7 @@ void module_demux::write_outputs( std::string outfile_name,
         {
             const sequence& curr = seq_iter->first;
             const std::vector<std::size_t> *curr_counts = seq_iter->second;
+
 
             outfile << curr.name << DELIMITER;
 
