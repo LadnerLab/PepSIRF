@@ -111,6 +111,8 @@ git merge master --no-ff
 git tag -a VERSION_NUMBER
 git push 
 git push --follow-tags
+git checkout develop
+git merge master
 ```
 
 The new version of PepSIRF has been officially released! 
