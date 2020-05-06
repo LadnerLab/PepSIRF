@@ -478,6 +478,30 @@ class matrix
     }
 
     /**
+     * Transpose this matrix, returning the result.
+     * @returns this^T, the transposition of this matrix.
+     **/
+    matrix<ValType>
+    transpose()
+    {
+        matrix<ValType>
+            ret_val{ this->M,
+                     this->N
+                   };
+
+        for( std::uint32_t row = 0; row < this->N; ++row )
+            {
+                for( std::uint32_t col = 0; col < this->M; ++col )
+                    {
+                        ret_val( col, row ) = this->operator()( row, col );
+                    }
+            }
+
+        return ret_val;
+    }
+
+
+    /**
      * Transpose the way this matrix is accessed.
      * @post accessing matrix( i,j ) is equivalent to 
      *       accessing matrix( j,i ) before this method is called.
