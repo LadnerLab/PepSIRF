@@ -1839,6 +1839,15 @@ TEST_CASE( "Arithmetic mean", "[stats]" )
 
 TEST_CASE( "matrix transposition", "[matrix]" )
 {
+    // a non-symmetric function of two variables, x and y,
+    // used because for symmetric F F(x,y) = F(y,x), making it not
+    // useful for testing our transposition operations
+    auto non_symmetric = []( int x, int y ) -> int 
+        {
+            constexpr int A = 4, B = 8, R = 28;
+            return ( A * x * x ) + ( B * y * y ) - ( R * R );
+        };
+
     SECTION( "Transposition of a square matrix", "[matrix]" )
         {
             labeled_matrix<int,std::string> matr{ 5, 5 };
@@ -1857,15 +1866,6 @@ TEST_CASE( "matrix transposition", "[matrix]" )
 
     SECTION( "Transposition of a rectangular matrix", "[matrix]" )
         {
-            // a non-symmetric function of two variables, x and y,
-            // used because for symmetric F F(x,y) = F(y,x), making it not
-            // useful for testing our transposition operations
-            auto non_symmetric = []( int x, int y ) -> int 
-                {
-                    constexpr int A = 4, B = 8, R = 28;
-                    return ( A * x * x ) + ( B * y * y ) - ( R * R );
-                };
-
             labeled_matrix<int,std::string> matr{ 8, 2 };
             matr.set_row_labels( std::vector<std::string>{ "row_1", "row_2", "row_3", "row_4",
                                                            "row_5", "row_6", "row_7", "row_8"
@@ -1894,6 +1894,74 @@ TEST_CASE( "matrix transposition", "[matrix]" )
                 }
 
             REQUIRE( ( matr_t_t == matr ) );
+        }
+    SECTION( "Transposed access of a square matrix", "[matrix]" )
+        {
+            labeled_matrix<int,std::string> matr{ 5, 5 };
+            labeled_matrix<int,std::string> matr_t{ 5, 5 };
+            std::vector<std::string> col_labs{ "col_1", "col_2", "col_3", "col_4", "col_5" };
+            std::vector<std::string> row_labs{ "row_1", "row_2", "row_3", "row_4", "row_5" };
+            matr.set_col_labels( col_labs );
+            matr.set_row_labels( row_labs );
+            matr.set_all( 5 );
+
+            matr_t.set_col_labels( col_labs );
+            matr_t.set_row_labels( row_labs );
+            matr_t.set_all( 5 );
+
+            matr( 1, 4 ) = 12;
+            matr_t( 1, 4 ) = 12;
+
+            matr_t.transpose_access();
+
+            for( int idx = 0; idx < 5; ++idx )
+                {
+                    for( int inner = 0; inner < 5; ++inner )
+                        {
+                            REQUIRE( matr( idx, inner ) == matr_t( inner, idx ) );
+                            REQUIRE( matr( row_labs[ idx ], col_labs[ inner ] )
+                                     == matr_t( col_labs[ inner ], row_labs[ idx ] ) );
+                        }
+                }
+        }
+    SECTION( "Transposed access of a rectangular matrix", "[matrix]" )
+        {
+            labeled_matrix<int,std::string> matr{ 8, 2 };
+            labeled_matrix<int,std::string> matr_t{ 8, 2 };
+            std::vector<std::string> row_labels{ "row_1", "row_2", "row_3", "row_4",
+                                                 "row_5", "row_6", "row_7", "row_8"
+                    };
+            std::vector<std::string> col_labels { "col_1", "col_2" };
+
+            matr.set_row_labels( row_labels ); 
+            matr.set_col_labels( col_labels );
+
+            matr_t.set_row_labels( row_labels ); 
+            matr_t.set_col_labels( col_labels );
+
+            for( int i = 0; i < 8; ++i )
+                {
+                    for( int j = 0; j < 2; ++j )
+                        {
+                            matr( i, j ) = non_symmetric( i, j );
+                            matr_t( i, j ) = non_symmetric( i, j );
+                        }
+                }
+
+            matr_t.transpose_access();
+
+            for( int i = 0; i < 8; ++i )
+                {
+                    for( int j = 0; j < 2; ++j )
+                        {
+                            REQUIRE( matr_t( j, i ) == matr( i, j ) );
+                            REQUIRE( matr( row_labels[ i ], col_labels[ j ] )
+                                     == matr_t( col_labels[ j ], row_labels[ i ] )
+                                   );
+
+                        }
+                }
+
         }
 
 }
