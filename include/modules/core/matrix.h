@@ -478,6 +478,18 @@ class matrix
     }
 
     /**
+     * Transpose the way this matrix is accessed.
+     * @post accessing matrix( i,j ) is equivalent to 
+     *       accessing matrix( j,i ) before this method is called.
+     * @note Calling this method twice is equivalent to 
+     *       doing nothing.
+     **/
+    void transpose_access()
+    {
+        this->is_transposed = !this->is_transposed;
+    }
+
+    /**
      * Set all of the members of the matrix to 
      * a certain value.
      * @param val The value to set all members of the matrix to.
@@ -676,6 +688,8 @@ class matrix
      * The number of columns the matrix has.
      **/
     std::uint32_t M;
+
+    bool is_transposed = false;
 
     /**
      * The values stored in the matrix.
