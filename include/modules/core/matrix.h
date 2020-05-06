@@ -725,6 +725,10 @@ class matrix
      **/
     std::uint32_t access_to_1d( const std::uint32_t x, const std::uint32_t y ) const
         {
+            if( is_transposed )
+                {
+                    return ( y * M ) + x;
+                }
             return ( x * M ) + y;
         }
 
@@ -1333,6 +1337,20 @@ class labeled_matrix : public matrix<ValType>
             }
 
         return ret_val;
+    }
+
+    /**
+     * Transpose the way this matrix is accessed.
+     * @post accessing matrix( i,j ) is equivalent to 
+     *       accessing matrix( j,i ) before this method is called.
+     * @note Calling this method twice is equivalent to 
+     *       doing nothing.
+     * @note this method also enables label-based access transposition.
+     **/
+    void transpose_access()
+    {
+        std::swap( this->col_labels, this->row_labels );
+        static_cast<matrix<ValType>*>( this )->transpose_access();
     }
 
  private:
