@@ -17,6 +17,23 @@ typedef struct peptide_score_data peptide_score_data_sample_major;
  **/
 typedef struct peptide_score_data peptide_score_data_peptide_major;
 
+namespace peptide_scoring
+{
+    /**
+     * A 'label_mode' that specifies whether labels should be 
+     * used when parsing values from the 'peptide_score_data' file. 
+     * When labels are enabled, memory use is increased by the 
+     * labeled matrix that is created. When disabled, 
+     * memory use is decreased. 
+     **/
+    enum class label_mode
+    {
+        LABELS_DISABLED,
+        LABELS_ENABLED     
+    };
+
+};
+
 
 /**
  * A struct to store peptide score data.
@@ -32,6 +49,8 @@ struct peptide_score_data
      * return the score of peptide x in sample y.
      **/
     labeled_matrix<double,std::string> scores;
+
+    peptide_scoring::label_mode label_mode;
 
     /**
      * The names of the peptides, in order in which they were
