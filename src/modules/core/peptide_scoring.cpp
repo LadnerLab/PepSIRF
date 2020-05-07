@@ -8,7 +8,8 @@
 
 
 void peptide_scoring::parse_peptide_scores( peptide_score_data_sample_major& dest,
-                                            std::string ifname
+                                            std::string ifname,
+                                            label_mode lab_mode
                                           )
 {
     std::string line;
@@ -84,9 +85,12 @@ void peptide_scoring::parse_peptide_scores( peptide_score_data_sample_major& des
                 }
         }
 
-    dest.scores.set_row_labels( dest.pep_names );
-    dest.scores.set_col_labels( dest.sample_names );
-    dest.scores = dest.scores.transpose();
+    if( lab_mode == label_mode::LABELS_ENABLED )
+        {
+            dest.scores.set_row_labels( dest.pep_names );
+            dest.scores.set_col_labels( dest.sample_names );
+        }
+    dest.scores.transpose_access();
 
 }
     void peptide_scoring::write_peptide_scores( std::string dest_fname,
@@ -101,7 +105,7 @@ void peptide_scoring::write_peptide_scores( std::ostream& output,
                                             peptide_score_data_sample_major& data
                                           )
 {
-    data.scores = data.scores.transpose();
+    data.scores.transpose_access();
 
     output << "Sequence name\t";
 
