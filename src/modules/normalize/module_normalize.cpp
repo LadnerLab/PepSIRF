@@ -39,7 +39,7 @@ void module_normalize::run( options *opts )
 
     peptide_scoring::parse_peptide_scores( original_scores, scores_fname );
 
-    original_scores.scores = original_scores.scores.transpose();
+    original_scores.scores.transpose_access();
 
     std::vector<double> norm_factors( original_scores.sample_names.size(), 0 );
 
@@ -56,7 +56,7 @@ void module_normalize::run( options *opts )
     // normalize the counts
     normalize_counts( original_scores.scores, norm_factors );
 
-    original_scores.scores = original_scores.scores.transpose();
+    original_scores.scores.transpose_access();
 
     std::ofstream output_file( n_opts->output_fname, std::ios_base::out );
     output_file
