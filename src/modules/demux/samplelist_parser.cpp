@@ -22,6 +22,10 @@ std::vector<sample> samplelist_parser::parse( const std::string filename )
 
     std::vector<sample> vec;
 
+    if( !in_stream.is_open() )
+        {
+            throw std::runtime_error( "File could not be opened. Verify sample list file exists." );
+        }
     while( std::getline( in_stream, line ) )
         {
             boost::trim_right( line );
@@ -42,7 +46,7 @@ std::vector<sample> samplelist_parser::parse( const std::string filename )
             else
                 {
                     std::stringstream err_str;
-                    err_str << "The samplelist file is not formatted correctly!\n" << 
+                    err_str << "The samplelist file is not formatted correctly!\n" <<
                         "the error occurs here: \n" << line_no << " " <<  line << "\n";
                     throw std::runtime_error( err_str.str() );
                 }
@@ -50,6 +54,10 @@ std::vector<sample> samplelist_parser::parse( const std::string filename )
             sample samp( id1, id2, name, sample_id );
             vec.push_back( samp );
             ++sample_id;
+        }
+    if( in_stream.bad() )
+        {
+            throw std::runtime_error( "Encountered error while reading file. Verify sample list file is in .tsv format." );
         }
 
     return vec;
