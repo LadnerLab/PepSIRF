@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- Fixed bug that prevented the 'pepsirf_test' executable from building.
 
 ## [1.2.1] - 2020-04-06
 - (Demux) Fixed a bug that allowed reads who had a forward index match but no reverse index match be output with a score of zero.

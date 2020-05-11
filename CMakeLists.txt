@@ -101,6 +101,7 @@ add_library(modules_demux STATIC src/modules/demux/options_demux.cpp src/modules
 			src/modules/parsers/fasta_parser.cpp src/modules/parsers/fastq_parser.cpp
             src/modules/core/sequence.cpp 
 			src/modules/demux/samplelist_parser.cpp
+			src/modules/demux/translation_map.cpp
 			src/modules/core/sequence_indexer.cpp
 			src/modules/core/fastq_score.cpp
 		   )
