@@ -193,7 +193,7 @@ TEST_CASE( "Add seqs to map", "[module_demux]" )
 
     parallel_map<sequence, std::vector<std::size_t>*>::iterator it = my_map.begin();
     size_t index = 0;
-                       
+
     while( it != my_map.end() )
         {
             REQUIRE( it->second->size() == num_samples );
@@ -326,9 +326,9 @@ TEST_CASE( "Reference-independent Demultiplexing" )
             REQUIRE( it.size() == 2 );
             REQUIRE( it[ 0 ] == 0 );
             REQUIRE( it[ 1 ] == 0 );
-            
 
-            
+
+
         }
 
     SECTION( "Pointer-based value-items in the map" )
@@ -382,7 +382,7 @@ TEST_CASE( "Test Count Generation", "[module_demux]" )
     std::size_t seq_length     = 150;
     std::size_t seq_start      = 0;
     std::size_t num_mismatches = 0;
-    
+
     vec_a = fp.parse( "../test/test_fastq.fastq" );
 
     std::for_each( vec_a.begin(), vec_a.end(),
@@ -491,8 +491,8 @@ TEST_CASE( "get_kmers", "[kmer_scores]" )
             REQUIRE( kmers.size() == sequence.length() - ( index + 1 ) + 1 );
             kmers.clear();
         }
-                                                    
-                                                  
+
+
 }
 
 
@@ -523,7 +523,7 @@ TEST_CASE( "get_tie_candidates_integer", "[module_deconv]" )
                                           ovlp_threshold,
                                           difference<double>()
                                         );
-                           
+
     REQUIRE( candidates.size() == 3 );
     REQUIRE( t_type == tie_data::tie_type::K_WAY_TIE );
 
@@ -1214,7 +1214,7 @@ TEST_CASE( "to_dir_name", "[fs_tools]" )
     REQUIRE( fs_tools::to_dir_name( dest_str, name_trail ) == name_trail );
 
     dest_str.clear();
-    
+
     REQUIRE( fs_tools::to_dir_name( name_no_trail ) == name_trail );
 
     dest_str.clear();
@@ -1234,7 +1234,7 @@ TEST_CASE( "to_dir_name", "[fs_tools]" )
     REQUIRE( dest_str == "dir1/fpart1123fpart4" );
 
     dest_str.clear();
-    
+
     fs_tools::create_fname( dest_str, path_base_inc,
                             "fpart1", 1, 2, 3,
                             "fpart4"
@@ -1246,7 +1246,7 @@ TEST_CASE( "to_dir_name", "[fs_tools]" )
 
 TEST_CASE( "filter_counts (vector template)", "[module_deconv]" )
 {
-    std::vector<std::pair<std::size_t,double>> filter_vec; 
+    std::vector<std::pair<std::size_t,double>> filter_vec;
     module_deconv mod;
 
     for( std::size_t index = 0; index < 100; ++index )
@@ -1706,7 +1706,7 @@ TEST_CASE( "labeled_matrix full outer join", "[matrix]" )
                                          );
     a( "arow1", "acol1" ) = 5.5;
     b( "brow2", "bcol5" ) = 5.5;
-    
+
     labeled_matrix<double,std::string> a_join_b
         = a.full_outer_join( b );
 
@@ -1760,7 +1760,7 @@ TEST_CASE( "labeled_matrix full outer join", "[matrix]" )
                     a2_matr( y % x_dim, x ) = x * y;
                 }
         }
-            
+
     a1_matr.set_col_labels( a1_cl );
     a1_matr.set_row_labels( a1_rl );
     a2_matr.set_col_labels( a2_cl );
@@ -1860,7 +1860,7 @@ TEST_CASE( "matrix transposition", "[matrix]" )
             // a non-symmetric function of two variables, x and y,
             // used because for symmetric F F(x,y) = F(y,x), making it not
             // useful for testing our transposition operations
-            auto non_symmetric = []( int x, int y ) -> int 
+            auto non_symmetric = []( int x, int y ) -> int
                 {
                     constexpr int A = 4, B = 8, R = 28;
                     return ( A * x * x ) + ( B * y * y ) - ( R * R );
@@ -1971,7 +1971,7 @@ TEST_CASE( "Summing Counts of items in a matrix", "[module_bin]" )
     module_bin mod;
     std::vector<std::string> row_labels{ "row_1", "row_2", "row_3" };
     std::vector<std::string> col_labels{ "col_1", "col_2", "col_3" };
-    
+
     labeled_matrix<double,std::string>
         matrix{ 3,
                 3,
@@ -2004,9 +2004,9 @@ TEST_CASE( "Ranking Probes based upon their scores", "[probe_rank]" )
         { "p4", 156.095 }
     };
 
-    auto rank_probes = [&]( probe_rank& pr ) 
+    auto rank_probes = [&]( probe_rank& pr )
         {
-            // we want to force an order here 
+            // we want to force an order here
             pr.rank_probe( 1.445, "p1" );
             pr.rank_probe( 4.655, "p2" );
             pr.rank_probe( 1.045, "p3" );
@@ -2055,7 +2055,7 @@ TEST_CASE( "Ranking Probes based upon their scores", "[probe_rank]" )
                 { 1.05, { "p3" } },
                 { 1.45, { "p1" } },
                 { 4.66, { "p2" } },
-                { 156.10, { "p4" } }, 
+                { 156.10, { "p4" } },
             };
             REQUIRE( int_probe_rank.get_probe_ranks() == expected_values );
         }
@@ -2066,7 +2066,7 @@ TEST_CASE( "Ranking Probes based upon their scores", "[probe_rank]" )
 TEST_CASE( "Unary Predicate Reduction", "[module_s_enrich]" )
 {
     using namespace predicate;
-    
+
     auto positive = []( const int x ) -> bool { return x > 0; };
     auto gt_10 = []( const int x ) -> bool { return x > 10; };
     auto lt_100 = []( const int x ) -> bool { return x < 100; };
@@ -2106,7 +2106,7 @@ TEST_CASE( "Valid For", "[module_s_enrich]" )
     auto lt_100 = []( const int x ) -> bool { return x < 100; };
     auto positive = []( const int x ) -> bool { return x > 0; };
     auto even = []( const int x ) -> bool { return x % 2 == 0; };
-    using namespace predicate; 
+    using namespace predicate;
 
     SECTION( "Default function, no use of special 'get' function" )
 
@@ -2154,7 +2154,7 @@ TEST_CASE( "Valid For", "[module_s_enrich]" )
             valid_for( values.begin(),
                        values.end(),
                        std::back_inserter( result ),
-                       even, 
+                       even,
                        get_first
                      );
 
@@ -2308,7 +2308,7 @@ TEST_CASE( "Testing nt->aa translation", "[nt_aa_translator]" )
 
     nt_seq.seq = "TAGTAATGATTT";
     translated = translator( nt_seq );
-    
+
     REQUIRE( translated.seq == "___F" );
 
 }
@@ -2355,4 +2355,17 @@ TEST_CASE( "Determining whether a file is gzipped.", "[pepsirf_io]" )
 
     std::ifstream false_expected{ "../test/test.fasta" };
     REQUIRE( !pepsirf_io::is_gzipped( false_expected ) );
+}
+
+TEST_CASE( "Handling file opening/reading error during runtime", "[samplelist_parser]" )
+{
+    samplelist_parser sl;
+    REQUIRE_THROWS( sl.parse( "../test/test.fasta" ) );
+    REQUIRE_THROWS( sl.parse( "does_not_exist.tsv" ) );
+}
+
+TEST_CASE( "Handling file opening error during runtime", "[fasta_parser]" )
+{
+    fasta_parser fp;
+    REQUIRE_THROWS( fp.parse( "does_not_exist.fasta" ) );
 }

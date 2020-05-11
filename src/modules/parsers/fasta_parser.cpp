@@ -15,7 +15,7 @@ std::vector<sequence> fasta_parser::parse( std::string filename )
 
     if( !input_file.is_open() )
         {
-            throw std::runtime_error( "File could not be opened. Verify fasta file exists." )
+            throw std::runtime_error( "File could not be opened. Verify fasta file exists." );
         }
     while( std::getline( input_file, line ) )
         {
