@@ -109,7 +109,7 @@ TEST_CASE( "fasta_parser is able to read files that exist, properly creates erro
         remove( "out.fasta" );
     }
 
-    SECTION( "fasta_parser throws error when file is not found or incorrect format" )
+    SECTION( "fasta_parser throws error when file is not found" )
     {
         fasta_parser fp;
         REQUIRE_THROWS( fp.parse( "does_not_exist.fasta" ) );
