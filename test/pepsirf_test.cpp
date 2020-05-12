@@ -74,37 +74,46 @@ TEST_CASE( "Sequence", "[sequence]" )
     REQUIRE( seq.seq.compare( s2 ) != 0 );
 }
 
-TEST_CASE( "Parse Fasta", "[fasta_parser]" )
+TEST_CASE( "fasta_parser is able to read files that exist, properly creates error when file cannot be found", "[fasta_parser]" )
 {
-    fasta_parser fp;
-    std::vector<sequence> vec;
-    vec = fp.parse( "../test/test.fasta" );
+    SECTION( "fasta_parser reads a well-formed test" )
+    {
+        fasta_parser fp;
+        std::vector<sequence> vec;
+        vec = fp.parse( "../test/test.fasta" );
 
-    REQUIRE( vec.size() == 110 );
+        REQUIRE( vec.size() == 110 );
 
-    unsigned int index = 0;
-    for( index = 0; index < vec.size(); ++index )
-        {
-            REQUIRE( vec[ index ].seq.compare( "" ) );
-            REQUIRE( vec[ index ].name.compare( "" ) );
-        }
+        unsigned int index = 0;
+        for( index = 0; index < vec.size(); ++index )
+            {
+                REQUIRE( vec[ index ].seq.compare( "" ) );
+                REQUIRE( vec[ index ].name.compare( "" ) );
+            }
 
-    std::ofstream stream;
-    stream.open( "out.fasta" );
-    stream << fasta_ex;
-    stream.close();
+        std::ofstream stream;
+        stream.open( "out.fasta" );
+        stream << fasta_ex;
+        stream.close();
 
-    vec = fp.parse( "out.fasta" );
-    REQUIRE( vec.size() == 2 );
-    REQUIRE( !vec[ 0 ].name.compare( "Example sequence 1" ) );
-    REQUIRE( !vec[ 0 ].seq.compare( "DJFKDLFJSFDJFKDJFDJKFJKDFJDSKFLJFDKSFLJ" ) );
-    REQUIRE( !vec[ 1 ].name.compare( "Example Sequence 2" ) );
-    REQUIRE( !vec[ 1 ].seq.compare( "DJFKLSFJDKLSFJKSLFJSKDLFJDKSLFJKLDKDKDK" ) );
-    REQUIRE( vec[ 1 ].seq.compare( vec[ 0 ].seq ) );
-    REQUIRE( vec[ 0 ].seq.compare( vec[ 1 ].seq ) );
+        vec = fp.parse( "out.fasta" );
+        REQUIRE( vec.size() == 2 );
+        REQUIRE( !vec[ 0 ].name.compare( "Example sequence 1" ) );
+        REQUIRE( !vec[ 0 ].seq.compare( "DJFKDLFJSFDJFKDJFDJKFJKDFJDSKFLJFDKSFLJ" ) );
+        REQUIRE( !vec[ 1 ].name.compare( "Example Sequence 2" ) );
+        REQUIRE( !vec[ 1 ].seq.compare( "DJFKLSFJDKLSFJKSLFJSKDLFJDKSLFJKLDKDKDK" ) );
+        REQUIRE( vec[ 1 ].seq.compare( vec[ 0 ].seq ) );
+        REQUIRE( vec[ 0 ].seq.compare( vec[ 1 ].seq ) );
 
 
-    remove( "out.fasta" );
+        remove( "out.fasta" );
+    }
+
+    SECTION( "fasta_parser throws error when file is not found or incorrect format" )
+    {
+        fasta_parser fp;
+        REQUIRE_THROWS( fp.parse( "does_not_exist.fasta" ) );
+    }
 
 }
 
@@ -207,24 +216,35 @@ TEST_CASE( "Add seqs to map", "[module_demux]" )
 
 }
 
-TEST_CASE( "Test samplelist_parser and sample", "[samplelist_parser]" )
+TEST_CASE( "samplelist_parser is able to read files that exist, properly creates errors when file cannot be found/read", "[samplelist_parser]" )
 {
-    samplelist_parser slp;
-    std::string filename = "../test/test_samplelist.tsv";
+    SECTION( "samplelist_parser is able to read a well-formed test")
+    {
+        samplelist_parser slp;
+        std::string filename = "../test/test_samplelist.tsv";
 
-    auto vec = slp.parse( filename );
+        auto vec = slp.parse( filename );
 
-    REQUIRE( vec.size() == 96 );
+        REQUIRE( vec.size() == 96 );
 
 
-    unsigned int index = 0;
-    std::unordered_map<sample, int> s_map( vec.size() );
-    for( index = 0 ; index < vec.size(); ++index )
-        {
-            s_map[ vec[ index ] ] = vec[ index ].id;
-        }
+        unsigned int index = 0;
+        std::unordered_map<sample, int> s_map( vec.size() );
+        for( index = 0 ; index < vec.size(); ++index )
+            {
+                s_map[ vec[ index ] ] = vec[ index ].id;
+            }
 
-    REQUIRE( s_map.size() <= vec.size() );
+        REQUIRE( s_map.size() <= vec.size() );
+    }
+
+
+    SECTION( "samplelist_parser throws an error when a file is not found or incorrect format" )
+    {
+        samplelist_parser sl;
+        REQUIRE_THROWS( sl.parse( "../test/test.fasta" ) );
+        REQUIRE_THROWS( sl.parse( "does_not_exist.tsv" ) );
+    }
 }
 
 TEST_CASE( "Test String Indexing", "[string_indexer]" )
@@ -2355,17 +2375,4 @@ TEST_CASE( "Determining whether a file is gzipped.", "[pepsirf_io]" )
 
     std::ifstream false_expected{ "../test/test.fasta" };
     REQUIRE( !pepsirf_io::is_gzipped( false_expected ) );
-}
-
-TEST_CASE( "Handling file opening/reading error during runtime", "[samplelist_parser]" )
-{
-    samplelist_parser sl;
-    REQUIRE_THROWS( sl.parse( "../test/test.fasta" ) );
-    REQUIRE_THROWS( sl.parse( "does_not_exist.tsv" ) );
-}
-
-TEST_CASE( "Handling file opening error during runtime", "[fasta_parser]" )
-{
-    fasta_parser fp;
-    REQUIRE_THROWS( fp.parse( "does_not_exist.fasta" ) );
 }
