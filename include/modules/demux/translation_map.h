@@ -74,82 +74,21 @@ class codon_aa_map
 
 namespace codon_aa_mappings
 {
+    /**
+     * Get the default Codon -> AA map.
+     * This simply constructs and returns the map.
+     * This is necessary for the reasons listed in 
+     * this post:
+     * https://stackoverflow.com/questions/9092479/why-isnt-my-extern-variable-initialized-yet
+     **/
     std::unordered_map<std::string,char>
-        default_raw_map
-    {
-
-        { "AAA", 'K' },
-        { "AAG", 'K' },
-        { "AAC", 'N' },
-        { "AAT", 'N' },
-        { "ACA", 'T' },
-        { "ACC", 'T' },
-        { "ACG", 'T' },
-        { "ACT", 'T' },
-        { "ATA", 'I' },
-        { "ATC", 'I' },
-        { "ATG", 'M' },
-        { "ATT", 'I' },
-        { "CAA", 'Q' },
-        { "CAC", 'H' },
-        { "CAG", 'Q' },
-        { "CAT", 'H' },
-        { "CCA", 'P' },
-        { "CCC", 'P' },
-        { "CCG", 'P' },
-        { "CCT", 'P' },
-        { "CGA", 'R' },
-        { "CGC", 'R' },
-        { "CGG", 'R' },
-        { "CGT", 'R' },
-        { "CTA", 'L' },
-        { "CTC", 'L' },
-        { "CTG", 'L' },
-        { "CTT", 'L' },
-        { "GAA", 'E' },
-        { "GAG", 'E' },
-        { "GAC", 'D' },
-        { "GAT", 'D' },
-        { "GCA", 'A' },
-        { "GCG", 'A' },
-        { "GCT", 'A' },
-        { "GCC", 'A' },
-        { "GGA", 'G' },
-        { "GGG", 'G' },
-        { "GGC", 'G' },
-        { "GGT", 'G' },
-        { "GTA", 'V' },
-        { "GTC", 'V' },
-        { "GTG", 'V' },
-        { "GTT", 'V' },
-        { "TAC", 'Y' },
-        { "TAT", 'Y' },
-        { "AGT", 'S' },
-        { "AGC", 'S' },
-        { "AGA", 'R' },
-        { "AGG", 'R' },
-        { "TCA", 'S' },
-        { "TCC", 'S' },
-        { "TCG", 'S' },
-        { "TCT", 'S' },
-        { "TGC", 'C' },
-        { "TGG", 'W' },
-        { "TGT", 'C' },
-        { "TTA", 'L' },
-        { "TTC", 'F' },
-        { "TTG", 'L' },
-        { "TTT", 'F' },
-        // begin stop codons
-        { "TAG", '_' },
-        { "TAA", '_' },
-        { "TGA", '_' }
-    };
-
+        get_default_map();
+    
     /**
      * The default codon_aa map.
      **/
-    static const codon_aa_map<decltype( default_raw_map )>
-        default_codon_aa_map{ default_raw_map };
+    static const codon_aa_map<decltype( get_default_map() )>
+        default_codon_aa_map{ get_default_map() };
 
     /**
      * The type of the default codon aa map.

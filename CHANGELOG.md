@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- Added error checking and reporting to demux sample list parser and fasta parser.
+- Fixed bug that prevented the 'pepsirf_test' executable from building.
 
 ## [1.2.2] - 2020-05-01
 - (General) Added instructions for contributing to the PepSIRF software.
