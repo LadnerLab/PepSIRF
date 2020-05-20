@@ -2380,13 +2380,11 @@ TEST_CASE( "Determining whether a file is gzipped.", "[pepsirf_io]" )
 
 TEST_CASE( "Subjoin name list filter is optional", "[module_subjoin]" )
 {
-    module_subjoin *mod = new module_subjoin();
-    options_subjoin *opts = new options_subjoin();
-    opts->use_sample_names = true;
-    opts->out_matrix_fname = "../test/test_subjoin_output.txt";
-    opts->matrix_name_pairs.emplace_back( std::make_pair( "../test/test_score_matrix.tsv", "" ) );
-    mod->run( opts );
-    delete( mod );
-    delete( opts );
+    module_subjoin mod = module_subjoin();
+    options_subjoin opts = options_subjoin();
+    opts.use_sample_names = true;
+    opts.out_matrix_fname = "../test/test_subjoin_output.txt";
+    opts.matrix_name_pairs.emplace_back( std::make_pair( "../test/test_score_matrix.tsv", "" ) );
+    mod.run( &opts );
 }
 

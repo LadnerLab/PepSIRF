@@ -77,7 +77,7 @@ void module_subjoin::run( options *opts )
                 {
                     std::cout << "WARNING: No name list has been given. All scores will be output." << std::endl;
                     // add all sample names to score_name_pair.second
-                    for( auto& s_name : my_data.scores.get_col_labels() )
+                    for( const auto& s_name : my_data.scores.get_col_labels() )
                     {
                         score_name_pair.second.append( s_name.first + "\n" );
                     }
