@@ -12,9 +12,10 @@ std::string options_link::get_arguments()
     auto bool_str = []( bool opt ) -> std::string
         { return opt == true ? "true" : "false"; };
 
-            str_stream << 
+            str_stream <<
                           "--protein_file                   " << prot_file_fname <<  "\n" <<
                           " --peptide_file                   " << peptide_file_fname <<  "\n" <<
+                          " --meta                           " << metadata_fname << "\n" <<
                           " --tax_id_index                   " << id_index << "\n" <<
                           " --kmer_redundancy_control        " << bool_str( penalize_kmers )  << "\n" <<
                           " --output                         " << output_fname <<  "\n" <<

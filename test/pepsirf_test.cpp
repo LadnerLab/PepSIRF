@@ -28,6 +28,7 @@
 #include "module_demux.h"
 #include "module_deconv.h"
 #include "module_subjoin.h"
+#include "module_link.h"
 #include "samplelist_parser.h"
 #include "sample.h"
 #include "fastq_score.h"
@@ -2380,13 +2381,22 @@ TEST_CASE( "Determining whether a file is gzipped.", "[pepsirf_io]" )
 
 TEST_CASE( "Subjoin name list filter is optional", "[module_subjoin]" )
 {
-    module_subjoin *mod = new module_subjoin();
-    options_subjoin *opts = new options_subjoin();
-    opts->use_sample_names = true;
-    opts->out_matrix_fname = "../test/test_subjoin_output.txt";
-    opts->matrix_name_pairs.emplace_back( std::make_pair( "../test/test_score_matrix.tsv", "" ) );
-    mod->run( opts );
-    delete( mod );
-    delete( opts );
+    module_subjoin mod = module_subjoin();
+    options_subjoin opts = options_subjoin();
+    opts.use_sample_names = true;
+    opts.out_matrix_fname = "../test/test_subjoin_output.txt";
+    opts.matrix_name_pairs.emplace_back( std::make_pair( "../test/test_score_matrix.tsv", "" ) );
+    mod.run( &opts );
 }
 
+TEST_CASE( "Metadata file can be given in place of taxonomic id index", "[module_link]" )
+{
+    module_link mod = module_link();
+    options_link opts = options_link();
+    opts.metadata_fname = "../test/full_design_clean_min30_taxtweak_100perc_jingmens_2019-09-12.metadata,Name,Species";
+    opts.prot_file_fname = "../test/full_design_clean_min30_taxtweak_100perc_jingmens_2019-09-12.fasta";
+    opts.peptide_file_fname = "../test/PV1_10K3000_53_encoded.faa";
+    opts.kmer_size = 7;
+    opts.output_fname = "../test/test_link_output.tsv";
+    mod.run( &opts );
+}

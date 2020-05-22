@@ -37,6 +37,10 @@ bool options_parser_link::parse( int argc, char ***argv, options *opts )
           "Name of fasta file containing aa peptides that have been designed as part "
           "of a library.\n"
         )
+        ( "metadata", po::value<std::string>( &opts_link->metadata_fname ),
+          "Name of metadata file containing a column of protein sequence names and a column of metadata information for "
+          "generating a linkage map."
+        )
         ( "tax_id_index,t", po::value<std::size_t>( &opts_link->id_index )->default_value( 1 )
           ->notifier( [&]( const std::size_t val ) {
                   if( val > 3 )
@@ -68,8 +72,8 @@ bool options_parser_link::parse( int argc, char ***argv, options *opts )
 
     po::store( po::command_line_parser( argc, *argv ).options( desc ).run(), vm);
 
-    if( vm.count( "help" ) 
-        || argc == 2 
+    if( vm.count( "help" )
+        || argc == 2
         )
         {
             std::cout << desc << std::endl;
