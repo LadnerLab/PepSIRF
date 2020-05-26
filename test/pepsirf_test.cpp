@@ -27,6 +27,7 @@
 #include "fastq_parser.h"
 #include "module_demux.h"
 #include "module_deconv.h"
+#include "module_subjoin.h"
 #include "samplelist_parser.h"
 #include "sample.h"
 #include "fastq_score.h"
@@ -2376,3 +2377,14 @@ TEST_CASE( "Determining whether a file is gzipped.", "[pepsirf_io]" )
     std::ifstream false_expected{ "../test/test.fasta" };
     REQUIRE( !pepsirf_io::is_gzipped( false_expected ) );
 }
+
+TEST_CASE( "Subjoin name list filter is optional", "[module_subjoin]" )
+{
+    module_subjoin mod = module_subjoin();
+    options_subjoin opts = options_subjoin();
+    opts.use_sample_names = true;
+    opts.out_matrix_fname = "../test/test_subjoin_output.txt";
+    opts.matrix_name_pairs.emplace_back( std::make_pair( "../test/test_score_matrix.tsv", "" ) );
+    mod.run( &opts );
+}
+
