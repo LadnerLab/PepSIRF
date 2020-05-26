@@ -38,60 +38,8 @@ void module_link::run( options *opts )
         >
         peptide_sp_map;
     // When a metadata file is provided it is parsed for specific data and a kmer map is created, otherwise process uses ID index to create a kmer map
-    if( l_opts->metadata_fname.length() != 0 )
-        {
-        //is there a way to know if the index was provided or if it is the default? For now, it will be a general warning when metadata is provided.
-            std::cout << "WARNING: Metadata file has been provided and will be implemented with taxonomic ID index ignored." << std::endl;
-        /*
-        parse metadata file to obtain column data, create protein linkage map
-        metadata vector will contain three values, file name, one column name, a second column name
+    create_prot_map( kmer_sp_map, proteins, l_opts->k, l_opts->id_index );
 
-            STEP1: open metadata file, verify given column names are found in metadata file
-            STEP2: loop through protein sequence vector
-                for each protein sequence: -increment protein count
-                                           -get list of kmers - k is length of kmer
-                                           STEP3:
-                                                for each kmer in list(kmer==substring):
-                                                    -emplace a pair (kmer, value)
-                                                    -set second, value, in pair to a scored entity with ?string value==second column name (eg species)? and double value 0
-                                                    -increment double value once
-                -clear kmer list
-            Is this right? Right now this really just leaves out get_id - since we already have all the ids for the specified column
-        */
-            //find and verify existence and order for file name/path, pep seq name, spec name : eg. taxtweak_2019-09-12.metadata,Name,Species
-            std::vector<std::string> metadata_options;
-            metadata_options.reserve( 3 );
-            boost::split( metadata_options, l_opts->metadata_fname, boost::is_any_of( "," ) );
-            std::ifstream metadata_file( metadata_options[0], std::ios_base::in );
-            if( !metadata_file.is_open() )
-                {
-                    throw std::runtime_error( "File could not be opened. Verify metadata file exists.\n" );
-                }
-            if( metadata_options.size() < 3 )
-                {
-                    throw std::runtime_error( "Missing required specifications for meta flag. Use \"--meta [file name],[sequence name],[taxonomic identity]\" format.\n");
-                }
-            std::string line;
-            std::getline( metadata_file, line );
-            std::vector<std::string>::iterator opt_iter;
-            opt_iter = ++metadata_options.begin(); // step past file name
-            std::for_each( opt_iter, metadata_options.end(), [ line ]( std::string header, std::size_t next_pos, std::size_t last_pos )
-                    {
-                        if( next_pos = line.find( header ) == std::string::npos )
-                            {
-                                throw std::runtime_error( "Header '" + header + "' could not be found in metadata file. Verify names being entered to names in metadata file.\n" );
-                            }
-                        if( last_pos > next_pos )
-                            {
-                                throw std::runtime_error( "Order of provided names do not match meta flag format. Use \"--meta [file name],[sequence name],[taxonomic identity]\" format.\n" );
-                            }
-                    }
-                );
-        }
-    else
-        {
-            create_prot_map( kmer_sp_map, proteins, l_opts->k, l_opts->id_index );
-        }
     if( l_opts->penalize_kmers )
         {
             create_pep_map_with_kmer_penalty( kmer_sp_map,
@@ -165,6 +113,7 @@ void module_link::create_prot_map( std::unordered_map<std::string,
             ++num_prot;
             std::vector<std::string> kmers;
 
+            // get meta data? instead of get id
             spec_id = get_id( sequences[ index ].name, id_index );
             kmer_tools::get_kmers( kmers, sequences[ index ].seq, k );
             std::unordered_map<std::string,std::size_t> val_map;
