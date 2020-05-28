@@ -38,7 +38,14 @@ void module_link::run( options *opts )
         >
         peptide_sp_map;
     // When a metadata file is provided it is parsed for specific data and a kmer map is created, otherwise process uses ID index to create a kmer map
-    create_prot_map( kmer_sp_map, proteins, l_opts->k, l_opts->id_index );
+    if( l_opts->metadata_fname.length() == 0 )
+        {
+            create_prot_map( kmer_sp_map, proteins, l_opts->k, l_opts->id_index );
+        }
+    else
+        {
+            create_prot_map( kmer_sp_map, proteins, l_opts->k, l_opts->metadata_fname );
+        }
 
     if( l_opts->penalize_kmers )
         {
@@ -94,12 +101,13 @@ void module_link::write_outputs( std::string fname,
         }
 }
 
+template< typename retrieve_id >
 void module_link::create_prot_map( std::unordered_map<std::string,
                                    std::unordered_set<scored_entity<std::string,double>>>&
                                    scores_map,
                                    std::vector<sequence>& sequences,
                                    std::size_t k,
-                                   std::size_t id_index
+                                   retrieve_id retriever
                                  )
 {
     std::size_t index   = 0;
@@ -112,9 +120,8 @@ void module_link::create_prot_map( std::unordered_map<std::string,
         {
             ++num_prot;
             std::vector<std::string> kmers;
-
-            // get meta data? instead of get id
-            spec_id = get_id( sequences[ index ].name, id_index );
+            // using templated object to generalize object usage
+            spec_id = retriever( sequences[ index ].name );
             kmer_tools::get_kmers( kmers, sequences[ index ].seq, k );
             std::unordered_map<std::string,std::size_t> val_map;
 
