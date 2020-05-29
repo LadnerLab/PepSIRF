@@ -17,7 +17,8 @@ def main():
 #    p.add_option('-e', '--enriched',  help='List of peptide names, one per line. [None, REQ]')
     p.add_option('-m', '--meta',  help='Metadata file. [None, REQ]')
     p.add_option('-o', "--outDir", default="pepAligned", help='Name for dirctory in which output files will be generated. This Dirctory should NOT exist already. [pepAligned]')
-    p.add_option("--plot", help='If this option is used, along with some type of matrix, then heat map plots will be generated for each alignment. [OPT]')
+    p.add_option("--master", help='Use this option to provide a directory name to contain output alignments that will combine peptides enriched in all samples. [OPT]')
+    p.add_option("--plot", default=False, action="store_true", help='If this option is used, along with some type of matrix, then heat map plots will be generated for each alignment. [OPT]')
 
     opts, args = p.parse_args()
 
@@ -25,6 +26,12 @@ def main():
     if not os.path.isdir(opts.outDir):
         os.mkdir(opts.outDir)
     
+    #If master alignments are requested, generate output directory and create dictionary to hold into
+    if opts.master:
+        if not os.path.isdir(opts.master):
+            os.mkdir(opts.master)
+        masterByProt = defaultdict(list)
+
     #Read in info from metadata file
     pepD = io.fileDictHeader(opts.meta, "CodeName", "Peptide")
     catD=io.fileDictHeader(opts.meta, "CodeName", "Category")
@@ -51,6 +58,8 @@ def main():
         for p in peps:
             if catD[p] != "Control":
                 byProt[protD[p]].append(p)
+                if opts.master:
+                    masterByProt[protD[p]].append(p)
         
         #Generate clusters for each protein
         for prot, pL in byProt.items():
@@ -72,6 +81,25 @@ def main():
                 #Generate heat map
                 if opts.plot:
                     heatMap([revPepMap[x] for x in names], seqs, {k:{p:s for p,s in v.items() if pepMap[p] in c} for k,v in scoreDict.items()}, "%s/%s_%s.pdf" % (opts.outDir, outStr, bounds), opts)
+    
+    #Gnerate master output, if requested
+    if opts.master:
+        for prot, pL in masterByProt.items():
+            clu = clustProbes(pL, pepD, startD, stopD)
+            print(len(clu))
+            #Check clusters
+            for a,b in clu.items():
+                if set(a) != set(b):
+                    print ("Not all starting places resulted in the same cluster!!!", a, sorted(b))
+    
+            #String for output files
+            outStr="%s_master" % (prot)
+    
+            #Write aligned fasta files
+            for c in clu:
+                names,seqs,bounds = alignSeqs({x:[pepD[x], list(range(startD[x], stopD[x]))] for x in c})
+                write_fasta(names, seqs, "%s/%s_%s.fasta" % (opts.master, outStr, bounds))
+
     
 #----------------------End of main()
 
