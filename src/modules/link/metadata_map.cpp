@@ -1,7 +1,6 @@
 #include "metadata_map.h"
-#include "algorithm"
 
-void build_map( std::string metadata_fname )
+void metadata_map::build_map( std::string metadata_fname, std::string value )
     {
         // verify file
         std::cout << "WARNING: Metadata file has been provided and will be implemented with taxonomic ID index ignored." << std::endl;
@@ -19,9 +18,7 @@ void build_map( std::string metadata_fname )
                 throw std::runtime_error( "Missing required specifications for meta flag. Must include metadata file name, "
                                         "sequence name column, and species identification column.\n");
             }
-        std::unordered_map<std::string,
-                                   std::unordered_set<scored_entity<std::string,double>>>&
-                                   scores_map;
+        std::unordered_map<std::string, std::string> meta_map;
         std::string row;
         std::getline( metadata_file, row );
         std::vector<std::string>::iterator opt_iter;
@@ -35,15 +32,16 @@ void build_map( std::string metadata_fname )
                         }
                 }
             );
-        std::size_t name_index = std::count( row[ 0 ], row.find( metadata_options[ 1 ] ), "\t" );
-        std::size_t spec_index = std::count( row[ 0 ], row.find( metadata_options[ 2 ] ), "\t" );
+    // get column number for headers
+        std::size_t name_index = std::count( row.begin(), row.begin() + row.find( metadata_options[ 1 ] ), "\t" );
+        std::size_t spec_index = std::count( row.begin(), row.begin() + row.find( metadata_options[ 2 ] ), "\t" );
     // parse metadata to construct map - each row column of name, first, column of spec, second
         while( std::getline( metadata_file, row ) )
             {
-                scores_map.insert( std::make_pair( row.substr( name_index, row.find( "\t", name_index ) ),
+                meta_map.insert( std::make_pair( row.substr( name_index, row.find( "\t", name_index ) ),
                                     row.substr( spec_index, row.find( "\t", spec_index ) ) ) );
             }
     // NOTE: What if no string is given for a row id? Currently, it will be an empty string in map.
-        metadata_parser mp;
-        mp.find_data( retriever );
+
+    // pass map to metadata value class to handle value retrieval...
     }
