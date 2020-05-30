@@ -29,6 +29,7 @@
 #include "module_deconv.h"
 #include "module_subjoin.h"
 #include "module_link.h"
+#include "metadata_map.h"
 #include "samplelist_parser.h"
 #include "sample.h"
 #include "fastq_score.h"
@@ -2391,6 +2392,7 @@ TEST_CASE( "Subjoin name list filter is optional", "[module_subjoin]" )
 
 TEST_CASE( "Metadata file can be given in place of taxonomic id index", "[module_link]" )
 {
+    /*
     module_link mod = module_link();
     options_link opts = options_link();
     opts.metadata_fname = "../test/full_design_clean_min30_taxtweak_100perc_jingmens_2019-09-12.metadata,Name,Species";
@@ -2399,4 +2401,8 @@ TEST_CASE( "Metadata file can be given in place of taxonomic id index", "[module
     opts.kmer_size = 7;
     opts.output_fname = "../test/test_link_output.tsv";
     mod.run( &opts );
+    */
+    metadata_map meta_map = metadata_map();
+    std::string test_result = meta_map.build_map( "../test/full_design_clean_min30_taxtweak_100perc_jingmens_2019-09-12.metadata,Name,Species", "232097" );
+    REQUIRE( test_result.compare( "10509" ) );
 }

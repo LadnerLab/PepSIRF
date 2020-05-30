@@ -2,19 +2,20 @@
 #define METADATA_MAP_HH_INCLUDED
 
 #include <string>
+#include <vector>
 #include <boost/algorithm/string.hpp>
 #include <iostream>
 #include <fstream>
 #include <algorithm>
-#include "module_link.h"
-#include "metadata_parser.h"
+#include "metadata_retrieve.h"
 
 class metadata_map
 {
     public:
     //function call operator override
 
-    void metadata_map::build_map( std::string metadata_fname, std::string value );
+
+    std::string build_map( std::string metadata_fname, std::string sequence_name );
 
     private:
 };

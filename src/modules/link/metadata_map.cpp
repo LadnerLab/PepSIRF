@@ -1,6 +1,6 @@
 #include "metadata_map.h"
 
-void metadata_map::build_map( std::string metadata_fname, std::string value )
+std::string metadata_map::build_map( std::string metadata_fname, std::string sequence_name )
     {
         // verify file
         std::cout << "WARNING: Metadata file has been provided and will be implemented with taxonomic ID index ignored." << std::endl;
@@ -33,8 +33,8 @@ void metadata_map::build_map( std::string metadata_fname, std::string value )
                 }
             );
     // get column number for headers
-        std::size_t name_index = std::count( row.begin(), row.begin() + row.find( metadata_options[ 1 ] ), "\t" );
-        std::size_t spec_index = std::count( row.begin(), row.begin() + row.find( metadata_options[ 2 ] ), "\t" );
+        std::size_t name_index = std::count( row.begin(), row.begin() + row.find( metadata_options[ 1 ] ), '\t' );
+        std::size_t spec_index = std::count( row.begin(), row.begin() + row.find( metadata_options[ 2 ] ), '\t' );
     // parse metadata to construct map - each row column of name, first, column of spec, second
         while( std::getline( metadata_file, row ) )
             {
@@ -44,4 +44,6 @@ void metadata_map::build_map( std::string metadata_fname, std::string value )
     // NOTE: What if no string is given for a row id? Currently, it will be an empty string in map.
 
     // pass map to metadata value class to handle value retrieval...
+        metadata_retrieve mr;
+        return mr.find_sequence( meta_map, sequence_name );
     }
