@@ -19,31 +19,41 @@ std::string metadata_map::build_map( std::string metadata_fname, std::string seq
                                         "sequence name column, and species identification column.\n");
             }
         std::unordered_map<std::string, std::string> meta_map;
-        std::string row;
-        std::getline( metadata_file, row );
-        std::vector<std::string>::iterator opt_iter;
+        std::string line;
+        std::vector< std::string > metadata_header_row;
+        std::getline( metadata_file, line );
+        /*std::vector<std::string>::iterator opt_iter;
         opt_iter = ++metadata_options.begin(); // step past file name
-        std::for_each( opt_iter, metadata_options.end(), [&]( std::string header )
+        */
+        std::for_each( ++metadata_options.begin(), metadata_options.end(), [&]( std::string header )
                 {
-                    if( row.find( header ) == std::string::npos )
+                    if( line.find( header ) == std::string::npos )
                         {
                             throw std::runtime_error( "Header '" + header + "' could not be found in metadata file. "
                                                     "Verify names being entered to names in metadata file.\n" );
                         }
                 }
-            );
-    // get column number for headers
-        std::size_t name_index = std::count( row.begin(), row.begin() + row.find( metadata_options[ 1 ] ), '\t' );
-        std::size_t spec_index = std::count( row.begin(), row.begin() + row.find( metadata_options[ 2 ] ), '\t' );
-    // parse metadata to construct map - each row column of name, first, column of spec, second
-        while( std::getline( metadata_file, row ) )
+        );
+        boost::split( metadata_header_row, line, boost::is_any_of( "\t" ) );
+        std::size_t name_index;
+        std::size_t spec_index;
+        std::size_t count = 0;
+        for( const auto& column_val : metadata_header_row )
             {
-                meta_map.insert( std::make_pair( row.substr( name_index, row.find( "\t", name_index ) ),
-                                    row.substr( spec_index, row.find( "\t", spec_index ) ) ) );
+                if( column_val.compare( metadata_options[ 1 ] ) == 0 )
+                    name_index = count;
+                if( column_val.compare( metadata_options[ 2 ] ) == 0 )
+                    spec_index = count;
+                count++;
             }
-    // NOTE: What if no string is given for a row id? Currently, it will be an empty string in map.
-
-    // pass map to metadata value class to handle value retrieval...
+    // store name column and species column info in map
+        std::vector< std::string > metadata_row;
+        while( std::getline( metadata_file, line) )
+            {
+                boost::split( metadata_row, line, boost::is_any_of( "\t" ) );
+                meta_map.insert( std::make_pair( metadata_row.at( name_index ), metadata_row.at( spec_index ) ) );
+            }
+    // pass map to metadata value class to handle value retrieval.
         metadata_retrieve mr;
         return mr.find_sequence( meta_map, sequence_name );
     }
