@@ -18,7 +18,9 @@ def main():
     p.add_option('-m', '--meta',  help='Metadata file. [None, REQ]')
     p.add_option('-o', "--outDir", default="pepAligned", help='Name for dirctory in which output files will be generated. This Dirctory should NOT exist already. [pepAligned]')
     p.add_option("--master", help='Use this option to provide a directory name to contain output alignments that will combine peptides enriched in all samples. [OPT]')
-    p.add_option("--plot", default=False, action="store_true", help='If this option is used, along with some type of matrix, then heat map plots will be generated for each alignment. [OPT]')
+    p.add_option("--plot", help='If this option is used, along with some type of matrix, then heat map plots will be generated for each alignment. [OPT]')
+    p.add_option("--minToPlot", default=0, type="int", help='Minimum score to include in plots. [0]')
+    p.add_option("--plotLog", default=False, action="store_true", help='Use this flag if you want the y-axis for plots to be on the log scale. [False]')
 
     opts, args = p.parse_args()
 
@@ -41,10 +43,10 @@ def main():
     stopD=io.fileDictHeader(opts.meta, "CodeName", "AlignStop")
     stopD={k:int(v) for k,v in stopD.items() if v}
 
-    #Read in score matrix, if provided
+    #Read in score matrix for generating heat maps, if provided
     if opts.plot:
         scoreDict = parseCounts(opts.plot)
-        print("Read Scores")
+        print("Read scores for plots")
 
     #Step through each list of probes provided
     for each in args:
@@ -78,9 +80,6 @@ def main():
                 names,seqs,bounds = alignSeqs({x:[pepD[x], list(range(startD[x], stopD[x]))] for x in c})
                 write_fasta(names, seqs, "%s/%s_%s.fasta" % (opts.outDir, outStr, bounds))
             
-                #Generate heat map
-                if opts.plot:
-                    heatMap([revPepMap[x] for x in names], seqs, {k:{p:s for p,s in v.items() if pepMap[p] in c} for k,v in scoreDict.items()}, "%s/%s_%s.pdf" % (opts.outDir, outStr, bounds), opts)
     
     #Gnerate master output, if requested
     if opts.master:
@@ -100,12 +99,20 @@ def main():
                 names,seqs,bounds = alignSeqs({x:[pepD[x], list(range(startD[x], stopD[x]))] for x in c})
                 write_fasta(names, seqs, "%s/%s_%s.fasta" % (opts.master, outStr, bounds))
 
+                #Generate heat map
+                if opts.plot:
+                    heatMap(names, seqs, {k:{p:s for p,s in v.items() if p in c} for k,v in scoreDict.items()}, "%s/%s_%s.pdf" % (opts.master, outStr, bounds), opts.minToPlot, opts.plotLog)
+
+
     
 #----------------------End of main()
 
-def heatMap(names, seqs, dta, outname, opts):
+def heatMap(names, seqs, dta, outname, minToPlot, useLog):
     samps = sorted(dta.keys())
     vals = [[dta[x][y] for x in samps] for y in names]
+    if useLog:
+        vals = [np.log10(x) for x in vals]
+        minToPlot = np.log10(minToPlot)
 #    print(vals)
     fig,ax = plt.subplots(1,1,figsize=(8,2),facecolor='w')
     
@@ -114,7 +121,7 @@ def heatMap(names, seqs, dta, outname, opts):
     palatte.set_under(color='white')
     
     #Make plot
-    ims = ax.imshow(vals, vmin=8)
+    ims = ax.imshow(vals, vmin=minToPlot)
     cbar = fig.colorbar(ims)
 #    ax.set_xlim(-1,len(samps)+1)
 #    ax.set_ylim(-1,len(names)+1)
