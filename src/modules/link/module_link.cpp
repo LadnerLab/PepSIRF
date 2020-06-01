@@ -2,7 +2,6 @@
 #include "kmer_tools.h"
 #include "fasta_parser.h"
 #include "omp_opt.h"
-#include "metadata_map.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
@@ -122,7 +121,7 @@ void module_link::create_prot_map( std::unordered_map<std::string,
             ++num_prot;
             std::vector<std::string> kmers;
             // using templated object to generalize object usage
-            //spec_id = retriever( sequences[ index ].name );
+            spec_id = retriever( sequences[ index ].name );
             kmer_tools::get_kmers( kmers, sequences[ index ].seq, k );
             std::unordered_map<std::string,std::size_t> val_map;
 

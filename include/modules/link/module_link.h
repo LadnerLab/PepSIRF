@@ -4,7 +4,8 @@
 #include "options_link.h"
 #include "scored_entity.h"
 #include "sequence.h"
-
+#include "metadata_map.h"
+#include <regex>
 #include <vector>
 #include <unordered_set>
 #include <unordered_map>
@@ -14,7 +15,21 @@ class module_link : public module
 {
  public:
     module_link();
+    template < typename retrieve_id, typename access_type >
+    std::string operator() ( std::string sequence_name, access_type value)
+      {
+          std::regex access_exp( "^-?\\d+" );
+          if( std::regex_match( value, access_exp ) )
+              {
+                return get_id( sequence_name, value )
 
+              }
+          else
+              {
+                metadata_map mp;
+                return mp.build_map( value, sequence_name );
+              }
+      }
     /**
      * Run the link module, passing the options
      * specified by a user.
