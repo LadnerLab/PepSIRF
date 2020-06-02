@@ -97,7 +97,7 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
           "If this option is included without the '--translate_aggregates' flag, names of sequences in the file supplied "
           "by the \"--library flag\" MUST be of the form ID-NUM, where ID can contain any characters except '-', and NUM "
           "represents the id of this encoding. ID and NUM MUST be separated by a single dash '-' character. For example, suppose we have TG1_1-1 and TG1_1-2 "
-          "in our library, which says that we generated two encodings for the TG1_1 peptide. The file \"--aa_counts\" file will have a single TG1_1 "
+          "in our library, which says that we generated two encodings for the TG1_1 peptide. The \"--aa_counts\" file will have a single TG1_1 "
           "entry, with per sample counts that are the sum of the counts from TG1_1-1 and TG1_1-2.\n"
 
         )
