@@ -89,13 +89,13 @@ bool options_parser_p_enrich::parse( int argc, char ***argv, options *opts )
           "The sum of each probe's raw count in each sample must be at least either of these "
           "values in order for the sample to be considered.\n"
         )
-        ( "outfile_suffix,s",
+        ( "outfile_suffix,a",
           po::value( &opts_p_enrich->out_suffix )
           ->default_value( "" ),
           "Suffix to add to the names of the samples "
           "written to output. For example, '_enriched.txt' can be used. "
           "By default, no suffix is used.\n"
-        ) 
+        )
         ( "join_on,j",
           po::value( &opts_p_enrich->out_fname_join )
           ->default_value( "~" ),
@@ -114,8 +114,8 @@ bool options_parser_p_enrich::parse( int argc, char ***argv, options *opts )
 
     po::store( po::command_line_parser( argc, *argv ).options( desc ).run(), vm);
 
-    if( vm.count( "help" ) 
-        || argc == 2 
+    if( vm.count( "help" )
+        || argc == 2
         )
         {
             std::cout << desc << std::endl;
