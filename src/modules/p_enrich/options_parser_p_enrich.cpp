@@ -89,7 +89,7 @@ bool options_parser_p_enrich::parse( int argc, char ***argv, options *opts )
           "The sum of each probe's raw count in each sample must be at least either of these "
           "values in order for the sample to be considered.\n"
         )
-        ( "outfile_suffix,a",
+        ( "outfile_suffix,x",
           po::value( &opts_p_enrich->out_suffix )
           ->default_value( "" ),
           "Suffix to add to the names of the samples "
