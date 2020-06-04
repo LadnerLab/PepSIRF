@@ -15,21 +15,6 @@ class module_link : public module
 {
  public:
     module_link();
-    template < typename retrieve_id, typename access_type >
-    std::string operator() ( std::string sequence_name, access_type value)
-      {
-          std::regex access_exp( "^-?\\d+" );
-          if( std::regex_match( value, access_exp ) )
-              {
-                return get_id( sequence_name, value )
-
-              }
-          else
-              {
-                metadata_map mp;
-                return mp.build_map( value, sequence_name );
-              }
-      }
     /**
      * Run the link module, passing the options
      * specified by a user.
@@ -56,7 +41,7 @@ class module_link : public module
                           scores_map,
                           std::vector<sequence>& sequences,
                           std::size_t k,
-                          retrieve_id retriever
+                          retrieve_id id
                         );
 
     /**
@@ -118,6 +103,26 @@ class module_link : public module
      *       above regex.
      **/
     std::string get_id( std::string name, std::size_t id_index );
+
+    /**
+     * Either an unsigned integer (provided index_id ) or a string (provided metadata file )
+     * is provided. When given an integer, the get_id function is called, otherwise a metadata map is constructed and function
+     * to fill map is called.
+     * @param sequence_data set of data that contains name and species.
+     * @param retriever value used to retrieve species id.
+     * @note Overloaded method. Allows for use of unsighned integer or string.
+    **/
+    std::string verify_id_type( std::string sequence_data, std::size_t retriever);
+
+    /**
+     * Either an unsigned integer (provided index_id ) or a string (provided metadata file )
+     * is provided. When given an integer, the get_id function is called, otherwise a metadata map is constructed and function
+     * to fill map is called.
+     * @param sequence_data set of data that contains name and species.
+     * @param retriever value used to retrieve species id.
+     * @note Overloaded method. Allows for use of unsighned integer or string.
+    **/
+    std::string verify_id_type( std::string sequence_data, std::string retriever );
 
     /**
      * Write outputs for the linkage file generation.

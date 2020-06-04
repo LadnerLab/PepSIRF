@@ -38,12 +38,13 @@ void module_link::run( options *opts )
         >
         peptide_sp_map;
     // When a metadata file is provided it is parsed for specific data and a kmer map is created, otherwise process uses ID index to create a kmer map
-    if( l_opts->metadata_fname.length() == 0 )
+    if( l_opts->metadata_fname.empty() )
         {
             create_prot_map( kmer_sp_map, proteins, l_opts->k, l_opts->id_index );
         }
     else
         {
+            std::cout << "WARNING: Metadata file has been provided and will be implemented with taxonomic ID index ignored." << std::endl;
             create_prot_map( kmer_sp_map, proteins, l_opts->k, l_opts->metadata_fname );
         }
 
@@ -101,7 +102,7 @@ void module_link::write_outputs( std::string fname,
         }
 }
 
-template< typename retrieve_id >
+template<typename retrieve_id>
 void module_link::create_prot_map( std::unordered_map<std::string,
                                    std::unordered_set<scored_entity<std::string,double>>>&
                                    scores_map,
@@ -120,8 +121,7 @@ void module_link::create_prot_map( std::unordered_map<std::string,
         {
             ++num_prot;
             std::vector<std::string> kmers;
-            // using templated object to generalize object usage
-            spec_id = retriever( sequences[ index ].name );
+            spec_id = verify_id_type( sequences[ index ].name, retriever );
             kmer_tools::get_kmers( kmers, sequences[ index ].seq, k );
             std::unordered_map<std::string,std::size_t> val_map;
 
@@ -169,6 +169,17 @@ std::string module_link::get_id( std::string name, std::size_t id_index )
     return 0;
 }
 
+
+std::string module_link::verify_id_type( std::string sequence_data, std::size_t retriever )
+{
+    return get_id( sequence_data, retriever );
+}
+
+std::string module_link::verify_id_type( std::string sequence_data, std::string retriever )
+{
+    metadata_map mp = metadata_map();
+    return mp.build_map( sequence_data, retriever );
+}
 
 void module_link::create_pep_map( std::unordered_map<std::string,
                                   std::unordered_set<scored_entity<std::string,double>>>&

@@ -1,10 +1,7 @@
 #include "metadata_map.h"
 
-std::string metadata_map::build_map( std::string metadata_fname, std::string sequence_name )
+std::string metadata_map::build_map( std::string sequence_data, std::string metadata_fname)
     {
-        // verify file
-        std::cout << "WARNING: Metadata file has been provided and will be implemented with taxonomic ID index ignored." << std::endl;
-        //find and verify existence and order for file name/path, pep seq name, spec name : eg. taxtweak_2019-09-12.metadata,Name,Species
         std::vector<std::string> metadata_options;
         metadata_options.reserve( 3 );
         boost::split( metadata_options, metadata_fname, boost::is_any_of( "," ) );
@@ -18,13 +15,11 @@ std::string metadata_map::build_map( std::string metadata_fname, std::string seq
                 throw std::runtime_error( "Missing required specifications for meta flag. Must include metadata file name, "
                                         "sequence name column, and species identification column.\n");
             }
+        metadata_retrieve mr;
         std::unordered_map<std::string, std::string> meta_map;
         std::string line;
-        std::vector< std::string > metadata_header_row;
+        std::vector<std::string> metadata_header_row;
         std::getline( metadata_file, line );
-        /*std::vector<std::string>::iterator opt_iter;
-        opt_iter = ++metadata_options.begin(); // step past file name
-        */
         std::for_each( ++metadata_options.begin(), metadata_options.end(), [&]( std::string header )
                 {
                     if( line.find( header ) == std::string::npos )
@@ -35,25 +30,20 @@ std::string metadata_map::build_map( std::string metadata_fname, std::string seq
                 }
         );
         boost::split( metadata_header_row, line, boost::is_any_of( "\t" ) );
-        std::size_t name_index;
-        std::size_t spec_index;
         std::size_t count = 0;
         for( const auto& column_val : metadata_header_row )
             {
                 if( column_val.compare( metadata_options[ 1 ] ) == 0 )
-                    name_index = count;
+                    mr.set_name_index( count );
                 if( column_val.compare( metadata_options[ 2 ] ) == 0 )
-                    spec_index = count;
+                    mr.set_spec_index( count );
                 count++;
             }
-    // store name column and species column info in map
-        std::vector< std::string > metadata_row;
+        std::vector<std::string> metadata_row;
         while( std::getline( metadata_file, line) )
             {
                 boost::split( metadata_row, line, boost::is_any_of( "\t" ) );
-                meta_map.insert( std::make_pair( metadata_row.at( name_index ), metadata_row.at( spec_index ) ) );
+                meta_map.insert( std::make_pair( metadata_row.at( mr.get_name_index() ), metadata_row.at( mr.get_spec_index() ) ) );
             }
-    // pass map to metadata value class to handle value retrieval.
-        metadata_retrieve mr;
-        return mr.find_sequence( meta_map, sequence_name );
+        return mr.get_id( meta_map, sequence_data );
     }
