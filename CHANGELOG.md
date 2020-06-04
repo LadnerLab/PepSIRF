@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- Added functionality for metadata file usage in link module over an ID index number.
 - Added option to subjoin where exclusion of a name list outputs all columns of a given matrix file.
 - Added error checking and reporting to demux sample list parser and fasta parser.
 - Fixed bug that prevented the 'pepsirf_test' executable from building.
