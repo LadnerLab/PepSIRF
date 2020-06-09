@@ -2392,14 +2392,24 @@ TEST_CASE( "Subjoin name list filter is optional", "[module_subjoin]" )
 
 TEST_CASE( "Metadata file can be given in place of taxonomic id index", "[module_link]" )
 {
-
-    module_link mod = module_link();
-    options_link opts = options_link();
-    opts.metadata_fname = "../test/full_design_clean_min30_taxtweak_100perc_jingmens_2019-09-12_segment.metadata,Name,Species";
-    opts.prot_file_fname = "../test/full_design_clean_min30_taxtweak_100perc_jingmens_2019-09-12_segment.fasta";
-    opts.peptide_file_fname = "../test/PV1_10K3000_53_encoded_segment.faa";
-    opts.kmer_size = 7;
-    opts.output_fname = "../test/test_link_output.tsv";
-    mod.run( &opts );
-    REQUIRE( !opts.output_fname.empty() );
+    SECTION( "Verifying map creation and target sequence retrieval individually from link module" )
+    {
+        metadata_map mp = metadata_map();
+        mp.build_map( "../test/full_design_clean_min30_taxtweak_100perc_jingmens_2019-09-12_segment.metadata,Name,Species" );
+        std::string acquired_result = mp.get_id( "ID=A0A2Z4GZU5_HHV1 AC=A0A2Z4GZU5 OXX=10298,10298,10294,10292" );
+        std::string expected_result = "10294";
+        REQUIRE( acquired_result.compare( expected_result ) == 0 );
+    }
+    SECTION( "Verifying metadata file usage feature successfully integrates with link module." )
+    {
+        module_link mod = module_link();
+        options_link opts = options_link();
+        opts.metadata_fname =  "../test/full_design_clean_min30_taxtweak_100perc_jingmens_2019-09-12_segment.metadata,Name,Species";
+        opts.prot_file_fname = "../test/full_design_clean_min30_taxtweak_100perc_jingmens_2019-09-12_segment.fasta";
+        opts.peptide_file_fname = "../test/PV1_10K3000_53_encoded_segment.faa";
+        opts.kmer_size = 7;
+        opts.output_fname = "../test/test_metadata_output.txt";
+        mod.run( &opts );
+        REQUIRE( !opts.output_fname.empty() );
+    }
 }

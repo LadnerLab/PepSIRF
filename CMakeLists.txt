@@ -140,7 +140,6 @@ add_library( modules_link STATIC src/modules/link/module_link.cpp
 				src/modules/link/options_link.cpp
 				src/modules/link/options_parser_link.cpp
 				src/modules/link/metadata_map.cpp
-				src/modules/link/metadata_retrieve.cpp
 		   )
 add_library( modules_s_enrich STATIC src/modules/s_enrich/module_s_enrich.cpp
 				src/modules/s_enrich/options_s_enrich.cpp

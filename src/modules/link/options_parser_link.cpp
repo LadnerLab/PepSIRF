@@ -37,7 +37,7 @@ bool options_parser_link::parse( int argc, char ***argv, options *opts )
           "Name of fasta file containing aa peptides that have been designed as part "
           "of a library.\n"
         )
-        ( "metadata", po::value<std::string>( &opts_link->metadata_fname ),
+        ( "meta", po::value<std::string>( &opts_link->metadata_fname ),
           "Name of metadata file containing a column of protein sequence names and a column of metadata information for "
           "generating a linkage map."
         )
