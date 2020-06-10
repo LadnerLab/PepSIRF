@@ -1,6 +1,6 @@
 #include "metadata_map.h"
 
-void metadata_map::build_map( std::string metadata_fname )
+void metadata_map::build_map( std::unordered_map<std::string, std::string> *meta_map, std::string metadata_fname )
     {
         std::vector<std::string> metadata_options;
         boost::split( metadata_options, metadata_fname, boost::is_any_of( "," ) );
@@ -26,6 +26,8 @@ void metadata_map::build_map( std::string metadata_fname )
                 }
         );
         std::vector<std::string> metadata_header_row;
+        std::size_t name_index = 0;
+        std::size_t spec_index = 0;
         boost::split( metadata_header_row, line, boost::is_any_of( "\t" ) );
         std::size_t count = 0;
         for( const auto& column_val : metadata_header_row )
@@ -40,19 +42,15 @@ void metadata_map::build_map( std::string metadata_fname )
         while( std::getline( metadata_file, line) )
             {
                 boost::split( metadata_row, line, boost::is_any_of( "\t" ) );
-                meta_map.emplace( metadata_row.at( name_index ), metadata_row.at( spec_index ) );
+                meta_map->emplace( metadata_row.at( name_index ), metadata_row.at( spec_index ) );
             }
     }
 
-    std::string metadata_map::get_id( std::string sequence_data )
+    std::string metadata_map::get_id( std::string sequence_data, std::unordered_map<std::string, std::string> *meta_map )
     {
-        std::string sequence_id_codes = sequence_data.substr( sequence_data.find( "OXX=" ) + 4 );
-        std::vector<std::string> id_vec;
-        boost::split( id_vec, sequence_id_codes, boost::is_any_of( "," ) );
-        std::unordered_map<std::string, std::string>::const_iterator name = meta_map.find( id_vec[ name_index ] );
-        if( name != meta_map.end() )
+        std::unordered_map<std::string, std::string>::const_iterator name = meta_map->find( sequence_data );
+        if( name != meta_map->end() )
             {
-                std::cout << name->second << " was retrieved with " << id_vec[ name_index ] << ".\n";
                 return name->second;
             }
         else

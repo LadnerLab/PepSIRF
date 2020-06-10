@@ -46,9 +46,9 @@ void module_link::run( options *opts )
         {
             std::cout << "WARNING: Metadata file has been provided and will be implemented with taxonomic ID index ignored." << std::endl;
             metadata_map mp = metadata_map();
-            mp.build_map( l_opts->metadata_fname );
-            std::cout << "Map Built.\n";
-            create_prot_map( kmer_sp_map, proteins, l_opts->k, mp );
+            std::unordered_map<std::string, std::string> meta_map;
+            mp.build_map( &meta_map, l_opts->metadata_fname );
+            create_prot_map( kmer_sp_map, proteins, l_opts->k, &meta_map );
         }
 
     if( l_opts->penalize_kmers )
@@ -156,7 +156,7 @@ void module_link::create_prot_map( std::unordered_map<std::string,
     std::cout << num_prot << " proteins done in "
               << t_end - t_start
               << " seconds. (" << ( t_end - t_start ) / num_prot
-              << " seconds per peptide\n";
+              << " seconds per peptide)\n";
 }
 
 std::string module_link::get_id( std::string name, std::size_t id_index )
@@ -177,9 +177,9 @@ std::string module_link::verify_id_type( std::string sequence_data, std::size_t 
     return get_id( sequence_data, id_index );
 }
 
-std::string module_link::verify_id_type( std::string sequence_data, metadata_map map )
+std::string module_link::verify_id_type( std::string sequence_data, std::unordered_map<std::string, std::string> *map )
 {
-    return map.get_id( sequence_data );
+    return metadata_map::get_id( sequence_data, map );
 }
 
 void module_link::create_pep_map( std::unordered_map<std::string,

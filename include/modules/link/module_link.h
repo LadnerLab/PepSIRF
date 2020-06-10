@@ -30,7 +30,7 @@ class module_link : public module
      *       the scored_entity represents the score of a species.
      * @param scores_map The map that will store mappings of kmer -> scored_entity.
      * @param sequences The sequences to analyze.
-     * @param id_index The index (0-based) of id to choose.
+     * @param id Template object, either an unsigned integer or memory address to an unordered map
      * @param k The kmer size to use when creating the map.
      *        A species will be linked to a peptide if a peptide shares a
      *        kmer with that species.
@@ -105,24 +105,24 @@ class module_link : public module
     std::string get_id( std::string name, std::size_t id_index );
 
     /**
-     * Either an unsigned integer (provided index_id ) or a string (provided metadata file )
+     * Either an unsigned integer (provided index_id ) or an address (provided metadata file reference)
      * is provided. When given an integer, the get_id function is called, otherwise a metadata map is constructed and function
      * to fill map is called.
-     * @param sequence_data set of data that contains name and species.
+     * @param name The name from which to grab the id.
      * @param id_index value used to retrieve species id.
-     * @note Overloaded method. Allows for use of unsighned integer or string.
+     * @note Overloaded method. Allows for use of unsighned integer or reference to unordered map.
     **/
-    std::string verify_id_type( std::string sequence_data, std::size_t id_index);
+    std::string verify_id_type( std::string name, std::size_t id_index);
 
     /**
-     * Either an unsigned integer (provided index_id ) or a string (provided metadata file )
+     * Either an unsigned integer (provided index_id ) or an address (provided metadata file reference)
      * is provided. When given an integer, the get_id function is called, otherwise a metadata map is constructed and function
      * to fill map is called.
-     * @param sequence_data set of data that contains name and species.
-     * @param map unordered map used to retrieve species id.
-     * @note Overloaded method. Allows for use of unsighned integer or string.
+     * @param name The name from which to grab the id.
+     * @param map unordered map address for reference used to retrieve species id.
+     * @note Overloaded method. Allows for use of unsighned integer or reference to unordered map.
     **/
-    std::string verify_id_type( std::string sequence_data, metadata_map map );
+    std::string verify_id_type( std::string name, std::unordered_map<std::string, std::string> *map );
 
     /**
      * Write outputs for the linkage file generation.

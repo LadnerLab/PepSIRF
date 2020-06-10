@@ -38,8 +38,9 @@ bool options_parser_link::parse( int argc, char ***argv, options *opts )
           "of a library.\n"
         )
         ( "meta", po::value<std::string>( &opts_link->metadata_fname ),
-          "Name of metadata file containing a column of protein sequence names and a column of metadata information for "
-          "generating a linkage map."
+          "Name of metadata file with \".metadata\" extension, protein sequence name and species identification name. "
+          "The three entries should be comma delimited. The protein sequence and species identification name should be "
+          "consistent with their metadata file header column names."
         )
         ( "tax_id_index,t", po::value<std::size_t>( &opts_link->id_index )->default_value( 1 )
           ->notifier( [&]( const std::size_t val ) {
