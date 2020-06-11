@@ -6,7 +6,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <algorithm>
-#include "time_keep.h" 
+#include "time_keep.h"
 
 module_subjoin::module_subjoin() = default;
 
@@ -60,7 +60,7 @@ void module_subjoin::run( options *opts )
 
     // for all of the ( score_matrix, names_to_filter ) pairs:
     #pragma omp parallel for num_threads( 2 ) private( idx ) schedule( dynamic ) \
-            shared( s_opts, parsed_score_data ) 
+            shared( s_opts, parsed_score_data )
     for( idx = 0; idx < s_opts->matrix_name_pairs.size(); ++idx )
         {
             auto &score_name_pair = s_opts->matrix_name_pairs[ idx ];
@@ -68,17 +68,23 @@ void module_subjoin::run( options *opts )
             peptide_score_data_sample_major&
                 my_data = parsed_score_data[ idx ];
 
-                
             std::string& matrix_name_list  = score_name_pair.first;
-            std::ifstream names_list( score_name_pair.second,
-                                      std::ios_base::in
-                                     );
             // parse the matrix
-                peptide_scoring
-                ::parse_peptide_scores( my_data,
-                                        matrix_name_list
-                                      );
-
+            peptide_scoring::parse_peptide_scores( my_data,
+                                                matrix_name_list
+                                                );
+            if( score_name_pair.second.empty() )
+                {
+                    std::cout << "WARNING: No name list has been given. All scores will be output." << std::endl;
+                    // add all sample names to score_name_pair.second
+                    for( auto& s_name : my_data.scores.get_col_labels() )
+                    {
+                        score_name_pair.second.append( s_name.first + "\n" );
+                    }
+                }
+                std::ifstream names_list( score_name_pair.second,
+                                        std::ios_base::in
+                                        );
                 if( use_peptide_names )
                     {
                         my_data.scores = my_data.scores.transpose();
@@ -119,7 +125,7 @@ void module_subjoin::run( options *opts )
                                           << "and will not be included in the output.\n";
                             }
                     }
-            
+
                 // filter the data, assign to the scores and peptide name list
                 std::unordered_set<std::string> names;
 
@@ -159,8 +165,8 @@ void module_subjoin::run( options *opts )
                                }
                              );
 
-                
-           
+
+
                 my_data.scores = my_data.scores.filter_rows( filter_list );
                 my_data.pep_names = filter_list;
         }

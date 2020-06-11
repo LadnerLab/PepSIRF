@@ -27,6 +27,9 @@
 #include "fastq_parser.h"
 #include "module_demux.h"
 #include "module_deconv.h"
+#include "module_subjoin.h"
+#include "module_link.h"
+#include "metadata_map.h"
 #include "samplelist_parser.h"
 #include "sample.h"
 #include "fastq_score.h"
@@ -74,37 +77,46 @@ TEST_CASE( "Sequence", "[sequence]" )
     REQUIRE( seq.seq.compare( s2 ) != 0 );
 }
 
-TEST_CASE( "Parse Fasta", "[fasta_parser]" )
+TEST_CASE( "fasta_parser is able to read files that exist, properly creates error when file cannot be found", "[fasta_parser]" )
 {
-    fasta_parser fp;
-    std::vector<sequence> vec;
-    vec = fp.parse( "../test/test.fasta" );
+    SECTION( "fasta_parser reads a well-formed test" )
+    {
+        fasta_parser fp;
+        std::vector<sequence> vec;
+        vec = fp.parse( "../test/test.fasta" );
 
-    REQUIRE( vec.size() == 110 );
+        REQUIRE( vec.size() == 110 );
 
-    unsigned int index = 0;
-    for( index = 0; index < vec.size(); ++index )
-        {
-            REQUIRE( vec[ index ].seq.compare( "" ) );
-            REQUIRE( vec[ index ].name.compare( "" ) );
-        }
+        unsigned int index = 0;
+        for( index = 0; index < vec.size(); ++index )
+            {
+                REQUIRE( vec[ index ].seq.compare( "" ) );
+                REQUIRE( vec[ index ].name.compare( "" ) );
+            }
 
-    std::ofstream stream;
-    stream.open( "out.fasta" );
-    stream << fasta_ex;
-    stream.close();
+        std::ofstream stream;
+        stream.open( "out.fasta" );
+        stream << fasta_ex;
+        stream.close();
 
-    vec = fp.parse( "out.fasta" );
-    REQUIRE( vec.size() == 2 );
-    REQUIRE( !vec[ 0 ].name.compare( "Example sequence 1" ) );
-    REQUIRE( !vec[ 0 ].seq.compare( "DJFKDLFJSFDJFKDJFDJKFJKDFJDSKFLJFDKSFLJ" ) );
-    REQUIRE( !vec[ 1 ].name.compare( "Example Sequence 2" ) );
-    REQUIRE( !vec[ 1 ].seq.compare( "DJFKLSFJDKLSFJKSLFJSKDLFJDKSLFJKLDKDKDK" ) );
-    REQUIRE( vec[ 1 ].seq.compare( vec[ 0 ].seq ) );
-    REQUIRE( vec[ 0 ].seq.compare( vec[ 1 ].seq ) );
+        vec = fp.parse( "out.fasta" );
+        REQUIRE( vec.size() == 2 );
+        REQUIRE( !vec[ 0 ].name.compare( "Example sequence 1" ) );
+        REQUIRE( !vec[ 0 ].seq.compare( "DJFKDLFJSFDJFKDJFDJKFJKDFJDSKFLJFDKSFLJ" ) );
+        REQUIRE( !vec[ 1 ].name.compare( "Example Sequence 2" ) );
+        REQUIRE( !vec[ 1 ].seq.compare( "DJFKLSFJDKLSFJKSLFJSKDLFJDKSLFJKLDKDKDK" ) );
+        REQUIRE( vec[ 1 ].seq.compare( vec[ 0 ].seq ) );
+        REQUIRE( vec[ 0 ].seq.compare( vec[ 1 ].seq ) );
 
 
-    remove( "out.fasta" );
+        remove( "out.fasta" );
+    }
+
+    SECTION( "fasta_parser throws error when file is not found" )
+    {
+        fasta_parser fp;
+        REQUIRE_THROWS( fp.parse( "does_not_exist.fasta" ) );
+    }
 
 }
 
@@ -193,7 +205,7 @@ TEST_CASE( "Add seqs to map", "[module_demux]" )
 
     parallel_map<sequence, std::vector<std::size_t>*>::iterator it = my_map.begin();
     size_t index = 0;
-                       
+
     while( it != my_map.end() )
         {
             REQUIRE( it->second->size() == num_samples );
@@ -207,24 +219,35 @@ TEST_CASE( "Add seqs to map", "[module_demux]" )
 
 }
 
-TEST_CASE( "Test samplelist_parser and sample", "[samplelist_parser]" )
+TEST_CASE( "samplelist_parser is able to read files that exist, properly creates errors when file cannot be found/read", "[samplelist_parser]" )
 {
-    samplelist_parser slp;
-    std::string filename = "../test/test_samplelist.tsv";
+    SECTION( "samplelist_parser is able to read a well-formed test")
+    {
+        samplelist_parser slp;
+        std::string filename = "../test/test_samplelist.tsv";
 
-    auto vec = slp.parse( filename );
+        auto vec = slp.parse( filename );
 
-    REQUIRE( vec.size() == 96 );
+        REQUIRE( vec.size() == 96 );
 
 
-    unsigned int index = 0;
-    std::unordered_map<sample, int> s_map( vec.size() );
-    for( index = 0 ; index < vec.size(); ++index )
-        {
-            s_map[ vec[ index ] ] = vec[ index ].id;
-        }
+        unsigned int index = 0;
+        std::unordered_map<sample, int> s_map( vec.size() );
+        for( index = 0 ; index < vec.size(); ++index )
+            {
+                s_map[ vec[ index ] ] = vec[ index ].id;
+            }
 
-    REQUIRE( s_map.size() <= vec.size() );
+        REQUIRE( s_map.size() <= vec.size() );
+    }
+
+
+    SECTION( "samplelist_parser throws an error when a file is not found or incorrect format" )
+    {
+        samplelist_parser sl;
+        REQUIRE_THROWS( sl.parse( "../test/test.fasta" ) );
+        REQUIRE_THROWS( sl.parse( "does_not_exist.tsv" ) );
+    }
 }
 
 TEST_CASE( "Test String Indexing", "[string_indexer]" )
@@ -326,9 +349,9 @@ TEST_CASE( "Reference-independent Demultiplexing" )
             REQUIRE( it.size() == 2 );
             REQUIRE( it[ 0 ] == 0 );
             REQUIRE( it[ 1 ] == 0 );
-            
 
-            
+
+
         }
 
     SECTION( "Pointer-based value-items in the map" )
@@ -382,7 +405,7 @@ TEST_CASE( "Test Count Generation", "[module_demux]" )
     std::size_t seq_length     = 150;
     std::size_t seq_start      = 0;
     std::size_t num_mismatches = 0;
-    
+
     vec_a = fp.parse( "../test/test_fastq.fastq" );
 
     std::for_each( vec_a.begin(), vec_a.end(),
@@ -491,8 +514,8 @@ TEST_CASE( "get_kmers", "[kmer_scores]" )
             REQUIRE( kmers.size() == sequence.length() - ( index + 1 ) + 1 );
             kmers.clear();
         }
-                                                    
-                                                  
+
+
 }
 
 
@@ -523,7 +546,7 @@ TEST_CASE( "get_tie_candidates_integer", "[module_deconv]" )
                                           ovlp_threshold,
                                           difference<double>()
                                         );
-                           
+
     REQUIRE( candidates.size() == 3 );
     REQUIRE( t_type == tie_data::tie_type::K_WAY_TIE );
 
@@ -1214,7 +1237,7 @@ TEST_CASE( "to_dir_name", "[fs_tools]" )
     REQUIRE( fs_tools::to_dir_name( dest_str, name_trail ) == name_trail );
 
     dest_str.clear();
-    
+
     REQUIRE( fs_tools::to_dir_name( name_no_trail ) == name_trail );
 
     dest_str.clear();
@@ -1234,7 +1257,7 @@ TEST_CASE( "to_dir_name", "[fs_tools]" )
     REQUIRE( dest_str == "dir1/fpart1123fpart4" );
 
     dest_str.clear();
-    
+
     fs_tools::create_fname( dest_str, path_base_inc,
                             "fpart1", 1, 2, 3,
                             "fpart4"
@@ -1246,7 +1269,7 @@ TEST_CASE( "to_dir_name", "[fs_tools]" )
 
 TEST_CASE( "filter_counts (vector template)", "[module_deconv]" )
 {
-    std::vector<std::pair<std::size_t,double>> filter_vec; 
+    std::vector<std::pair<std::size_t,double>> filter_vec;
     module_deconv mod;
 
     for( std::size_t index = 0; index < 100; ++index )
@@ -1706,7 +1729,7 @@ TEST_CASE( "labeled_matrix full outer join", "[matrix]" )
                                          );
     a( "arow1", "acol1" ) = 5.5;
     b( "brow2", "bcol5" ) = 5.5;
-    
+
     labeled_matrix<double,std::string> a_join_b
         = a.full_outer_join( b );
 
@@ -1760,7 +1783,7 @@ TEST_CASE( "labeled_matrix full outer join", "[matrix]" )
                     a2_matr( y % x_dim, x ) = x * y;
                 }
         }
-            
+
     a1_matr.set_col_labels( a1_cl );
     a1_matr.set_row_labels( a1_rl );
     a2_matr.set_col_labels( a2_cl );
@@ -1860,7 +1883,7 @@ TEST_CASE( "matrix transposition", "[matrix]" )
             // a non-symmetric function of two variables, x and y,
             // used because for symmetric F F(x,y) = F(y,x), making it not
             // useful for testing our transposition operations
-            auto non_symmetric = []( int x, int y ) -> int 
+            auto non_symmetric = []( int x, int y ) -> int
                 {
                     constexpr int A = 4, B = 8, R = 28;
                     return ( A * x * x ) + ( B * y * y ) - ( R * R );
@@ -1971,7 +1994,7 @@ TEST_CASE( "Summing Counts of items in a matrix", "[module_bin]" )
     module_bin mod;
     std::vector<std::string> row_labels{ "row_1", "row_2", "row_3" };
     std::vector<std::string> col_labels{ "col_1", "col_2", "col_3" };
-    
+
     labeled_matrix<double,std::string>
         matrix{ 3,
                 3,
@@ -2004,9 +2027,9 @@ TEST_CASE( "Ranking Probes based upon their scores", "[probe_rank]" )
         { "p4", 156.095 }
     };
 
-    auto rank_probes = [&]( probe_rank& pr ) 
+    auto rank_probes = [&]( probe_rank& pr )
         {
-            // we want to force an order here 
+            // we want to force an order here
             pr.rank_probe( 1.445, "p1" );
             pr.rank_probe( 4.655, "p2" );
             pr.rank_probe( 1.045, "p3" );
@@ -2055,7 +2078,7 @@ TEST_CASE( "Ranking Probes based upon their scores", "[probe_rank]" )
                 { 1.05, { "p3" } },
                 { 1.45, { "p1" } },
                 { 4.66, { "p2" } },
-                { 156.10, { "p4" } }, 
+                { 156.10, { "p4" } },
             };
             REQUIRE( int_probe_rank.get_probe_ranks() == expected_values );
         }
@@ -2066,7 +2089,7 @@ TEST_CASE( "Ranking Probes based upon their scores", "[probe_rank]" )
 TEST_CASE( "Unary Predicate Reduction", "[module_s_enrich]" )
 {
     using namespace predicate;
-    
+
     auto positive = []( const int x ) -> bool { return x > 0; };
     auto gt_10 = []( const int x ) -> bool { return x > 10; };
     auto lt_100 = []( const int x ) -> bool { return x < 100; };
@@ -2106,7 +2129,7 @@ TEST_CASE( "Valid For", "[module_s_enrich]" )
     auto lt_100 = []( const int x ) -> bool { return x < 100; };
     auto positive = []( const int x ) -> bool { return x > 0; };
     auto even = []( const int x ) -> bool { return x % 2 == 0; };
-    using namespace predicate; 
+    using namespace predicate;
 
     SECTION( "Default function, no use of special 'get' function" )
 
@@ -2154,7 +2177,7 @@ TEST_CASE( "Valid For", "[module_s_enrich]" )
             valid_for( values.begin(),
                        values.end(),
                        std::back_inserter( result ),
-                       even, 
+                       even,
                        get_first
                      );
 
@@ -2308,7 +2331,7 @@ TEST_CASE( "Testing nt->aa translation", "[nt_aa_translator]" )
 
     nt_seq.seq = "TAGTAATGATTT";
     translated = translator( nt_seq );
-    
+
     REQUIRE( translated.seq == "___F" );
 
 }
@@ -2355,4 +2378,30 @@ TEST_CASE( "Determining whether a file is gzipped.", "[pepsirf_io]" )
 
     std::ifstream false_expected{ "../test/test.fasta" };
     REQUIRE( !pepsirf_io::is_gzipped( false_expected ) );
+}
+
+TEST_CASE( "Subjoin name list filter is optional", "[module_subjoin]" )
+{
+    module_subjoin mod = module_subjoin();
+    options_subjoin opts = options_subjoin();
+    opts.use_sample_names = true;
+    opts.out_matrix_fname = "../test/test_subjoin_output.txt";
+    opts.matrix_name_pairs.emplace_back( std::make_pair( "../test/test_score_matrix.tsv", "" ) );
+    mod.run( &opts );
+}
+
+TEST_CASE( "Metadata file can be given in place of taxonomic id index", "[module_link]" )
+{
+    std::ifstream metadata_file( "../test/test_meta_fraction.metadata", std::ios_base::in );
+    module_link mod = module_link();
+    std::unordered_map<std::string, std::string> meta_map(
+                                                { { ">ID=A0A2Z4GZU5_HHV1 AC=A0A2Z4GZU5 OXX=10298,10298,10294,10292", "10294" },
+                                                { ">ID=A0A2L2Q9I3_9BETA AC=A0A2L2Q9I3 OXX=32603,32603,40272,10292", "40272" },
+                                                { ">ID=E9RHT2_HPV67 AC=E9RHT2 OXX=37120,337041,333750,151340", "333750" } }
+        );
+    int id_index = 2;
+    std::string id_index_spec_id = mod.get_id( ">ID=A0A2Z4GZU5_HHV1 AC=A0A2Z4GZU5 OXX=10298,10298,10294,10292", id_index );
+    std::string metadata_spec_id = metadata_map::get_id( ">ID=A0A2Z4GZU5_HHV1 AC=A0A2Z4GZU5 OXX=10298,10298,10294,10292", &meta_map );
+    REQUIRE( id_index_spec_id.compare( metadata_spec_id ) == 0 );
+
 }

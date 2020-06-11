@@ -37,6 +37,11 @@ bool options_parser_link::parse( int argc, char ***argv, options *opts )
           "Name of fasta file containing aa peptides that have been designed as part "
           "of a library.\n"
         )
+        ( "meta", po::value<std::string>( &opts_link->metadata_fname ),
+          "Name of metadata file with \".metadata\" extension, protein sequence name and species identification name. "
+          "The three entries should be comma delimited. The protein sequence and species identification name should be "
+          "consistent with their metadata file header column names."
+        )
         ( "tax_id_index,t", po::value<std::size_t>( &opts_link->id_index )->default_value( 1 )
           ->notifier( [&]( const std::size_t val ) {
                   if( val > 3 )
@@ -68,8 +73,8 @@ bool options_parser_link::parse( int argc, char ***argv, options *opts )
 
     po::store( po::command_line_parser( argc, *argv ).options( desc ).run(), vm);
 
-    if( vm.count( "help" ) 
-        || argc == 2 
+    if( vm.count( "help" )
+        || argc == 2
         )
         {
             std::cout << desc << std::endl;
