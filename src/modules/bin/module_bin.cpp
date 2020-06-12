@@ -12,7 +12,7 @@ void module_bin::run( options *opts )
 {
     options_bin *b_opts = (options_bin*) opts;
     time_keep::timer timer;
-
+    int min_bin_size_extension = 1;
     timer.start();
 
     peptide_score_data_sample_major input_data;
@@ -42,6 +42,15 @@ void module_bin::run( options *opts )
     auto probe_bins = bin_ranked_probes( ranked_probes,
                                          b_opts->min_bin_size
                                        );
+
+    // while min bin size is greater then smallest bin size, increase min bin size
+    while( b_opts->min_bin_size > probe_bins.smallest().size() )
+        {
+            probe_bins = bin_ranked_probes( ranked_probes,
+                            b_opts->min_bin_size + min_bin_size_extension
+                                        );
+            min_bin_size_extension++;
+        }
 
     std::ofstream output_file( b_opts->output_bins_fname,
                                std::ios_base::out
@@ -87,19 +96,22 @@ bin_collection module_bin::bin_ranked_probes( const probe_rank& ranked_probes,
                                        current_rank_peptides.end()
                                      );
 
-            if( current_bin->size() 
-                >= min_size
+            /*
+            current bin size greater or equal to minimum size and
+            current key is not last key in container
+            */
+            if( current_bin->size()
+                >= min_size && key != *( keys.end() - 1 )
               )
                 {
                     bins.add_bin( peptide_bin() );
                     current_bin = bins.end() - 1;
                 }
-            
         }
 
     return bins;
 }
-    
+
 
 std::vector<double>
 module_bin::sum_counts( const labeled_matrix<double,std::string>& data )
