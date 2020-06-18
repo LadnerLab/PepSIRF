@@ -29,7 +29,7 @@
     <div class="navbar">
     {% for page in site.pages %}
         {% if page.title %}
-            <ul><li class="navlinks"><a href="{{ page.url }}">{{ page.title }}</a></li></ul>
+            <ul><li class="navlinks"><a href="{{ site.baseurl }}{{ page.url }}">{{ page.title }}</a></li></ul>
         {% endif %}
     {% endfor %}
     </div>
