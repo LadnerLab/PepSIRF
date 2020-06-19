@@ -9,16 +9,16 @@
 class options_deconv : public options
 {
  public:
-    
+
     /**
-     * Returns the arguments that are stored by 
+     * Returns the arguments that are stored by
      * the options object.
      **/
     std::string get_arguments();
 
     /**
-     * Name of the file containing lines linking 
-     * peptides to the species each peptide shares 
+     * Name of the file containing lines linking
+     * peptides to the species each peptide shares
      * a 7-mer with.
      **/
     std::string linked_fname;
@@ -26,7 +26,7 @@ class options_deconv : public options
     std::size_t id_index;
 
     /**
-     * Suffix to add to files written to 
+     * Suffix to add to files written to
      * output directory in batch mode.
      **/
     std::string outfile_suffix;
@@ -42,8 +42,8 @@ class options_deconv : public options
     std::string output_fname;
 
     /**
-     * Flag to penalize kmers based upon their frequency in the 
-     * designed peptides. 
+     * Flag to penalize kmers based upon their frequency in the
+     * designed peptides.
      **/
     bool penalize_kmers;
 
@@ -66,48 +66,42 @@ class options_deconv : public options
     std::string orig_scores_dname;
 
     /**
-     * Score threshold to determine 
-     * when two species are tied. 
+     * Score threshold to determine
+     * when two species are tied.
      **/
     double score_tie_threshold;
 
     /**
-     * Threshold to determine when 
-     * two species have 'significant' 
-     * overlap. Note that significant is not 
-     * in the statistical sense, but is defined 
-     * by either number or percentage of shared 
+     * Threshold to determine when
+     * two species have 'significant'
+     * overlap. Note that significant is not
+     * in the statistical sense, but is defined
+     * by either number or percentage of shared
      * peptides.
      **/
     double score_overlap_threshold;
 
     /**
-     * Name of the file to write a 
-     * map of what peptides were assigned 
+     * Name of the file to write a
+     * map of what peptides were assigned
      * to what species to.
      **/
     std::string species_peptides_out;
 
     /**
-     * If this value is true only one thread will be used for 
+     * If this value is true only one thread will be used for
      * operations. Otherwise, two will be used.
      **/
     bool single_threaded;
 
     /**
-     * Flag whether to use fractional scoring.
+     * Flag stores scoring strategy. Default: summation.
      **/
-    bool fractional_scoring;
-
-    /**
-     * Flag whether to use 
-     * summation scoring.
-     **/
-    bool summation_scoring;
+    std::string scoring_strategy;
 
     /**
      * Flag designating whether to use
-     * score filtering instead of 
+     * score filtering instead of
      * count filtering.
      **/
     bool score_filtering;
@@ -119,13 +113,13 @@ class options_deconv : public options
     std::string peptide_file_fname;
 
     /**
-     * The kmer size to use 
+     * The kmer size to use
      * when mapping peptides.
      **/
     std::size_t k;
 
     /**
-     * The name of the file to 
+     * The name of the file to
      * write the id name map to.
      **/
     std::string id_name_map_fname;

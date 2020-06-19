@@ -69,11 +69,11 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
                                                     << val
                                                     << "' already exists!";
                                           throw std::runtime_error
-                                              ( error_msg.str() ); 
+                                              ( error_msg.str() );
                                       }
                                   else
                                       {
-                                  
+
                                           fs_tools::create_directory( val );
                                       }
                               }
@@ -90,28 +90,21 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "By default this module uses two threads. Include this option with no arguments if you only want "
           " one thread to be used. \n"
         )
-        ( "fractional_scoring", po::bool_switch( &opts_deconv->fractional_scoring )->default_value( false ),
-          "Use fractional instead of integer scoring. For integer scoring the score of each species is "
-          "defined by the number of peptides that share a 7mer with that species. For fractional scoring "
-          "the score of each species is defined by 1/n for each peptide, where n is the number of species "
-          "a peptide shares a 7mer with. In this method of scoring "
-          "peptides with fewer species are worth more. Note that if neither this flag nor --summation_scoring "
-          "are included, integer scoring will be used. In integer scoring each species is scored by the "
-          "number of peptides it shares a kmer with. \n" 
-        )
-        ( "summation_scoring", po::bool_switch( &opts_deconv->summation_scoring )->default_value( false ),
+        ( "scoring_strategy", po::value<std::string>( &opts_deconv->scoring_strategy )->default_value( "summation" ),
           "Include this flag (without any arguments) if you want summation scoring to be used instead of "
           "fractional or integer scoring. For summation scoring, the --linked file passed must be of the "
           "form created by the link module. This means a file of tab-delimited values, one per line. \n"
           "Each line is of the form peptide_name TAB id:score,id:score, and so on. Undefined behavior "
           "will result if input is not in this format. For summation scoring, each species is scored "
-          "based on the number of kmers it shares with each peptide with which it shares a kmer.\n "
+          "based on the number of kmers it shares with each peptide with which it shares a kmer.\n"
           "For example, assume a line in the --linked file looks like the following: \n"
           "peptide_1 TAB 123:4,543:8\n"
           "Both species '123' and '543' will receive a score of 4 and 8 respectively."
-          "Note that if neither this flag nor --summation_scoring "
-          "are included, integer scoring will be used. In integer scoring each species is scored by the "
-          "number of peptides it shares a kmer with. \n" 
+          "For integer scoring the score of each species is defined by the number of peptides that share a 7mer with that species. "
+          "For fractional scoring the score of each species is defined by 1/n for each peptide, where n is the number of species "
+          "a peptide shares a 7mer with. In this method of scoring "
+          "peptides with fewer species are worth more. In integer scoring each species is scored by the "
+          "number of peptides it shares a kmer with. \n"
         )
         ( "enriched,e", po::value<std::string>( &opts_deconv->enriched_fname ),
           "Name of a directory containing files, or a single file containing the "
@@ -193,14 +186,14 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "of its peptides with species 1. To use integer tie evaluation, where species must share an integer number of "
           "peptides, not a ratio of their total peptides, provide this argument with a value in the interval [1, inf). "
           "These two will only be reported together if score_overlap_threshold "
-          "<= 0.1.  \n" 
+          "<= 0.1.  \n"
         )
         ;
 
     po::store( po::command_line_parser( argc, *argv ).options( desc ).run(), vm);
 
-    if( vm.count( "help" ) 
-	    || argc == 2 
+    if( vm.count( "help" )
+	    || argc == 2
 	  )
         {
             std::cout << desc << std::endl;
