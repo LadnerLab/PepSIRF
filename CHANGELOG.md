@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.3.0] - 2020-6-22
 - Deconv module now requires --linked file to be in format provided by link module output file.
 - Deconv Module now uses a single scoring strategy flag that takes the name of the strategy as an argument.
 - Updated help info provided by modules -h flag.
