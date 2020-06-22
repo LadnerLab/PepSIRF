@@ -1988,32 +1988,65 @@ TEST_CASE( "Parsing/Writing Bins from stream", "[peptide_bin]" )
 
 }
 
-TEST_CASE( "Summing Counts of items in a matrix", "[module_bin]" )
+TEST_CASE( "Verify sums and minimum bin size resizing", "[module_bin]" )
 {
-    module_bin mod;
-    std::vector<std::string> row_labels{ "row_1", "row_2", "row_3" };
-    std::vector<std::string> col_labels{ "col_1", "col_2", "col_3" };
+    SECTION( "Summing Counts of items in a matrix" )
+    {
+        module_bin mod;
+        std::vector<std::string> row_labels{ "row_1", "row_2", "row_3" };
+        std::vector<std::string> col_labels{ "col_1", "col_2", "col_3" };
 
-    labeled_matrix<double,std::string>
-        matrix{ 3,
-                3,
-                row_labels,
-                col_labels
-              };
+        labeled_matrix<double,std::string>
+            matrix{ 3,
+                    3,
+                    row_labels,
+                    col_labels
+                };
 
-    matrix.set_all( 4 );
+        matrix.set_all( 4 );
 
-    auto summed_counts = mod.sum_counts( matrix );
+        auto summed_counts = mod.sum_counts( matrix );
 
-    REQUIRE( summed_counts[ 0 ] == 12 );
-    REQUIRE( summed_counts[ 1 ] == 12 );
-    REQUIRE( summed_counts[ 2 ] == 12 );
+        REQUIRE( summed_counts[ 0 ] == 12 );
+        REQUIRE( summed_counts[ 1 ] == 12 );
+        REQUIRE( summed_counts[ 2 ] == 12 );
 
-    matrix( 2, 2 ) = 11.5;
-    summed_counts = mod.sum_counts( matrix );
+        matrix( 2, 2 ) = 11.5;
+        summed_counts = mod.sum_counts( matrix );
 
-    REQUIRE( summed_counts[ 2 ] == 19.5 );
-    REQUIRE( summed_counts[ 0 ] == 12 );
+        REQUIRE( summed_counts[ 2 ] == 19.5 );
+        REQUIRE( summed_counts[ 0 ] == 12 );
+    }
+
+    SECTION( "Tweak peptide combination when a bin falls below minimum size" )
+    {
+        module_bin mod = module_bin();
+        options_bin opt = options_bin();
+        opt.min_bin_size = 300;
+        opt.input_scores_fname = "../test/test_bins.tsv";
+        opt.rounding_factor = 1;
+        opt.output_bins_fname = "../test/test_bin_output.txt";
+        mod.run( &opt );
+        std::ifstream bin_output( opt.output_bins_fname, std::ios_base::in );
+        std::ifstream bin_expected_output( "../test/test_expected_bins.tsv",
+                                                        std::ios_base::in );
+        std::string expected_line;
+        std::string output_line;
+
+        while( std::getline( bin_output, output_line ) &&
+                                    std::getline( bin_expected_output, expected_line ) )
+            {
+                std::unordered_set<std::string> bin_output_set;
+                std::unordered_set<std::string> bin_expected_set;
+                boost::split( bin_output_set, output_line, boost::is_any_of( "\t" ) );
+                boost::split( bin_expected_set, expected_line, boost::is_any_of( "\t" ) );
+                for( auto probe: bin_expected_set )
+                    {
+                        REQUIRE( bin_output_set.find( probe ) !=
+                                                    bin_output_set.end() );
+                    }
+            }
+    }
 }
 
 TEST_CASE( "Ranking Probes based upon their scores", "[probe_rank]" )
