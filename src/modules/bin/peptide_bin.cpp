@@ -32,7 +32,7 @@ bool peptide_bin::contains( const value_type& look_for )
     return peptide_names.find( look_for ) != peptide_names.end();
 }
 
-// bin_collection 
+// bin_collection
 bin_collection::iterator bin_collection::begin() { return bins.begin(); }
 bin_collection::iterator bin_collection::end() { return bins.end(); }
 
@@ -54,6 +54,19 @@ void bin_collection::add_bin( const peptide_bin bin )
 bin_collection::size_type bin_collection::size() const
 {
     return bins.size();
+}
+
+peptide_bin bin_collection::smallest()
+{
+    peptide_bin smallest = *bins.begin();
+    for( const auto& bin : bins )
+        {
+            if( smallest.size() > bin.size() )
+                {
+                    smallest = bin;
+                }
+        }
+    return smallest;
 }
 
 // namespace peptide_bin_io

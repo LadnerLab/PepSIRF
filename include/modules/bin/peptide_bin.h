@@ -28,7 +28,7 @@ class peptide_bin
     /**
      * Determine whether this bin equals other.
      * @param other the bin to compare this with.
-     * @returns true if this and other contain the same 
+     * @returns true if this and other contain the same
      *          peptides, false otherwise.
      **/
     bool operator==( const peptide_bin& other ) const;
@@ -116,6 +116,12 @@ class bin_collection
     size_type size() const;
 
     /**
+     * Get the smallest bin in the bin_collection
+     * @returns the smallest sized bin
+     **/
+    peptide_bin smallest();
+
+    /**
      * Construct a bin collection from items in the range
      * [begin, end).
      * @tparam Iterator the type of iterator to read from
@@ -133,12 +139,12 @@ class bin_collection
     /**
      * Determine whether bin collections are equal.
      * @param other The bin to compare this with.
-     * @returns true if every bin in this collection is  
-     *          equal to every bin in other. 
+     * @returns true if every bin in this collection is
+     *          equal to every bin in other.
      * @note order of the bins matters.
      **/
     bool operator==( const bin_collection& other ) const;
-        
+
 
 };
 
@@ -146,8 +152,8 @@ namespace peptide_bin_io
 {
     /**
      * Parse bins from the stream bin_source.
-     * Each bin is a tab-separated list of peptide names. 
-     * Bins are separated by newline characters. 
+     * Each bin is a tab-separated list of peptide names.
+     * Bins are separated by newline characters.
      * @param bin_source The stream containing bins
      * @returns A bin_collection containing each bin from bin_source
      **/
