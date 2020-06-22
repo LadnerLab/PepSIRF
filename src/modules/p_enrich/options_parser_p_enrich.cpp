@@ -88,7 +88,7 @@ bool options_parser_p_enrich::parse( int argc, char ***argv, options *opts )
           "order for any of the peptides in that sample to be considered enriched. "
           "This provides a way to impose a minimum read count for a sample to be evaluated.\n"
         )
-        ( "outfile_suffix,s",
+        ( "outfile_suffix,x",
           po::value( &opts_p_enrich->out_suffix )
           ->default_value( "" ),
           "Suffix to add to all output files. Together, the sample name and the suffix "

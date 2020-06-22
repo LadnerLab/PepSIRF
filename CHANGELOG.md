@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- Fixed bug where p_enrich -s arg referred to both the output suffix and the sample.
 - Altered the info module output for sum of column scores to fixed-point notation.
 - Fixed bug causing the max of the specified norm/score to be used in s_enrich
 - Added option to subjoin where exclusion of a name list outputs all columns of a given matrix file.
