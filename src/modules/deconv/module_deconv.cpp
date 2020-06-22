@@ -888,23 +888,27 @@ module_deconv::get_filter_method( options_deconv *opts )
 evaluation_strategy::score_strategy
 module_deconv::get_evaluation_strategy( options_deconv *opts )
 {
-    if( !( opts->fractional_scoring
-           || opts->summation_scoring
-          )
-      )
+    if( opts->scoring_strategy.compare( "integer" ) == 0 )
         {
             return evaluation_strategy::score_strategy::INTEGER_SCORING;
         }
-
-    return  opts->fractional_scoring ?
-             evaluation_strategy::score_strategy::FRACTIONAL_SCORING :
-             evaluation_strategy::score_strategy::SUMMATION_SCORING;
+    if( opts->scoring_strategy.compare( "fraction" ) == 0 )
+        {
+            return evaluation_strategy::score_strategy::FRACTIONAL_SCORING;
+        }
+    if( opts->scoring_strategy.compare( "summation" ) == 0 )
+        {
+            return evaluation_strategy::score_strategy::SUMMATION_SCORING;
+        }
+    throw std::runtime_error( "The scoring strategy, " + opts->scoring_strategy
+            + ", provided for '--scoring_strategy' is not a valid argument. "
+            "Valid arguments include: \"summation\", \"integer\", and \"fraction\"." );
 }
 
 evaluation_strategy::tie_eval_strategy
 module_deconv::get_tie_eval_strategy( options_deconv *opts )
 {
-    if( opts->summation_scoring )
+    if( opts->scoring_strategy.compare( "summation" ) == 0 )
         {
             return evaluation_strategy::tie_eval_strategy::SUMMATION_SCORING_TIE_EVAL;
         }

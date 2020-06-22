@@ -1138,8 +1138,7 @@ TEST_CASE( "Deconv end_to_end", "[module_deconv]" )
 
     opts.threshold = 00;
     opts.single_threaded = false;
-    opts.fractional_scoring = false;
-    opts.summation_scoring = true;
+    opts.scoring_strategy = "summation";
     opts.score_filtering = true;
     opts.species_peptides_out = "";
     opts.score_tie_threshold = 0.90;

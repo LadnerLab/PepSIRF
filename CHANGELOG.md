@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- Changed link modules scoring strategy selection process to now use only one flag to which the strategy must be entered.
 - Added functionality for metadata file usage in link module over an ID index number.
 - Fixed bug where p_enrich -s arg referred to both the output suffix and the sample.
 - Altered the info module output for sum of column scores to fixed-point notation.
