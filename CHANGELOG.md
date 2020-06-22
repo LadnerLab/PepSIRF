@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 - Fixed bug where p_enrich -s arg referred to both the output suffix and the sample.
+- Altered the info module output for sum of column scores to fixed-point notation.
 - Fixed bug causing the max of the specified norm/score to be used in s_enrich
 - Added option to subjoin where exclusion of a name list outputs all columns of a given matrix file.
 - Added error checking and reporting to demux sample list parser and fasta parser.

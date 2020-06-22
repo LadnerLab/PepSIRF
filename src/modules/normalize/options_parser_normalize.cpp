@@ -26,20 +26,22 @@ bool options_parser_normalize::parse( int argc, char ***argv, options *opts )
                                 );
 
     desc.add_options()
-        ( "help,h", "Produce help message\n" )
+        ( "help,h", "Produce help message\n"
+          "The norm module is used to normalize raw count data to allow for meaningful "
+          "comparison among samples.\n"
+        )
         ( "peptide_scores,p", po::value<std::string>( &opts_normalize->peptide_scores_fname ),
-          "Name of file containing peptide scores. This file should be tab-delimited "
-          "with the first column being peptide names, and every next column should be \n"
-          "the peptide's score within a given sample (the first item in the column). "
-          "This is exactly the format output by the deconv module.\n"
+          "Name of tab-delimited matrix file containing peptide scores. "
+          "This file should be in the same format as the output from the deconv module.\n"
         )
         ( "col_sum,c", po::bool_switch( &opts_normalize->col_sum_norm )->default_value( true ),
-          "Normalize the counts using a column-sum method. Output is the number of reads a peptide "
-          "per reads million mapped. Note that if size_factors is also included, the value of this flag "
-          "will be ignored and the size_factors method is used. By default, col_sum normalization is used.\n"
+          "Normalize the raw counts using a column-sum method. Output per peptide is the number of counts "
+          "per million total counts for the sample (i.e., summed across all peptides). Note that if size_factors "
+          "is also included, the value of this flag will be ignored and the size_factors method is used. "
+          "By default, col_sum normalization is used.\n"
         )
         ( "size_factors,s", po::bool_switch( &opts_normalize->size_factors_norm )->default_value( false ),
-          "Normalize the counts using the size factors method (Anders and Huber 2010). Note that if this "
+          "Normalize the raw counts using the size factors method (Anders and Huber 2010). Note that if this "
           "flag is included, the value of col_sum will be ignored.\n"
         )
         ( "precision", po::value( &opts_normalize->precision_digits )
@@ -50,9 +52,9 @@ bool options_parser_normalize::parse( int argc, char ***argv, options *opts )
         )
         ( "output,o", po::value<std::string>( &opts_normalize->output_fname )
           ->default_value( "norm_output.tsv" ),
-          "The name of the file to write output to. The output is formatted in the same "
-          "way the input 'peptide_scores' are formatted, i.e. a score matrix with samples "
-          "on the columns and scores for a certain peptide on the rows. The score for each peptide "
+          "Name for the output file. The output is formatted in the same "
+          "way the input file provided with 'peptide_scores' (i.e., a score matrix with samples "
+          "on the columns and scores for a certain peptide on the rows). The score for each peptide "
           "in the output has been normalized in the manner specified.\n"
         );
 
