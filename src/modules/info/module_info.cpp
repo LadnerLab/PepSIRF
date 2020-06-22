@@ -58,7 +58,7 @@ void module_info::run( options *opts )
 
                     peptide_names << sample_n.first
                                   << "\t"
-                                  << sum
+                                  << std::fixed << std::setprecision( 2 ) << sum
                                   << "\n";
                 }
 
