@@ -3,9 +3,9 @@ project(PepSIRF LANGUAGES CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(Boost_USE_STATIC_LIBS ON) 
-set(Boost_USE_MULTITHREADED ON)  
-set(Boost_USE_STATIC_RUNTIME OFF) 
+set(Boost_USE_STATIC_LIBS ON)
+set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_STATIC_RUNTIME OFF)
 set(CMAKE_CXX_STANDARD 11)
 
 find_package(OpenMP)
@@ -29,21 +29,21 @@ include_directories(lib)
 
 add_compile_options( "-Wall" "-std=c++11" "-Wextra" "-fvisibility=hidden"
                      "-fvisibility-inlines-hidden"
-                     "$<$<CONFIG:DEBUG>:-O0;-g>" 
+                     "$<$<CONFIG:DEBUG>:-O0;-g>"
 					 "$<$<CONFIG:RELEASE>:-O3>"
                    )
 
 
 set(PepSIRF_MODULES
     pepsirf_common
-    modules_demux modules_deconv 
-    modules_normalize modules_subjoin 
-	modules_zscore modules_bin 
+    modules_demux modules_deconv
+    modules_normalize modules_subjoin
+	modules_zscore modules_bin
 	modules_link
 	modules_s_enrich
 	modules_p_enrich
 	modules_info
-   )                
+   )
 
 list( APPEND PepSIRF_LINK_LIBS
   ${PepSIRF_MODULES}
@@ -78,9 +78,9 @@ include_directories(${Boost_INCLUDE_DIRS})
 add_executable(pepsirf src/main.cpp)
 
 # Library common to all modules
-add_library(pepsirf_common STATIC src/modules/parsers/options_parser.cpp src/modules/core/options.cpp 
-            src/modules/core/sequence.cpp 
-            src/modules/core/file_io.cpp 
+add_library(pepsirf_common STATIC src/modules/parsers/options_parser.cpp src/modules/core/options.cpp
+            src/modules/core/sequence.cpp
+            src/modules/core/file_io.cpp
 			src/modules/parsers/fastq_parser.cpp src/modules/parsers/fasta_parser.cpp
 			src/modules/core/module.cpp
 			src/modules/core/sequence_indexer.cpp
@@ -94,19 +94,19 @@ add_library(pepsirf_common STATIC src/modules/parsers/options_parser.cpp src/mod
 			src/modules/core/predicate.cpp
            )
 
-add_library(modules_demux STATIC src/modules/demux/options_demux.cpp src/modules/demux/options_parser_demux.cpp src/modules/parsers/options_parser.cpp 
-            src/modules/core/options.cpp 
-            src/modules/core/file_io.cpp 
+add_library(modules_demux STATIC src/modules/demux/options_demux.cpp src/modules/demux/options_parser_demux.cpp src/modules/parsers/options_parser.cpp
+            src/modules/core/options.cpp
+            src/modules/core/file_io.cpp
 			src/modules/core/module.cpp src/modules/demux/module_demux.cpp
 			src/modules/parsers/fasta_parser.cpp src/modules/parsers/fastq_parser.cpp
-            src/modules/core/sequence.cpp 
+            src/modules/core/sequence.cpp
 			src/modules/demux/samplelist_parser.cpp
 			src/modules/demux/translation_map.cpp
 			src/modules/core/sequence_indexer.cpp
 			src/modules/core/fastq_score.cpp
 		   )
 
-add_library( modules_deconv STATIC src/modules/deconv/options_deconv.cpp src/modules/deconv/options_parser_deconv.cpp 
+add_library( modules_deconv STATIC src/modules/deconv/options_deconv.cpp src/modules/deconv/options_parser_deconv.cpp
 				src/modules/core/module.cpp src/modules/deconv/module_deconv.cpp
 				src/modules/core/fs_tools.cpp
                 src/modules/deconv/scored_peptide.cpp
@@ -130,16 +130,16 @@ add_library( modules_zscore STATIC src/modules/zscore/module_zscore.cpp
 			 src/modules/zscore/options_parser_zscore.cpp
 			 src/modules/bin/peptide_bin.cpp
 		   )
-add_library( modules_bin STATIC src/modules/bin/module_bin.cpp 
+add_library( modules_bin STATIC src/modules/bin/module_bin.cpp
 			 src/modules/bin/options_bin.cpp
 			 src/modules/bin/options_parser_bin.cpp
 			 src/modules/bin/peptide_bin.cpp
 			 src/modules/bin/probe_rank.cpp
            )
-
 add_library( modules_link STATIC src/modules/link/module_link.cpp
 				src/modules/link/options_link.cpp
 				src/modules/link/options_parser_link.cpp
+				src/modules/link/metadata_map.cpp
 		   )
 add_library( modules_s_enrich STATIC src/modules/s_enrich/module_s_enrich.cpp
 				src/modules/s_enrich/options_s_enrich.cpp
@@ -167,7 +167,7 @@ if(BUILD_TESTS)
   include_directories(pepsirf_test lib)
   enable_testing()
   target_link_libraries(pepsirf_test PUBLIC ${PepSIRF_LINK_LIBS} )
-  add_test( NAME test COMMAND pepsirf_test ) 
+  add_test( NAME test COMMAND pepsirf_test )
 
 endif()
 
