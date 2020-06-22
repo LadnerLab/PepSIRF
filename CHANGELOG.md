@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- Deconv module now requires --linked file to be in format provided by link module output file.
+- Deconv Module now uses a single scoring strategy flag that takes the name of the strategy as an argument.
+- Updated help info provided by modules -h flag.
 - Fixed bug where bin module last bin size falls below minimum.
 - Changed link modules scoring strategy selection process to now use only one flag to which the strategy must be entered.
 - Added functionality for metadata file usage in link module over an ID index number.
