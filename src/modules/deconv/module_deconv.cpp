@@ -111,7 +111,7 @@ void module_deconv::choose_kmers( options_deconv *opts )
 
     // filter out the peptides that are not enriched
     auto it = std::remove_if( pep_species_vec.begin(), pep_species_vec.end(),
-                              [&]( std::pair<std::string,std::vector<std::pair<std::string,double>>>& i) -> bool 
+                              [&]( std::pair<std::string,std::vector<std::pair<std::string,double>>>& i) -> bool
                               { return enriched_species.find( std::get<0>( i ) )
                                       == enriched_species.end();
                               }
@@ -176,7 +176,7 @@ void module_deconv::choose_kmers( options_deconv *opts )
                       == evaluation_strategy::filter_strategy::COUNT_FILTER
                    )
                 {
-                    
+
                     // recreate species_scores
                     filter_counts<std::string,double>
                     ( species_peptide_counts, thresh );
@@ -485,17 +485,19 @@ module_deconv::parse_linked_file( std::string fname )
                                     if( match[ 1 ] != ""
                                         && match[ 2 ] == "" )
                                         {
-                                            id_ints.emplace_back(
-                                                                 std::make_pair(
-                                                                 ( match[ 1 ] ),
-                                                                 boost::lexical_cast<double>
-                                                                 ( 1 )
-                                                                                )
-                                                                );
+                                            throw std::runtime_error( "No score count found "
+                                            "for ID: " + item + ".\n"
+                                            "The format follows the link module output. "
+                                            "The link module outputs linkage maps with "
+                                            "\":score\" after each ID that is linked to "
+                                            "a given peptide. This score is utilized in "
+                                            "the summation scoring method, but "
+                                            "not utilized in the fractional or integer "
+                                            "scoring methods.\n" );
                                         }
                                     // matched 'id:count'
                                     else if( match[ 1 ] != ""
-                                             && match[ 2 ] != "" ) 
+                                             && match[ 2 ] != "" )
                                         {
                                             id_ints.emplace_back(
                                                                  std::make_pair(
@@ -624,7 +626,7 @@ double module_deconv::get_score( std::unordered_map<std::string,std::vector<std:
                         }
                 }
         }
-    
+
     return score;
 }
 
@@ -769,7 +771,7 @@ void module_deconv::write_outputs( std::string out_name,
                 {
                     for( auto tied_i : tied_items )
                         {
-                            to_stream_if( out_file, tied, 
+                            to_stream_if( out_file, tied,
                                           get_map_value( id_name_map,
                                                          tied_i.first.get_id(),
                                                          tied_i.first.get_id()
@@ -807,7 +809,7 @@ void module_deconv::write_outputs( std::string out_name,
 
             out_file << it->first.get_count() << "\t";
 
-            // score for both 
+            // score for both
             for( auto tied_i : tied_items )
                 {
                     to_stream_if( out_file, tied, tied_i.first.get_score(), "," );
@@ -943,7 +945,7 @@ module_deconv::parse_name_map( std::string fname,
 
                     std::string id   = ( split_line[ 0 ] );
                     std::string name = split_line[ 1 ];
-                    
+
                     name_map.insert( std::make_pair( id, name ) );
                 }
 
@@ -998,7 +1000,7 @@ module_deconv::handle_ties( std::vector<std::pair<std::string,double>>&
             // if the overlap between the two is high,
             // report them together. Otherwise, report the first
             // item. High is defined by the overlap_threshold
-            if( calculate_overlap(  
+            if( calculate_overlap(
                                    id_pep_map,
                                    pep_species_map_wcounts,
                                    tie_candidates[ 0 ].first,
@@ -1040,7 +1042,7 @@ module_deconv::get_tie_type( std::size_t to_convert )
         {
         case 0:
             throw std::runtime_error( "to_convert must be > 0" );
-            break; 
+            break;
         case 1:
             ret_val =  tie_data::tie_type::SINGLE_WAY_TIE;
             break;
@@ -1064,10 +1066,10 @@ module_deconv
                           )
 
 {
-                                          
+
     std::ofstream ofs( fname, std::ofstream::out );
     ofs << "Peptide\tAssigned Ids\tAll IDs\n";
-    
+
     for( auto curr = out_map.begin(); curr != out_map.end(); ++curr )
         {
             ofs << curr->first << "\t";
@@ -1083,7 +1085,7 @@ module_deconv
 
                     curr_str.append( x.first );
                     curr_str.append( ":" );
-                    curr_str.append( boost::lexical_cast<std::string>( x.second ) ); 
+                    curr_str.append( boost::lexical_cast<std::string>( x.second ) );
 
                     id_count_pairs.push_back( curr_str );
                 }
@@ -1100,7 +1102,7 @@ module_deconv
 
 void
 module_deconv
-::handle_kway_tie( 
+::handle_kway_tie(
                    std::vector<std::pair<std::string,double>>& tie_outputs,
                    std::unordered_map<std::string, std::vector<std::string>>& id_pep_map,
                    std::unordered_map<std::string,std::unordered_map<std::string,double>>&
@@ -1133,7 +1135,7 @@ module_deconv
                             );
 
     // index, index (inner), a_to_b, b_to_a
-    std::tuple<std::size_t, 
+    std::tuple<std::size_t,
                std::size_t,
                overlap_data<double>
                > max_match = std::make_tuple( 0, 0, overlap_data<double>{0,0} );
@@ -1186,7 +1188,7 @@ module_deconv
 
             tie_outputs.emplace_back( tie_candidates[ max_inner ] );
 
-            
+
             for( std::size_t index = 0;
                  index < pairwise_distances[ max_outer ].size();
                  ++index
@@ -1204,7 +1206,7 @@ module_deconv
         }
 }
 
-bool module_deconv              
+bool module_deconv
 ::use_ratio_score_tie_thresh( double threshold )
 {
     return !util::is_integer( threshold );
