@@ -37,8 +37,19 @@ void module_link::run( options *opts )
             >
         >
         peptide_sp_map;
-
-    create_prot_map( kmer_sp_map, proteins, l_opts->k, l_opts->id_index );
+    // When a metadata file is provided it is parsed for specific data and a kmer map is created, otherwise process uses ID index to create a kmer map
+    if( l_opts->metadata_fname.empty() )
+        {
+            create_prot_map( kmer_sp_map, proteins, l_opts->k, l_opts->id_index );
+        }
+    else
+        {
+            std::cout << "WARNING: Metadata file has been provided and will be implemented with taxonomic ID index ignored." << std::endl;
+            metadata_map mp = metadata_map();
+            std::unordered_map<std::string, std::string> meta_map;
+            mp.build_map( &meta_map, l_opts->metadata_fname );
+            create_prot_map( kmer_sp_map, proteins, l_opts->k, &meta_map );
+        }
 
     if( l_opts->penalize_kmers )
         {
@@ -94,12 +105,13 @@ void module_link::write_outputs( std::string fname,
         }
 }
 
+template<typename retrieve_id>
 void module_link::create_prot_map( std::unordered_map<std::string,
                                    std::unordered_set<scored_entity<std::string,double>>>&
                                    scores_map,
                                    std::vector<sequence>& sequences,
                                    std::size_t k,
-                                   std::size_t id_index
+                                   retrieve_id retriever
                                  )
 {
     std::size_t index   = 0;
@@ -112,8 +124,7 @@ void module_link::create_prot_map( std::unordered_map<std::string,
         {
             ++num_prot;
             std::vector<std::string> kmers;
-
-            spec_id = get_id( sequences[ index ].name, id_index );
+            spec_id = verify_id_type( sequences[ index ].name, retriever );
             kmer_tools::get_kmers( kmers, sequences[ index ].seq, k );
             std::unordered_map<std::string,std::size_t> val_map;
 
@@ -145,7 +156,7 @@ void module_link::create_prot_map( std::unordered_map<std::string,
     std::cout << num_prot << " proteins done in "
               << t_end - t_start
               << " seconds. (" << ( t_end - t_start ) / num_prot
-              << " seconds per peptide\n";
+              << " seconds per peptide)\n";
 }
 
 std::string module_link::get_id( std::string name, std::size_t id_index )
@@ -161,6 +172,15 @@ std::string module_link::get_id( std::string name, std::size_t id_index )
     return 0;
 }
 
+std::string module_link::verify_id_type( std::string sequence_data, std::size_t id_index )
+{
+    return get_id( sequence_data, id_index );
+}
+
+std::string module_link::verify_id_type( std::string sequence_data, std::unordered_map<std::string, std::string> *map )
+{
+    return metadata_map::get_id( sequence_data, map );
+}
 
 void module_link::create_pep_map( std::unordered_map<std::string,
                                   std::unordered_set<scored_entity<std::string,double>>>&

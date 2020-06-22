@@ -485,13 +485,15 @@ module_deconv::parse_linked_file( std::string fname )
                                     if( match[ 1 ] != ""
                                         && match[ 2 ] == "" )
                                         {
-                                            id_ints.emplace_back(
-                                                                 std::make_pair(
-                                                                 ( match[ 1 ] ),
-                                                                 boost::lexical_cast<double>
-                                                                 ( 1 )
-                                                                                )
-                                                                );
+                                            throw std::runtime_error( "No score count found "
+                                            "for ID: " + item + ".\n"
+                                            "The format follows the link module output. "
+                                            "The link module outputs linkage maps with "
+                                            "\":score\" after each ID that is linked to "
+                                            "a given peptide. This score is utilized in "
+                                            "the summation scoring method, but "
+                                            "not utilized in the fractional or integer "
+                                            "scoring methods.\n" );
                                         }
                                     // matched 'id:count'
                                     else if( match[ 1 ] != ""

@@ -11,7 +11,7 @@ class options_link : public options
     std::string get_arguments();
 
     /**
-     * Name of the fasta file containing 
+     * Name of the fasta file containing
      * protein sequences
      **/
     std::string prot_file_fname;
@@ -23,24 +23,26 @@ class options_link : public options
     std::string peptide_file_fname;
 
     /**
-     * The kmer size to use 
+     * The kmer size to use
      * when mapping peptides.
      **/
     std::size_t k;
 
     /**
-     * The name of the file to 
+     * The name of the file to
      * write the id name map to.
      **/
     std::string id_name_map_fname;
 
     std::string output_fname;
 
+    std::string metadata_fname;
+
     std::size_t id_index;
 
     /**
-     * Flag to penalize kmers based upon their frequency in the 
-     * designed peptides. 
+     * Flag to penalize kmers based upon their frequency in the
+     * designed peptides.
      **/
     bool penalize_kmers;
 

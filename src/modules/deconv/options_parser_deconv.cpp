@@ -20,40 +20,43 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
     po::options_description desc( "PepSIRF "
                                   + format_version_string()
                                   + ": Peptide-based Serological Immune Response "
-                                  "Framework species deconvolution module. This module has "
-                                  "two modes: batch and singular. In batch mode, the input "
-                                  "given to '--enriched' is a directory containing files of enriched "
-                                  "peptides for each sample. Output is a directory where the output "
-                                  "deconvolution reports will be written. In singular mode, both '--enriched' "
-                                  "and '--output' are treated as files. The chosen mode is determined by the type "
-                                  "of the argument to '--enriched'. If a directory is specified, batch mode will be used. "
-                                  "If a file is specified, singular mode will be used.\n",
+                                  "Framework species deconvolution module.\n",
                                   line_width
                                 );
     desc.add_options()
-        ( "help,h", "Produce help message\n" )
+        ( "help,h", "Produce help message\n"
+          "The deconv module converts a list of enriched peptides into a parsimony-based "
+          "list of likely taxa to which the assayed individual has likely been exposed. "
+          "This module has two modes: batch and singular. In batch mode, the input given "
+          "to '--enriched' is a directory containing files of enriched peptides for each "
+          "sample (e.g., as output by s_enrich or p_enrich). In this case, '--output' "
+          "is a directory where the output deconvolution reports will be written. In "
+          "singular mode, both '--enriched' and '--output' are treated as files, not directories. "
+          "The chosen mode is determined by the type of argument provided with '--enriched'. "
+          "If a directory is specified, batch mode will be used. If a file is specified, "
+          "singular mode will be used.\n"
+        )
         ( "linked,l", po::value<std::string>( &opts_deconv->linked_fname ),
-          "Name of file containing peptide to species linkages. \n"
+          "Name of linkage map to be used for deconvolution. It should be in the format output "
+          "by the 'link' module.\n"
         )
         ( "threshold,t", po::value<std::size_t>( &opts_deconv->threshold ),
-          "Threshold number of peptides for a species to be considered. \n"
+          "Minimum score that a taxon must obtain in order to be included in the deconvolution report.\n"
         )
         ( "outfile_suffix", po::value( &opts_deconv->outfile_suffix )
           ->default_value( "" ),
-          "Used for batch mode only. When specified, each file written to the output will "
-          "have this suffix.\n"
+          "Used for batch mode only. When specified, the name of each file written to the output "
+          " directory will have this suffix.\n"
         )
         ( "output,o", po::value<std::string>( &opts_deconv->output_fname )->default_value( "deconv_output.tsv" ),
-          "Name of the directory or file to write output to. Output will be in the form of "
-          "either one file or a directory containing files, each "
-          "a tab-delimited file with a header. Each entry will be of the form:\n"
-          "species_id\\tcount\n Note that in batch mode, the default output directory will be 'deconv_output'.\n"
+          "Name for the output directory or file. Output will be in the form of either one file "
+          "or a directory containing files. Each output file will be tab-delimited and will include "
+          "a header.\n"
         )
         ( "remove_file_types,r", po::bool_switch( &opts_deconv->remove_file_types )
           ->default_value( false ),
-          "Remove the existing file extensions from files before adding new suffixes. "
-          "For example, 'enriched_probes.txt' becomes 'enriched_probes'. A suffix can then be used "
-          "that adds a new file extension, e.g. 'enriched_probes.map'. Not used in single mode."
+          "Use this flag to exclude input file ('--enrich') extensions from the names of output files. "
+          "Not used in singular mode.\n"
         )
         ( "scores_per_round,s", po::value<std::string>( &opts_deconv->orig_scores_dname )->default_value( "" )
           ->notifier( [&]( const std::string& val )
@@ -78,17 +81,16 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
                                       }
                               }
                       }),
-          "Name of directory to write counts/scores to after every round. If included, \n"
-          "the counts and scores for all remaining species will be written after every round. \n"
-          "Filenames will be written in the format '$dir/round_x', where x is the round number. \n"
-          "The original scores will be written to '$dir/round_0'. A new file will be written to the \n"
-          "directory after each subsequent round. If this flag is included \n"
-          "and the specified directory exists, the program will exit with an error. "
-          "\n"
+          "Optional. Name of directory to write counts/scores to after every round. If included, "
+          "the counts and scores for all remaining taxa will be recorded after every round. "
+          "Filenames will be written in the format '$dir/round_x', where x is the round number. "
+          "The original scores will be written to '$dir/round_0'. A new file will be written to the "
+          "directory after each subsequent round. If this flag is included "
+          "and the specified directory exists, the program will exit with an error.\n"
         )
         ( "single_threaded", po::bool_switch( &opts_deconv->single_threaded )->default_value( false ),
           "By default this module uses two threads. Include this option with no arguments if you only want "
-          " one thread to be used. \n"
+          "only one thread to be used. \n"
         )
         ( "scoring_strategy", po::value<std::string>( &opts_deconv->scoring_strategy )->default_value( "summation" ),
           "Scoring strategies \"summation\", \"integer\", or \"fraction\" can be specified. "
@@ -109,33 +111,29 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "In this method of scoring peptides, a peptide with fewer linked IDs is worth more points.\n"
         )
         ( "enriched,e", po::value<std::string>( &opts_deconv->enriched_fname ),
-          "Name of a directory containing files, or a single file containing the "
-          "names of enriched peptides, one per line. "
-          "Each file in this file should have a corresponding entry in the "
-          "file provided by the --linked option. \n"
+          "Name of a directory containing files, or a single file containing the names of enriched peptides, "
+          "one per line. Each peptide contained in this file (or files) should have a corresponding entry in the "
+          "'--linked' input file.\n"
         )
         ( "score_filtering", po::bool_switch( &opts_deconv->score_filtering )->default_value( false ),
-          "Include this flag if you want filtering to be done by the score of each species. Note that score is "
-          "determined by the different flags specifying how a species should be scored. This means "
-          "that any species whose score falls below --threshold "
-          "will be removed from consideration. Note that for integer scoring, both score filtering and count filtering "
-          "are the same. If this flag is not included, then any species whose count falls below --threshold will "
-          "be removed from consideration. Score filtering is best suited for the summation scoring algorithm. \n"
+          "Include this option if you want filtering to be done by the score of each taxon, rather than the count of "
+          "linked peptides. If used, any taxon with a score below '--threshold' will be removed from consideration, "
+          "even if it is the highest scoring taxon. Note that for integer scoring, both score filtering and count "
+          "filtering (default) are the same. If this flag is not included, then any species whose count falls below "
+          "'--threshold' will be removed from consideration. Score filtering is best suited for the summation scoring "
+          "method.\n"
         )
         ( "peptide_assignment_map,p", po::value<std::string>( &opts_deconv->species_peptides_out ),
-          "If specified, a map detailing which peptides were assigned to which species will be "
-          "written. If deconv is used in batch mode, this will be used as a directory name for "
-          "the peptide maps to be stored. This map will be a tab-delimited file with the "
-          " first column peptide names, "
-          "the second column is a comma-separated list of species the peptide was assigned to. "
-          "The third column will be a list of the species the peptide originally shared "
-          "a kmer with. \n"
-          "Note that the second column will only contain multiple values in the event of "
-          "a tie. \n"
+          "Optional output. If specified, a map detailing which peptides were assigned to which taxa will be "
+          "written. If this module is run in batch mode, this will be used as a directory name for the peptide maps to "
+          "be stored. Maps will be tab-delimited files with the first column being peptide names; the second column "
+          "containing a comma-separated list of taxa to which the peptide was assigned; the third column will be a list "
+          "of the taxa with which the peptide originally shared a kmer. "
+          "Note that the second column will only contain multiple values in the event of a tie.\n"
         )
         ( "mapfile_suffix", po::value( &opts_deconv->map_suffix )
           ->default_value( "" ),
-          "In batch mode, add a suffix to the filenames written to the peptide_assignment_map directory.\n"
+          "Used for batch mode only. When specified, the name of each '--peptide_assignment_map' will have this suffix.\n"
         )
         ( "score_tie_threshold", po::value<double>( &opts_deconv->score_tie_threshold )->default_value( 0.00 )
           ->notifier( [&]( const double val ) {
@@ -148,23 +146,22 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
                       } ),
           "Threshold for two species to be evaluated as a tie. Note that this value can be either an integer "
           "or a ratio that is in (0,1). When provided as an integer this value dictates the difference in score "
-          "that is allowed for two species to be considered. For example, if this flag is provided with the value "
-          "0, then two or more species must have the exact same score to be tied. If this flag is provided with "
-          "the value 4, then the scores of species must be no greater than 4 to be considered tied. So if species 1"
-          "has a score of 5, and species has a score anywhere between the integer values in [1,9], then these species "
-          "will be considered tied, and their tie will be evaluated as dicated by the tie evaluation strategy provided."
-          "If the argument provided to this flag is in (0, 1), then a species must have at least this percentage of "
-          "the species with the maximum score to be tied. So if species 1 has the highest score with a "
-          "score of 9, and species 2 has a score of 5, "
-          "then this flag must be provided with value >= 4/5 = 0.8 for the species to be considered tied. "
-          "Note that any values provided to this flag that are in the set { x: x >= 1 } - Z, where Z is the set of "
-          "integers, will result in an error. So 4.45 is not a valid value, but both 4 and 0.45 are. "
-          " \n"
+          "that is allowed for two taxa to be considered as potentially tied. For example, if this flag is provided with the value "
+          "0, then two or more taxa must have the exact same score to be tied. If this flag is provided with "
+          "the value 4, then the difference between the scores of two taxa must be no greater than 4 to be considered tied. "
+          "For example, if taxon 1 has a score of 5, and taxon 2 has a score anywhere between the integer values in [1,9], "
+          "then these species will be considered tied, and their tie will be evaluated as dictated by the specified "
+          "'--score_overlap_threshold'. If the argument provided to this flag is in (0, 1), then the score for a taxon "
+          "must be at least this proportion of the score for the highest scoring taxon, to trigger a tie. So if species "
+          "1 has the highest score with a score of 9, and species 2 has a score of 5, then this flag must be provided with "
+          "value >= 4/5 = 0.8 for the species 1 and 2 to be considered tied. Note that any values provided to this flag that are in "
+          "the set { x: x >= 1 } - Z, where Z is the set of integers, will result in an error. So 4.45 is not a valid value, "
+          "but both 4 and 0.45 are.\n"
         )
         ( "id_name_map", po::value<std::string>( &opts_deconv->id_name_map_fname )->default_value( "" ),
-          "File containing mappings from taxonomic id to name. This file should be formatted like the "
+          "Optional file containing mappings from taxonomic id to taxon name. This file should be formatted like the "
           "file 'rankedlineage.dmp' from NCBI. It is recommended to either use this file or a subset of this file "
-          "that at least contains the species ids of the designed peptides. If included, the output will contain "
+          "that contains all of the taxon ids linked to peptides of interest. If included, the output will contain "
           "a column denoting the name of the species as well as the id. \n"
         )
         ( "score_overlap_threshold", po::value<double>( &opts_deconv->score_overlap_threshold )->default_value( 1.0 )
@@ -178,17 +175,14 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
                       }
 
               }),
-          "Once two species have been found to be within 'score_tie_threshold' number of peptides "
-          "of one another, they are then evaluated as a tie. For a two-way tie where integer tie evaluation is used, "
-          "if the species share "
-          "more than score_overlap_threshold number of peptides, then they are both reported. An example value "
-          "is 10. For ratio tie evaluation, which is used when this argument is provided with a value in the "
-          "interval (0,1), two species must share at leat this amount of peptides with each other. "
-          "For example, suppose species 1 shares 0.5 of its peptides with species 2, but species 2 only shares 0.1 "
-          "of its peptides with species 1. To use integer tie evaluation, where species must share an integer number of "
+          "Once two species have been determined to be tied, according to '--score_tie_threshold', they are "
+          "then evaluated as a tie. To use integer tie evaluation, where species must share an integer number of "
           "peptides, not a ratio of their total peptides, provide this argument with a value in the interval [1, inf). "
-          "These two will only be reported together if score_overlap_threshold "
-          "<= 0.1.  \n"
+          "For ratio tie evaluation, which is used when this argument is provided with a value in the "
+          "interval (0,1), two taxon must reciprocally share at least the specified proportion of peptides to be "
+          "reported together. For example, suppose species 1 shares half (0.5) of its peptides with species 2, but species "
+          "2 only shares a tenth (0.1) of its peptides with species 1. These two will only be reported together if "
+          "score_overlap_threshold' <= 0.1.\n"
         )
         ;
 

@@ -28,6 +28,8 @@
 #include "module_demux.h"
 #include "module_deconv.h"
 #include "module_subjoin.h"
+#include "module_link.h"
+#include "metadata_map.h"
 #include "samplelist_parser.h"
 #include "sample.h"
 #include "fastq_score.h"
@@ -2387,3 +2389,18 @@ TEST_CASE( "Subjoin name list filter is optional", "[module_subjoin]" )
     mod.run( &opts );
 }
 
+TEST_CASE( "Metadata file can be given in place of taxonomic id index", "[module_link]" )
+{
+    std::ifstream metadata_file( "../test/test_meta_fraction.metadata", std::ios_base::in );
+    module_link mod = module_link();
+    std::unordered_map<std::string, std::string> meta_map(
+                                                { { ">ID=A0A2Z4GZU5_HHV1 AC=A0A2Z4GZU5 OXX=10298,10298,10294,10292", "10294" },
+                                                { ">ID=A0A2L2Q9I3_9BETA AC=A0A2L2Q9I3 OXX=32603,32603,40272,10292", "40272" },
+                                                { ">ID=E9RHT2_HPV67 AC=E9RHT2 OXX=37120,337041,333750,151340", "333750" } }
+        );
+    int id_index = 2;
+    std::string id_index_spec_id = mod.get_id( ">ID=A0A2Z4GZU5_HHV1 AC=A0A2Z4GZU5 OXX=10298,10298,10294,10292", id_index );
+    std::string metadata_spec_id = metadata_map::get_id( ">ID=A0A2Z4GZU5_HHV1 AC=A0A2Z4GZU5 OXX=10298,10298,10294,10292", &meta_map );
+    REQUIRE( id_index_spec_id.compare( metadata_spec_id ) == 0 );
+
+}

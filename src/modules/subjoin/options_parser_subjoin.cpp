@@ -21,6 +21,9 @@ bool options_parser_subjoin::parse( int argc, char ***argv, options *opts )
     desc.add_options()
         (
          "help,h", "Produce help message\n"
+         "The subjoin module is used to manipulate matrix files. This module "
+         "can create a subset of an existing matrix, can combine multiple matrices "
+         "together or perform a combination of these two functions.\n"
         )
         ( "filter_scores,f", po::value( &matrix_name_list_pairs )->required()
           ->notifier( [&]( const std::vector<std::string>& name_pairs )
@@ -74,12 +77,12 @@ bool options_parser_subjoin::parse( int argc, char ***argv, options *opts )
                                           po::validation_error::invalid_option_value,
                                           "filter_scores",
                                           provided_value
-                                          );                                         
+                                          );
 
                                       }
 
                               }
-                          
+
                       }
                     ),
           "Either comma-separated filenames (For example: score_matrix.tsv,sample_names.txt ), "
@@ -90,15 +93,18 @@ bool options_parser_subjoin::parse( int argc, char ***argv, options *opts )
           "to keep in the score matrix. The score matrix should be of the format output by the "
           "demux module, with sample names on the columns and peptide names on the rows. "
           "The namelist must have one name per line, but can optionally have 2. If "
-          "2 tab-delimited names are included on one line, the name in the second "
-          "column will be output.. "
-          "To use multiple name lists with multiple "
-          "score matrices, include this argument multiple times.\n"
+          "2 tab-delimited names are included on one line, the name in the first column "
+          "should match the name in the input matrix file, while the name in the second "
+          "column will be output. Therefore, this allows for the renaming of samples in "
+          "the output. To use multiple name lists with multiple "
+          "score matrices, include this argument multiple times. "
+          "Optionally, a name list can be omitted if all samples from the input "
+          "matrix should be included in the output.\n"
         )
         ( "filter_peptide_names", po::bool_switch( &opts_subjoin->use_sample_names  )->default_value( false )
           ->notifier( [&]( bool val ){ opts_subjoin->use_sample_names = !val; } ),
-          "Flag to include if the files input to the filter_scores options should be treated as "
-          "peptide names instead of sample names. With the inclusion of this flag, the input files will "
+          "Flag to include if the name lists input to the filter_scores options should be treated as "
+          "peptide (i.e. row) names instead of sample (i.e. column) names. With the inclusion of this flag, the input files will "
           "be filtered on peptide names (rows) instead of sample names (column).\n"
         )
         ( "duplicate_evaluation,d", po::value<std::string>()->default_value( "include" )
@@ -115,22 +121,22 @@ bool options_parser_subjoin::parse( int argc, char ***argv, options *opts )
                                                              po::validation_error::invalid_option_value,
                                                              "duplicate_evaluation",
                                                              provided_value
-                                                             );                                         
+                                                             );
                               }
                       }
                     ),
           "Defines what should be done when sample or peptide names are not unique across files being "
-          "joined. Currently, three different duplicate evaluation strategies are used: \n"
-          " - combine: Combine (with addition) the values associated with peptide/sample names. \n\n"
-          " - include: Include each duplicate, adding a suffix to the duplicate samplename detailing the "
-          "file the sample came from. \n\n"
+          "joined. Currently, three different duplicate evaluation strategies are available: \n"
+          " - combine: Combine (with addition) the values associated with identical sample/peptide names "
+          "from different files.\n\n"
+          " - include: Include each duplicate, adding a suffix to the duplicate name detailing the "
+          "file from which the sample came.\n\n"
           " - ignore: Ignore the possibility of duplicates. Behavior is undefined when duplicates are "
-          " encountered in this mode.\n\n"
-          " Possible options include combine, include, and ignore.\n"
+          " encountered in this mode Therefore, this mode is not recommended.\n\n"
         )
         (
          "output,o", po::value<std::string>( &opts_subjoin->out_matrix_fname )->default_value( "subjoin_output.tsv" ),
-         "The name of the file to write output scores to. The output will be in the form of the input, but with only the "
+         "Name for the output score matrix file. The output will be in the form of the input, but with only the "
          "specified values (samplenames or peptides) found in the namelists. \n"
         )
         ;
@@ -138,8 +144,8 @@ bool options_parser_subjoin::parse( int argc, char ***argv, options *opts )
 
     po::store( po::command_line_parser( argc, *argv ).options( desc ).run(), vm);
 
-    if( vm.count( "help" ) 
-	    || argc == 2 
+    if( vm.count( "help" )
+	    || argc == 2
 	  )
         {
             std::cout << desc << std::endl;

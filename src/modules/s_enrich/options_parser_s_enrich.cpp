@@ -11,7 +11,7 @@ bool options_parser_s_enrich
         {
             return ( !p | q ) && ( !q | p );
         };
-    
+
     options_s_enrich *opts_s_enrich = (options_s_enrich*) opts;
     namespace po = boost::program_options;
     po::variables_map vm;
@@ -24,36 +24,39 @@ bool options_parser_s_enrich
                                 );
     desc.add_options()
         ( "help,h", "Produce help message and exit.\n"
-          "This module determines which probes in a sample are "
-          "enriched, as determined by various numerical thresholds. "
-          "Note that a probe must meet each specified numeric threshold in order "
-          "to be considered enriched.\n"
+          "The s_enrich module determines which peptides are enriched in each sample, "
+          "as determined by user-specified thresholds. "
+          "Note that a peptide must meet each specified threshold (e.g., zscore, "
+          "norm count and raw count) in order to be considered enriched. This module "
+          "will batch process all samples contained within a matrix and will generate "
+          "one output file per sample.\n"
         )
         ( "zscores,z", po::value( &opts_s_enrich->in_zscore_fname )
           ->required(),
-          "A matrix containing the zscores of each probe in every sample. "
-          "This should be in the format output by the zscore module, with "
-          "probes on the rows and sample names on the columns.\n"
+          "A tab-delimited matrix containing the zscores of each peptide in every "
+          "sample of interest. This should be in the format output by the zscore module, "
+          "with peptides on the rows and sample names on the columns.\n"
         )
         ( "min_zscore", po::value( &opts_s_enrich->min_zscore )
           ->required(),
-          "The minimum zscore a probe must have in order to be considered "
+          "The minimum zscore a peptide must have in order to be considered "
           "enriched.\n"
         )
         ( "norm_scores,n", po::value( &opts_s_enrich->in_norm_score_fname )
           ->required(),
-          "A matrix containing normalized scores for each probe in each sample.\n"
+          "A tab-delimited matrix containing normalized counts for each peptide in each "
+          "sample of interest.\n"
         )
         ( "min_norm_score", po::value( &opts_s_enrich->min_norm_score )
           ->required(),
-          "The minimum normalized score a probe must have in a sample "
+          "The minimum normalized count a peptide must have in a sample "
           "in order to be considered enriched.\n"
         )
         ( "raw_scores,r", po::value( &opts_s_enrich->in_raw_count_fname )
           ->default_value( "" ),
-          "Optionally, a raw count matrix can be included. This matrix must "
-          "contain the raw counts of each probe. If included, 'min_raw_count' "
-          "must also be specified.\n"
+          "Optionally, a tab-delimited matrix containing raw counts can be included. "
+          "This matrix must contain the raw counts for each peptide. If included, "
+          "'min_raw_score' must also be specified.\n"
         )
         ( "min_raw_score", po::value( &opts_s_enrich->min_raw_count )
           ->default_value( static_cast<double>( 0 ) )
@@ -73,30 +76,32 @@ bool options_parser_s_enrich
                               }
                       }
                     ),
-          "The minimum raw count a sample can have for all of its peptides in "
-          "order for any of the probes in that sample to be considered enriched. "
-          "The sum of each probe's raw count in a sample must be at least this "
-          "value in order for the sample to be considered.\n"
+          "The minimum total raw count a sample can have for all of its peptides in "
+          "order for any of the peptides in that sample to be considered enriched. "
+          "This provides a way to impose a minimum read count for a sample to be "
+          "evaluated.\n"
         )
         ( "outfile_suffix,s",
           po::value( &opts_s_enrich->out_suffix )
           ->default_value( "" ),
-          "Suffix to add to the names of the samples "
-          "written to output. For example, '_enriched.txt' can be used. "
+          "Suffix to add to all output files. Together, the sample name and the suffix "
+          "will form the name of the output file for each sample. For example, with a suffix "
+          "of '_enriched.txt' and a sample name of 'sample1', the name of the output "
+          "file for this sample would be 'sample1_enriched.txt. "
           "By default, no suffix is used.\n"
-        ) 
+        )
         ( "output,o", po::value( &opts_s_enrich->out_dirname )
           ->default_value( "single" ),
-          "Name of the directory to write output files to. "
-          "Each sample with at least one enriched peptide will "
-          "receive a file in the output directory.\n"
+          "Directory name to which output files will be written. An output file will be "
+          "generated for each sample with at least one enriched peptide. "
+          "This directory will be created by the module.\n"
         )
         ;
 
     po::store( po::command_line_parser( argc, *argv ).options( desc ).run(), vm);
 
-    if( vm.count( "help" ) 
-        || argc == 2 
+    if( vm.count( "help" )
+        || argc == 2
         )
         {
             std::cout << desc << std::endl;
