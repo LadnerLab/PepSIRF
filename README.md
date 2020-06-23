@@ -1,15 +1,15 @@
-# PepSIRF: Peptide-based Serological Immune Response Framework  
+# PepSIRF: Peptide-based Serological Immune Response Framework
 
 <img src="./img/logo.png" alt="Your image title" width="1024"/>
 
 
-### Current Version: v1.2.2
+### Current Version: v1.3.0
 
 ### Dependencies
 - cmake version 3.9 or higher.
 - boost version 1.66 or higher.
 
-### Compiling/Building 
+### Compiling/Building
 ```
 mkdir build
 cd build
@@ -41,9 +41,9 @@ cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
 ```
 
 ### Usage
-PepSIRF is a module-based program, and each module has its own set of arguments. 
+PepSIRF is a module-based program, and each module has its own set of arguments.
 ```
-USAGE: pepsirf [ --help | module_name <module_args*> ] 
+USAGE: pepsirf [ --help | module_name <module_args*> ]
 --help, -h displays this message, while 'pepsirf module_name --help' will display the help for the module module_name.
 ```
 To see usage information for each module, check out [this page](doc/module_readme).

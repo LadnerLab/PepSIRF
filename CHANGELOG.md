@@ -6,6 +6,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2020-6-22
+- Deconv module now requires --linked file to be in format provided by link module output file.
+- Deconv Module now uses a single scoring strategy flag that takes the name of the strategy as an argument.
+- Updated help info provided by modules -h flag.
+- Fixed bug where bin module last bin size falls below minimum.
+- Changed link modules scoring strategy selection process to now use only one flag to which the strategy must be entered.
+- Added functionality for metadata file usage in link module over an ID index number.
+- Fixed bug where p_enrich -s arg referred to both the output suffix and the sample.
+- Altered the info module output for sum of column scores to fixed-point notation.
+- Fixed bug causing the max of the specified norm/score to be used in s_enrich
+- Added option to subjoin where exclusion of a name list outputs all columns of a given matrix file.
+- Added error checking and reporting to demux sample list parser and fasta parser.
+- Fixed bug that prevented the 'pepsirf_test' executable from building.
+
 ## [1.2.2] - 2020-05-01
 - (General) Added instructions for contributing to the PepSIRF software.
 
