@@ -259,7 +259,7 @@ form {
 }
 
 .navbar ul {
-  display: inline;
+  display: inline-block;
   list-style-type: none;
   padding: 0;
   overflow: hidden;
@@ -270,6 +270,7 @@ form {
   float: left;
   position: relative;
   margin: 0 auto;
+  width: 100%;
 }
 
 .navlinks a {
