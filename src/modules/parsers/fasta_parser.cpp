@@ -13,13 +13,17 @@ std::vector<sequence> fasta_parser::parse( std::string filename )
     std::string line;
     std::ifstream input_file( filename, std::ios_base::in );
 
+    if( !input_file.is_open() )
+        {
+            throw std::runtime_error( "File could not be opened. Verify fasta file exists." );
+        }
     while( std::getline( input_file, line ) )
         {
             boost::trim_right( line );
             // skip any empty lines
             if( line.length() > 0 )
                 {
-                    
+
                     if( line[ 0 ] == SEQ_START_TOKEN )
                         {
                             if( seq.name.compare( "" ) )
@@ -37,13 +41,11 @@ std::vector<sequence> fasta_parser::parse( std::string filename )
                             seq.seq.append( line );
                         }
                 }
-            
+
         }
 
-    // last sequence would otherwise not have been added 
+    // last sequence would otherwise not have been added
     seq_vector.push_back( seq );
 
     return seq_vector;
 }
-
-

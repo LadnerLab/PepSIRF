@@ -21,7 +21,7 @@ void module_s_enrich::run( options *opts )
     peptide_score_data_sample_major raw_scores;
 
     peptide_score_data_sample_major *zscores_ptr = &zscores;
-    peptide_score_data_sample_major *norm_scores_ptr = &zscores;
+    peptide_score_data_sample_major *norm_scores_ptr = &norm_scores;
     peptide_score_data_sample_major *raw_scores_ptr = nullptr;
 
     peptide_scoring::parse_peptide_scores( zscores, e_opts->in_zscore_fname );
