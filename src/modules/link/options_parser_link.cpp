@@ -40,15 +40,11 @@ bool options_parser_link::parse( int argc, char ***argv, options *opts )
           "Name of fasta file containing aa peptides of interest. These will generally "
           "be peptides that are contained in a particular assay.\n"
         )
-        ( "meta", "Optional method for providing taxonomic information for each protein "
+        ( "meta", po::value<std::string>( &opts_link->metadata_fname ),
+          "Optional method for providing taxonomic information for each protein "
           "contained in \"--protein_file\". Three comma-separated strings should be provided: "
           "1) name of tab-delimited metadata file, 2) header for column containing protein "
           "sequence name and 3) header for column containing ID to be used in creating the linkage map.\n"
-        )
-        ( "meta", po::value<std::string>( &opts_link->metadata_fname ),
-          "Name of metadata file with \".metadata\" extension, protein sequence name and species identification name. "
-          "The three entries should be comma delimited. The protein sequence and species identification name should be "
-          "consistent with their metadata file header column names."
         )
         ( "tax_id_index,t", po::value<std::size_t>( &opts_link->id_index )->default_value( 1 )
           ->notifier( [&]( const std::size_t val ) {

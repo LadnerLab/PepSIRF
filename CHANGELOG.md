@@ -6,7 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.3.0] - 2020-6-22
+## [1.3.1] - 2020-07-09
+- Fixed bug causing sample names to be mismatched for s_enrich module output files.
+- ZLib disabled for Mac OS temporarily to avoid compilation bug.
+
+## [1.3.0] - 2020-06-22
 - Deconv module now requires --linked file to be in format provided by link module output file.
 - Deconv Module now uses a single scoring strategy flag that takes the name of the strategy as an argument.
 - Updated help info provided by modules -h flag.
