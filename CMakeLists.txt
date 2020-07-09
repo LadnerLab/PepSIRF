@@ -10,6 +10,10 @@ set(CMAKE_CXX_STANDARD 11)
 
 find_package(OpenMP)
 find_package(ZLIB)
+if(APPLE AND ZLIB_FOUND)
+  set(ZLIB_FOUND 0)
+  message( "WARNING: ZLIB has been disabled due to Mac related compilation bug." )
+endif()
 
 find_package(Boost REQUIRED COMPONENTS program_options regex filesystem iostreams)
 
