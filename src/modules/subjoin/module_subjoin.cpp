@@ -73,18 +73,6 @@ void module_subjoin::run( options *opts )
             peptide_scoring::parse_peptide_scores( my_data,
                                                 matrix_name_list
                                                 );
-            if( score_name_pair.second.empty() )
-                {
-                    std::cout << "WARNING: No name list has been given. All scores will be output." << std::endl;
-                    // add all sample names to score_name_pair.second
-                    for( const auto& s_name : my_data.scores.get_col_labels() )
-                    {
-                        score_name_pair.second.append( s_name.first + "\n" );
-                    }
-                }
-                std::ifstream names_list( score_name_pair.second,
-                                        std::ios_base::in
-                                        );
                 if( use_peptide_names )
                     {
                         my_data.scores = my_data.scores.transpose();
@@ -92,9 +80,22 @@ void module_subjoin::run( options *opts )
 
                 // parse the peptide scores
                 std::vector<std::string> peptide_name_list;
-                auto replacement_names =
-                parse_namelist( peptide_name_list, names_list );
-
+                name_replacement_list replacement_names;
+                if( score_name_pair.second.empty() )
+                    {
+                        std::string header_line;
+                        std::ifstream matrix_names( matrix_name_list,
+                                                     std::ios_base::in );
+                        std::getline( matrix_names, header_line );
+                        boost::split( peptide_name_list, header_line, boost::is_any_of( "\t" ) );
+                    }
+                else
+                    {
+                        std::ifstream names_list( score_name_pair.second,
+                                                std::ios_base::in
+                                                );
+                        replacement_names = parse_namelist( peptide_name_list, names_list );
+                    }
                 auto replace_begin = use_peptide_names ? my_data.pep_names.begin()
                                       : my_data.sample_names.begin();
 
