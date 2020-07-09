@@ -43,7 +43,7 @@ void module_s_enrich::run( options *opts )
     if( dir_exists )
         {
             std::cout << "WARNING: the directory '" << e_opts->out_dirname
-                      << "' exists, any files with " 
+                      << "' exists, any files with "
                       << "colliding filenames will be overwritten!\n";
         }
 
@@ -142,7 +142,7 @@ void module_s_enrich::run( options *opts )
                     if( !enriched_probes.empty() )
                         {
                             std::string outf_name = e_opts->out_dirname + '/'
-                                + zscores.sample_names[ sample_idx ]
+                                + sample_id
                                 + e_opts->out_suffix;
 
                             std::ofstream out_file{ outf_name, std::ios_base::out };
@@ -153,7 +153,7 @@ void module_s_enrich::run( options *opts )
                         }
                 }
         }
-    
+
     timer.stop();
     std::cout << "Took " << timer.get_elapsed() << " seconds.\n";
 }

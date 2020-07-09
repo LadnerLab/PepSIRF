@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- Fixed bug causing sample names to be mismatched for s_enrich module output files.
 
 ## [1.3.0] - 2020-6-22
 - Deconv module now requires --linked file to be in format provided by link module output file.
