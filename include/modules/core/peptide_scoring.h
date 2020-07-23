@@ -17,24 +17,6 @@ typedef struct peptide_score_data peptide_score_data_sample_major;
  **/
 typedef struct peptide_score_data peptide_score_data_peptide_major;
 
-namespace peptide_scoring
-{
-    /**
-     * A 'label_mode' that specifies whether labels should be 
-     * used when parsing values from the 'peptide_score_data' file. 
-     * When labels are enabled, memory use is increased by the 
-     * labeled matrix that is created. When disabled, 
-     * memory use is decreased. 
-     **/
-    enum class label_mode
-    {
-        LABELS_DISABLED,
-        LABELS_ENABLED     
-    };
-
-};
-
-
 /**
  * A struct to store peptide score data.
  * This struct is designed to represent 
@@ -49,8 +31,6 @@ struct peptide_score_data
      * return the score of peptide x in sample y.
      **/
     labeled_matrix<double,std::string> scores;
-
-    peptide_scoring::label_mode label_mode;
 
     /**
      * The names of the peptides, in order in which they were
@@ -87,19 +67,13 @@ namespace peptide_scoring
      * @param dest The destination for scores. 
      * @param ifname The name of the input file to parse. This file should be 
      *        in the format output by the 'demux' module. 
-     * @param use_labels If labels should be added to the 
-     *        score matrix generated from the input file, this value 
-     *        should be label_mode::LABELS_ENABLED. 
-     *        Otherwise, label_mode::LABELS_DISABLED should be used,
-     *        as the use of labels increases the memory usage.
      * @note to reduce resource usage and improve efficiency of 
      *       iteration items are stored in dest in sample-major order,
      *       so accessing dest.scores[ x ][ y ] returns the score for 
      *       the y'th peptide in sample x.
      **/
     void parse_peptide_scores( peptide_score_data_sample_major& dest,
-                               std::string ifname,
-                               label_mode use_labels = label_mode::LABELS_DISABLED
+                               std::string ifname
                              );
 
     /**
