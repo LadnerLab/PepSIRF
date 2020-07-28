@@ -56,6 +56,9 @@ bool options_parser_zscore::parse( int argc, char ***argv, options *opts )
           "when calculating the mean and standard deviation. This value must be "
           "in the range [0.00,100.0].\n"
         )
+        ("hdi,d", po::value( &opts_zscore->hdi_percent )->default_value( 0.0 ),
+          "Highest posterior density percentile for calculating each bins highest density interval.\n"
+        )
         ( "output,o", po::value( &opts_zscore->out_fname )->default_value( "zscore_output.tsv" ),
           "Name for the output Z scores file. This file will be a tab-delimited matrix file with "
           "the same dimensions as the input score file. Each peptide will be written with its "

@@ -15,6 +15,7 @@ class options_zscore : public options
     std::string out_fname;
     std::string nan_report_fname;
 
+    double hdi_percent;
     double trim_percent;
 };
 
