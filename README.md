@@ -2,6 +2,7 @@
 
 <img src="./img/logo.png" alt="Your image title" width="1024"/>
 
+Visit our GitHub Pages website: [https://ladnerlab.github.io/PepSIRF/](https://ladnerlab.github.io/PepSIRF/)
 
 ### Current Version: v1.3.1
 
@@ -46,7 +47,6 @@ PepSIRF is a module-based program, and each module has its own set of arguments.
 USAGE: pepsirf [ --help | module_name <module_args*> ]
 --help, -h displays this message, while 'pepsirf module_name --help' will display the help for the module module_name.
 ```
-To see usage information for each module, check out [this page](doc/module_readme).
 
 ### Generating Code Documentation
 To create documentation for the code run the following:
