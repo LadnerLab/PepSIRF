@@ -1,5 +1,5 @@
 ---
 layout: default
-title: PepSIRF Examples
+title: Examples
 permalink: /examples/
 ---

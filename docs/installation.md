@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Installation Instructions
+title: Installation
 permalink: /installation/
 ---
 ### Dependencies
