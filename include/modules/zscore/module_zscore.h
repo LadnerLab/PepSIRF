@@ -69,7 +69,7 @@ class module_zscore : public module
                                         }
                                 }
                             new_begin = current_row_counts.begin() + count;
-                            new_end = current_row_counts.end() - ( count + num_interval );
+                            new_end = current_row_counts.begin() + count + num_interval;
                         }
                     else
                         {

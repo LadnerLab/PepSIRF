@@ -56,7 +56,21 @@ bool options_parser_zscore::parse( int argc, char ***argv, options *opts )
           "when calculating the mean and standard deviation. This value must be "
           "in the range [0.00,100.0].\n"
         )
-        ("hdi,d", po::value( &opts_zscore->hdi_percent )->default_value( 0.0 ),
+        ("hdi,d", po::value( &opts_zscore->hdi_percent )->default_value( 0.0 )
+          ->notifier( []( const double& val )
+                      {
+                          if( !( val >= 0.0 && val <= 100.00 ) )
+                              {
+
+                                  throw po::validation_error(
+                                    po::validation_error::invalid_option_value,
+                                    "filter_scores",
+                                    std::to_string( val )
+                                                             );
+                              }
+
+                      }
+                      ),
           "Highest posterior density percentile for calculating each bins highest density interval.\n"
         )
         ( "output,o", po::value( &opts_zscore->out_fname )->default_value( "zscore_output.tsv" ),
