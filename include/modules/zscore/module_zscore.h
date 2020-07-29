@@ -52,16 +52,16 @@ class module_zscore : public module
                     // separate to new function for highest density interval support
                     std::vector<double>::iterator new_begin;
                     std::vector<double>::iterator new_end;
-                    if( z_opts->hdi_percent != 0.0 )
+                    if( z_opts->hpd_percent != 0.0 )
                         {
-                            std::size_t num_interval = std::round( z_opts->hdi_percent * bin.size() );
+                            std::size_t num_interval = std::round( z_opts->hpd_percent * bin.size() );
                             std::size_t count = 0;
-                            std::size_t ref = current_row_counts.at( count + num_interval ) - current_row_counts.at( count );
+                            double ref = current_row_counts.at( count + num_interval - 1 ) - current_row_counts.at( count );
+                            double curr_value;
                             std::size_t index;
-                            std::size_t curr_value;
-                            for( index = 0; index < bin.size() - num_interval; index++ )
+                            for( index = 0; index < bin.size() - num_interval - 1; index++ )
                                 {
-                                    curr_value = current_row_counts.at( index + num_interval ) - current_row_counts.at( index );
+                                    curr_value = current_row_counts.at( index + num_interval - 1 ) - current_row_counts.at( index );
                                     if( curr_value < ref )
                                         {
                                             ref = curr_value;
@@ -69,7 +69,7 @@ class module_zscore : public module
                                         }
                                 }
                             new_begin = current_row_counts.begin() + count;
-                            new_end = current_row_counts.begin() + count + num_interval;
+                            new_end = current_row_counts.begin() + count + num_interval - 1;
                         }
                     else
                         {

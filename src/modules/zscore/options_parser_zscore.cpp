@@ -56,7 +56,7 @@ bool options_parser_zscore::parse( int argc, char ***argv, options *opts )
           "when calculating the mean and standard deviation. This value must be "
           "in the range [0.00,100.0].\n"
         )
-        ("hdi,d", po::value( &opts_zscore->hdi_percent )->default_value( 0.0 )
+        ("hdi,d", po::value( &opts_zscore->hpd_percent )->default_value( 0.0 )
           ->notifier( []( const double& val )
                       {
                           if( !( val >= 0.0 && val <= 100.00 ) )

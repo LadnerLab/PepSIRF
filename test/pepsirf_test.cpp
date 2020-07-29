@@ -2465,7 +2465,7 @@ TEST_CASE( "Discard outliers of bin distribution by trimming for further calcula
         opts.in_fname = "../../../../Downloads/combo_norm_avgSBdiff.tsv";
         opts.in_bins_fname = "../../../../Downloads/NS30_IgG_combo_SB4_300r1.tsv";
         opts.out_fname = "../../../../Downloads/zscore_test_hdi_output.tsv";
-        opts.hdi_percent = 0.75;
+        opts.hpd_percent = 0.75;
         peptide_scoring::parse_peptide_scores( input, opts.in_fname );
         std::ifstream bins_file( opts.in_bins_fname, std::ios_base::in );
         bin_collection peptide_bins = peptide_bin_io::parse_bins( bins_file );
@@ -2493,7 +2493,7 @@ TEST_CASE( "Discard outliers of bin distribution by trimming for further calcula
         opts.in_fname = "../../../../Downloads/combo_norm_avgSBdiff.tsv";
         opts.in_bins_fname = "../../../../Downloads/NS30_IgG_combo_SB4_300r1.tsv";
         opts.out_fname = "../../../../Downloads/zscore_test_trim_output.tsv";
-        opts.hdi_percent = 0.0;
+        opts.hpd_percent = 0.0;
         opts.trim_percent = 0.90;
         peptide_scoring::parse_peptide_scores( input, opts.in_fname );
         std::ifstream bins_file( opts.in_bins_fname, std::ios_base::in );
