@@ -71,7 +71,11 @@ bool options_parser_zscore::parse( int argc, char ***argv, options *opts )
 
                       }
                       ),
-          "Highest posterior density percentile for calculating each bins highest density interval.\n"
+          "Alternative approach for discarding outliers prior to calculating mean and stdev. "
+          "If provided, this argument will override --trim, which trims evenly from both sides "
+          "of the distribution. For --hdi, the user should provide the high density interval to "
+          "be used for calculation of mean and stdev. For example, \"--hdi 0.95\" would instruct "
+          "the program to utilize the 95% highest density interval (from each bin) for these calculations.\n"
         )
         ( "output,o", po::value( &opts_zscore->out_fname )->default_value( "zscore_output.tsv" ),
           "Name for the output Z scores file. This file will be a tab-delimited matrix file with "
