@@ -58,7 +58,7 @@ def indivZ(cD, grps, hpd, temp):
         avg = np.mean(mid)
         std = stat.stdev(mid)
         
-        print(temp, i, avg, std, len(g), len(mid))
+#        print(temp, i, avg, std, len(g), len(mid))
         
         for p in g:
             zD[p]=(cD[p]-avg)/std
