@@ -1,0 +1,23 @@
+{% if not page.params.hide_title %}
+  <header class="post-header inner-sm">
+    <h1 class="post-title underline">{{ page.params.title }}</h1>
+  </header><!-- .post-header -->
+  {% endif %}
+
+  {% for section in page.params.sections %}
+    {% set include_dict = {'section': section, 'site': site} %}
+    {% set component = section.type | component_file %}
+    {% include component %}
+  {% endfor %}
+
+<div id="page" class="site style-{{ site.params.layout_style }} palette-{{ site.params.palette }}">
+    {% include "header.html" %}
+    <div id="content" class="site-content">
+      <div class="inner">
+        <main id="main" class="site-main">
+          {% block content %}{% endblock %}
+        </main><!-- .site-main -->
+        {% include "footer.html" %}
+      </div><!-- .inner -->
+    </div><!-- .site-content -->
+  </div><!-- .site -->
