@@ -21,9 +21,9 @@
 
 
 /**
- * Class for running the demultiplex module. Given a file of reads and a file containing 
- * a designed set of oligos, maps reads to a reference and counts how many times each reference 
- * sequence was read. 
+ * Class for running the demultiplex module. Given a file of reads and a file containing
+ * a designed set of oligos, maps reads to a reference and counts how many times each reference
+ * sequence was read.
  **/
 class module_demux : public module
 {
@@ -32,19 +32,19 @@ class module_demux : public module
     std::string name;
 
     /**
-     * Default constructor, sets the 'name' member of the 
+     * Default constructor, sets the 'name' member of the
      * class to 'demux'.
      **/
     module_demux();
 
     /**
-     * Runs the demux (demultiplex) module. 
-     * @param opts Pointer to an instance of the 
-     *        'options_demux' class whose values have been 
-     *        initialized. 
-     * @pre Opts is an instance of the 'options_demux' class 
-     *      that has been initialized. If opts is unitialized, 
-     *      undefined behavior will result. 
+     * Runs the demux (demultiplex) module.
+     * @param opts Pointer to an instance of the
+     *        'options_demux' class whose values have been
+     *        initialized.
+     * @pre Opts is an instance of the 'options_demux' class
+     *      that has been initialized. If opts is unitialized,
+     *      undefined behavior will result.
      **/
     void run( options *opts );
 
@@ -52,29 +52,30 @@ class module_demux : public module
     std::string get_name();
 
     /**
-     * Adds sequences to an unordered map, where the key is the string sequence, and the value is a vector of 
+     * Adds sequences to an unordered map, where the key is the string sequence, and the value is a vector of
      * size_t counts. Each count will be used to keep track of how many times each sequence is found per sample.
-     * @param input_map parallel_map which will have sequences as keys, and vectors of size_t as values. 
+     * @param input_map parallel_map which will have sequences as keys, and vectors of size_t as values.
      * @param seqs The sequences that will be added to the unordered_map
      * @param num_samples The number of samples that were processed in the sequencing run.
 
      **/
     void add_seqs_to_map( parallel_map<sequence, std::vector<std::size_t>*>& input_map, std::vector<sequence>& seqs, size_t num_samples );
 
+    void module_demux::write_diagnostic_output( std::string outfile_name, options_demux* d_opts, std::vector<sample>& samples );
 
     /**
      * Writes output to the outfile_name.
-     * Output is a tab-separated file, one line per sequence 
-     * where each tab-separated entry is the count for a certain 
-     * sample. 
+     * Output is a tab-separated file, one line per sequence
+     * where each tab-separated entry is the count for a certain
+     * sample.
      * @note A header is written to the file labelling each column.
      * @param outfile_name Name of file to write to.
-     * @param seq_scores A map that couples sequences with a vector of their scores, where 
-     *        the i'th entry in the seq_scores for sequence j is the number of times that 
+     * @param seq_scores A map that couples sequences with a vector of their scores, where
+     *        the i'th entry in the seq_scores for sequence j is the number of times that
      *        sequence j was found in sample i.
-     * @param samples vector of samples. This vector is used to label each of the samples in the 
-     *        vector of each seq_score. Note that samples[ i ].id must equal j[ i ] for each 
-     *        j = 1, 2, ... j.size(), i.e. The id of a sample must correspond with its entry in 
+     * @param samples vector of samples. This vector is used to label each of the samples in the
+     *        vector of each seq_score. Note that samples[ i ].id must equal j[ i ] for each
+     *        j = 1, 2, ... j.size(), i.e. The id of a sample must correspond with its entry in
      *        the count vector.
      **/
     void write_outputs( std::string outfile_name,
@@ -86,7 +87,7 @@ class module_demux : public module
     /**
      * Method to zero a vector of size_t elements.
      * @param vec Pointer to the vector to zero.
-     * @pre vec must have been initialized with some number of 
+     * @pre vec must have been initialized with some number of
      *      elements, each element from vec[ 0 ] to vec[ size - 1 ]
      *      will be zero'd out.
      **/
@@ -94,21 +95,21 @@ class module_demux : public module
 
     /**
      * Find the sequence mapped to, allowing for either one shift to the right or up to two shifts to the left,
-     * or up to and including num_mism substitutions. 
-     * We first check to see if the match is exact, no bases were 
+     * or up to and including num_mism substitutions.
+     * We first check to see if the match is exact, no bases were
      * added, deleted, or changed during synthesization and reading.
      * Then, we shift one and then two to the left and check again, and one to the right and check again.
-     * Finally, we check to see if a match is found at the original location, but up to and 
-     * include num_mism substitutions occurred. 
+     * Finally, we check to see if a match is found at the original location, but up to and
+     * include num_mism substitutions occurred.
      * If no match is found, we return map.end()
-     * @param map A map containing sequences as the keys, and anything as the value. 
+     * @param map A map containing sequences as the keys, and anything as the value.
      * @param probe_seq The sequence we are looking for in the map.
-     * @param idx A sequence_indexer to query if no exact match is found when 
-     *        searching from either shift. Note that the fuzzy match is only searched for 
+     * @param idx A sequence_indexer to query if no exact match is found when
+     *        searching from either shift. Note that the fuzzy match is only searched for
      *        in the original expected position of the sequence.
-     * @param num_mism The maximum number of mismatches (i.e. the maximum hamming distance) 
-     *        to tolerate when searching for imperfectly-matched sequences. Any matches that are 
-     *        found within this distance are included, and the minimum distance is used.  
+     * @param num_mism The maximum number of mismatches (i.e. the maximum hamming distance)
+     *        to tolerate when searching for imperfectly-matched sequences. Any matches that are
+     *        found within this distance are included, and the minimum distance is used.
      * @param f_start The start index at which we should look for probe_seq.
      * @param f_len The expected length of probe_seq, we search map for the substring of probe_seq
      *        starting at position f_start and ending at position f_len.
@@ -186,10 +187,10 @@ class module_demux : public module
         }
 
     /**
-     * Gets the minimum distance from a vectors, returns a pointer to the 
+     * Gets the minimum distance from a vectors, returns a pointer to the
      * sequence who has the minimum distance.
      * @note Because matches is sorted, returns the first item in the vector
-     * @pre  matches must be a sorted vector, sorted in non-decreasing order on the second item 
+     * @pre  matches must be a sorted vector, sorted in non-decreasing order on the second item
      *       in each pair
      * @returns The item with the smallest value in the vector.
      **/
@@ -201,11 +202,11 @@ class module_demux : public module
                          );
 
     /**
-     * Determine if a sequence has had more than one best match. We say for sequence a 
-     * that a has multiple best matches iff the minimum of the second item in each 
+     * Determine if a sequence has had more than one best match. We say for sequence a
+     * that a has multiple best matches iff the minimum of the second item in each
      * pair is not unique.
      * @param matches A vector of pairs where the first item is a pointer to sequence,
-     *        and the second an integer count. 
+     *        and the second an integer count.
      * @returns boolean true if the minimum in matches appears more than once,
      *          false
      * @pre matches should be sorted
@@ -214,17 +215,17 @@ class module_demux : public module
 
     /**
      * Aggregate output counts, creating count data at the aa-level.
-     * When multiple encodings are created for each nt sequence, output 
-     * is reported at the aa-level. By summing the counts for each encoding of 
-     * each aa in the design, we get counts at the aa-level. 
-     * @param agg_map Reference to map where aggregate counts will be stored. 
+     * When multiple encodings are created for each nt sequence, output
+     * is reported at the aa-level. By summing the counts for each encoding of
+     * each aa in the design, we get counts at the aa-level.
+     * @param agg_map Reference to map where aggregate counts will be stored.
      * @param count_map Reference to map that contains counts at the nt-level.
-     * @param num_samples The number of samples for which the design has been 
+     * @param num_samples The number of samples for which the design has been
      *        sequenced. This is equivalent to the number of lines in the samplelist
      *        file.
      * @pre The names of keys in count_map are formatted as such:
-     *      NAME-ID, where NAME is the name of the aa sequence, and ID is the 
-     *      ID of the particular encoding of that sequence. Note the '-' separating 
+     *      NAME-ID, where NAME is the name of the aa sequence, and ID is the
+     *      ID of the particular encoding of that sequence. Note the '-' separating
      *      the two identifiers.
      **/
     void aggregate_counts( parallel_map<sequence, std::vector<std::size_t>*>& agg_map,
@@ -234,15 +235,15 @@ class module_demux : public module
 
     /**
      * Aggregate output counts, creating count data at the aa-level.
-     * When multiple encodings are created for each nt sequence, output 
-     * is reported at the aa-level. By summing the counts for each encoding of 
-     * each aa in the design, we get counts at the aa-level. 
-     * @param agg_map Reference to map where aggregate counts will be stored. 
+     * When multiple encodings are created for each nt sequence, output
+     * is reported at the aa-level. By summing the counts for each encoding of
+     * each aa in the design, we get counts at the aa-level.
+     * @param agg_map Reference to map where aggregate counts will be stored.
      * @param count_map Reference to map that contains counts at the nt-level.
-     * @param num_samples The number of samples for which the design has been 
+     * @param num_samples The number of samples for which the design has been
      *        sequenced. This is equivalent to the number of lines in the samplelist
      *        file.
-     * @note This method renames sequences to have the name of the sequences that 
+     * @note This method renames sequences to have the name of the sequences that
      *       resulted from the translation.
      **/
     template<typename Translator,

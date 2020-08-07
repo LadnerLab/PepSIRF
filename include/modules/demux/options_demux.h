@@ -6,8 +6,8 @@
 
 #include "options.h"
 
-/*! Data class to contain and handle 
- * arguments that will be passed in from the 
+/*! Data class to contain and handle
+ * arguments that will be passed in from the
  * command-line.
 */
 class options_demux: public options
@@ -20,6 +20,7 @@ public:
     std::string output_fname; //!< Filename of file to write output to.
     std::string aggregate_fname; //!< Filename to write aggregate counts to.
     std::string samplelist_fname; //!< Name of tab-delimited file containing a list of samples.
+    std::string diagnostic_fname;
     std::tuple<std::size_t, std::size_t, std::size_t> f_index_data; //!< 0 = start, 1 = len, 2 = num_mismatches
     std::tuple<std::size_t, std::size_t, std::size_t> r_index_data; //!< 0 = start, 1 = len, 2 = num_mismatches
     std::tuple<std::size_t, std::size_t, std::size_t> seq_data;     //!< 0 = start, 1 = len, 2 = num_mismatches
@@ -30,31 +31,34 @@ public:
 
     bool translation_aggregation;
 
+    std::vector<std::size_t> total_pair_matches;
+    std::vector<std::size_t> var_region_matches;
+
     /**
      * The number of fastq records to read per loop. A higher value here will result in higher memory usage by the program.
      * However, higher values can also result in better performance as fewer disk accesses are performed.
      **/
-    long int read_per_loop; 
+    long int read_per_loop;
     const long int DEFAULT_READ_PER_LOOP;
     const std::string DEFAULT_OUTPUT_FNAME;
 
     /**
-     * Returns the arguments that are stored by 
+     * Returns the arguments that are stored by
      * the options object.
      **/
     std::string get_arguments();
 
     /**
      * Set the info of one of the f_index, r_index or seq data members.
-     * Parses three comma-separated values from the info string, stores them in 
+     * Parses three comma-separated values from the info string, stores them in
      * the designated member.
-     * @param member Pointer to either options_demux::f_index_data, 
+     * @param member Pointer to either options_demux::f_index_data,
      *        options_demux::r_index_data, or options_demux::seq_data.
-     *        The first item in the tuple pointed to by member will 
-     *        store the start-index of the specified item, the second the 
-     *        length and the third will store the number of mismatches 
+     *        The first item in the tuple pointed to by member will
+     *        store the start-index of the specified item, the second the
+     *        length and the third will store the number of mismatches
      *        to tolerate for this item.
-     * @param info The string to parse. Must be 3 comma-separated 
+     * @param info The string to parse. Must be 3 comma-separated
      *        integer values.
      **/
     void set_info( std::tuple<std::size_t, std::size_t, std::size_t>

@@ -10,11 +10,11 @@ std::string options_demux::get_arguments()
     std::ostringstream str_stream;
 
     str_stream << "--input_r1              " << input_r1_fname << "\n" <<
-                  " --input_r2              " << input_r2_fname << "\n" << 
+                  " --input_r2              " << input_r2_fname << "\n" <<
                   " --output                " << output_fname << "\n" <<
-                  " --aa_counts             " << aggregate_fname << "\n" << 
-                  " --translate_aggregates  " << std::boolalpha << translation_aggregation  << "\n" << 
-                  " --index                 " << index_fname << "\n" << 
+                  " --aa_counts             " << aggregate_fname << "\n" <<
+                  " --translate_aggregates  " << std::boolalpha << translation_aggregation  << "\n" <<
+                  " --index                 " << index_fname << "\n" <<
                   " --samplelist            " << samplelist_fname << "\n"
                   " --library               " << library_fname << "\n" <<
                   " --read_per_loop         " << read_per_loop << "\n" <<
@@ -24,7 +24,8 @@ std::string options_demux::get_arguments()
                   " --r_index               " << tup_to_string( r_index_data ) << "\n" <<
                   " --phred_base            " << phred_base << "\n" <<
                   " --phred_min_score       " << min_phred_score << "\n" <<
-                  " --concatemer            " << concatemer << "\n" << 
+                  " --concatemer            " << concatemer << "\n" <<
+                  " --diagnostic_info       " << diagnostic_fname << "\n"
                   "\n";
 
     return str_stream.str();
