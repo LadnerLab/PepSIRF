@@ -1,23 +1,81 @@
-{% if not page.params.hide_title %}
-  <header class="post-header inner-sm">
-    <h1 class="post-title underline">{{ page.params.title }}</h1>
-  </header><!-- .post-header -->
-  {% endif %}
+<!DOCTYPE html>
+<html lang="en">
+  <body>
+    <div id="page" class="site style-overflow palette-blue">
+      <header id="masthead" class="site-content">
+        <div class="site-header-wrap">
+          <div class="site-header-inside">
+            <div class="site-branding">
+              <p class="profile">
+                <a href="/_"><img class="avatar" src="/images/logo.png" alt="PepSIRF Logo"></a>
+              </p>
+              <div class="site-identity">
+                <p class="site-title">
+                  PepSIRF
+                </p>
+                <p class="site-description">
+                  Peptide-based Serological Immune Response Framework
+                </p>
+              </div>
+            </div>
+            <nav id="main-navigation" class="site-navigation" aria-label="Main Navigation">
+              <div class="site-nav-wrap">
+                <div class="site-nav-inside">
+                  <ul class="menu">
+                    <li class="menu-item"><a href="/">Home</a></li>
+                    <li class="menu-item current-menu-item"><a href="/blog/">Blog</a></li>
+                    <li class="menu-item"><a href="/style-guide/">Style Guide</a></li>
+                    <li class="menu-item"><a href="/about/">About</a></li>
+                    <li class="menu-item"><a href="/contact/">Contact</a></li>
+                  </ul>
+                  <div class="social-links">
+                    <a class="button button-icon" href="https://twitter.com/" target="_blank" rel="noopener">
+                      <span class="fab fa-twitter" aria-hidden="true"></span><span class="screen-reader-text">Twitter</span>
+                    </a>
+                    <a class="button button-icon" href="https://www.instagram.com/" target="_blank" rel="noopener">
+                      <span class="fab fa-instagram" aria-hidden="true"></span><span class="screen-reader-text">Instagram</span>
+                    </a>
+                    <a class="button button-icon" href="https://github.com/" target="_blank" rel="noopener">
+                      <span class="fab fa-github" aria-hidden="true"></span><span class="screen-reader-text">GitHub</span>
+                    </a>
+                    <a class="button button-icon" href="https://www.linkedin.com/" target="_blank" rel="noopener">
+                      <span class="fab fa-linkedin" aria-hidden="true"></span><span class="screen-reader-text">LinkedIn</span>
+                    </a>
+                    <a class="button button-icon" href="https://dev.to/" target="_blank" rel="noopener">
+                      <span class="fab fa-dev" aria-hidden="true"></span><span class="screen-reader-text">DEV</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </nav>
+          </div>
+        </div>
+      </header>
+      <div id="content" class="site-content">
+        <div class="inner">
+          <main id="main" class="site-main">
+              <header class="screen-reader-text">
+                <h1>Blog</h1>
+              </header>
 
-  {% for section in page.params.sections %}
-    {% set include_dict = {'section': section, 'site': site} %}
-    {% set component = section.type | component_file %}
-    {% include component %}
-  {% endfor %}
+              <div class="post-feed">
 
-<div id="page" class="site style-{{ site.params.layout_style }} palette-{{ site.params.palette }}">
-    {% include "header.html" %}
-    <div id="content" class="site-content">
-      <div class="inner">
-        <main id="main" class="site-main">
-          {% block content %}{% endblock %}
-        </main><!-- .site-main -->
-        {% include "footer.html" %}
-      </div><!-- .inner -->
-    </div><!-- .site-content -->
-  </div><!-- .site -->
+              </div>
+          </main>
+          <footer id="colophon" class="site-footer inner-sm">
+            <p class="site-info">
+
+
+              <span class="copyright">© All rights reserved.</span>
+
+
+                <a href="https://www.stackbit.com" target="_blank" rel="noopener">Made with Stackbit.</a>
+
+            </p>
+            <a id="to-top" class="to-top" href="#page"><span class="icon-arrow-up" aria-hidden="true"></span><span class="screen-reader-text">Back to top</span></a>
+          </footer>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
