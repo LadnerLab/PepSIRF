@@ -156,7 +156,6 @@ void module_demux::run( options *opts )
     std::istream& r2_reads_ref   = *r2_reads_ptr;
     std::size_t f_idx_match_count = 0;
     std::size_t r_idx_match_count = 0;
-    std::size_t both_idx_match_count = 0;
     std::size_t var_reg_match_count = 0;
     d_opts->total_pair_matches = {0};
     d_opts->var_region_matches = {0};
@@ -271,15 +270,6 @@ void module_demux::run( options *opts )
                         && quality_match()
                       )
                         {
-                            if( reverse_length == 0 )
-                                {
-                                    f_idx_match_count++;
-                                }
-                            else
-                                {
-                                    both_idx_match_count++;
-                                }
-
                             using seq_map = parallel_map<sequence, std::vector<std::size_t>*>;
 
                             if( reference_dependent )
@@ -392,7 +382,7 @@ void module_demux::run( options *opts )
             r2_seqs.clear();
 
         }
-    if( !d_opts->diagnostic_fname.empty() )
+    if( d_opts->diagnostic_fname.length() > 0 )
         {
             write_diagnostic_output( d_opts->diagnostic_fname, d_opts, samplelist );
         }
@@ -403,9 +393,9 @@ void module_demux::run( options *opts )
     std::cout << processed_success << " records were found to be a match out of "
               << processed_total << " (" << ( (long double) processed_success / (long double) processed_total ) * 100
               << "%) successful.\n";
-    std::cout << ( ( long double ) f_idx_match_count / ( long double ) processed_total ) * 100.00 << "% of reads from index 1 were found to be a match out of total.\n"
-              << ( ( long double ) r_idx_match_count / ( long double ) processed_total ) * 100.00 << "% of reads from index 2 were found to be a match out of total.\n"
-              << ( ( long double ) var_reg_match_count / ( long double ) processed_total ) * 100.00 << "% of reads from variable sequence regions were found to be a match out of total.\n";
+    std::cout << ( ( long double ) f_idx_match_count / ( long double ) processed_total ) * 100.00 << "% of reads for index 1 matched out of total records.\n"
+              << ( ( long double ) r_idx_match_count / ( long double ) processed_total ) * 100.00 << "% of reads for index 2 matched out of total records.\n"
+              << ( ( long double ) var_reg_match_count / ( long double ) processed_total ) * 100.00 << "% of reads from variable sequence regions were found to be a match out of total records.\n";
 
     if( d_opts->concatemer.length() > 0 )
         {
@@ -532,12 +522,12 @@ void module_demux::write_diagnostic_output( std::string outfile_name, options_de
 {
 
     std::ofstream outfile( outfile_name, std::ofstream::out );
-    std::string line = "Sequence name\tRead Matches\tVariable Region Matches\n";
-    outfile << line;
+    outfile << "Sequence name\tRead Matches\tVariable Region Matches\n";
     std::size_t id_index = 0;
     for( const auto& sample_name : samples )
         {
-            outfile << sample_name.name << "\t" << d_opts->total_pair_matches[ id_index ] << "\t" << d_opts->var_region_matches[ id_index ] << "\n";
+            outfile << std::setprecision( 9 ) << sample_name.name << "\t" << d_opts->total_pair_matches[ id_index ]
+            << "\t" << d_opts->var_region_matches[ id_index ] << "\n";
             id_index++;
         }
     outfile.close();

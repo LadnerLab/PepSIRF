@@ -111,7 +111,7 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
           "The first item in each tab-delimited line is \"--index1\", the second (if included) is the \"--index2\", and the third is the samplename. "
           "\"--index2\" can be omitted if only using a single index.\n"
         )
-        ( "diagnostic_info, d", po::value<std::string>( &opts_demux->diagnostic_fname )->default_value( "" ),
+        ( "diagnostic_info,d", po::value<std::string>( &opts_demux->diagnostic_fname )->default_value( "" ),
           "Include this flag with an output file name to collect diagnostic information on read pair matches in map. The file will be formated with tab delimited "
           "lines \"samplename\"  \"% index pair matches\"  \"% matches to any variable region\"."
         )
