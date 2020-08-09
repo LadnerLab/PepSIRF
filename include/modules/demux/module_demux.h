@@ -62,6 +62,10 @@ class module_demux : public module
      **/
     void add_seqs_to_map( parallel_map<sequence, std::vector<std::size_t>*>& input_map, std::vector<sequence>& seqs, size_t num_samples );
 
+    /**
+     * Writes output to diagnostic_fname. Output as tab-delimited file, with three columns, samplename, index pair matches, variable region matches.
+     * Output is optional, defaulted as unused.
+    **/
     void write_diagnostic_output( std::string outfile_name, options_demux* d_opts, std::vector<sample>& samples );
 
     /**
