@@ -61,7 +61,7 @@ class module_demux : public module
      **/
     void add_seqs_to_map( parallel_map<sequence, std::vector<std::size_t>*>& input_map, std::vector<sequence>& seqs, size_t num_samples );
 
-    void module_demux::write_diagnostic_output( std::string outfile_name, options_demux* d_opts, std::vector<sample>& samples );
+    void write_diagnostic_output( std::string outfile_name, options_demux* d_opts, std::vector<sample>& samples );
 
     /**
      * Writes output to the outfile_name.

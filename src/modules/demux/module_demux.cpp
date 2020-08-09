@@ -155,6 +155,7 @@ void module_demux::run( options *opts )
     std::istream& reads_file_ref = *reads_ptr;
     std::istream& r2_reads_ref   = *r2_reads_ptr;
     std::size_t f_idx_match_count = 0;
+    std::size_t r_idx_match_count = 0;
     std::size_t both_idx_match_count = 0;
     std::size_t var_reg_match_count = 0;
     d_opts->total_pair_matches = {0};
@@ -194,7 +195,18 @@ void module_demux::run( options *opts )
 
 
                         };
+                    auto f_idx_match_found = [&]() -> bool
+                        {
+                            return ( f_idx_match != index_map.end() );
+                        };
 
+                    auto r_idx_match_found = [&]() -> bool
+                        {
+                            return (
+                                    reverse_length != 0
+                                    && r_idx_match != index_map.end()
+                                    );
+                        };
 
                     // checks to see that a concatemer was included
                     auto found_concatemer = [&]() -> bool
@@ -245,6 +257,16 @@ void module_demux::run( options *opts )
                                                                index_idx, std::get<2>( d_opts->f_index_data ),
                                                                forward_start, forward_length
                                                              );
+
+                    if( f_idx_match_found() )
+                        {
+                            f_idx_match_count++;
+                        }
+                    if( r_idx_match_found() )
+                        {
+                            r_idx_match_count++;
+                        }
+
                     if( match_found()
                         && quality_match()
                       )
@@ -370,6 +392,10 @@ void module_demux::run( options *opts )
             r2_seqs.clear();
 
         }
+    if( !d_opts->diagnostic_fname.empty() )
+        {
+            write_diagnostic_output( d_opts->diagnostic_fname, d_opts, samplelist );
+        }
 
     total_time.stop();
 
@@ -378,7 +404,7 @@ void module_demux::run( options *opts )
               << processed_total << " (" << ( (long double) processed_success / (long double) processed_total ) * 100
               << "%) successful.\n";
     std::cout << ( ( long double ) f_idx_match_count / ( long double ) processed_total ) * 100.00 << "% of reads from index 1 were found to be a match out of total.\n"
-              << ( ( long double ) both_idx_match_count / ( long double ) processed_total ) * 100.00 << "% of reads from index 1 and index 2 were found to be a match out of total.\n"
+              << ( ( long double ) r_idx_match_count / ( long double ) processed_total ) * 100.00 << "% of reads from index 2 were found to be a match out of total.\n"
               << ( ( long double ) var_reg_match_count / ( long double ) processed_total ) * 100.00 << "% of reads from variable sequence regions were found to be a match out of total.\n";
 
     if( d_opts->concatemer.length() > 0 )
