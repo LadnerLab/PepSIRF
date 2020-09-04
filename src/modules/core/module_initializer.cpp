@@ -25,65 +25,11 @@ module_initializer::~module_initializer()
 void module_initializer::initialize( const std::string& mod_name )
 {
 
-    if( !mod_name.compare( "demux" ) )
-        {
-            opts       = new options_demux();
-            opt_parser = new options_parser_demux();
-            mod        = new module_demux();
-        }
-    else if( !mod_name.compare( "deconv" ) )
-        {
-            opts       = new options_deconv();
-            opt_parser = new options_parser_deconv();
-            mod        = new module_deconv();
-        }
-    else if( !mod_name.compare( "norm" ) )
-        {
-            opts        = new options_normalize();
-            opt_parser  = new options_parser_normalize();
-            mod         = new module_normalize();
-        }
-    else if( !mod_name.compare( "subjoin" ) )
+    if( !mod_name.compare( "subjoin" ) )
         {
             opts        = new options_subjoin();
             opt_parser  = new options_parser_subjoin();
             mod         = new module_subjoin();
-        }
-    else if( !mod_name.compare( "zscore" ) )
-        {
-            opts        = new options_zscore();
-            opt_parser  = new options_parser_zscore();
-            mod         = new module_zscore();
-        }
-    else if( !mod_name.compare( "bin" ) )
-        {
-            opts        = new options_bin();
-            opt_parser  = new options_parser_bin();
-            mod         = new module_bin();
-        }
-    else if( !mod_name.compare( "link" ) )
-        {
-            opts        = new options_link();
-            opt_parser  = new options_parser_link();
-            mod         = new module_link();
-        }
-    else if( !mod_name.compare( "s_enrich" ) )
-        {
-            opts        = new options_s_enrich();
-            opt_parser  = new options_parser_s_enrich();
-            mod         = new module_s_enrich();
-        }
-    else if( !mod_name.compare( "p_enrich" ) )
-        {
-            opts        = new options_p_enrich();
-            opt_parser  = new options_parser_p_enrich();
-            mod         = new module_p_enrich();
-        }
-    else if( !mod_name.compare( "info" ) )
-        {
-            opts        = new options_info();
-            opt_parser  = new options_parser_info();
-            mod         = new module_info();
         }
     else
         {

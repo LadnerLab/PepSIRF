@@ -33,25 +33,14 @@ struct peptide_score_data
     labeled_matrix<double,std::string> scores;
 
     /**
-     * The names of the peptides, in order in which they were
-     * found. 
-     **/
-    std::vector<std::string> pep_names;
-
-    /**
-     * The names of the samples, in order in which 
-     * they were found.
-     **/
-    std::vector<std::string> sample_names;
-
-    /**
      * The name of the file this peptide_score_data is from.
      **/
     std::string file_name;
 
     peptide_score_data( const peptide_score_data& other )
-    : scores{ other.scores }, pep_names{ other.pep_names },
-      sample_names{ other.sample_names}, file_name{ other.file_name }
+    : scores{ other.scores }, //pep_names{ other.pep_names },
+      /* sample_names{ other.sample_names}, */
+        file_name{ other.file_name }
        {};
 
     peptide_score_data() = default;

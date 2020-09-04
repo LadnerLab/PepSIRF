@@ -96,63 +96,49 @@ add_library(pepsirf_common STATIC src/modules/parsers/options_parser.cpp src/mod
 
 add_library(modules_demux STATIC src/modules/demux/options_demux.cpp src/modules/demux/options_parser_demux.cpp src/modules/parsers/options_parser.cpp 
             src/modules/core/options.cpp 
-            src/modules/core/file_io.cpp 
-			src/modules/core/module.cpp src/modules/demux/module_demux.cpp
-			src/modules/parsers/fasta_parser.cpp src/modules/parsers/fastq_parser.cpp
-            src/modules/core/sequence.cpp 
-			src/modules/demux/samplelist_parser.cpp
-			src/modules/demux/translation_map.cpp
-			src/modules/core/sequence_indexer.cpp
-			src/modules/core/fastq_score.cpp
-		   )
+			src/modules/core/module.cpp 		   )
 
 add_library( modules_deconv STATIC src/modules/deconv/options_deconv.cpp src/modules/deconv/options_parser_deconv.cpp 
-				src/modules/core/module.cpp src/modules/deconv/module_deconv.cpp
-				src/modules/core/fs_tools.cpp
-                src/modules/deconv/scored_peptide.cpp
-                src/modules/core/peptide.cpp
-                src/modules/deconv/species_data.cpp
+				src/modules/core/module.cpp 
 		)
 
 add_library( modules_normalize STATIC src/modules/normalize/options_normalize.cpp
              src/modules/normalize/options_parser_normalize.cpp
-			 src/modules/core/module.cpp src/modules/normalize/module_normalize.cpp
-			 src/modules/core/peptide_scoring.cpp
+			 src/modules/core/module.cpp 
            )
 
 add_library( modules_subjoin STATIC src/modules/subjoin/options_subjoin.cpp
+			 src/modules/core/options.cpp
+			 src/modules/core/peptide_scoring.cpp
+			 src/modules/parsers/options_parser.cpp
              src/modules/subjoin/options_parser_subjoin.cpp
              src/modules/core/module.cpp src/modules/subjoin/module_subjoin.cpp
            )
 
-add_library( modules_zscore STATIC src/modules/zscore/module_zscore.cpp
+add_library( modules_zscore STATIC 
 			 src/modules/zscore/options_zscore.cpp
 			 src/modules/zscore/options_parser_zscore.cpp
-			 src/modules/bin/peptide_bin.cpp
 		   )
-add_library( modules_bin STATIC src/modules/bin/module_bin.cpp 
+add_library( modules_bin STATIC 
 			 src/modules/bin/options_bin.cpp
 			 src/modules/bin/options_parser_bin.cpp
-			 src/modules/bin/peptide_bin.cpp
-			 src/modules/bin/probe_rank.cpp
            )
 
-add_library( modules_link STATIC src/modules/link/module_link.cpp
+add_library( modules_link STATIC 
 				src/modules/link/options_link.cpp
 				src/modules/link/options_parser_link.cpp
 		   )
-add_library( modules_s_enrich STATIC src/modules/s_enrich/module_s_enrich.cpp
+add_library( modules_s_enrich STATIC 
 				src/modules/s_enrich/options_s_enrich.cpp
 				src/modules/s_enrich/options_parser_s_enrich.cpp
 		   )
 
-add_library( modules_p_enrich STATIC src/modules/p_enrich/module_p_enrich.cpp
+add_library( modules_p_enrich STATIC 
 				src/modules/p_enrich/options_p_enrich.cpp
 				src/modules/p_enrich/options_parser_p_enrich.cpp
-				src/modules/core/predicate.cpp
 		   )
 
-add_library( modules_info STATIC src/modules/info/module_info.cpp
+add_library( modules_info STATIC 
 			 src/modules/info/options_info.cpp
 			 src/modules/info/options_parser_info.cpp
 		   )
