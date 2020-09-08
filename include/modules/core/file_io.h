@@ -13,21 +13,21 @@
 #include <boost/iostreams/filter/gzip.hpp>
 #include <memory>
 
-#endif 
+#endif
 
 namespace pepsirf_io
 {
 
     /**
-     * Simple method to write joined items in the range [begin, end) 
+     * Simple method to write joined items in the range [begin, end)
      * to an output stream.
      * @tparam Iterator the iterator to be iterated over.
-     * @tparam JoinSequence The sequence that will be written to 
+     * @tparam JoinSequence The sequence that will be written to
      *         the stream between each item in the range [begin, end)
      * @param output The ostream being written to
      * @param begin The first item in the range
      * @param end the last item in the range
-     * @param join The JoinSequence on which items in the range should be 
+     * @param join The JoinSequence on which items in the range should be
      *        joined.
      **/
     template
@@ -47,14 +47,14 @@ namespace pepsirf_io
     }
 
     /**
-     * Read a file from an input stream, outputting 
-     * parsed values to an Iterator. Can perform type 
+     * Read a file from an input stream, outputting
+     * parsed values to an Iterator. Can perform type
      * initialization.
-     * @tparam SplitPredicate a predicate that returns true if 
-     *         the current character is the split character that 
+     * @tparam SplitPredicate a predicate that returns true if
+     *         the current character is the split character that
      *         delimits entries within one line of the file.
      * @tparam IteratorInitializer a function that takes iterators
-     *         that form the range [ begin, end ) and initialize a value 
+     *         that form the range [ begin, end ) and initialize a value
      *         that can be written to the OutputIterator
      * @tparam OutputIterator an iterator to write parsed values to.
      * @param input The stream to take data from
@@ -92,10 +92,10 @@ namespace pepsirf_io
 
     /**
      * Check to see whether an istreamjk is gzipped.
-     * @note False positives are positive, as this method simply performs a 
+     * @note False positives are positive, as this method simply performs a
      *       check for the 'magic number' (0x1F8B) at the beginning of a gzipped file.
-     *       Any file beginning with this magic number will be found to be gzipped 
-     *       by this function. However, the likelihood that a non-gzipped file, 
+     *       Any file beginning with this magic number will be found to be gzipped
+     *       by this function. However, the likelihood that a non-gzipped file,
      *       especially one used by PepSIRF, is rather small.
      * @param to_check The stream that we want to check for gzip-edness.
      * @post istream is ready to begin at the first item in the file.
@@ -128,7 +128,7 @@ namespace pepsirf_io
     public:
 
         /**
-         * Argument constructor. 
+         * Argument constructor.
          * @param input The input stream to read gzipped data from.
          **/
         gzip_reader( std::istream& input )
@@ -182,7 +182,7 @@ namespace pepsirf_io
             }
     };
 
-#endif 
+#endif
 
 }; // namespace pepsirf_io
 
