@@ -20,8 +20,8 @@ std::string options_demux::get_arguments()
                   " --read_per_loop         " << read_per_loop << "\n" <<
                   " --num_threads           " << num_threads << "\n" <<
                   " --seq                   " << tup_to_string( seq_data ) << "\n" <<
-                  " --f_index               " << tup_to_string( f_index_data ) << "\n" <<
-                  " --r_index               " << tup_to_string( r_index_data ) << "\n" <<
+                  " --index1                " << tup_to_string( f_index_data ) << "\n" <<
+                  " --index2                " << tup_to_string( r_index_data ) << "\n" <<
                   " --phred_base            " << phred_base << "\n" <<
                   " --phred_min_score       " << min_phred_score << "\n" <<
                   " --concatemer            " << concatemer << "\n" <<
