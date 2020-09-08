@@ -66,7 +66,8 @@ class module_demux : public module
      * Writes output to diagnostic_fname. Output as tab-delimited file, with three columns, samplename, index pair matches, variable region matches.
      * Output is optional, defaulted as unused.
     **/
-    void write_diagnostic_output( std::string outfile_name, options_demux* d_opts, std::vector<sample>& samples );
+    void write_diagnostic_output( options_demux* d_opts, std::map<std::pair<std::string,std::string>,
+                                  std::pair<std::string,std::vector<std::size_t>>>& diagnostic_map );
 
     /**
      * Writes output to the outfile_name.
