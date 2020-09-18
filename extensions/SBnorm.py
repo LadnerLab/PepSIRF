@@ -15,7 +15,7 @@ def main():
     p.add_option('--negMat',  help='Optionally, this flag can be used to supply a separate data matrix containing SB samples. [None]')
     p.add_option('-s', '--start',  help='Optional approach for identifying negative controls. Can provide unique string at the start of all negative control samples [None]')
     p.add_option('-n', '--negNames', help='Optional approach for identifying negative controls. Comma-separated list of negative control samples names [None]')
-    p.add_option('-a', '--approach', help='Approach for normalization. Options: "ratio" and "diff" [None, REQ]')
+    p.add_option('-a', '--approach', help='Approach for normalization. Options: "ratio", "diff" "diffratio" [None, REQ]')
     p.add_option('-o', '--out', help='Name for output file, which will contain ratios of sample Norm Count/average negative control sample Norm Count [None, REQ]')
     opts, args = p.parse_args()
     
@@ -52,6 +52,8 @@ def main():
                     negNormD[s][p] = inD[s][p]/avgNeg
                 elif opts.approach == "diff":
                     negNormD[s][p] = inD[s][p] - avgNeg
+                elif opts.approach == "diffratio":
+                    negNormD[s][p] = (inD[s][p] - avgNeg)/avgNeg
                 else:
                     print("%s is not a recognized approach" % opts.approach)
                     
