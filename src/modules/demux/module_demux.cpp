@@ -310,6 +310,7 @@ void module_demux::run( options *opts )
                                             if( !d_opts->diagnostic_fname.empty() )
                                                 {
                                                     diagnostic_map.find( { f_idx_match->first.name, r_idx_match->first.name } )->second.second[2] += 1;
+
                                                 }
                                         }
                                     else if( reverse_length != 0
