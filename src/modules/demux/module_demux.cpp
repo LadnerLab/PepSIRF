@@ -288,7 +288,6 @@ void module_demux::run( options *opts )
                       )
                         {
                             using seq_map = parallel_map<sequence, std::vector<std::size_t>*>;
-
                             if( reference_dependent )
                                 {
                                     et_seq_search<seq_map,true> library_searcher( lib_idx, reference_counts, num_samples );
@@ -303,13 +302,14 @@ void module_demux::run( options *opts )
                                         && seq_match != reference_counts.end()
                                         )
                                         {
+                                            std::cout << "ref match\n";
                                             sample_id = f_idx_match->second.id;
                                             seq_match->second->at( sample_id )++;
                                             var_reg_match_count++;
                                             ++processed_success;
                                             if( !d_opts->diagnostic_fname.empty() )
                                                 {
-                                                    diagnostic_map.at( { f_idx_match->first.name, r_idx_match->first.name } ).second[ 2 ] += 1;
+                                                    diagnostic_map.find( { f_idx_match->first.name, r_idx_match->first.name } )->second.second[2] += 1;
                                                 }
                                         }
                                     else if( reverse_length != 0
@@ -327,6 +327,10 @@ void module_demux::run( options *opts )
                                                     seq_match->second->at( sample_id )++;
                                                     var_reg_match_count++;
                                                     ++processed_success;
+                                                    if( !d_opts->diagnostic_fname.empty() )
+                                                        {
+                                                            diagnostic_map.find( { f_idx_match->first.name, r_idx_match->first.name } )->second.second[2] += 1;
+                                                        }
                                                 }
                                         }
                                     else if( seq_match == reference_counts.end()
