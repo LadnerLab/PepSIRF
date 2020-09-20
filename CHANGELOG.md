@@ -5,7 +5,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-- Added highest density interval as zscore filtering option.
+
+## [1.3.2] - 2020-09-20
+- Fixed issue with Zlib compilation error on Mac.
+- Added additional output features to demux to aid in diagnosis and tracing of the 2 possible indexes given and DNA tag matches.
+- Added highest density interval as filtering option for zscore module.
 
 ## [1.3.1] - 2020-07-09
 - Fixed bug causing sample names to be mismatched for s_enrich module output files.
