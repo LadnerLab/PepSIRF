@@ -31,7 +31,7 @@ void module_zscore::run( options *opts )
                                       "specified bins file for reading"
                                     );
         }
-        
+
     bin_collection peptide_bins = peptide_bin_io::parse_bins( bins_file );
 
     auto& zscore_matrix = input.scores;
@@ -44,7 +44,7 @@ void module_zscore::run( options *opts )
             std::string sample_name = sample_pair.first;
 
             calculate_zscores( peptide_bins,
-                               z_opts->trim_percent,
+                               z_opts,
                                zscore_matrix,
                                sample_name,
                                std::back_inserter( nan_values )

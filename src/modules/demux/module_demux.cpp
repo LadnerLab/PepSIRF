@@ -8,7 +8,7 @@
 #include "et_search.h"
 #include "nt_aa_translator.h"
 
-module_demux::module_demux() 
+module_demux::module_demux()
 {
     name = "Demux";
 }
@@ -34,7 +34,8 @@ void module_demux::run( options *opts )
     parallel_map<sequence, std::size_t> non_perfect_match_seqs;
 
     sequential_map<sequence, sample> index_map;
-
+    std::map<std::pair<std::string,std::string>,
+             std::pair<std::string,std::vector<std::size_t>>> diagnostic_map;
     omp_set_num_threads( opts->num_threads );
 
     total_time.start();;
@@ -46,7 +47,6 @@ void module_demux::run( options *opts )
     std::vector<fastq_sequence> reads;
 
     reads.reserve( d_opts->read_per_loop );
-
     // create parsers for the encoded library and the fastq reads.
     fasta_parser fasta_p;
     fastq_parser fastq_p;
@@ -54,7 +54,7 @@ void module_demux::run( options *opts )
     samplelist_parser samplelist_p;
     std::vector<sample> samplelist = samplelist_p.parse( d_opts->samplelist_fname );
 
-    // open the read file so we can iterate over it 
+    // open the read file so we can iterate over it
     std::ifstream reads_file( d_opts->input_r1_fname, std::ios_base::in );
     std::ifstream r2_reads;
 
@@ -119,7 +119,7 @@ void module_demux::run( options *opts )
     pepsirf_io::gzip_reader gzip_r2_reader( r2_reads );
 
 
-    #endif 
+    #endif
 
     if( pepsirf_io::is_gzipped( reads_file ) )
         {
@@ -132,7 +132,7 @@ void module_demux::run( options *opts )
                                       "Please either configure boost with zlib "
                                       "or unzip the file before attempting to demux."
                                     );
-    #endif 
+    #endif
         }
 
     if( r2_reads_included
@@ -148,17 +148,31 @@ void module_demux::run( options *opts )
                                       "Please either configure boost with zlib "
                                       "or unzip the file before attempting to demux."
                                     );
-    #endif 
+    #endif
         }
 
 
     std::istream& reads_file_ref = *reads_ptr;
     std::istream& r2_reads_ref   = *r2_reads_ptr;
+    std::size_t f_idx_match_total = 0;
+    std::size_t r_idx_match_total = 0;
+    std::size_t var_reg_match_total = 0;
 
+    if( !d_opts->diagnostic_fname.empty() )
+        {
+            for( const auto index : index_map )
+                {
+                    diagnostic_map.insert( { { index.second.string_ids.first, index.second.string_ids.second },
+                                             { index.second.name , std::vector<std::size_t>{0,0,0} } } );
+                }
+        }
     // while we still have reads to process, loop terminates when no fastq records
     // are read from the file
     while( fastq_p.parse( reads_file_ref, reads, d_opts->read_per_loop  ) )
         {
+            std::size_t f_idx_match_count = 0;
+            std::size_t r_idx_match_count = 0;
+            std::size_t var_reg_match_count = 0;
 
             if( r2_reads_included )
                 {
@@ -168,8 +182,9 @@ void module_demux::run( options *opts )
 
            #pragma omp parallel for private( seq_iter, nuc_seq, read_index, index_str, adapter, sample_id,  \
                                               r_idx_match, f_idx_match ) \
-               shared( seq_start, seq_length, d_opts, reference_counts, library_seqs, index_seqs, r2_seqs ) \
+               shared( seq_start, seq_length, d_opts, reference_counts, library_seqs, index_seqs, r2_seqs, diagnostic_map, f_idx_match_count, r_idx_match_count ) \
                 reduction( +:processed_total, processed_success, concatemer_found ) schedule( dynamic )
+
             for( read_index = 0; read_index < reads.size(); ++read_index )
                 {
                     // lambda to return whether a match was found
@@ -178,24 +193,50 @@ void module_demux::run( options *opts )
                     // we need to check both
                     auto match_found = [&]() -> bool
                         {
-                            return 
-                            ( reverse_length == 0
-                              && f_idx_match != index_map.end()
-                              )
-                            ||
-                            ( reverse_length != 0
-                                 && f_idx_match != index_map.end()
-                                 && r_idx_match != index_map.end()
-                               );
-                            
+                            if( f_idx_match != index_map.end() )
+                                {
+                                    // When diagnostic file output is included, increment f & r index for associated sample name
+                                    if( !d_opts->diagnostic_fname.empty() )
+                                        {
+                                            for( auto& sample : diagnostic_map )
+                                                {
+                                                    if( f_idx_match->first.name.compare( sample.first.first ) == 0 )
+                                                        {
+                                                            sample.second.second.at( 0 ) += 1;
+                                                        }
+                                                }
+                                        }
+                                    ++f_idx_match_count;
+                                    if( reverse_length == 0 )
+                                        {
+                                            return true;
+                                        }
+                                    if( reverse_length != 0
+                                        && r_idx_match != index_map.end() )
+                                        {
+                                            if( !d_opts->diagnostic_fname.empty() )
+                                                {
+                                                    for( auto& sample : diagnostic_map )
+                                                        {
+                                                            if( r_idx_match->first.name.compare( sample.first.second ) == 0
+                                                                && f_idx_match->first.name.compare( sample.first.first ) == 0 )
+                                                                {
+                                                                    sample.second.second.at( 1 ) += 1;
+                                                                }
+                                                        }
+                                                }
+                                            ++r_idx_match_count;
+                                            return true;
+                                        }
+                                }
 
+                            return false;
                         };
-
 
                     // checks to see that a concatemer was included
                     auto found_concatemer = [&]() -> bool
                         {
-                            return 
+                            return
                                      d_opts->concatemer.length() > 0
                                        && reads[ read_index ].seq.find( d_opts->concatemer,
                                                                         0
@@ -241,30 +282,36 @@ void module_demux::run( options *opts )
                                                                index_idx, std::get<2>( d_opts->f_index_data ),
                                                                forward_start, forward_length
                                                              );
+
                     if( match_found()
                         && quality_match()
                       )
                         {
-
                             using seq_map = parallel_map<sequence, std::vector<std::size_t>*>;
-
                             if( reference_dependent )
                                 {
                                     et_seq_search<seq_map,true> library_searcher( lib_idx, reference_counts, num_samples );
-
 
                                     auto seq_match = library_searcher.find( reads[ read_index ],
                                                                             std::get<2>( d_opts->seq_data ),
                                                                             seq_start,
                                                                             seq_length
                                                                           );
+
                                     if( reverse_length == 0
                                         && seq_match != reference_counts.end()
                                         )
                                         {
+                                            std::cout << "ref match\n";
                                             sample_id = f_idx_match->second.id;
                                             seq_match->second->at( sample_id )++;
+                                            var_reg_match_count++;
                                             ++processed_success;
+                                            if( !d_opts->diagnostic_fname.empty() )
+                                                {
+                                                    diagnostic_map.find( { f_idx_match->first.name, r_idx_match->first.name } )->second.second[2] += 1;
+
+                                                }
                                         }
                                     else if( reverse_length != 0
                                              && seq_match != reference_counts.end()
@@ -279,7 +326,12 @@ void module_demux::run( options *opts )
                                                 {
                                                     sample_id = d_id->second.id;
                                                     seq_match->second->at( sample_id )++;
+                                                    var_reg_match_count++;
                                                     ++processed_success;
+                                                    if( !d_opts->diagnostic_fname.empty() )
+                                                        {
+                                                            diagnostic_map.find( { f_idx_match->first.name, r_idx_match->first.name } )->second.second[2] += 1;
+                                                        }
                                                 }
                                         }
                                     else if( seq_match == reference_counts.end()
@@ -290,6 +342,7 @@ void module_demux::run( options *opts )
                                 }
                             else
                                 {
+
                                     et_seq_search<seq_map,false> library_searcher( lib_idx, reference_counts, num_samples );
 
 
@@ -346,18 +399,29 @@ void module_demux::run( options *opts )
                     // record the number of records that are processed
                     ++processed_total;
                 }
+            f_idx_match_total += f_idx_match_count;
+            r_idx_match_total += r_idx_match_count;
+            var_reg_match_total += var_reg_match_count;
 
             reads.clear();
             r2_seqs.clear();
 
         }
+    if( !d_opts->diagnostic_fname.empty() )
+        {
+            write_diagnostic_output( d_opts, diagnostic_map );
+        }
 
     total_time.stop();
 
-    std::cout << "Processed " << processed_total << " records in " << time_keep::get_elapsed( total_time ) << " seconds.\n";
+
     std::cout << processed_success << " records were found to be a match out of "
               << processed_total << " (" << ( (long double) processed_success / (long double) processed_total ) * 100
               << "%) successful.\n";
+    std::cout << std::fixed << std::setprecision( 1 )
+              << ( ( long double ) f_idx_match_total / ( long double ) processed_total ) * 100.00 << "% " << f_idx_match_total << " of total records matched index 1.\n"
+              << ( ( long double ) r_idx_match_total / ( long double ) processed_total ) * 100.00 << "% " << r_idx_match_total << " of total records matched index 1 + index 2.\n"
+              << ( ( long double ) var_reg_match_total / ( long double ) processed_total ) * 100.00 << "% " << var_reg_match_total << " of total records matched index 1 + index 2 + DNA tag.\n";
 
     if( d_opts->concatemer.length() > 0 )
         {
@@ -385,7 +449,7 @@ void module_demux::run( options *opts )
                 {
                     aggregate_counts( agg_map, reference_counts, samplelist.size() );
                 }
-            
+
             write_outputs( d_opts->aggregate_fname,
                            agg_map,
                            samplelist
@@ -426,7 +490,7 @@ void module_demux::aggregate_counts( parallel_map<sequence, std::vector<std::siz
 
             // we are not going to get correct results
             // if names are not in the expected
-            // format. 
+            // format.
             if( strs.size() != NUM_DELIMITED_ITEMS )
                 {
 
@@ -478,6 +542,42 @@ void module_demux::add_seqs_to_map( parallel_map<sequence, std::vector<std::size
                        0
                      );
         }
+}
+
+void module_demux::write_diagnostic_output( options_demux* d_opts, std::map<std::pair<std::string,std::string>,
+             std::pair<std::string,std::vector<std::size_t>>>& diagnostic_map )
+{
+    std::ofstream outfile( d_opts->diagnostic_fname, std::ios::out );
+    std::map<std::pair<std::string,std::string>,
+             std::pair<std::string,std::vector<std::size_t>>>::iterator sample_iter = diagnostic_map.begin();
+    std::string header = "Sample name\tIndex1 Matches\tIndex Pair Matches";
+    // Include Variable Region Matches column if ref dependent.
+    if( !d_opts->library_fname.empty() )
+        {
+            header.append( "\tDNA Tag Matches" );
+        }
+    header.append( "\n" );
+    outfile << header;
+
+    for( std::size_t sample_index = 0; sample_index < diagnostic_map.size(); sample_index++ )
+        {
+            const std::string curr = sample_iter->second.first;
+            const std::vector<std::size_t> curr_counts = sample_iter->second.second;
+            outfile << curr << "\t" << curr_counts[ 0 ] << "\t"
+                << curr_counts[ 1 ];
+
+            if( !d_opts->library_fname.empty() )
+                {
+                    outfile << "\t" << curr_counts[ 2 ];
+                }
+            outfile << "\n";
+
+            ++sample_iter;
+        }
+
+    outfile << "\n";
+    outfile.close();
+
 }
 
 void module_demux::write_outputs( std::string outfile_name,
