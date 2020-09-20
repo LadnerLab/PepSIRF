@@ -3,7 +3,7 @@
 <img src="./img/logo.png" alt="Your image title" width="1024"/>
 
 
-### Current Version: v1.3.1
+### Current Version: v1.3.2
 
 ### Dependencies
 - cmake version 3.9 or higher.
