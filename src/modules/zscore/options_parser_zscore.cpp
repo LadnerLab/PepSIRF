@@ -56,6 +56,27 @@ bool options_parser_zscore::parse( int argc, char ***argv, options *opts )
           "when calculating the mean and standard deviation. This value must be "
           "in the range [0.00,100.0].\n"
         )
+        ("hdi,d", po::value( &opts_zscore->hpd_percent )->default_value( 0.0 )
+          ->notifier( []( const double& val )
+                      {
+                          if( !( val >= 0.0 && val <= 100.00 ) )
+                              {
+
+                                  throw po::validation_error(
+                                    po::validation_error::invalid_option_value,
+                                    "filter_scores",
+                                    std::to_string( val )
+                                                             );
+                              }
+
+                      }
+                      ),
+          "Alternative approach for discarding outliers prior to calculating mean and stdev. "
+          "If provided, this argument will override --trim, which trims evenly from both sides "
+          "of the distribution. For --hdi, the user should provide the high density interval to "
+          "be used for calculation of mean and stdev. For example, \"--hdi 0.95\" would instruct "
+          "the program to utilize the 95% highest density interval (from each bin) for these calculations.\n"
+        )
         ( "output,o", po::value( &opts_zscore->out_fname )->default_value( "zscore_output.tsv" ),
           "Name for the output Z scores file. This file will be a tab-delimited matrix file with "
           "the same dimensions as the input score file. Each peptide will be written with its "
