@@ -108,7 +108,7 @@ Once a release is ready to be merged into master, the following steps may be don
 ```
 git checkout master
 git merge develop --no-ff
-git tag -a vX.Y.Z
+git tag -a PEPSIRF_VERSION
 git push
 git push --follow-tags
 git checkout develop
