@@ -69,7 +69,7 @@ void peptide_scoring::parse_peptide_scores( peptide_score_data_sample_major& des
             dest.pep_names[ assign_index ] = my_str.substr( 0, pos );
 
             std::size_t begin_pos = pos + 1;
-            
+
             // for j = 0 -> num_samples grab the number
             for( std::size_t count_index = 0; count_index < sample_count; ++count_index )
                 {
@@ -80,7 +80,7 @@ void peptide_scoring::parse_peptide_scores( peptide_score_data_sample_major& des
 
                     dest.scores( assign_index, count_index ) = val;
                     begin_pos = end_pos + 1;
-                        
+
                 }
         }
 
@@ -94,7 +94,7 @@ void peptide_scoring::parse_peptide_scores( peptide_score_data_sample_major& des
                                                 )
 {
     std::ofstream out_file( dest_fname, std::ios_base::out );
-    write_peptide_scores( out_file, data ); 
+    write_peptide_scores( out_file, data );
 }
 
 void peptide_scoring::write_peptide_scores( std::ostream& output,
@@ -110,12 +110,12 @@ void peptide_scoring::write_peptide_scores( std::ostream& output,
     for( std::size_t index = 0; index < data.scores.nrows(); ++index )
         {
             output << data.pep_names[ index ] << "\t";
-                        
+
             std::size_t inner_index = 0;
 
             for( inner_index = 0; inner_index < data.sample_names.size(); ++inner_index )
                 {
-                    output << data.scores( index, inner_index );
+                    output << std::fixed << std::setprecision( 15 ) << data.scores( index, inner_index );
 
                     if( inner_index < data.sample_names.size() - 1 )
                         {

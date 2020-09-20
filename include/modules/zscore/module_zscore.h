@@ -17,9 +17,9 @@ class module_zscore : public module
     /**
      * Calculate the zscores for each peptide in a bin.
      * @tparam OutputIt the type of iterator to write nan_reports to
-     * @param peptide_bins The peptide bins against which zscores should 
-     *        be calculated. 
-     * @param trim_percent Percent [0.0,100.0] of peptides with the 
+     * @param peptide_bins The peptide bins against which zscores should
+     *        be calculated.
+     * @param trim_percent Percent [0.0,100.0] of peptides with the
      *        highest and lowest scores to trim.
      * @param sample_name The name of the sample to calculate the zscores for.
      * @param nan_report_location The place to write nan reports to.
@@ -27,7 +27,7 @@ class module_zscore : public module
     template<typename OutputIt>
     void
         calculate_zscores( const bin_collection& peptide_bins,
-                           const double trim_percent,
+                           options_zscore* z_opts,
                            labeled_matrix<double,std::string>& scores,
                            const std::string sample_name,
                            OutputIt nan_report_location
@@ -49,11 +49,35 @@ class module_zscore : public module
                     std::sort( current_row_counts.begin(),
                                current_row_counts.end()
                                );
-
-                    std::size_t trim_length = current_row_counts.size() * ( 0.01 * trim_percent );
-                    auto new_begin = current_row_counts.begin() + trim_length;
-                    auto new_end = current_row_counts.end() - trim_length;
-
+                    // separate to new function for highest density interval support
+                    std::vector<double>::iterator new_begin;
+                    std::vector<double>::iterator new_end;
+                    if( z_opts->hpd_percent != 0.0 )
+                        {
+                            std::size_t num_interval = std::round( z_opts->hpd_percent * bin.size() );
+                            std::size_t count = 0;
+                            double ref = current_row_counts.at( count + num_interval - 1 ) - current_row_counts.at( count );
+                            double curr_value;
+                            std::size_t index;
+                            for( index = 0; index < bin.size() - num_interval - 1; index++ )
+                                {
+                                    curr_value = current_row_counts.at( index + num_interval - 1 ) - current_row_counts.at( index );
+                                    if( curr_value < ref )
+                                        {
+                                            ref = curr_value;
+                                            count = index;
+                                        }
+                                }
+                            new_begin = current_row_counts.begin() + count;
+                            new_end = current_row_counts.begin() + count + num_interval - 1;
+                        }
+                    else
+                        {
+                            std::size_t trim_length = current_row_counts.size() * ( 0.01 * z_opts->trim_percent );
+                            new_begin = current_row_counts.begin() + trim_length;
+                            new_end = current_row_counts.end() - trim_length;
+                        }
+                    //
                     double mean = stats::arith_mean( new_begin,
                                                      new_end
                                                    );
