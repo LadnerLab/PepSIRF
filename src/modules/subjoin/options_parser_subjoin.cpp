@@ -52,24 +52,39 @@ bool options_parser_subjoin::parse( int argc, char ***argv, options *opts )
                                       }
                                   else if( split_output.size() == 1 )
                                       {
-                                          std::ifstream input_f{ split_output[ 0 ] };
-                                          if( input_f.fail() )
-                                              {
-                                                  throw std::runtime_error( "Unable to open input file for reading" );
-                                              }
+                                            std::ifstream input_f{ split_output[ 0 ] };
+                                            if( input_f.fail() )
+                                                {
+                                                    throw std::runtime_error( "Unable to open input file for reading" );
+                                                }
+                                            std::string line;
+                                            std::getline( input_f, line );
+                                            std::string first_col_header = line.substr( 0, line.find_first_of('\t') );
 
-                                          pepsirf_io::read_file( input_f,
-                                                                 boost::is_any_of( "\t" ),
-                                                                 []( typename std::vector<std::string>::iterator a,
-                                                                     typename std::vector<std::string>::iterator end
-                                                                   )
-                                                                 -> std::pair<std::string,std::string>
-                                                                 { std::string f = *a;
-                                                                     if( a != end )
-                                                                         ++a;
-                                                                   return std::make_pair( f, *a ); },
-                                                                 std::back_inserter( opts_subjoin->matrix_name_pairs )
-                                                               );
+                                            // Not a tab-delimited file containing score_matrix and sample name list filename pairs -> treat as score matrix with no filter
+                                            if( first_col_header.compare( "Sequence name" ) == 0 )
+                                                {
+                                                    std::cout << "WARNING: No sample name list has been given and provided "
+                                                                "file does not contain filename pairs. All scores will be "
+                                                                "output without filter.\n";
+                                                    opts_subjoin->matrix_name_pairs.emplace_back( std::make_pair( split_output[0], "" ) );
+                                                }
+                                            // Is a file containing filename pairs
+                                            else
+                                                {
+                                                    pepsirf_io::read_file( input_f,
+                                                                            boost::is_any_of( "\t" ),
+                                                                            []( typename std::vector<std::string>::iterator a,
+                                                                                typename std::vector<std::string>::iterator end
+                                                                            )
+                                                                            -> std::pair<std::string,std::string>
+                                                                            { std::string f = *a;
+                                                                                if( a != end )
+                                                                                    ++a;
+                                                                            return std::make_pair( f, *a ); },
+                                                                            std::back_inserter( opts_subjoin->matrix_name_pairs )
+                                                                        );
+                                                }
                                       }
                                   else
                                       {
