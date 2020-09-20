@@ -131,7 +131,7 @@ namespace pepsirf_io
          * Argument constructor.
          * @param input The input stream to read gzipped data from.
          **/
-        gzip_reader( std::istream& input )
+        gzip_reader( std::istream& input ) : std::istream( nullptr )
             {
                 using namespace boost::iostreams;
                 read_filter.push( gzip_decompressor() );
