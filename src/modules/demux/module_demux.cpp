@@ -414,13 +414,14 @@ void module_demux::run( options *opts )
 
     total_time.stop();
 
-    std::cout << "Processed " << processed_total << " records in " << time_keep::get_elapsed( total_time ) << " seconds.\n";
+
     std::cout << processed_success << " records were found to be a match out of "
               << processed_total << " (" << ( (long double) processed_success / (long double) processed_total ) * 100
               << "%) successful.\n";
-    std::cout << ( ( long double ) f_idx_match_total / ( long double ) processed_total ) * 100.00 << "% of reads for index 1 matched out of total records.\n"
-              << ( ( long double ) r_idx_match_total / ( long double ) processed_total ) * 100.00 << "% of reads for index 2 matched out of total records.\n"
-              << ( ( long double ) var_reg_match_total / ( long double ) processed_total ) * 100.00 << "% of reads from variable sequence regions were found to be a match out of total records.\n";
+    std::cout << std::fixed << std::setprecision( 1 )
+              << ( ( long double ) f_idx_match_total / ( long double ) processed_total ) * 100.00 << "% " << f_idx_match_total << " of total records matched index 1.\n"
+              << ( ( long double ) r_idx_match_total / ( long double ) processed_total ) * 100.00 << "% " << r_idx_match_total << " of total records matched index 1 + index 2.\n"
+              << ( ( long double ) var_reg_match_total / ( long double ) processed_total ) * 100.00 << "% " << var_reg_match_total << " of total records matched index 1 + index 2 + DNA tag.\n";
 
     if( d_opts->concatemer.length() > 0 )
         {
@@ -549,11 +550,11 @@ void module_demux::write_diagnostic_output( options_demux* d_opts, std::map<std:
     std::ofstream outfile( d_opts->diagnostic_fname, std::ios::out );
     std::map<std::pair<std::string,std::string>,
              std::pair<std::string,std::vector<std::size_t>>>::iterator sample_iter = diagnostic_map.begin();
-    std::string header = "Sample name\tIndex1 Matches\tPair Matches";
+    std::string header = "Sample name\tIndex1 Matches\tIndex Pair Matches";
     // Include Variable Region Matches column if ref dependent.
     if( !d_opts->library_fname.empty() )
         {
-            header.append( "\tVariable Region Matches" );
+            header.append( "\tDNA Tag Matches" );
         }
     header.append( "\n" );
     outfile << header;
