@@ -57,6 +57,7 @@ bool options_parser_subjoin::parse( int argc, char ***argv, options *opts )
                                                 {
                                                     throw std::runtime_error( "Unable to open input file for reading" );
                                                 }
+                                            std::streampos start_pos_input_f = input_f.tellg();
                                             std::string line;
                                             std::getline( input_f, line );
                                             std::string first_col_header = line.substr( 0, line.find_first_of('\t') );
@@ -72,6 +73,7 @@ bool options_parser_subjoin::parse( int argc, char ***argv, options *opts )
                                             // Is a file containing filename pairs
                                             else
                                                 {
+                                                    input_f.seekg( start_pos_input_f );
                                                     pepsirf_io::read_file( input_f,
                                                                             boost::is_any_of( "\t" ),
                                                                             []( typename std::vector<std::string>::iterator a,
