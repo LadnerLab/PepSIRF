@@ -7,6 +7,7 @@
 #include <functional>
 #include <numeric>
 #include <iomanip>
+#include <boost/algorithm/string.hpp>
 
 #include "module_normalize.h"
 #include "options_normalize.h"
@@ -36,18 +37,61 @@ void module_normalize::run( options *opts )
     omp_set_num_threads( n_opts->num_threads );
 
     peptide_score_data_sample_major original_scores;
-
+    peptide_score_data_sample_major neg_scores;
     peptide_scoring::parse_peptide_scores( original_scores, scores_fname );
-
     original_scores.scores = original_scores.scores.transpose();
+    std::vector<std::string> neg_filter;
 
-    std::vector<double> norm_factors( original_scores.sample_names.size(), 0 );
+    if( !(n_opts->neg_control).empty() )
+        {
+            peptide_scoring::parse_peptide_scores( neg_scores, n_opts->neg_control );
 
-    if( n_opts->size_factors_norm )
+            if( !(n_opts->neg_names).empty() )
+                {
+                    boost::split( neg_filter, neg_scores.sample_names, boost::is_any_of( "," ) );
+                }
+            else if( !(n_opts->neg_id).empty() )
+                {
+                    for( const auto& sample : neg_scores.sample_names )
+                        {
+                            if( sample.rfind( n_opts->neg_id, 0 ) != std::string::npos )
+                                {
+                                    neg_filter.emplace_back( sample );
+                                }
+                        }
+                }
+
+
+
+        }
+
+    std::size_t sample_size;
+
+    if( !(n_opts->neg_control).empty() )
+        {
+            sample_size = neg_scores.sample_names.size();
+        }
+    else
+        {
+            sample_size = original_scores.sample_names.size();
+        }
+
+    std::vector<double> norm_factors( sample_size, 0 );
+
+    if( n_opts->approach == "size_factors" )
         {
             compute_size_factors( norm_factors, original_scores.scores );
         }
-    else
+    else if( n_opts->approach == "neg_diff" )
+        {
+            // get ratio, pass in norm_factors, the original scores, the neg scores,
+            // and the mean average of the negative scores.
+        }
+    else if( n_opts->approach == "diff_ratio" )
+        {
+
+        }
+    else // Column sum default
         {
             get_sum( norm_factors, original_scores.scores );
             constant_factor_normalization( norm_factors, ONE_MILLION );
@@ -67,7 +111,7 @@ void module_normalize::run( options *opts )
     peptide_scoring::write_peptide_scores( output_file, original_scores );
 
     timer.stop();
-    
+
     std::cout << "Took " << timer.get_elapsed() << " seconds.\n";
 
 }
@@ -83,6 +127,8 @@ void module_normalize::constant_factor_normalization( std::vector<double>& cols,
         }
 }
 
+void module_normalize::get_ratio( std::vector< )
+
 void module_normalize::get_sum( std::vector<double>& dest,
                                 matrix<double>& src
                               )
@@ -96,7 +142,7 @@ void module_normalize::get_sum( std::vector<double>& dest,
                 {
                     dest[ inner_index ] += src( index, inner_index );
                 }
-            
+
         }
 }
 

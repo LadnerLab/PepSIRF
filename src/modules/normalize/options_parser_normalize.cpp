@@ -34,15 +34,22 @@ bool options_parser_normalize::parse( int argc, char ***argv, options *opts )
           "Name of tab-delimited matrix file containing peptide scores. "
           "This file should be in the same format as the output from the deconv module.\n"
         )
-        ( "col_sum,c", po::bool_switch( &opts_normalize->col_sum_norm )->default_value( true ),
-          "Normalize the raw counts using a column-sum method. Output per peptide is the number of counts "
-          "per million total counts for the sample (i.e., summed across all peptides). Note that if size_factors "
-          "is also included, the value of this flag will be ignored and the size_factors method is used. "
+        ( "normalize_approach,a", po::value<std::string>( &opts_normalize->approach )->default_value( "col_sum" ),
           "By default, col_sum normalization is used.\n"
-        )
-        ( "size_factors,s", po::bool_switch( &opts_normalize->size_factors_norm )->default_value( false ),
-          "Normalize the raw counts using the size factors method (Anders and Huber 2010). Note that if this "
+          "col_sum: Normalize the raw counts using a column-sum method. Output per peptide is the number of counts "
+          "per million total counts for the sample (i.e., summed across all peptides). Note that if size_factors "
+          "is also included, the value of this flag will be ignored and the size_factors method is used.\n"
+          "size_factors: Normalize the raw counts using the size factors method (Anders and Huber 2010). Note that if this "
           "flag is included, the value of col_sum will be ignored.\n"
+        )
+        ( "negative_control", po::value<std::string>( &opts_normalize->neg_control )->default_value( "" ),
+          "Optional data matrix for sb samples.\n"
+        )
+        ( "negative_id,s", po::value<std::string>( &opts_normalize->neg_id )->default_value( "" ),
+          "Optional apporach for identifying negative controls. Provide a unique string at the start of all negative control samples.\n"
+        )
+        ( "negative_names,n", po::value<std::string>( &opts_normalize->neg_names )->default_value( "" ),
+          "Optional approach for identifying negative controls. Comma-separated list of negative control sample names.\n"
         )
         ( "precision", po::value( &opts_normalize->precision_digits )
           ->default_value( static_cast<std::size_t>( 2 ) ),
