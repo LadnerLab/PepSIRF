@@ -20,7 +20,7 @@ namespace std
         }
     };
 
-}; // namespace std 
+}; // namespace std
 
 
 
@@ -55,7 +55,7 @@ namespace evaluation_strategy
     {
         return string_drs_map.find( strategy )->second;
     }
-    
+
 };
 
 options_subjoin::options_subjoin() = default;
@@ -64,8 +64,18 @@ std::string options_subjoin::get_arguments()
 {
     std::ostringstream str_stream;
 
-    std::for_each( matrix_name_pairs.begin(),
-                   matrix_name_pairs.end(),
+    std::for_each( multi_matrix_name_pairs.begin(),
+                   multi_matrix_name_pairs.end(),
+                   [&]( const std::pair<std::string,std::string>& str )
+                   {
+                       str_stream << "--multi_file        "
+                                  << str.first << "," << str.second
+                                  << "\n ";
+                   }
+                 );
+
+    std::for_each( input_matrix_name_pairs.begin(),
+                   input_matrix_name_pairs.end(),
                    [&]( const std::pair<std::string,std::string>& str )
                    {
                        str_stream << "--filter_scores        "
@@ -77,7 +87,7 @@ std::string options_subjoin::get_arguments()
     str_stream << "--duplicate_evaluation " <<
         evaluation_strategy::string_drs_map[ duplicate_resolution_strategy ]
                << "\n ";
-    str_stream << "--output               " << out_matrix_fname << "\n " << 
+    str_stream << "--output               " << out_matrix_fname << "\n " <<
                   "\n";
 
     return str_stream.str();

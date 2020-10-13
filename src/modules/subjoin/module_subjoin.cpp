@@ -49,7 +49,24 @@ void module_subjoin::run( options *opts )
     options_subjoin *s_opts = (options_subjoin*) opts;
     std::vector<peptide_score_data_sample_major>
         parsed_score_data;
-    parsed_score_data.resize( s_opts->matrix_name_pairs.size() );
+    // join matrix name pairs provided by potentially both/either a multifile input and command input.
+    std::vector<std::pair<std::string,std::string>> matrix_name_pairs;
+    matrix_name_pairs.reserve( s_opts->input_matrix_name_pairs.size() + s_opts->multi_matrix_name_pairs.size() );
+    if( !s_opts->input_matrix_name_pairs.empty() )
+        {
+            matrix_name_pairs.insert( matrix_name_pairs.end(),
+                                      s_opts->input_matrix_name_pairs.begin(),
+                                      s_opts->input_matrix_name_pairs.end()
+                                    );
+        }
+    if( !s_opts->multi_matrix_name_pairs.empty() )
+        {
+            matrix_name_pairs.insert( matrix_name_pairs.end(),
+                                      s_opts->multi_matrix_name_pairs.begin(),
+                                      s_opts->multi_matrix_name_pairs.end()
+                                    );
+        }
+    parsed_score_data.resize( matrix_name_pairs.size() );
     std::uint32_t idx = 0;
 
     bool use_peptide_names = !s_opts->use_sample_names;
@@ -60,10 +77,10 @@ void module_subjoin::run( options *opts )
 
     // for all of the ( score_matrix, names_to_filter ) pairs:
     #pragma omp parallel for num_threads( 2 ) private( idx ) schedule( dynamic ) \
-            shared( s_opts, parsed_score_data )
-    for( idx = 0; idx < s_opts->matrix_name_pairs.size(); ++idx )
+            shared( matrix_name_pairs, parsed_score_data )
+    for( idx = 0; idx < matrix_name_pairs.size(); ++idx )
         {
-            auto &score_name_pair = s_opts->matrix_name_pairs[ idx ];
+            auto &score_name_pair = matrix_name_pairs[ idx ];
 
             peptide_score_data_sample_major&
                 my_data = parsed_score_data[ idx ];

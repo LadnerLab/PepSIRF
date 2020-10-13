@@ -25,8 +25,68 @@ bool options_parser_subjoin::parse( int argc, char ***argv, options *opts )
          "can create a subset of an existing matrix, can combine multiple matrices "
          "together or perform a combination of these two functions.\n"
         )
-        ( "filter_scores,f", po::value( &matrix_name_list_pairs )->required()
-          ->notifier( [&]( const std::vector<std::string>& name_pairs )
+        ( "multi_file,m", po::value<std::string>()->default_value( "" )
+          ->notifier( [&]( const std::string& provided_string )
+                      {
+                            std::ifstream input_f{ provided_string };
+                            if( !provided_string.empty() )
+                                {
+                                    if( input_f.fail() )
+                                        {
+                                            throw std::runtime_error( "Unable to open multi_file input.\n" );
+                                        }
+                                    std::vector<std::string> split_output;
+                                    std::string line;
+                                    while( std::getline( input_f, line ) )
+                                    {
+                                        boost::split( split_output, line, boost::is_any_of( "\t" ) );
+
+                                        if( split_output.size() == 2 )
+                                            {
+                                                boost::trim( split_output[ 0 ] );
+                                                boost::trim( split_output[ 1 ] );
+
+                                                opts_subjoin->multi_matrix_name_pairs.push_back(
+                                                                                std::make_pair(
+                                                                                    split_output[ 0 ],
+                                                                                    split_output[ 1 ]
+                                                                                )
+                                                );
+                                            }
+                                        else if( split_output.size() == 1 )
+                                            {
+                                                opts_subjoin->multi_matrix_name_pairs.push_back(
+                                                                                std::make_pair(
+                                                                                    split_output[0],
+                                                                                    ""
+                                                                                )
+                                                );
+                                            }
+                                        else
+                                            {
+                                                throw po::validation_error(
+                                                po::validation_error::invalid_option_value,
+                                                "multi_file",
+                                                provided_string
+                                                );
+
+                                            }
+
+                                    }
+                                }
+
+                      }
+                    ),
+          "The name of a tab-delimited file containing score_matrix "
+          "and sample name list filename pairs, one per line. "
+          "Each of these pairs must be a score matrix and a file "
+          "containing the names of samples (or peptides, if specified) "
+          "to keep in the score matrix. The score matrix should be of the format output by the "
+          "demux module, with sample names on the columns and peptide names on the rows. "
+          "The namelist must have one name per line, but can optionally have 2.\n"
+        )
+        ( "filter_scores,f", po::value( &matrix_name_list_pairs )->notifier(
+                    [&]( const std::vector<std::string>& name_pairs )
                       {
                           std::vector<std::string> split_output;
 
@@ -43,7 +103,7 @@ bool options_parser_subjoin::parse( int argc, char ***argv, options *opts )
                                           boost::trim( split_output[ 1 ] );
 
                                           opts_subjoin
-                                              ->matrix_name_pairs.push_back( std::make_pair
+                                              ->input_matrix_name_pairs.push_back( std::make_pair
                                                                              ( split_output[ 0 ],
                                                                                split_output[ 1 ]
                                                                                )
@@ -55,7 +115,7 @@ bool options_parser_subjoin::parse( int argc, char ***argv, options *opts )
                                             std::ifstream input_f{ split_output[ 0 ] };
                                             if( input_f.fail() )
                                                 {
-                                                    throw std::runtime_error( "Unable to open input file for reading" );
+                                                    throw std::runtime_error( "Unable to open input file for reading.\n" );
                                                 }
                                             std::string line;
                                             std::getline( input_f, line );
@@ -67,7 +127,7 @@ bool options_parser_subjoin::parse( int argc, char ***argv, options *opts )
                                                     std::cout << "WARNING: No sample name list has been given and provided "
                                                                 "file does not contain filename pairs. All scores will be "
                                                                 "output without filter.\n";
-                                                    opts_subjoin->matrix_name_pairs.emplace_back( std::make_pair( split_output[0], "" ) );
+                                                    opts_subjoin->input_matrix_name_pairs.emplace_back( std::make_pair( split_output[0], "" ) );
                                                 }
                                             // Is a file containing filename pairs
                                             else
@@ -82,7 +142,7 @@ bool options_parser_subjoin::parse( int argc, char ***argv, options *opts )
                                                                                 if( a != end )
                                                                                     ++a;
                                                                             return std::make_pair( f, *a ); },
-                                                                            std::back_inserter( opts_subjoin->matrix_name_pairs )
+                                                                            std::back_inserter( opts_subjoin->input_matrix_name_pairs )
                                                                         );
                                                 }
                                       }
@@ -100,9 +160,7 @@ bool options_parser_subjoin::parse( int argc, char ***argv, options *opts )
 
                       }
                     ),
-          "Either comma-separated filenames (For example: score_matrix.tsv,sample_names.txt ), "
-          "or the name of a tab-delimited file containing score_matrix "
-          "and sample name list filename pairs, one per line. "
+          "Comma-separated filenames (For example: score_matrix.tsv,sample_names.txt ). "
           "Each of these pairs must be a score matrix and a file "
           "containing the names of samples (or peptides, if specified) "
           "to keep in the score matrix. The score matrix should be of the format output by the "
