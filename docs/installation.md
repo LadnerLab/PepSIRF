@@ -1,11 +1,8 @@
-# PepSIRF: Peptide-based Serological Immune Response Framework
-
-<img src="./img/logo.png" alt="Your image title" width="1024"/>
-
-Visit our GitHub Pages website: [https://ladnerlab.github.io/PepSIRF/](https://ladnerlab.github.io/PepSIRF/)
-
-### Current Version: v1.3.2
-
+---
+layout: default
+title: Installation
+permalink: /installation/
+---
 ### Dependencies
 - cmake version 3.9 or higher.
 - boost version 1.66 or higher.
@@ -40,7 +37,6 @@ module system is managed. For example on NAU's Monsoon cluster:
 ```
 cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DBOOST_ROOT=/packages/boost/1.66.0-gcc-6.2.0 ..
 ```
-
 ### Usage
 PepSIRF is a module-based program, and each module has its own set of arguments.
 ```

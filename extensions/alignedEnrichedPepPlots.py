@@ -23,8 +23,12 @@ def main():
     p.add_option('-n', '--minDepth', type='float', default=100, help='Minimum count to be included in plot. [100]')
     p.add_option('--readDepthToo', action='store_true', default=False, help='Use this flag to also generate a plot showing combined read depth at each position. This is most appropriate with normalized read count data. [False]')
     p.add_option('--withLabels', action='store_true', default=False, help='Use this flag to include sample labels on y-axis. [False]')
+    p.add_option('--sampleOrder', help='Can provide a plain text file with the order you would like the samples to appear in the plot. [Optional]')
     opts, args = p.parse_args()
     
+
+    #Read in sample order for plots, IF provided
+    sampOrderList = fileList(opts.sampleOrder)
 
     #Read in probes
     names,tseqs = read_fasta_lists(opts.probes)
@@ -73,14 +77,20 @@ def main():
     #Make probe count plots
     #By default, any sample that starts with "Super" is excluded. These are expected to be negative controls
     for each in opts.speciesIDs.split(","):
-        plotAlignHits([x for x in list(data.keys()) if not x.startswith("Super")], each, alInfo, data, mapDict, id2name, opts.minDepth, annotD, opts)
+        if opts.sampleOrder:
+            plotAlignHits(sampOrderList, each, alInfo, data, mapDict, id2name, opts.minDepth, annotD, opts)
+        else:
+            plotAlignHits([x for x in list(data.keys()) if not x.startswith("Super")], each, alInfo, data, mapDict, id2name, opts.minDepth, annotD, opts)
     
 
     #Make read count depth plots (will be most appropriate with normalized read counts)
     #By default, any sample that starts with "Super" is excluded. These are expected to be negative controls
     if opts.readDepthToo:
         for each in opts.speciesIDs.split(","):
-            plotAlignDepth([x for x in list(data.keys()) if not x.startswith("Super")], each, alInfo, data, mapDict, id2name, opts.minDepth, annotD, opts)
+            if opts.sampleOrder:
+                plotAlignDepth(sampOrderList, each, alInfo, data, mapDict, id2name, opts.minDepth, annotD, opts)
+            else:
+                plotAlignDepth([x for x in list(data.keys()) if not x.startswith("Super")], each, alInfo, data, mapDict, id2name, opts.minDepth, annotD, opts)
 
 #----------------------End of main()
 
