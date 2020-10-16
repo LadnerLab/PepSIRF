@@ -93,11 +93,11 @@ bool options_parser_subjoin::parse( int argc, char ***argv, options *opts )
                                       }
                                   else if( split_output.size() == 1 )
                                       {
+
                                           std::cout << "\nWARNING: No sample name list has been given for "
                                                     << split_output[0]
                                                     << ". All samples from this input matrix will be included.\n";
                                           opts_subjoin->input_matrix_name_pairs.emplace_back( std::make_pair( split_output[0], "" ) );
-
                                       }
                                   else
                                       {
