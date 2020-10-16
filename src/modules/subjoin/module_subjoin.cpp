@@ -1,7 +1,6 @@
 #include <unordered_set>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/algorithm/string/split.hpp>
-#include <boost/algorithm/string.hpp>
 #include "module_subjoin.h"
 #include "matrix.h"
 #include <iostream>
@@ -50,28 +49,7 @@ void module_subjoin::run( options *opts )
     options_subjoin *s_opts = (options_subjoin*) opts;
     std::vector<peptide_score_data_sample_major>
         parsed_score_data;
-    // join matrix name pairs provided by potentially both/either a multifile input and command input.
-    std::vector<std::pair<std::string,std::string>> matrix_name_pairs;
-    if( s_opts->input_matrix_name_pairs.size() + s_opts->multi_matrix_name_pairs.size() == 0 )
-        {
-            throw std::runtime_error( "No -i (--input) or -m (--multi_file) input has been provided. Manipulation cannot proceed.\n" );
-        }
-    matrix_name_pairs.reserve( s_opts->input_matrix_name_pairs.size() + s_opts->multi_matrix_name_pairs.size() );
-    if( !s_opts->multi_matrix_name_pairs.empty() )
-        {
-            matrix_name_pairs.insert( matrix_name_pairs.end(),
-                                      s_opts->multi_matrix_name_pairs.begin(),
-                                      s_opts->multi_matrix_name_pairs.end()
-                                    );
-        }
-    if( !s_opts->input_matrix_name_pairs.empty() )
-        {
-            matrix_name_pairs.insert( matrix_name_pairs.end(),
-                                      s_opts->input_matrix_name_pairs.begin(),
-                                      s_opts->input_matrix_name_pairs.end()
-                                    );
-        }
-    parsed_score_data.resize( matrix_name_pairs.size() );
+    parsed_score_data.resize( s_opts->matrix_name_pairs.size() );
     std::uint32_t idx = 0;
 
     bool use_peptide_names = !s_opts->use_sample_names;
@@ -82,10 +60,10 @@ void module_subjoin::run( options *opts )
 
     // for all of the ( score_matrix, names_to_filter ) pairs:
     #pragma omp parallel for num_threads( 2 ) private( idx ) schedule( dynamic ) \
-            shared( matrix_name_pairs, parsed_score_data )
-    for( idx = 0; idx < matrix_name_pairs.size(); ++idx )
+            shared( s_opts, parsed_score_data )
+    for( idx = 0; idx < s_opts->matrix_name_pairs.size(); ++idx )
         {
-            auto &score_name_pair = matrix_name_pairs[ idx ];
+            auto &score_name_pair = s_opts->matrix_name_pairs[ idx ];
 
             peptide_score_data_sample_major&
                 my_data = parsed_score_data[ idx ];
@@ -105,13 +83,11 @@ void module_subjoin::run( options *opts )
                 name_replacement_list replacement_names;
                 if( score_name_pair.second.empty() )
                     {
-                        std::string line;
+                        std::string header_line;
                         std::ifstream matrix_names( matrix_name_list,
                                                      std::ios_base::in );
-                        std::getline( matrix_names, line );
-
-                        boost::split( peptide_name_list, line, boost::is_any_of( "\t" ) );
-
+                        std::getline( matrix_names, header_line );
+                        boost::split( peptide_name_list, header_line, boost::is_any_of( "\t" ) );
                     }
                 else
                     {
@@ -143,7 +119,7 @@ void module_subjoin::run( options *opts )
                             }
                         else
                             {
-                                    std::cout << "WARNING: The sample "
+                                std::cout << "WARNING: The sample "
                                           << name_repl_pair.first
                                           << " was not found in "
                                           << "the input matrix, "
@@ -177,14 +153,11 @@ void module_subjoin::run( options *opts )
                                        != names.end();
                                    if( !res )
                                        {
-                                           if( boost::to_lower_copy( name ) != "sequence name" )
-                                                {
-                                                    std::cout << "WARNING: The sample "
-                                                            << name
-                                                            << " was not found in "
-                                                            << "the input matrix, "
-                                                            << "and will not be included in the output.\n";
-                                                }
+                                           std::cout << "WARNING: The sample "
+                                                     << name
+                                                     << " was not found in "
+                                                     << "the input matrix, "
+                                                     << "and will not be included in the output.\n";
                                        }
                                    else
                                        {
