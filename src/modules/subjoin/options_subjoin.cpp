@@ -78,7 +78,7 @@ std::string options_subjoin::get_arguments()
                    input_matrix_name_pairs.end(),
                    [&]( const std::pair<std::string,std::string>& str )
                    {
-                       str_stream << "--filter_scores        "
+                       str_stream << "--input        "
                                   << str.first << "," << str.second
                                   << "\n ";
                    }

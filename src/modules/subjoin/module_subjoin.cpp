@@ -1,6 +1,7 @@
 #include <unordered_set>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string.hpp>
 #include "module_subjoin.h"
 #include "matrix.h"
 #include <iostream>
@@ -51,19 +52,23 @@ void module_subjoin::run( options *opts )
         parsed_score_data;
     // join matrix name pairs provided by potentially both/either a multifile input and command input.
     std::vector<std::pair<std::string,std::string>> matrix_name_pairs;
-    matrix_name_pairs.reserve( s_opts->input_matrix_name_pairs.size() + s_opts->multi_matrix_name_pairs.size() );
-    if( !s_opts->input_matrix_name_pairs.empty() )
+    if( s_opts->input_matrix_name_pairs.size() + s_opts->multi_matrix_name_pairs.size() == 0 )
         {
-            matrix_name_pairs.insert( matrix_name_pairs.end(),
-                                      s_opts->input_matrix_name_pairs.begin(),
-                                      s_opts->input_matrix_name_pairs.end()
-                                    );
+            throw std::runtime_error( "No -i (--input) or -m (--multi_file) input has been provided. Manipulation cannot proceed.\n" );
         }
+    matrix_name_pairs.reserve( s_opts->input_matrix_name_pairs.size() + s_opts->multi_matrix_name_pairs.size() );
     if( !s_opts->multi_matrix_name_pairs.empty() )
         {
             matrix_name_pairs.insert( matrix_name_pairs.end(),
                                       s_opts->multi_matrix_name_pairs.begin(),
                                       s_opts->multi_matrix_name_pairs.end()
+                                    );
+        }
+    if( !s_opts->input_matrix_name_pairs.empty() )
+        {
+            matrix_name_pairs.insert( matrix_name_pairs.end(),
+                                      s_opts->input_matrix_name_pairs.begin(),
+                                      s_opts->input_matrix_name_pairs.end()
                                     );
         }
     parsed_score_data.resize( matrix_name_pairs.size() );
@@ -100,11 +105,13 @@ void module_subjoin::run( options *opts )
                 name_replacement_list replacement_names;
                 if( score_name_pair.second.empty() )
                     {
-                        std::string header_line;
+                        std::string line;
                         std::ifstream matrix_names( matrix_name_list,
                                                      std::ios_base::in );
-                        std::getline( matrix_names, header_line );
-                        boost::split( peptide_name_list, header_line, boost::is_any_of( "\t" ) );
+                        std::getline( matrix_names, line );
+
+                        boost::split( peptide_name_list, line, boost::is_any_of( "\t" ) );
+
                     }
                 else
                     {
@@ -136,7 +143,7 @@ void module_subjoin::run( options *opts )
                             }
                         else
                             {
-                                std::cout << "WARNING: The sample "
+                                    std::cout << "WARNING: The sample "
                                           << name_repl_pair.first
                                           << " was not found in "
                                           << "the input matrix, "
@@ -170,11 +177,14 @@ void module_subjoin::run( options *opts )
                                        != names.end();
                                    if( !res )
                                        {
-                                           std::cout << "WARNING: The sample "
-                                                     << name
-                                                     << " was not found in "
-                                                     << "the input matrix, "
-                                                     << "and will not be included in the output.\n";
+                                           if( boost::to_lower_copy( name ) != "sequence name" )
+                                                {
+                                                    std::cout << "WARNING: The sample "
+                                                            << name
+                                                            << " was not found in "
+                                                            << "the input matrix, "
+                                                            << "and will not be included in the output.\n";
+                                                }
                                        }
                                    else
                                        {
