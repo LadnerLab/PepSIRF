@@ -25,29 +25,29 @@ namespace evaluation_strategy
 };
 
 /**
- * Options for the subjoin module of the
+ * Options for the subjoin module of the 
  * PepSIRF package.
  **/
 class options_subjoin : public options
 {
  public:
 
-    options_subjoin();
+    options_subjoin(); 
     /**
-     * Returns a string of the arguments provided
+     * Returns a string of the arguments provided 
      * to the module.
      **/
     std::string get_arguments();
 
-    std::vector<std::pair<std::string,std::string>> multi_matrix_name_pairs;
-    std::vector<std::pair<std::string,std::string>> input_matrix_name_pairs;
+    std::vector<std::pair<std::string,std::string>> matrix_name_pairs;
+
     /**
      * The name of the file to write output to.
      **/
     std::string out_matrix_fname;
 
     /**
-     * Boolean option to determine whether
+     * Boolean option to determine whether 
      * sample names or peptide names should be
      * used.
      **/
