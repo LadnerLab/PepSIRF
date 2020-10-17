@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.3] - 2020-10-16
+- Subjoin bugfix where first line of list of provided matrix filenames may be skipped.
+- Subjoin -f flag has become two separate flags, -i(--input) and -m(--multi_file). This is to increase flexability in
+  providing a variety of input.
+- Subjoin gave warnings when reading the "Sequence name" header as a sample name. This issue was created from 1.3.0 feature addition.
+
 ## [1.3.2] - 2020-09-20
 - Fixed issue with Zlib compilation error on Mac.
 - Added additional output features to demux to aid in diagnosis and tracing of the 2 possible indexes given and DNA tag matches.
