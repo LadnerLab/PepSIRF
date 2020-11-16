@@ -91,15 +91,16 @@ void module_p_enrich::run( options *opts )
             raw_scores.sample_names.end()
             };
 
+    std::vector<paired_score> enriched_probes;
+
     peptide_score_data_sample_major *curr_matrix_ptr;
     std::vector<double> *curr_thresholds_ptr;
-    for( std::size_t sample_idx = 0;
-         sample_idx < sample_pairs.size();
-         ++sample_idx
-       )
+    for( std::size_t sample_idx = 0; sample_idx < sample_pairs.size(); ++sample_idx )
         {
-            for( curr_matrix = 0; curr_matrix < matrix_thresh_pairs.size(); curr_matrix++ )
+
+            for( curr_matrix = 0; curr_matrix < matrix_thresh_pairs.size(); ++curr_matrix )
                 {
+
                     curr_matrix_ptr = &matrix_thresh_pairs[curr_matrix].first;
                     curr_thresholds_ptr = &matrix_thresh_pairs[curr_matrix].second;
 
@@ -148,8 +149,6 @@ void module_p_enrich::run( options *opts )
                                                         raw_scores_ptr,
                                                         sample_pairs[ sample_idx ]
                                                         );
-                            std::vector<paired_score> enriched_probes;
-                            enriched_probes.reserve( enrichment_candidates.size() );
 
                             // only attempt to get the column sum if raw counts
                             // have been specified
@@ -176,28 +175,27 @@ void module_p_enrich::run( options *opts )
                                                 {
                                                     enriched_probes.emplace_back( candidate );
                                                 }
-
-                                        }
-
-                                    if( !enriched_probes.empty() )
-                                        {
-                                            std::string outf_name =
-                                                p_opts->out_dirname + '/'
-                                                + sample_pairs[ sample_idx ].first
-                                                + p_opts->out_fname_join
-                                                + sample_pairs[ sample_idx ].second
-                                                + p_opts->out_suffix;
-                                            std::ofstream out_file{ outf_name, std::ios_base::out };
-
-                                            pepsirf_io::write_file( out_file,
-                                                                    enriched_probes.begin(),
-                                                                    enriched_probes.end(),
-                                                                    "\n"
-                                                                );
-
                                         }
                                 }
                         }
+                }
+
+            if( !enriched_probes.empty() )
+                {
+                    std::string outf_name =
+                        p_opts->out_dirname + '/'
+                        + sample_pairs[ sample_idx ].first
+                        + p_opts->out_fname_join
+                        + sample_pairs[ sample_idx ].second
+                        + p_opts->out_suffix;
+                    std::ofstream out_file{ outf_name, std::ios_base::out };
+
+                    pepsirf_io::write_file( out_file,
+                                            enriched_probes.begin(),
+                                            enriched_probes.end(),
+                                            "\n"
+                                        );
+
                 }
         }
 }
