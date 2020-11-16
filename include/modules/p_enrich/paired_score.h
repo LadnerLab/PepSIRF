@@ -11,27 +11,23 @@ class paired_score
     using pair = std::pair<double,double>;
 
     std::string pep_name;
-    pair zscore;
-    pair norm_score;
+    // score represents either a norm score or zscore pair
+    pair score;
     pair raw_score;
 
  paired_score( const std::string pep_name,
-               const pair& zscore,
-               const pair& norm_score,
+               const pair& score,
                const pair& raw_score
              )
      : pep_name{ pep_name },
-       zscore{ zscore },
-       norm_score{ norm_score },
+       score{ score },
        raw_score{ raw_score } {}
 
  paired_score( const std::string& pep_name,
-               const pair& zscore,
-               const pair& norm_score
+               const pair& score
              )
      : paired_score{ pep_name,
-                     zscore,
-                     norm_score,
+                     score,
                      { 0.0, 0.0 }
                    } {}
 

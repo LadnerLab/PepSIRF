@@ -6,7 +6,7 @@
 #include <stdexcept>
 #include <iostream>
 #include "stream_tools.h"
-
+#include "file_io.h"
 #include "predicate.h"
 
 bool options_parser_p_enrich::parse( int argc, char ***argv, options *opts )
@@ -32,32 +32,41 @@ bool options_parser_p_enrich::parse( int argc, char ***argv, options *opts )
           "independent of order. Note that a peptide must meet each specified threshold "
           "(e.g., zscore, norm count and raw count) in order to be considered enriched.\n"
         )
-        ( "samples,s", po::value( &opts_p_enrich->in_samples_fname )
-          ->required(),
+        ( "threshhold_file,t", po::value( &opts_p_enrich->threshold_fname )->required()->notifier(
+                                [&]( std::string input_filename )->void
+                                  {
+                                    std::ifstream input_f{ input_filename };
+                                    if( input_f.fail() )
+                                        {
+                                          throw std::runtime_error( "Unable to open threshold_file input.\n" );
+                                        }
+                                    std::string line;
+                                    std::vector<std::string> matrix_thresh_pairs;
+                                    while( getline( input_f, line ) )
+                                      {
+                                        boost::split( matrix_thresh_pairs, line, boost::is_any_of( "\t" ) );
+                                        if( matrix_thresh_pairs.size() == 2 )
+                                          {
+                                            opts_p_enrich->matrix_thresh_fname_pairs.emplace_back(
+                                                          std::make_pair( matrix_thresh_pairs[0], matrix_thresh_pairs[1] ) );
+                                          }
+                                        else
+                                          {
+                                            throw std::runtime_error( "The input file must contain a matrix filename with threshold(s) "
+                                            "where the filename and thresholds are tab-delimited and thresholds are comma-delimited.\n" );
+                                          }
+                                      }
+                                  }
+                                ),
+          "The name of a file containing one tab-delimited matrix filename and threshold(s), one per line. If more than one threshold then separate "
+          "by comma. A matrix file may contain the zscores or normalized counts of each peptide in every sample of interest. This should be in the "
+          "format output by the zscore module, with peptides on the rows and sample names on the columns. "
+          "The provided thresholds should be comma-separated if more than one is provided for a single matrix file.\n"
+        )
+        ( "samples,s", po::value( &opts_p_enrich->in_samples_fname ),
           "The name of the file containing sample pair information, denoting which "
           "samples, in the input matrices, are replicates. This file must be "
           "tab-delimited with one pair of samples per line.\n"
-        )
-        ( "zscores,z", po::value( &opts_p_enrich->in_zscore_fname )
-          ->required(),
-          "A tab-delimited matrix containing the zscores of each peptide in every "
-          "sample of interest. This should be in the format output by the zscore module, "
-          "with peptides on the rows and sample names on the columns.\n"
-        )
-        ( "zscore_constraint", po::value( &opts_p_enrich->zscore_params )
-          ->required(),
-          "Comma-separated zscores thresholds. These thresholds will be evaluated as "
-          "specified in the module description. Example: '--zscore_constraint 3.5,4.0'.\n"
-        )
-        ( "norm_scores,n", po::value( &opts_p_enrich->in_norm_scores_fname )
-          ->required(),
-          "A tab-delimited matrix containing normalized counts for each peptide in each "
-          "sample of interest.\n"
-        )
-        ( "norm_score_constraint", po::value( &opts_p_enrich->norm_scores_params )
-          ->required(),
-          "Comma-separated normalized count thresholds. These thresholds will be evaluated "
-          "as specified in the module description. Example: '--norm_score_constraint 5.5,6.0'.\n"
         )
         ( "raw_scores,r", po::value( &opts_p_enrich->in_raw_scores_fname )
           ->default_value( "" ),
@@ -65,17 +74,15 @@ bool options_parser_p_enrich::parse( int argc, char ***argv, options *opts )
           "must contain the raw counts for each peptide. If included, '--raw_score_constraint' "
           "must also be specified.\n"
         )
-        ( "raw_score_constraint", po::value( &opts_p_enrich->raw_scores_params )
-          ->default_value( std::pair<double,double>{ 0.0, 0.0 } )
-          ->notifier( [&]( const std::pair<double,double>& val ) -> void
+        ( "raw_score_constraint", po::value( &opts_p_enrich->raw_scores_params_str )
+          ->default_value( "" )
+          ->notifier( [&]( const std::string& params_str ) -> void
                       {
                           if( !predicate::biconditional( vm[ "raw_scores" ].defaulted(),
                                                          vm[ "raw_score_constraint" ].defaulted()
                                                        )
 
-                              // dirty hack to ensure the argument is used
-                              && val.first < std::numeric_limits<double>::max()
-                              )
+                              && params_str.empty() )
                               {
                                   throw std::runtime_error( "If either 'raw_scores' "
                                                             "or 'raw_score_constraint' options "
