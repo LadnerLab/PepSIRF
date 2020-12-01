@@ -23,6 +23,12 @@ class paired_score
        score{ score },
        raw_score{ raw_score } {}
 
+// this paired score represents data where the peptide may be stored separately (eg. map w/ pep name as key)
+paired_score( const pair& score,
+              const pair& raw_score
+            )
+     : score{score},raw_score{raw_score} {}
+
  paired_score( const std::string& pep_name,
                const pair& score
              )

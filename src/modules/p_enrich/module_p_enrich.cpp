@@ -91,19 +91,21 @@ void module_p_enrich::run( options *opts )
             raw_scores.sample_names.end()
             };
 
-    std::vector<paired_score> enriched_probes;
 
+    bool valid_candidate;
+    bool raw_count_enriched = true;
     peptide_score_data_sample_major *curr_matrix_ptr;
-    std::vector<double> *curr_thresholds_ptr;
     for( std::size_t sample_idx = 0; sample_idx < sample_pairs.size(); ++sample_idx )
         {
-
+            std::vector<paired_score> enriched_probes;
+            std::vector<std::map<std::string,paired_score>> all_enrichment_candidates;
+            all_enrichment_candidates.resize( matrix_thresh_pairs.size() );
             for( curr_matrix = 0; curr_matrix < matrix_thresh_pairs.size(); ++curr_matrix )
                 {
 
                     curr_matrix_ptr = &matrix_thresh_pairs[curr_matrix].first;
-                    curr_thresholds_ptr = &matrix_thresh_pairs[curr_matrix].second;
 
+                    // list of samples
                     sample_name_set matrix_sample_names{ curr_matrix_ptr->sample_names.begin(),
                         curr_matrix_ptr->sample_names.end() };
 
@@ -144,12 +146,12 @@ void module_p_enrich::run( options *opts )
                         }
                     else
                         {
-                            auto enrichment_candidates =
-                                get_enrichment_candidates( curr_matrix_ptr,
-                                                        raw_scores_ptr,
-                                                        sample_pairs[ sample_idx ]
-                                                        );
-
+                            //create a vector of enrichment candidates - each vector of paired scores for a thresholds file provided
+                            get_enrichment_candidates( &all_enrichment_candidates[curr_matrix],
+                                                       curr_matrix_ptr,
+                                                       raw_scores_ptr,
+                                                       sample_pairs[ sample_idx ]
+                                                     );
                             // only attempt to get the column sum if raw counts
                             // have been specified
                             std::pair<double,double>
@@ -157,29 +159,50 @@ void module_p_enrich::run( options *opts )
 
                             if( raw_counts_included )
                                 {
-                                    col_sums = get_raw_sums( enrichment_candidates.begin(),
-                                                            enrichment_candidates.end()
-                                                        );
+                                    col_sums = get_raw_sums( all_enrichment_candidates[curr_matrix].begin(),
+                                                    all_enrichment_candidates[curr_matrix].end()
+                                                );
                                 }
-
-                            bool raw_count_enriched = raw_counts_included
-                                ? thresholds_met( col_sums, raw_score_params )
+                            // determine if raw count is enriched if meets or is over threshold
+                            raw_count_enriched = raw_counts_included
+                                ? ( raw_count_enriched && thresholds_met( col_sums, raw_score_params ) )
                                 : true;
-
-                            if( raw_count_enriched )
-                                {
-                                    for( const auto& candidate : enrichment_candidates )
-                                        {
-
-                                            if( thresholds_met( candidate.score, *curr_thresholds_ptr ) )
-                                                {
-                                                    enriched_probes.emplace_back( candidate );
-                                                }
-                                        }
-                                }
                         }
                 }
+            if( raw_count_enriched )
+                {
+                    // verify all candidates of the same peptide name are over given thresholds
+                    for( const auto& candidate : all_enrichment_candidates[0] )
+                        {
+                            std::string pep_name = candidate.first;
+                            valid_candidate = true;
+                            for( std::size_t curr_map = 0; curr_map < all_enrichment_candidates.size(); ++curr_map )
+                                {
+                                    // if( all_enrichment_candidates[curr_map].find( pep_name ) != all_enrichment_candidates[curr_map].end() )
+                                    //     {
 
+                                    if( valid_candidate
+                                        && thresholds_met( all_enrichment_candidates[curr_map].at( pep_name ).score,
+                                                        matrix_thresh_pairs[curr_map].second ) )
+                                        {
+                                            valid_candidate = true;
+                                        }
+                                    else
+                                        {
+                                            valid_candidate = false;
+                                        }
+                                        // }
+                                }
+                            if( valid_candidate )
+                                {
+                                    paired_score enriched_probe = { pep_name,
+                                                                    candidate.second.score,
+                                                                    candidate.second.raw_score };
+                                    enriched_probes.emplace_back( enriched_probe );
+                                }
+                        }
+
+                }
             if( !enriched_probes.empty() )
                 {
                     std::string outf_name =
@@ -195,11 +218,10 @@ void module_p_enrich::run( options *opts )
                                             enriched_probes.end(),
                                             "\n"
                                         );
-
                 }
+
         }
 }
-
 
 std::vector<module_p_enrich::sample_type>
 module_p_enrich::parse_samples( std::istream& file )
@@ -236,8 +258,8 @@ module_p_enrich::parse_samples( std::istream& file )
     return return_val;
 }
 
-std::vector<paired_score>
-module_p_enrich::get_enrichment_candidates( const peptide_score_data_sample_major *matrix_score_data,
+void module_p_enrich::get_enrichment_candidates( std::map<std::string,paired_score> *enrichment_candidates,
+                                            const peptide_score_data_sample_major *matrix_score_data,
                                             const peptide_score_data_sample_major *raw_score_data,
                                             const std::pair<std::string,std::string> sample_names
                                           )
@@ -250,7 +272,6 @@ module_p_enrich::get_enrichment_candidates( const peptide_score_data_sample_majo
     for( pep_idx = 0; pep_idx < matrix_score_data->pep_names.size(); ++pep_idx )
         {
             std::string pep_name = matrix_score_data->pep_names[ pep_idx ];
-
             // get matrix score (norm or zscore) in each of the sample
             pair matrix_scores = { matrix_score_data->scores( sample_names.first, pep_name ),
                              matrix_score_data->scores( sample_names.second, pep_name )
@@ -267,13 +288,11 @@ module_p_enrich::get_enrichment_candidates( const peptide_score_data_sample_majo
                                  };
                 }
 
-            paired_score candidate{ pep_name,
-                                    matrix_scores,
+            paired_score candidate{ matrix_scores,
                                     raw_scores
                                   };
 
-            candidates.emplace_back( candidate );
+            enrichment_candidates->emplace( pep_name, candidate );
         }
 
-    return candidates;
 }

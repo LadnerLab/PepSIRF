@@ -7,6 +7,7 @@
 #include "options_p_enrich.h"
 #include "peptide_scoring.h"
 #include "paired_score.h"
+#include <map>
 
 class module_p_enrich : public module
 {
@@ -103,20 +104,12 @@ public:
                                            Iterator end
                                          )
     {
-        // ensure we have the correct type of iterator
-        static_assert( std::is_same<typename Iterator::value_type,
-                                    paired_score>
-                       ::value,
-                       "get_raw_sums is only valid for Iterators of "
-                       "paired_score type"
-                     );
-
         std::pair<double,double> sums{ 0.0, 0.0 };
 
-        for( auto current = begin; current != end; ++current )
+        for( std::map<std::string,paired_score>::iterator current = begin; current != end; ++current )
             {
-                sums.first  += current->raw_score.first;
-                sums.second += current->raw_score.second;
+                sums.first  += current->second.raw_score.first;
+                sums.second += current->second.raw_score.second;
             }
 
         return sums;
@@ -124,21 +117,19 @@ public:
 
     /**
      * Get enrichment candidates for peptides in a sample pair.
-     * @param zscore_data pointer to data containing zscores for both samples in
-     *        the sample_names pair.
-     * @param norm_score_data pointer to data containing normalized scores.
+     * @param enrichment_candidates pointer to map of paired score values for
+     *        each peptide where the key is the petide name
+     * @param matrix_score_data pointer to data containing normalized scores.
      * @param raw_score_data pointer to data containing raw scores. If this is
      *        a nullptr, raw scores will be written as zero.
      * @param sample_names the pair of samples to get enrichment candidates for.
-     * @param returns a vector of paired score values for each peptide in the pair of
-     *        samples.
+     * @param returns void
      **/
-    std::vector<paired_score>
-    get_enrichment_candidates( const peptide_score_data_sample_major *matrix_score_data,
-                               const peptide_score_data_sample_major *raw_score_data,
-                               const std::pair<std::string,std::string> sample_names
-                             );
-
+    void get_enrichment_candidates( std::map<std::string,paired_score> *enrichment_candidates,
+                                    const peptide_score_data_sample_major *matrix_score_data,
+                                    const peptide_score_data_sample_major *raw_score_data,
+                                    const std::pair<std::string,std::string> sample_names
+                                  );
 };
 
 #endif // MODULE_P_ENRICH_HH_ENCLUDED
