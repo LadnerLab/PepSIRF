@@ -46,7 +46,7 @@ bool options_parser_normalize::parse( int argc, char ***argv, options *opts )
           "Optional data matrix for sb samples.\n"
         )
         ( "negative_id,s", po::value<std::string>( &opts_normalize->neg_id )->default_value( "" ),
-          "Optional apporach for identifying negative controls. Provide a unique string at the start of all negative control samples.\n"
+          "Optional approach for identifying negative controls. Provide a unique string at the start of all negative control samples.\n"
         )
         ( "negative_names,n", po::value<std::string>( &opts_normalize->neg_names )->default_value( "" ),
           "Optional approach for identifying negative controls. Comma-separated list of negative control sample names.\n"

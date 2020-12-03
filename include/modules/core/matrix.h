@@ -35,7 +35,7 @@
 #endif
 
 /**
- * A simple matrix to implement common matrix 
+ * A simple matrix to implement common matrix
  * operations.
  **/
 template <typename ValType>
@@ -45,7 +45,7 @@ class matrix
     // TODO: Constant/mutable iterators
 
     /**
-     * An iterator providing functionality for iterating over rows/columns 
+     * An iterator providing functionality for iterating over rows/columns
      * of a matrix.
      **/
     class mutable_iterator
@@ -53,10 +53,10 @@ class matrix
 
     public:
         /**
-         * Initialize the mutable_iterator with a matrix, 
+         * Initialize the mutable_iterator with a matrix,
          * sets mutable_iterator pointer to zero.
          **/
-    mutable_iterator(  ::matrix<ValType> *matr ) 
+    mutable_iterator(  ::matrix<ValType> *matr )
             : matr( matr ),
               current_idx( 0 )
               {}
@@ -70,16 +70,16 @@ class matrix
     mutable_iterator(  ::matrix<ValType> *matr,
               std::size_t start_row,
               std::size_t start_col
-                       ) 
+                       )
             : matr( matr ),
               current_idx( matr->access_to_1d( start_row, start_col ) )
               {}
 
-        
+
         /**
-         * Determines whether the mutable_iterator has reached 
+         * Determines whether the mutable_iterator has reached
          * at least the end of the matrix.
-         * @returns boolean True if the current pointer is greater than 
+         * @returns boolean True if the current pointer is greater than
          *          the size of the matrix, False otherwise.
          **/
         bool end()
@@ -87,20 +87,20 @@ class matrix
             return current_idx >=
                  this->matr.access_to_1d( this->matr.N, this->matr.M );
         }
-        
+
         /**
-         * ant access to the current value pointed to by the 
+         * ant access to the current value pointed to by the
          * mutable_iterator.
          * @returns ant reference to the current iterated value
          **/
-         ValType& operator*() 
+         ValType& operator*()
         {
             return this->matr->operator()( this->current_idx );
         }
 
         /**
          * In-place advance the mutable_iterator forward.
-         * @param advance The number of positions to 
+         * @param advance The number of positions to
          *        advance.
          **/
         void operator+=( int advance )
@@ -109,7 +109,7 @@ class matrix
         }
 
         /**
-         * Increment in-place, return reference to 
+         * Increment in-place, return reference to
          * this mutable_iterator.
          **/
         mutable_iterator &operator++()
@@ -118,10 +118,10 @@ class matrix
             }
 
         /**
-         * Advance forward an entire row from the 
-         * current position. 
-         * @note This does not advance to the beginning of 
-         *       the row, but advances to the current position in 
+         * Advance forward an entire row from the
+         * current position.
+         * @note This does not advance to the beginning of
+         *       the row, but advances to the current position in
          *       the next row.
          **/
         mutable_iterator& next_row()
@@ -131,10 +131,10 @@ class matrix
             }
 
         /**
-         * Advance forward an entire column from the 
-         * current position. 
-         * @note This does not advance to the beginning of 
-         *       the column, but advances to the current position in 
+         * Advance forward an entire column from the
+         * current position.
+         * @note This does not advance to the beginning of
+         *       the column, but advances to the current position in
          *       the next column.
          **/
         mutable_iterator &next_col()
@@ -144,9 +144,9 @@ class matrix
             }
 
         /**
-         * Determines whether this mutable_iterator is NOT equal to 
+         * Determines whether this mutable_iterator is NOT equal to
          * another.
-         * @note We say two mutable_iterators are equal if they point to the 
+         * @note We say two mutable_iterators are equal if they point to the
          *       same position in the same matrix. See matrix::mutable_iterator::operator==
          * @returns True if !( this == comp ), false otherwise
          **/
@@ -154,17 +154,17 @@ class matrix
         {
             return !( *this == comp );
         }
-        
+
         /**
          * Determine whether two mutable_iterators are equal.
-         * @note We define two mutable_iterators as equivalent if 
-         *       they point to the same position in the same 
+         * @note We define two mutable_iterators as equivalent if
+         *       they point to the same position in the same
          *       matrix.
          * @returns True if this == comp, false otherwise.
          **/
         bool operator==( const mutable_iterator& comp ) const
         {
-            return this->matr == comp.matr 
+            return this->matr == comp.matr
                      && this->current_idx == comp.current_idx;
         }
 
@@ -173,7 +173,7 @@ class matrix
          * @param other The mutable_iterator to copy.
          * @note After calling this method, this == other will be true,
          *       and it is thus important to note that this method does not
-         *       copy the matrix pointed to by other, it copies only its 
+         *       copy the matrix pointed to by other, it copies only its
          *       pointer.
          **/
         void operator=( const typename matrix<ValType>::mutable_iterator& other )
@@ -181,11 +181,11 @@ class matrix
                 this->matr = other.matr;
                 this->current_idx = other.current_idx;
             }
-    
+
         using difference_type = std::ptrdiff_t;
         using iterator_category	= std::forward_iterator_tag;
         using value_type = ValType;
-        using pointer = ValType*; 
+        using pointer = ValType*;
         using reference = ValType&;
 
     private:
@@ -195,7 +195,7 @@ class matrix
          ::matrix<ValType> *matr;
 
         /**
-         * The current location of the mutable_iterator. 
+         * The current location of the mutable_iterator.
          **/
         std::size_t current_idx;
 
@@ -208,10 +208,10 @@ class matrix
 
     public:
         /**
-         * Initialize the iterator with a matrix, 
+         * Initialize the iterator with a matrix,
          * sets iterator pointer to zero.
          **/
-    iterator( const ::matrix<ValType> *matr ) 
+    iterator( const ::matrix<ValType> *matr )
             : matr( matr ),
               current_idx( 0 )
               {}
@@ -225,16 +225,16 @@ class matrix
     iterator( const ::matrix<ValType> *matr,
               std::size_t start_row,
               std::size_t start_col
-                       ) 
+                       )
             : matr( matr ),
               current_idx( matr->access_to_1d( start_row, start_col ) )
               {}
 
-        
+
         /**
-         * Determines whether the iterator has reached 
+         * Determines whether the iterator has reached
          * at least the end of the matrix.
-         * @returns boolean True if the current pointer is greater than 
+         * @returns boolean True if the current pointer is greater than
          *          the size of the matrix, False otherwise.
          **/
         bool end()
@@ -242,9 +242,9 @@ class matrix
             return current_idx >=
                  this->matr.access_to_1d( this->matr.N, this->matr.M );
         }
-        
+
         /**
-         * Constant access to the current value pointed to by the 
+         * Constant access to the current value pointed to by the
          * iterator.
          * @returns constant reference to the current iterated value
          **/
@@ -255,7 +255,7 @@ class matrix
 
         /**
          * In-place advance the iterator forward.
-         * @param advance The number of positions to 
+         * @param advance The number of positions to
          *        advance.
          **/
         void operator+=( int advance )
@@ -264,7 +264,7 @@ class matrix
         }
 
         /**
-         * Increment in-place, return reference to 
+         * Increment in-place, return reference to
          * this iterator.
          **/
         iterator &operator++()
@@ -273,10 +273,10 @@ class matrix
             }
 
         /**
-         * Advance forward an entire row from the 
-         * current position. 
-         * @note This does not advance to the beginning of 
-         *       the row, but advances to the current position in 
+         * Advance forward an entire row from the
+         * current position.
+         * @note This does not advance to the beginning of
+         *       the row, but advances to the current position in
          *       the next row.
          **/
         iterator& next_row()
@@ -286,10 +286,10 @@ class matrix
             }
 
         /**
-         * Advance forward an entire column from the 
-         * current position. 
-         * @note This does not advance to the beginning of 
-         *       the column, but advances to the current position in 
+         * Advance forward an entire column from the
+         * current position.
+         * @note This does not advance to the beginning of
+         *       the column, but advances to the current position in
          *       the next column.
          **/
         iterator &next_col()
@@ -299,9 +299,9 @@ class matrix
             }
 
         /**
-         * Determines whether this iterator is NOT equal to 
+         * Determines whether this iterator is NOT equal to
          * another.
-         * @note We say two iterators are equal if they point to the 
+         * @note We say two iterators are equal if they point to the
          *       same position in the same matrix. See matrix::iterator::operator==
          * @returns True if !( this == comp ), false otherwise
          **/
@@ -309,17 +309,17 @@ class matrix
         {
             return !( *this == comp );
         }
-        
+
         /**
          * Determine whether two iterators are equal.
-         * @note We define two iterators as equivalent if 
-         *       they point to the same position in the same 
+         * @note We define two iterators as equivalent if
+         *       they point to the same position in the same
          *       matrix.
          * @returns True if this == comp, false otherwise.
          **/
         bool operator==( const iterator& comp ) const
         {
-            return this->matr == comp.matr 
+            return this->matr == comp.matr
                      && this->current_idx == comp.current_idx;
         }
 
@@ -328,7 +328,7 @@ class matrix
          * @param other The iterator to copy.
          * @note After calling this method, this == other will be true,
          *       and it is thus important to note that this method does not
-         *       copy the matrix pointed to by other, it copies only its 
+         *       copy the matrix pointed to by other, it copies only its
          *       pointer.
          **/
         void operator=( const typename matrix<ValType>::iterator& other )
@@ -336,7 +336,7 @@ class matrix
                 this->matr = other.matr;
                 this->current_idx = other.current_idx;
             }
-    
+
     private:
         /**
          * The matrix being iterated over.
@@ -344,15 +344,15 @@ class matrix
         const ::matrix<ValType> *matr;
 
         /**
-         * The current location of the iterator. 
+         * The current location of the iterator.
          **/
         std::size_t current_idx;
 
     };
 
     /**
-     * Returns an iterator to 
-     * this matrix whose pointer is at the 
+     * Returns an iterator to
+     * this matrix whose pointer is at the
      * first element in the matrix.
      **/
     iterator get_iterator() const
@@ -361,9 +361,9 @@ class matrix
     }
 
     /**
-     * Get an iterator that is pointing to the end of 
-     * the n'th row. 
-     * @note No safety checks are made to ensure 
+     * Get an iterator that is pointing to the end of
+     * the n'th row.
+     * @note No safety checks are made to ensure
      *       the chosen row is actually in the matrix.
      * @param row The row to point to the end of.
      **/
@@ -381,7 +381,7 @@ class matrix
     }
 
 
-    const mutable_iterator row_end( std::size_t row ) 
+    const mutable_iterator row_end( std::size_t row )
     {
         return mutable_iterator( this, row + 1, 0 );
     }
@@ -389,7 +389,7 @@ class matrix
     /**
      * Get an iterator to the beginning of the n'th row.
      **/
-    const mutable_iterator row_begin( std::size_t row ) 
+    const mutable_iterator row_begin( std::size_t row )
     {
         return mutable_iterator( this, row, 0 );
     }
@@ -439,7 +439,7 @@ class matrix
         }
 
     /**
-     * Swap this matrix with another. 
+     * Swap this matrix with another.
      **/
     friend void swap( matrix<ValType>& first, matrix<ValType>& second )
     {
@@ -460,12 +460,12 @@ class matrix
         }
 
     /**
-     * Access the constant (x,y) element of the array, checking that we will be 
+     * Access the constant (x,y) element of the array, checking that we will be
      * performing a check to ensure the access is in bounds.
      * @param x The index of the row to acccess
      * @param y the index of the column to access.
      * @returns constant reference to the (x,y) item in the matrix.
-     * @throws std::out_of_range if (x,y) is greater than the shape of the 
+     * @throws std::out_of_range if (x,y) is greater than the shape of the
      *         matrix.
      **/
     const ValType& at( const std::uint32_t x, const std::uint32_t y ) const
@@ -478,7 +478,7 @@ class matrix
     }
 
     /**
-     * Set all of the members of the matrix to 
+     * Set all of the members of the matrix to
      * a certain value.
      * @param val The value to set all members of the matrix to.
      **/
@@ -494,7 +494,7 @@ class matrix
 
         /**
          * Determine whether this matrix and other are equal.
-         * For two matrices, A and B, we say A == B if A and B have 
+         * For two matrices, A and B, we say A == B if A and B have
          * the same shape, and all of the pairwise entries of A are equal
          * to all of the pairwise entries of B.
          * @param other The matrix to compare this with.
@@ -516,12 +516,12 @@ class matrix
 
 
     /**
-     * Access the mutable (x,y) element of the array, checking that we will be 
+     * Access the mutable (x,y) element of the array, checking that we will be
      * performing a check to ensure the access is in bounds.
      * @param x The index of the row to acccess
      * @param y the index of the column to access.
      * @returns mutable reference to the (x,y) item in the matrix.
-     * @throws std::out_of_range if (x,y) is greater than the shape of the 
+     * @throws std::out_of_range if (x,y) is greater than the shape of the
      *         matrix.
      **/
     ValType& at( const std::uint32_t x, const std::uint32_t y )
@@ -538,7 +538,7 @@ class matrix
      * @param x The index of the row to acccess
      * @param y the index of the column to access.
      * @returns mutable reference to the (x,y) item in the matrix.
-     * @note if the compile-time constant 'MATRIX_CHECK_BOUNDS' is defined, 
+     * @note if the compile-time constant 'MATRIX_CHECK_BOUNDS' is defined,
      *       this method throws std::out_of_range on invalid access.
      **/
     ValType& operator()( const std::uint32_t x, const std::uint32_t y )
@@ -547,10 +547,10 @@ class matrix
         }
 
     /**
-     * Access a constant member of the matrix using 1-dimensional 
+     * Access a constant member of the matrix using 1-dimensional
      * access.
      * @note no safety checks are made to ensure the access is valid.
-     * @returns constant reference to the access_idx'th item in 
+     * @returns constant reference to the access_idx'th item in
      *          the matrix.
      **/
     const ValType& operator()( const std::uint32_t access_idx ) const
@@ -559,13 +559,13 @@ class matrix
         }
 
     /**
-     * Access a mutable member of the matrix using 1-dimensional 
+     * Access a mutable member of the matrix using 1-dimensional
      * access.
      * @note no safety checks are made to ensure the access is valid.
-     * @returns mutable reference to the access_idx'th item in 
+     * @returns mutable reference to the access_idx'th item in
      *          the matrix.
      **/
-    ValType& operator()( const std::uint32_t access_idx ) 
+    ValType& operator()( const std::uint32_t access_idx )
         {
             return this->arr[ access_idx ];
         }
@@ -575,7 +575,7 @@ class matrix
      * @param x The index of the row to acccess
      * @param y the index of the column to access.
      * @returns constant reference to the (x,y) item in the matrix.
-     * @note if the compile-time constant 'MATRIX_CHECK_BOUNDS' is defined, 
+     * @note if the compile-time constant 'MATRIX_CHECK_BOUNDS' is defined,
      *       this method throws std::out_of_range on invalid access.
      **/
     const ValType& operator()( const std::uint32_t x, const std::uint32_t y ) const
@@ -584,9 +584,9 @@ class matrix
         }
 
     /**
-     * Get the shape of the matrix, where 
+     * Get the shape of the matrix, where
      * the shape of an N x M matrix is (N,M).
-     * @returns a pair containing the number of rows 
+     * @returns a pair containing the number of rows
      *          and number of columns in the matrix.
      **/
     const std::pair<std::uint32_t,std::uint32_t>
@@ -624,14 +624,14 @@ class matrix
 
     /**
      * Compare the row_idx'th row of this matrix
-     * with the row_idx'th row of comp. 
-     * For the rows we say they are equal if they have 
-     * the same number of columns AND each item in the row 
+     * with the row_idx'th row of comp.
+     * For the rows we say they are equal if they have
+     * the same number of columns AND each item in the row
      * is equal to the item in comp's row at that index.
      * @param comp The matrix to grab a row from to compare
      * @param row_idx The row to compare
-     * @returns boolean true if the matrices have the same 
-     *          number of columns, and each item in the row 
+     * @returns boolean true if the matrices have the same
+     *          number of columns, and each item in the row
      *          of each are the same.
      **/
     bool compare_row( const matrix<ValType>& comp,
@@ -667,7 +667,7 @@ class matrix
 
  protected:
     /**
-     * The number of rows 
+     * The number of rows
      * the matrix has
      **/
     std::uint32_t N;
@@ -703,9 +703,9 @@ class matrix
         }
 
     /**
-     * Check if accessing the (x,y)th element of this matrix will 
+     * Check if accessing the (x,y)th element of this matrix will
      * be valid.
-     **/    
+     **/
     bool in_range( const std::uint32_t x, const std::uint32_t y ) const
     {
         return access_to_1d( x, y ) < ( N * M );
@@ -722,13 +722,13 @@ class matrix
     {
         return &(this->arr[ row_idx * this->M ]);
     }
-    
+
 };
 
 
 /**
- * A matrix whose rows and columns are labeled. 
- * A label can be any type, but is likely a string. 
+ * A matrix whose rows and columns are labeled.
+ * A label can be any type, but is likely a string.
  * @tparam ValType The type of the values stored in the matrix.
  * @tparam LabelType The type of the labels.
  **/
@@ -738,7 +738,7 @@ template <typename ValType,
 class labeled_matrix : public matrix<ValType>
 {
  public:
-    
+
     labeled_matrix()
         : matrix<ValType>{ 0, 0 } {};
     /**
@@ -752,12 +752,12 @@ class labeled_matrix : public matrix<ValType>
 
     /**
      * Initialize a labeled matrix with row and column labels.
-     * @tparam RowLabelContainerType The container that holds the values for 
-     *         the row labels. This container must be ordered, containing 
+     * @tparam RowLabelContainerType The container that holds the values for
+     *         the row labels. This container must be ordered, containing
      *         begin() and end() functions such that for LabelContainerType L,
      *         L.begin() + N is the label for the N'th row.
-     * @tparam ColLabelContainerType The container that holds the values for 
-     *         the column labels. This container must be ordered, containing 
+     * @tparam ColLabelContainerType The container that holds the values for
+     *         the column labels. This container must be ordered, containing
      *         begin() and end() functions such that for LabelContainerType L,
      *         L.begin() + N is the label for the N'th column.
      * @param in_N The number of rows in the matrix.
@@ -818,12 +818,12 @@ class labeled_matrix : public matrix<ValType>
               second.col_labels
             );
     }
-    
+
     /**
      * Move constructor.
      **/
     labeled_matrix( labeled_matrix<ValType,LabelType>&& to_move )
-        : labeled_matrix() 
+        : labeled_matrix()
         {
             swap( *this, to_move );
         }
@@ -849,10 +849,10 @@ class labeled_matrix : public matrix<ValType>
     using matrix<ValType>::at;
 
     /**
-     * Set the row labels for this matrix. 
+     * Set the row labels for this matrix.
      * @tparam ContainerType the container labels are currently stored in.
      *         this should be an ordered container.
-     * @pre the values in labels are in the same order as the 
+     * @pre the values in labels are in the same order as the
      *      rows of this matrix.
      * @post This matrix's row labels are set to the labels in containers
      **/
@@ -865,13 +865,13 @@ class labeled_matrix : public matrix<ValType>
         }
 
     /**
-     * Get the row labels of the matrix, store them in 
+     * Get the row labels of the matrix, store them in
      * dest.
      * @tparam ContainerType The type of container to store labels in.
      *         This type should have an 'insert( hint, val )' method.
      * @param dest The location to store the labels in.
      * @note This method does not force any ordering of the labels,
-     *       do not expect the n'th item in dest to be the label of the 
+     *       do not expect the n'th item in dest to be the label of the
      *       n'th row in the matrix.
      **/
     template<typename ContainerType>
@@ -884,17 +884,17 @@ class labeled_matrix : public matrix<ValType>
         }
 
     /**
-     * Get the column labels of the matrix, store them in 
+     * Get the column labels of the matrix, store them in
      * dest.
      * @tparam ContainerType The type of container to store labels in.
      *         This type should have an 'insert( hint, val )' method.
      * @param dest The location to store the labels in.
      * @note This method does not force any ordering of the labels,
-     *       do not expect the n'th item in dest to be the label of the 
+     *       do not expect the n'th item in dest to be the label of the
      *       n'th column in the matrix.
      **/
     template<typename ContainerType>
-        ContainerType& get_col_labels( ContainerType& dest ) const 
+        ContainerType& get_col_labels( ContainerType& dest ) const
         {
             get_labels( dest,
                         this->col_labels
@@ -931,11 +931,11 @@ class labeled_matrix : public matrix<ValType>
 
     /**
      * Full outer join this matrix with other.
-     * Creates a matrix with all of the rows and columns of 
-     * this and other. Any values that are not in the join will 
+     * Creates a matrix with all of the rows and columns of
+     * this and other. Any values that are not in the join will
      * be zero-initialized, as defined by ValType.
      * @param other The matrix to join with this.
-     * @returns a labeled matrix with the rows and columns of this 
+     * @returns a labeled matrix with the rows and columns of this
      *          and other.
      **/
     labeled_matrix<ValType, LabelType>
@@ -1009,10 +1009,10 @@ class labeled_matrix : public matrix<ValType>
     }
 
     /**
-     * Set the column labels for this matrix. 
+     * Set the column labels for this matrix.
      * @tparam ContainerType the container labels are currently stored in.
      *         this should be an ordered container.
-     * @pre the values in labels are in the same order as the 
+     * @pre the values in labels are in the same order as the
      *      columns of this matrix.
      * @post This matrix's column labels are set to the labels in containers
      **/
@@ -1025,15 +1025,15 @@ class labeled_matrix : public matrix<ValType>
         }
 
     /**
-     * Access a mutable member of the matrix using its row/column labels instead 
-     * of integer indices. 
+     * Access a mutable member of the matrix using its row/column labels instead
+     * of integer indices.
      * @note Performs validity check on the labels and bounds checks on the access
      * @param row_lab The label of the row to access
      * @param col_lab The label of the column to access
      * @throws std::out_of_range if row_lab and col_lab are not valid row/column labels.
-     * @throws std::out_of_range if (row_lab, col_lab) resolves to indices 
+     * @throws std::out_of_range if (row_lab, col_lab) resolves to indices
      *         that are not in range of the matrix.
-     * @returns mutable reference to the matrix at (row_lab, col_lab) 
+     * @returns mutable reference to the matrix at (row_lab, col_lab)
      **/
     ValType &at( const LabelType& row_lab, const LabelType& col_lab )
         {
@@ -1053,15 +1053,15 @@ class labeled_matrix : public matrix<ValType>
         }
 
     /**
-     * Access a constant member of the matrix using its row/column labels instead 
-     * of integer indices. 
+     * Access a constant member of the matrix using its row/column labels instead
+     * of integer indices.
      * @note Performs validity check on the labels and bounds checks on the access
      * @param row_lab The label of the row to access
      * @param col_lab The label of the column to access
      * @throws std::out_of_range if row_lab and col_lab are not valid row/column labels.
-     * @throws std::out_of_range if (row_lab, col_lab) resolves to indices 
+     * @throws std::out_of_range if (row_lab, col_lab) resolves to indices
      *         that are not in range of the matrix.
-     * @returns constant reference to the matrix at (row_lab, col_lab) 
+     * @returns constant reference to the matrix at (row_lab, col_lab)
      **/
     const ValType &at( const LabelType& row_lab, const LabelType& col_lab ) const
         {
@@ -1081,9 +1081,9 @@ class labeled_matrix : public matrix<ValType>
         }
 
     /**
-     * Access a mutable member of the matrix using its row/column labels instead of 
+     * Access a mutable member of the matrix using its row/column labels instead of
      * integer indices.
-     * @note Does NOT perform bounds check on the access, behavior is undefined if 
+     * @note Does NOT perform bounds check on the access, behavior is undefined if
      *       the access is invalid.
      * @returns Mutable reference to the (row_lab, col_lab) member of the matrix.
      **/
@@ -1096,9 +1096,9 @@ class labeled_matrix : public matrix<ValType>
         }
 
     /**
-     * Access a constant member of the matrix using its row/column labels instead of 
+     * Access a constant member of the matrix using its row/column labels instead of
      * integer indices.
-     * @note Does NOT perform bounds check on the access, behavior is undefined if 
+     * @note Does NOT perform bounds check on the access, behavior is undefined if
      *       the access is invalid.
      * @returns Constant reference to the (row_lab, col_lab) member of the matrix.
      **/
@@ -1111,7 +1111,7 @@ class labeled_matrix : public matrix<ValType>
         }
 
     /**
-     * Access an item in the matrix, given a label for the row and the index 
+     * Access an item in the matrix, given a label for the row and the index
      * of the column.
      * @param row_lab The label of the row to access
      * @param col_idx the index of the column to access
@@ -1124,7 +1124,7 @@ class labeled_matrix : public matrix<ValType>
         }
 
     /**
-     * Access an item in the matrix, given an index for the row 
+     * Access an item in the matrix, given an index for the row
      * and a label for the column.
      * @param row_idx The index of the row to grab
      * @param col_lab the label of the column to access
@@ -1137,7 +1137,7 @@ class labeled_matrix : public matrix<ValType>
 
     void set_row_label( const LabelType& orig_label,
                         const LabelType& new_label
-                      ) 
+                      )
     {
         set_label( this->row_labels,
                    orig_label,
@@ -1147,7 +1147,7 @@ class labeled_matrix : public matrix<ValType>
 
     void set_col_label( const LabelType& orig_label,
                         const LabelType& new_label
-                      ) 
+                      )
     {
         set_label( this->col_labels,
                    orig_label,
@@ -1178,15 +1178,15 @@ class labeled_matrix : public matrix<ValType>
         }
 
     /**
-     * Filter the rows in this matrix, keeping only the rows whose 
+     * Filter the rows in this matrix, keeping only the rows whose
      * labels are found in the provided container.
-     * @tparam ContainerType the type of container the labels are 
+     * @tparam ContainerType the type of container the labels are
      *         stored in. Must be iterable by a range-based for loop.
-     * @param row_labels 
-     * @note row_labels the order of the labels in row_labels is 
+     * @param row_labels
+     * @note row_labels the order of the labels in row_labels is
      *       preserved.
-     * @returns An K x M matrix, where K is the size of row_labels. The returned 
-     *          matrix will contain the rows in this matrix whose labels are found in 
+     * @returns An K x M matrix, where K is the size of row_labels. The returned
+     *          matrix will contain the rows in this matrix whose labels are found in
      *          row labels. The columns and their labels will remain unchanged.
      **/
     template<typename ContainerType>
@@ -1225,6 +1225,55 @@ class labeled_matrix : public matrix<ValType>
                 }
             return return_matrix;
         }
+
+    /**
+     * Filter the cols in this matrix, keeping only the rows whose
+     * labels are found in the provided container.
+     * @tparam ContainerType the type of container the labels are
+     *         stored in. Must be iterable by a range-based for loop.
+     * @param col_labels The order of the labels in col_labels is
+     *        preserved.
+     * @returns An N x K matrix, where K is the size of col_labels. The returned
+     *          matrix will contain the cols in this matrix whose labels are found in
+     *          col labels. The rows and their labels will remain unchanged.
+     **/
+    template<typename ContainerType>
+    labeled_matrix<ValType,LabelType>
+        filter_cols( const ContainerType& col_labels )
+        {
+            std::vector<LabelType> row_labels;
+            row_labels.resize( this->row_labels.size() );
+
+            // assign the row labels to the a standalone data structure,
+            // taking care to remember std::unordered_map is unordered
+            for( const auto& row_data : this->row_labels )
+                {
+                    row_labels[ row_data.second ] = row_data.first;
+                }
+            // resizing cols to only include filter results
+            std::uint32_t num_cols = col_labels.size();
+            labeled_matrix<ValType,LabelType> return_matrix( this->N, num_cols,
+                                                             row_labels,
+                                                             col_labels
+                                                           );
+
+            std::uint32_t col_idx_new = 0;
+
+            for( const auto& col_lab : col_labels )
+                {
+                    std::uint32_t col_idx_original = this->col_labels.at( col_lab );
+                    const ValType *col_ptr = &(this->arr[col_idx_original]);
+
+                    for( std::uint32_t col_val = 0; col_val < this->N; ++col_val )
+                        {
+                            return_matrix( col_val, col_idx_new ) = *col_ptr;
+                            ++col_ptr;
+                        }
+                    ++col_idx_new;
+                }
+            return return_matrix;
+        }
+
 
     /**
      * Convert this matrix to a string.
@@ -1267,7 +1316,7 @@ class labeled_matrix : public matrix<ValType>
 
     bool operator==( const labeled_matrix<ValType,LabelType>& other ) const
     {
-        return matrix<ValType>::operator==( other ) 
+        return matrix<ValType>::operator==( other )
                && this->row_labels == other.row_labels
                   && this->col_labels == other.col_labels;
     }

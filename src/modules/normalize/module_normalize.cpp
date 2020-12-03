@@ -41,64 +41,109 @@ void module_normalize::run( options *opts )
     peptide_scoring::parse_peptide_scores( original_scores, scores_fname );
     original_scores.scores = original_scores.scores.transpose();
     std::vector<std::string> neg_filter;
+    std::size_t sample_size;
 
-    if( !(n_opts->neg_control).empty() )
+    // Use negative control if provided
+    if( !n_opts->neg_control.empty() )
         {
             peptide_scoring::parse_peptide_scores( neg_scores, n_opts->neg_control );
-
-            if( !(n_opts->neg_names).empty() )
+// This can be made into a function where the data sample major is passed (remove repetive code)
+// Function : filter_neg_control_start_names
+            // Filter negative scores by: string identifiable prefix or list of sample names
+            if( !n_opts->neg_names.empty() && !n_opts->neg_id.empty() )
                 {
-                    boost::split( neg_filter, neg_scores.sample_names, boost::is_any_of( "," ) );
-                }
-            else if( !(n_opts->neg_id).empty() )
-                {
-                    for( const auto& sample : neg_scores.sample_names )
+                    if( !neg_scores.file_name.empty() )
                         {
-                            if( sample.rfind( n_opts->neg_id, 0 ) != std::string::npos )
+                            for( const auto& sample : neg_scores.sample_names )
                                 {
-                                    neg_filter.emplace_back( sample );
+                                    if( sample.rfind( n_opts->neg_id, n_opts->neg_id.size() ) != std::string::npos
+                                        || boost::contains( n_opts->neg_names, sample ) )
+                                        {
+                                            neg_filter.emplace_back( sample );
+                                        }
+                                }
+                        }
+                    else
+                        {
+                            for( const auto& sample : original_scores.sample_names )
+                                {
+                                    if( sample.rfind( n_opts->neg_id, n_opts->neg_id.size() ) != std::string::npos
+                                        || boost::contains( n_opts->neg_names, sample ) )
+                                        {
+                                            neg_filter.emplace_back( sample );
+                                        }
                                 }
                         }
                 }
+            else if( !n_opts->neg_names.empty() )
+                {
+                    boost::split( neg_filter, n_opts->neg_names, boost::is_any_of( "," ) );
+                }
+            else if( !n_opts->neg_id.empty() )
+                {
+// Function : filter_neg_control_start
+                    if( !neg_scores.file_name.empty() )
+                        {
+                            for( const auto& sample : neg_scores.sample_names )
+                                {
+                                    if( sample.rfind( n_opts->neg_id, n_opts->neg_id.size() ) != std::string::npos )
+                                        {
+                                            neg_filter.emplace_back( sample );
+                                        }
+                                }
+                        }
+                    else // if data matrix of sb/neg samples is not provided, use input matrix
+                        {
+                            for( const auto& sample : original_scores.sample_names )
+                                {
+                                    if( sample.rfind( n_opts->neg_id, n_opts->neg_id.size() ) != std::string::npos )
+                                        {
+                                            neg_filter.emplace_back( sample );
+                                        }
+                                }
+                        }
 
-
-
+                }
+            else
+                {
+                    throw std::runtime_error( "Error: Must use approach for identifying negative controls. "
+                                         "Either a negative id [--negative_id,-s] or [--negative_names,-n]." );
+                }
         }
 
-    std::size_t sample_size;
-
-    if( !(n_opts->neg_control).empty() )
+    if( !n_opts->neg_control.empty() )
         {
-            sample_size = neg_scores.sample_names.size();
-        }
-    else
-        {
-            sample_size = original_scores.sample_names.size();
+            // Filter to only include negative scores specified by neg_filter
+            neg_scores.scores = neg_scores.scores.filter_cols( neg_filter );
         }
 
-    std::vector<double> norm_factors( sample_size, 0 );
+    sample_size = original_scores.sample_names.size();
 
     if( n_opts->approach == "size_factors" )
         {
-            compute_size_factors( norm_factors, original_scores.scores );
+            std::vector<double> norm_factors( sample_size, 0 );
+            compute_size_factors( &norm_factors, &original_scores.scores );
+            // normalize the counts
+            normalize_counts( &original_scores.scores, &norm_factors );
         }
     else if( n_opts->approach == "neg_diff" )
         {
-            // get ratio, pass in norm_factors, the original scores, the neg scores,
-            // and the mean average of the negative scores.
+            matrix<double> neg_norm_diffs;
+            compute_neg_diff( &neg_norm_diffs, &neg_scores, &original_scores.scores );
         }
     else if( n_opts->approach == "diff_ratio" )
         {
-
+            matrix<double> neg_norm_diff_ratios;
+            compute_neg_diff_ratio( &neg_norm_diff_ratios, &neg_scores, &original_scores.scores );
         }
     else // Column sum default
         {
-            get_sum( norm_factors, original_scores.scores );
-            constant_factor_normalization( norm_factors, ONE_MILLION );
+            std::vector<double> norm_factors( sample_size, 0 );
+            get_sum( &norm_factors, &original_scores.scores );
+            constant_factor_normalization( &norm_factors, ONE_MILLION );
+            // normalize the counts
+            normalize_counts( &original_scores.scores, &norm_factors );
         }
-
-    // normalize the counts
-    normalize_counts( original_scores.scores, norm_factors );
 
     original_scores.scores = original_scores.scores.transpose();
 
@@ -117,74 +162,125 @@ void module_normalize::run( options *opts )
 }
 
 
-void module_normalize::constant_factor_normalization( std::vector<double>& cols,
+void module_normalize::constant_factor_normalization( std::vector<double> *cols,
                                                       const std::size_t factor
                                                     )
 {
-    for( std::size_t index = 0; index < cols.size(); ++index )
+    for( std::size_t index = 0; index < cols->size(); ++index )
         {
-            cols[ index ] /= factor;
+            (*cols)[ index ] /= factor;
         }
 }
 
-void module_normalize::get_ratio( std::vector< )
-
-void module_normalize::get_sum( std::vector<double>& dest,
-                                matrix<double>& src
+void module_normalize::get_sum( std::vector<double> *dest,
+                                matrix<double> *src
                               )
 {
     std::size_t index = 0;
 
-    for( index = 0; index < src.nrows(); ++index )
+    for( index = 0; index < src->nrows(); ++index )
         {
             std::size_t inner_index = 0;
-            for( inner_index = 0; inner_index < src.ncols(); ++inner_index )
+            for( inner_index = 0; inner_index < src->ncols(); ++inner_index )
                 {
-                    dest[ inner_index ] += src( index, inner_index );
+                    (*dest)[ inner_index ] += (*src)( index, inner_index );
                 }
 
         }
 }
 
-void module_normalize::normalize_counts( matrix<double>&
-                                         original_scores,
-                                         const std::vector<double>& norm_factors
+void module_normalize::normalize_counts( matrix<double> *original_scores,
+                                         const std::vector<double> *norm_factors
                                        )
 {
-    for( std::size_t index = 0; index < original_scores.nrows(); ++index )
+    for( std::size_t index = 0; index < original_scores->nrows(); ++index )
         {
-            for( std::size_t inner_index = 0; inner_index < original_scores.ncols(); ++inner_index )
+            for( std::size_t inner_index = 0; inner_index < original_scores->ncols(); ++inner_index )
                 {
-                    original_scores( index, inner_index ) /= norm_factors[ inner_index ];
+                    (*original_scores)( index, inner_index ) /= (*norm_factors)[ inner_index ];
                 }
         }
 }
 
-void module_normalize::compute_size_factors( std::vector<double>& size_factors,
-                                             const matrix<double>& data
+void module_normalize::compute_neg_diff( matrix<double> *norm_diffs,
+                                         peptide_score_data_sample_major *neg_scores,
+                                         const matrix<double> *data )
+{
+    double neg_mean = 0;
+    // for each sample in data
+    for( std::size_t curr_samp = 0; curr_samp < data->ncols(); ++curr_samp )
+        {
+            // if sb data is given, get mean from current samples rows in neg_scores
+            if( !neg_scores->file_name.empty() )
+                {
+                    neg_mean = stats::geom_mean( data->row_begin( curr_samp ),
+                                                data->row_end( curr_samp )
+                                                );
+                }
+            // if not using neg_scores, get mean from current sample rows in input data
+                // *will need to filter the input data to only count sample names from neg_filter
+            // Now, for each peptide (row) in the sample (column) calculate the difference
+            for( std::size_t curr_pep = 0; curr_pep < data->nrows(); ++curr_pep )
+                {
+                    // store the result in that coordinate of the norm_diffs
+                    (*norm_diffs)( curr_pep, curr_samp ) = (*data)(curr_pep,curr_samp) - neg_mean;
+                }
+        }
+}
+
+void module_normalize::compute_neg_diff_ratio( matrix<double> *norm_diff_ratios,
+                                         peptide_score_data_sample_major *neg_scores,
+                                         const matrix<double> *data )
+{
+    double neg_mean = 0;
+    // for each sample in data
+    for( std::size_t curr_samp = 0; curr_samp < data->ncols(); ++curr_samp )
+        {
+            // if sb data is given, get mean from current samples rows in neg_scores
+            if( !neg_scores->file_name.empty() )
+                {
+                    neg_mean = stats::geom_mean( data->row_begin( curr_samp ),
+                                                data->row_end( curr_samp )
+                                                );
+                }
+            // if not using neg_scores, get mean from current sample rows in input data
+                // *will need to filter the input data to only count sample names from neg_filter
+            // Now, for each peptide (row) in the sample (column) calculate the difference ratio
+            for( std::size_t curr_pep = 0; curr_pep < data->nrows(); ++curr_pep )
+                {
+                    // store the result in that coordinate of the norm_diffs
+                    (*norm_diff_ratios)( curr_pep, curr_samp ) =
+                                 ((*data)(curr_pep,curr_samp) - neg_mean)/neg_mean;
+                }
+        }
+
+}
+
+void module_normalize::compute_size_factors( std::vector<double> *size_factors,
+                                             const matrix<double> *data
                                            )
 {
     std::vector<double> row;
     std::vector<std::vector<double>> geom_mean_factors;
-    geom_mean_factors.reserve( data.ncols() );
+    geom_mean_factors.reserve( data->ncols() );
 
     std::size_t index = 0;
 
-    for( index = 0; index < data.nrows(); ++index )
+    for( index = 0; index < data->nrows(); ++index )
         {
-            geom_mean_factors.emplace_back( std::vector<double>( data.nrows(), 0 ) ) ;
+            geom_mean_factors.emplace_back( std::vector<double>( data->nrows(), 0 ) ) ;
         }
 
-    for( index = 0; index < data.nrows(); ++index )
+    for( index = 0; index < data->nrows(); ++index )
         {
-            double g_mean = stats::geom_mean( data.row_begin( index ),
-                                              data.row_end( index )
+            double g_mean = stats::geom_mean( data->row_begin( index ),
+                                              data->row_end( index )
                                             );
 
-            for( std::size_t inner_index = 0; inner_index < data.ncols(); ++inner_index )
+            for( std::size_t inner_index = 0; inner_index < data->ncols(); ++inner_index )
                 {
                     // transpose the data here so computing the medians is easier
-                    geom_mean_factors[ inner_index ][ index ] = data( index, inner_index ) / g_mean;
+                    geom_mean_factors[ inner_index ][ index ] = (*data)( index, inner_index ) / g_mean;
                 }
         }
 
@@ -200,7 +296,7 @@ void module_normalize::compute_size_factors( std::vector<double>& size_factors,
                                          );
             int median_loc = (geom_mean_factors[ index ].size()
                               - std::distance( begin, geom_mean_factors[ index ].end() )) / 2;
-            size_factors.push_back( geom_mean_factors[ index ][ median_loc ] );
+            size_factors->push_back( geom_mean_factors[ index ][ median_loc ] );
         }
 
 }
