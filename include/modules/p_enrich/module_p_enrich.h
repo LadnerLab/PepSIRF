@@ -106,29 +106,36 @@ public:
     {
         std::pair<double,double> sums{ 0.0, 0.0 };
 
-        for( std::map<std::string,paired_score>::iterator current = begin; current != end; ++current )
+        for( auto& current = begin; current != end; ++current )
             {
-                sums.first  += current->second.raw_score.first;
-                sums.second += current->second.raw_score.second;
+                sums.first  += current->first;
+                sums.second += current->second;
             }
 
         return sums;
     }
 
     /**
+     * Get raw scores for each peptide in specified sample.
+     * @param raw_scores_dest The pointer to the location where raw score pairs will be stored.
+     * @param raw_score_data The pointer to the raw score data used to find raw scores.
+     * @param sample_names The pointer to the sample name pair to get raw scores from.
+     **/
+    void get_raw_scores( std::vector<std::pair<double,double>> *raw_scores_dest,
+                                      const peptide_score_data_sample_major *raw_score_data,
+                                      const std::pair<std::string,std::string> sample_names );
+
+    /**
      * Get enrichment candidates for peptides in a sample pair.
      * @param enrichment_candidates pointer to map of paired score values for
-     *        each peptide where the key is the petide name
+     *        each peptide where the key is the peptide name
      * @param matrix_score_data pointer to data containing normalized scores.
-     * @param raw_score_data pointer to data containing raw scores. If this is
-     *        a nullptr, raw scores will be written as zero.
      * @param sample_names the pair of samples to get enrichment candidates for.
      * @param returns void
      **/
-    void get_enrichment_candidates( std::map<std::string,paired_score> *enrichment_candidates,
-                                    const peptide_score_data_sample_major *matrix_score_data,
-                                    const peptide_score_data_sample_major *raw_score_data,
-                                    const std::pair<std::string,std::string> sample_names
+    void get_enrichment_candidates( std::map<std::string,std::pair<double,double>> *enrichment_candidates,
+                                            const peptide_score_data_sample_major *matrix_score_data,
+                                            const std::pair<std::string,std::string> sample_names
                                   );
 };
 
