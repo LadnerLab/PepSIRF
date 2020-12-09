@@ -41,6 +41,9 @@ bool options_parser_normalize::parse( int argc, char ***argv, options *opts )
           "is also included, the value of this flag will be ignored and the size_factors method is used.\n"
           "size_factors: Normalize the raw counts using the size factors method (Anders and Huber 2010). Note that if this "
           "flag is included, the value of col_sum will be ignored.\n"
+          "diff:\n"
+          "ratio:\n"
+          "diff_ratio:\n"
         )
         ( "negative_control", po::value<std::string>( &opts_normalize->neg_control )->default_value( "" ),
           "Optional data matrix for sb samples.\n"

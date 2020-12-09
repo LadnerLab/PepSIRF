@@ -37,6 +37,22 @@ class module_normalize : public module
                 );
 
     /**
+     * Finding the average for each peptide in control data. Row/peptide major,
+     * all samples will be iterated through, but only samples found in neg_filter
+     * will be added in calculation of mean for the current peptide.
+     * @param control The pointer to data that will be analysed to find scores for
+     *        mean calculation.
+     * @param neg_filter The pointer to a set containing all sample names used in
+     *        calculation.
+     * @param pep_averages The pointer to the destination where the averages for
+     *        each peptide will be stored (ordered).
+     **/
+    void get_neg_average( peptide_score_data_sample_major *control,
+                                            std::unordered_set<std::string> *neg_filter,
+                                            std::vector<double> *pep_averages );
+
+
+    /**
      * Normalize the counts in a vector of column sums
      * by a constant factor.
      * @param cols A vector of doubles, where each value is the
@@ -47,6 +63,13 @@ class module_normalize : public module
     void constant_factor_normalization( std::vector<double> *cols,
                                         const std::size_t factor
                                       );
+
+    /**
+     *
+     **/
+    void filter_neg_control_start( peptide_score_data_sample_major *score_data,
+                              std::unordered_set<std::string> *neg_filter,
+                              std::string start );
 
     /**
      * Normalize the counts in 'original_scores'.
@@ -80,10 +103,8 @@ class module_normalize : public module
      * @param avg_neg_score The mean of provided negative control score.
      * @param data The counts to get the diffs for.
      **/
-    void compute_neg_diff( matrix<double> *norm_diffs,
-                           peptide_score_data_sample_major *neg_scores,
-                           const matrix<double> *data );
-
+    void compute_diff( matrix<double> *norm_diffs,
+                        std::vector<double> *peptide_avgs );
 
     /**
      * Compute the difference and ratio:
@@ -94,9 +115,14 @@ class module_normalize : public module
      * @param avg_neg_score The mean of provided negative control score.
      * @param data The counts to get the diff ratios for.
      **/
-    void compute_neg_diff_ratio( matrix<double> *norm_diff_ratios,
-                                 peptide_score_data_sample_major *neg_scores,
-                                 const matrix<double> *data );
+    void compute_diff_ratio( matrix<double> *norm_diff_ratios,
+                        std::vector<double> *peptide_avgs );
+
+    /**
+     *
+     **/
+    void compute_ratio( matrix<double> *norm_diff_ratios,
+                        std::vector<double> *peptide_avgs );
 };
 
 #endif // MODULE_NORMALIZE_HH_INCLUDED
