@@ -21,12 +21,13 @@ def main():
     p.add_option('-m', '--meta', help='Tab-delim metadata file with headers. One column should correspond to simple names of the reference fastas. Another should correspond to the category of interest.  [None, REQ]')
     p.add_option('-c', '--cat', help='Metadata header for category of interest [None, REQ]')
     p.add_option('-n', '--names', help='Metadata header for seq names. It is assumed that these are "simple" names, corresponding to the fasta file names prior to the first whitespace character [None, REQ]')
+    p.add_option('--minRefLen', type="int", default=40, help='Minimum required length (in AA) for a reference sequence to be used [40]')
 
     opts, args = p.parse_args()
     
     # Read in reference sequences
     refD = ft.read_fasta_dict_upper(opts.ref)        #Read in reference seqs
-    simpleRefD = {n.split()[0]:s for n,s in refD.items()}
+    simpleRefD = {n.split()[0]:s for n,s in refD.items() if len(s)>=opts.minRefLen}
     
     # Read in data of interest from metadata file
     catD = io.fileDictHeader(opts.meta, opts.names, opts.cat)
