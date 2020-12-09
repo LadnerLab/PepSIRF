@@ -25,8 +25,49 @@ bool options_parser_subjoin::parse( int argc, char ***argv, options *opts )
          "can create a subset of an existing matrix, can combine multiple matrices "
          "together or perform a combination of these two functions.\n"
         )
-        ( "filter_scores,f", po::value( &matrix_name_list_pairs )->required()
-          ->notifier( [&]( const std::vector<std::string>& name_pairs )
+        ( "multi_file,m", po::value<std::string>()->notifier( [&]( const std::string& provided_string )
+                      {
+                            if( !provided_string.empty() )
+                                {
+                                    std::ifstream input_f{ provided_string };
+                                    if( input_f.fail() )
+                                        {
+                                            throw std::runtime_error( "Unable to open multi_file input.\n" );
+                                        }
+                                    pepsirf_io::read_file(  input_f,
+                                                            boost::is_any_of( "\t" ),
+                                                            []( typename std::vector<std::string>::iterator a,
+                                                                typename std::vector<std::string>::iterator end
+                                                            )-> std::pair<std::string,std::string>
+                                                            {
+                                                                std::string f = *a;
+                                                                ++a;
+                                                                if( a != end )
+                                                                    return std::make_pair( f, *a );
+                                                                else
+                                                                    return std::make_pair( f, "" );
+                                                            },
+                                                            std::back_inserter( opts_subjoin->multi_matrix_name_pairs )
+                                                        );
+
+                                }
+
+
+                      }
+                    ),
+          "The name of a tab-delimited file containing score matrix "
+          "and sample name list filename pairs, one per line. "
+          "Each of these pairs must be a score matrix and a file "
+          "containing the names of samples (or peptides, if specified) "
+          "to keep from the input the score matrix. The score matrix should be of the format output by the "
+          "demux module, with sample names on the columns and peptide names on the rows. "
+          "The namelist must have one name per line, but can optionally have 2, if "
+          "renaming samples in the subjoin output. Optionally, a name list can be "
+          "omitted if all samples from the input matrix should be included in the "
+          "output.\n"
+        )
+        ( "input,i", po::value( &matrix_name_list_pairs )->notifier(
+                    [&]( const std::vector<std::string>& name_pairs )
                       {
                           std::vector<std::string> split_output;
 
@@ -43,7 +84,7 @@ bool options_parser_subjoin::parse( int argc, char ***argv, options *opts )
                                           boost::trim( split_output[ 1 ] );
 
                                           opts_subjoin
-                                              ->matrix_name_pairs.push_back( std::make_pair
+                                              ->input_matrix_name_pairs.push_back( std::make_pair
                                                                              ( split_output[ 0 ],
                                                                                split_output[ 1 ]
                                                                                )
@@ -52,45 +93,17 @@ bool options_parser_subjoin::parse( int argc, char ***argv, options *opts )
                                       }
                                   else if( split_output.size() == 1 )
                                       {
-                                            std::ifstream input_f{ split_output[ 0 ] };
-                                            if( input_f.fail() )
-                                                {
-                                                    throw std::runtime_error( "Unable to open input file for reading" );
-                                                }
-                                            std::string line;
-                                            std::getline( input_f, line );
-                                            std::string first_col_header = line.substr( 0, line.find_first_of('\t') );
 
-                                            // Not a tab-delimited file containing score_matrix and sample name list filename pairs -> treat as score matrix with no filter
-                                            if( first_col_header.compare( "Sequence name" ) == 0 )
-                                                {
-                                                    std::cout << "WARNING: No sample name list has been given and provided "
-                                                                "file does not contain filename pairs. All scores will be "
-                                                                "output without filter.\n";
-                                                    opts_subjoin->matrix_name_pairs.emplace_back( std::make_pair( split_output[0], "" ) );
-                                                }
-                                            // Is a file containing filename pairs
-                                            else
-                                                {
-                                                    pepsirf_io::read_file( input_f,
-                                                                            boost::is_any_of( "\t" ),
-                                                                            []( typename std::vector<std::string>::iterator a,
-                                                                                typename std::vector<std::string>::iterator end
-                                                                            )
-                                                                            -> std::pair<std::string,std::string>
-                                                                            { std::string f = *a;
-                                                                                if( a != end )
-                                                                                    ++a;
-                                                                            return std::make_pair( f, *a ); },
-                                                                            std::back_inserter( opts_subjoin->matrix_name_pairs )
-                                                                        );
-                                                }
+                                          std::cout << "\nWARNING: No sample name list has been given for "
+                                                    << split_output[0]
+                                                    << ". All samples from this input matrix will be included.\n";
+                                          opts_subjoin->input_matrix_name_pairs.emplace_back( std::make_pair( split_output[0], "" ) );
                                       }
                                   else
                                       {
                                           throw po::validation_error(
                                           po::validation_error::invalid_option_value,
-                                          "filter_scores",
+                                          "input",
                                           provided_value
                                           );
 
@@ -100,9 +113,7 @@ bool options_parser_subjoin::parse( int argc, char ***argv, options *opts )
 
                       }
                     ),
-          "Either comma-separated filenames (For example: score_matrix.tsv,sample_names.txt ), "
-          "or the name of a tab-delimited file containing score_matrix "
-          "and sample name list filename pairs, one per line. "
+          "Comma-separated filenames (For example: score_matrix.tsv,sample_names.txt ). "
           "Each of these pairs must be a score matrix and a file "
           "containing the names of samples (or peptides, if specified) "
           "to keep in the score matrix. The score matrix should be of the format output by the "
@@ -116,9 +127,9 @@ bool options_parser_subjoin::parse( int argc, char ***argv, options *opts )
           "Optionally, a name list can be omitted if all samples from the input "
           "matrix should be included in the output.\n"
         )
-        ( "filter_peptide_names", po::bool_switch( &opts_subjoin->use_sample_names  )->default_value( false )
+        ( "filter_peptide_names", po::bool_switch( &opts_subjoin->use_sample_names )->default_value( false )
           ->notifier( [&]( bool val ){ opts_subjoin->use_sample_names = !val; } ),
-          "Flag to include if the name lists input to the filter_scores options should be treated as "
+          "Flag to include if the name lists input to the input or multi_file options should be treated as "
           "peptide (i.e. row) names instead of sample (i.e. column) names. With the inclusion of this flag, the input files will "
           "be filtered on peptide names (rows) instead of sample names (column).\n"
         )
@@ -158,7 +169,6 @@ bool options_parser_subjoin::parse( int argc, char ***argv, options *opts )
 
 
     po::store( po::command_line_parser( argc, *argv ).options( desc ).run(), vm);
-
     if( vm.count( "help" )
 	    || argc == 2
 	  )
