@@ -108,8 +108,15 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
           "Therefore, this mode is most appropriate for use with reference-independent demultiplexing.\n"
         )
         ( "samplelist,s", po::value<std::string>( &opts_demux->samplelist_fname )->required(), "A tab-delimited list of samples, one sample per line. "
-          "The first item in each tab-delimited line is \"--index1\", the second (if included) is the \"--index2\", and the third is the samplename. "
-          "\"--index2\" can be omitted if only using a single index.\n"
+          "If no header_names flag is provided, then each tab-delimited line is by default first \"--index1\", "
+          "second (if included) \"--index2\", and the third samplename. "
+          "Otherwise if the header_names flag is provided, then this file can have any number of columns provided in any order. Only columns specified by "
+          "header_names will be used in the run.\n"
+        )
+        (
+          "header_names,h", po::value<std::string>( &opts_demux->header_names_set )->default_value( "" ),
+          "A comma-delimited string of column header names. Include this flag with the samplelist option if the samplelist is not in the default format. "
+          "Only the column headers provided in this list will be accessed and used in the samplelist file.\n"
         )
         ( "diagnostic_info,d", po::value<std::string>( &opts_demux->diagnostic_fname )->default_value( "" ),
           "Include this flag with an output file name to collect diagnostic information on read pair matches in map. The file will be formated with tab delimited "

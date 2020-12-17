@@ -2,24 +2,17 @@
 #include <sstream>
 #include <boost/algorithm/string.hpp>
 
-// Pass not just filename, but also the string for headers.
-std::vector<sample> samplelist_parser::parse( const std::string filename )
-{
-    const int FORWARD_ONLY_SIZE        = 2;
-    const int FORWARD_AND_REVERSE_SIZE = 3;
-
+// Pass not just filename, but also the string array of headers
+std::vector<sample> samplelist_parser::parse( const std::string filename, std::unordered_set<std::string> header_names )
+                                                                           // A question I need to consider for this process is:
+                                                                           // Do I need to restructure how samplelist data is stored?
+{                                                                          //  - I know the order will not change per column being used
+                                                                           //  - This is a pretty straightforward update. Each usable column is specified and verified to exist.
     std::ifstream in_stream( filename );
-    // parse the header string if not empty, otherwise use default.
-    // Instead of these three columns, headers string will be parsed into a set.
-    std::string id1  = "";
-    std::string id2  = "";
-    std::string name = "";
-
-    std::string line;
     std::size_t line_no = 0;
-
+    std::string line;
     std::vector<std::string> split_line;
-
+    std::vector<std::string> samplelist_data;
     int sample_id = 0;
 
     std::vector<sample> vec;
@@ -28,38 +21,77 @@ std::vector<sample> samplelist_parser::parse( const std::string filename )
         {
             throw std::runtime_error( "File could not be opened. Verify sample list file exists." );
         }
-    while( std::getline( in_stream, line ) )
-        {
-            boost::trim_right( line );
-            boost::split( split_line, line, boost::is_any_of( "\t" ) );
-            ++line_no;
-            // Now it will be more nondeterministic what number of headers will be used.
-            // We must check to verify the size of split_line is equal to the size of the headers set.
-            // Read the first line and assume it to be a line of headers. Store each into an array samplefile_headers.
-            // for each header from the input file, check it is found in the set of specified headers. If not throw error.
-            // Track every index that is to be included and store for each following line those indexes into the sample object.
-            if( split_line.size() == FORWARD_ONLY_SIZE )
-                {
-                    id1  = split_line[ 0 ];
-                    name = split_line[ 1 ];
-                }
-            else if( split_line.size() == FORWARD_AND_REVERSE_SIZE )
-                {
-                    id1  = split_line[ 0 ];
-                    id2  = split_line[ 1 ];
-                    name = split_line[ 2 ];
-                }
-            else
-                {
-                    std::stringstream err_str;
-                    err_str << "The samplelist file is not formatted correctly!\n" <<
-                        "the error occurs here: \n" << line_no << " " <<  line << "\n";
-                    throw std::runtime_error( err_str.str() );
-                }
 
-            sample samp( id1, id2, name, sample_id );
-            vec.push_back( samp );
-            ++sample_id;
+    // Default process to obtaining samples from samplelist
+    if( header_names.empty() )
+        {
+            const int ID1_ONLY_SIZE     = 2;
+            const int ID2_INCLUDED_SIZE = 3;
+            // Assume 2-3 columns: ( idx1 or ( idx1 and idx2 )) and samplename
+            
+            while( std::getline( in_stream, line ) )
+                {
+                    boost::trim_right( line );
+                    boost::split( split_line, line, boost::is_any_of( "\t" ) );
+                    ++line_no;
+
+                    if( split_line.size() == ID1_ONLY_SIZE )
+                        {
+                            samplelist_data.emplace_back( split_line[ 0 ] ); // id1
+                            samplelist_data.emplace_back( split_line[ 1 ] ); // id2
+                        }
+                    else if( split_line.size() == ID2_INCLUDED_SIZE )
+                        {
+                            samplelist_data.emplace_back( split_line[ 0 ] ); // id1
+                            samplelist_data.emplace_back( split_line[ 1 ] ); // id2
+                            samplelist_data.emplace_back( split_line[ 2 ] ); // samplename
+                        }
+                    else
+                        {
+                            std::stringstream err_str;
+                            err_str << "The samplelist file is not formatted correctly!\n" <<
+                                "the error occurs here: \n" << line_no << " " <<  line << "\n";
+                            throw std::runtime_error( err_str.str() );
+                        }
+                    // store the series of sample headers into the sample obj.
+                    sample samp( samplelist_data, sample_id );
+                    vec.push_back( samp );
+                    ++sample_id;
+                }
+        }
+    else if( !header_names.empty() ) // user-defined inclusivity of headers -> store samples only for columns provided by header_names
+        {
+            std::string header_row, name;
+            std::size_t col_idx;
+            std::vector<int> column_idxs;
+
+            std::getline( in_stream, header_row );
+            boost::trim_right( header_row );
+            boost::split( split_line, header_row, boost::is_any_of( "\t" ) );
+
+            // get list of indexes of names col header names matching --header_names to samplelist col headers 
+            for( col_idx = 0; col_idx < split_line.size(); ++col_idx )
+                {
+                    name = split_line.at( col_idx );
+                    if( header_names.find( name ) != header_names.end() )
+                        {
+                            column_idxs.emplace_back( col_idx );
+                        }
+                }
+            // Reading samplelist file starting at second row
+            while( std::getline( in_stream, line ) )
+                {
+                    boost::trim_right( line );
+                    boost::split( split_line, line, boost::is_any_of( "\t" ) );
+                    ++line_no;
+                    for( const auto& col : column_idxs )
+                        {
+                            samplelist_data.emplace_back( split_line[ col ] );
+                        }
+                    sample samp( samplelist_data, sample_id );
+                    vec.push_back( samp );
+                    ++sample_id;
+                }
         }
     if( in_stream.bad() )
         {

@@ -28,7 +28,6 @@ void module_demux::run( options *opts )
 
 
     std::size_t read_index = 0;
-
     struct time_keep::timer total_time;
     parallel_map<sequence, std::vector<std::size_t>*> reference_counts;
     parallel_map<sequence, std::size_t> non_perfect_match_seqs;
@@ -50,9 +49,13 @@ void module_demux::run( options *opts )
     // create parsers for the encoded library and the fastq reads.
     fasta_parser fasta_p;
     fastq_parser fastq_p;
-
+    // parse samplelist
     samplelist_parser samplelist_p;
-    std::vector<sample> samplelist = samplelist_p.parse( d_opts->samplelist_fname );
+    std::unordered_set<std::string> col_headers;
+    if( !d_opts->header_names_set.empty() )
+        boost::split( col_headers, d_opts->header_names_set, boost::is_any_of( "\t" ) );
+
+    std::vector<sample> samplelist = samplelist_p.parse( d_opts->samplelist_fname, col_headers );
 
     // open the read file so we can iterate over it
     std::ifstream reads_file( d_opts->input_r1_fname, std::ios_base::in );
@@ -649,6 +652,7 @@ void module_demux::create_index_map( sequential_map<sequence, sample>& map,
 
     unsigned int index = 0;
 
+    // Populate map with first sample as default filler data.
     for( index = 0; index < index_seqs.size(); ++index )
         {
             st_table[ index_seqs[ index ].name ] = index_seqs[ index ].seq;
@@ -660,6 +664,7 @@ void module_demux::create_index_map( sequential_map<sequence, sample>& map,
 
     for( index = 0; index < samplelist.size(); ++index )
         {
+            // This is now N sequences.
             seq1 = st_table[ samplelist[ index ].get_first_id() ];
             seq2 = st_table[ samplelist[ index ].get_second_id() ];
             concat_seq = seq1 + seq2;

@@ -61,6 +61,10 @@ class sample
             sequences  = std::make_pair( seq1, seq2 );
         }
 
+    /**
+     * 
+     **/
+    sample( std::vector<std::string> string_ids, int sample_id )
 
     /**
      * Copy constructor.
