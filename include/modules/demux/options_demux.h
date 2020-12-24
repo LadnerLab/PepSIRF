@@ -16,14 +16,16 @@ public:
     options_demux(): DEFAULT_READ_PER_LOOP( 100000 ), DEFAULT_OUTPUT_FNAME( "output.csv" ){} //!< Automatic constructor
     std::string input_r1_fname; //!< Filename for forward reads, can be a .zip archive or a regular fastq file.
     std::string input_r2_fname; //!< Filename for reverse reads.
-    std::string library_fname; //!< Filename containing a FASTA file containing a library of amino acid peptide sequences.
+    std::string library_fname; //!< Filename containing a FASTA file containing a librry of amino acid peptide sequences.
     std::string output_fname; //!< Filename of file to write output to.
     std::string aggregate_fname; //!< Filename to write aggregate counts to.
     std::string samplelist_fname; //!< Name of tab-delimited file containing a list of samples.
-    std::string header_names_set;
+    std::string samplename;
+    std::string sample_idx1;
+    std::string sample_idx2;
     std::string diagnostic_fname;
-    std::tuple<std::size_t, std::size_t, std::size_t> f_index_data; //!< 0 = start, 1 = len, 2 = num_mismatches
-    std::tuple<std::size_t, std::size_t, std::size_t> r_index_data; //!< 0 = start, 1 = len, 2 = num_mismatches
+    std::tuple<std::size_t, std::size_t, std::size_t> index1_data; //!< 0 = start, 1 = len, 2 = num_mismatches
+    std::tuple<std::size_t, std::size_t, std::size_t> index2_data; //!< 0 = start, 1 = len, 2 = num_mismatches
     std::tuple<std::size_t, std::size_t, std::size_t> seq_data;     //!< 0 = start, 1 = len, 2 = num_mismatches
     std::string index_fname; //!< Name of file containing indexed sequences.
     std::string concatemer; //!< Concatenated primer sequences, we look for this in our reads to determine whether a peptide exists

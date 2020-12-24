@@ -62,11 +62,6 @@ class sample
         }
 
     /**
-     * 
-     **/
-    sample( std::vector<std::string> string_ids, int sample_id )
-
-    /**
      * Copy constructor.
      * @param s Sample object to copy.
      **/

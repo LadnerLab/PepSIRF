@@ -51,7 +51,7 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
         ( "index1", po::value<std::string>()
                      ->required()
                      ->notifier( [&]( const std::string &vals ) {
-                             opts_demux->set_info( &options_demux::f_index_data,
+                             opts_demux->set_info( &options_demux::index1_data,
                                                     vals
                                                  );
                                                                 }
@@ -74,7 +74,7 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
         ( "index2", po::value<std::string>()
                      ->default_value( "0,0,0" )
                      ->notifier( [&]( const std::string &vals ) {
-                             opts_demux->set_info( &options_demux::r_index_data,
+                             opts_demux->set_info( &options_demux::index2_data,
                                                     vals
                                                  );
                                                                 }
@@ -108,15 +108,20 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
           "Therefore, this mode is most appropriate for use with reference-independent demultiplexing.\n"
         )
         ( "samplelist,s", po::value<std::string>( &opts_demux->samplelist_fname )->required(), "A tab-delimited list of samples, one sample per line. "
-          "If no header_names flag is provided, then each tab-delimited line is by default first \"--index1\", "
-          "second (if included) \"--index2\", and the third samplename. "
-          "Otherwise if the header_names flag is provided, then this file can have any number of columns provided in any order. Only columns specified by "
-          "header_names will be used in the run.\n"
+          "Each tab-delimited line is compromised of at least one index column and one sample name column. Multiple index columns may be included for potential use. "
+          "Specify which columns to use using the \"--sname\", \"--sindex1\", and \"--sindex2\" flags.\n"
         )
         (
-          "header_names,h", po::value<std::string>( &opts_demux->header_names_set )->default_value( "" ),
-          "A comma-delimited string of column header names. Include this flag with the samplelist option if the samplelist is not in the default format. "
-          "Only the column headers provided in this list will be accessed and used in the samplelist file.\n"
+          "sname", po::value<std::string>( &opts_demux->samplename )->default_value( "SampleName" ),
+          "Optional name specification flag for the sample name column in the samplelist. By default \'SampleName\' is set as the column header name.\n"
+        )
+        (
+          "sindex1", po::value<std::string>( &opts_demux->sample_idx1 )->default_value( "Index1" ),
+          "Optional name specification flag for the index 1 column in the samplelist. By default \'Index1\' is set as the column header name.\n"
+        )
+        (
+          "sindex2", po::value<std::string>( &opts_demux->sample_idx2 )->default_value( "Index2" ),
+          "Optional name specification flag for the index 2 column in the samplelist. By default \'Index2\' is set as the column header name.\n"
         )
         ( "diagnostic_info,d", po::value<std::string>( &opts_demux->diagnostic_fname )->default_value( "" ),
           "Include this flag with an output file name to collect diagnostic information on read pair matches in map. The file will be formated with tab delimited "
