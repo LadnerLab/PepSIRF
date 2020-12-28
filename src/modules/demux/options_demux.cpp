@@ -15,13 +15,16 @@ std::string options_demux::get_arguments()
                   " --aa_counts             " << aggregate_fname << "\n" <<
                   " --translate_aggregates  " << std::boolalpha << translation_aggregation  << "\n" <<
                   " --index                 " << index_fname << "\n" <<
-                  " --samplelist            " << samplelist_fname << "\n"
+                  " --samplelist            " << samplelist_fname << "\n" <<
+                  " --sname                 " << samplename << "\n" <<
+                  " --sindex1               " << sample_idx1 << "\n" <<
+                  " --sindex2               " << sample_idx2 << "\n" <<
                   " --library               " << library_fname << "\n" <<
                   " --read_per_loop         " << read_per_loop << "\n" <<
                   " --num_threads           " << num_threads << "\n" <<
                   " --seq                   " << tup_to_string( seq_data ) << "\n" <<
-                  " --index1                " << tup_to_string( f_index_data ) << "\n" <<
-                  " --index2                " << tup_to_string( r_index_data ) << "\n" <<
+                  " --index1                " << tup_to_string( index1_data ) << "\n" <<
+                  " --index2                " << tup_to_string( index2_data ) << "\n" <<
                   " --phred_base            " << phred_base << "\n" <<
                   " --phred_min_score       " << min_phred_score << "\n" <<
                   " --concatemer            " << concatemer << "\n" <<

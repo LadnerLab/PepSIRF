@@ -61,7 +61,6 @@ class sample
             sequences  = std::make_pair( seq1, seq2 );
         }
 
-
     /**
      * Copy constructor.
      * @param s Sample object to copy.
