@@ -35,15 +35,17 @@ bool options_parser_normalize::parse( int argc, char ***argv, options *opts )
           "This file should be in the same format as the output from the deconv module.\n"
         )
         ( "normalize_approach,a", po::value<std::string>( &opts_normalize->approach )->default_value( "col_sum" ),
-          "By default, col_sum normalization is used.\n"
-          "col_sum: Normalize the raw counts using a column-sum method. Output per peptide is the number of counts "
-          "per million total counts for the sample (i.e., summed across all peptides). Note that if size_factors "
-          "is also included, the value of this flag will be ignored and the size_factors method is used.\n"
-          "size_factors: Normalize the raw counts using the size factors method (Anders and Huber 2010). Note that if this "
-          "flag is included, the value of col_sum will be ignored.\n"
-          "diff:\n"
-          "ratio:\n"
-          "diff_ratio:\n"
+          "Options: \'col_sum\', \'size_factors\', \'diff\', \'ratio\', \'diff_ratio\', By default, col_sum normalization is used.\n"
+          "\'col_sum\': Normalize the scores using a column-sum method. Output per peptide is the score per million for the sample "
+          "(i.e., summed across all peptides).\n"
+          "\'size_factors\': Normalize the scores using the size factors method (Anders and Huber 2010).\n"
+          "\'diff\': Normalize the scores using the difference method. For each peptide and sample, the "
+          "difference between the score and the respective peptide\'s mean score in the negative controls is determined.\n"
+          "\'ratio\': Normalize the scores using the ratio method. For each peptide and sample, the ratio of score to the respective "
+          "peptide\'s mean score in the negative controls is determined.\n"
+          "\'diff_ratio\': Normalize the scores using the difference-ratio method. For each peptide and sample, the difference between "
+          "the score and the respective peptide\'s mean score in the negative controls is first determined. This difference is then "
+          "divided by the respective peptide\'s mean score in the negative controls.\n"
         )
         ( "negative_control", po::value<std::string>( &opts_normalize->neg_control )->default_value( "" ),
           "Optional data matrix for sb samples.\n"
