@@ -6,19 +6,16 @@ std::string options_p_enrich::get_arguments()
 {
     // enable ADL
     using namespace std;
-    
+
     std::ostringstream stream;
     stream << "--samples               " << in_samples_fname << "\n "
-           << "--zscores               " << in_zscore_fname << "\n "
-           << "--zscore_constraint     " << zscore_params << "\n "
-           << "--norm_scores           " << in_norm_scores_fname << "\n "
-           << "--norm_score_constraint " << norm_scores_params << "\n "
+           << "--threshhold_file       " << threshold_fname << "\n "
         ;
 
     if( !in_raw_scores_fname.empty() )
         {
            stream << "--raw_scores            " << in_raw_scores_fname << "\n "
-                  << "--raw_score_constraint  " << raw_scores_params << "\n ";
+                  << "--raw_score_constraint  " << raw_scores_params_str << "\n ";
         }
 
     stream << "--outfile_suffix        " << out_suffix << "\n "

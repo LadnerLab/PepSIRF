@@ -360,6 +360,11 @@ class matrix
         return iterator( this );
     }
 
+    iterator get_end_iterator() const
+    {
+        return std::end( this );
+    }
+
     /**
      * Get an iterator that is pointing to the end of
      * the n'th row.
