@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.4] - 2020-12-28
+- Penrich now uses a tab-delimited file containing a matrix file name and its threshold(s) per each line. A matrix file may contain zscores or normalized counts of each peptide.
+- Demux sample list may now include more than 3 columns for demultiplexing. A header name must now be specified for each column in the list to specify the sample name column, index 1 column and potentially index 2 column. Updated comments to drop reference to forward and reverse indexes - now index 1 and index 2.
+- Norm includes 3 new approaches: diff, ratio, and diff-ratio.
+
 ## [1.3.3] - 2020-10-16
 - Subjoin bugfix where first line of list of provided matrix filenames may be skipped.
 - Subjoin -f flag has become two separate flags, -i(--input) and -m(--multi_file). This is to increase flexability in

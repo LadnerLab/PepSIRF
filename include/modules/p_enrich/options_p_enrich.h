@@ -3,6 +3,7 @@
 #include "options.h"
 
 #include <string>
+#include <vector>
 
 class options_p_enrich : public options
 {
@@ -20,14 +21,12 @@ class options_p_enrich : public options
 
     std::string in_samples_fname;
 
-    std::string in_zscore_fname;
-    score_pair zscore_params;
-
-    std::string in_norm_scores_fname;
-    score_pair norm_scores_params;
-
     std::string in_raw_scores_fname;
-    score_pair raw_scores_params;
+    std::string raw_scores_params_str;
+    std::vector<double> raw_scores_params;
+
+    std::string threshold_fname;
+    std::vector<std::pair<std::string,std::string>> matrix_thresh_fname_pairs;
 
     std::string out_dirname;
 
