@@ -107,21 +107,22 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
           "Note: When this mode is used, the name of the aggregate sequence will be the sequence that was a result of the translation. "
           "Therefore, this mode is most appropriate for use with reference-independent demultiplexing.\n"
         )
-        ( "samplelist,s", po::value<std::string>( &opts_demux->samplelist_fname )->required(), "A tab-delimited list of samples, one sample per line. "
-          "Each tab-delimited line is compromised of at least one index column and one sample name column. Multiple index columns may be included for potential use. "
-          "Specify which columns to use using the \"--sname\", \"--sindex1\", and \"--sindex2\" flags.\n"
+        ( "samplelist,s", po::value<std::string>( &opts_demux->samplelist_fname )->required(), "A tab-delimited list of samples with a header row "
+          "and one sample per line. This file must contain at least one index column and one sample name column. Multiple index columns may be included. "
+          "This file can also include additional columns that will not be used for the demultiplexing. "
+          "Specify which columns to use with the \"--sname\", \"--sindex1\", and \"--sindex2\" flags.\n"
         )
         (
           "sname", po::value<std::string>( &opts_demux->samplename )->default_value( "SampleName" ),
-          "Optional name specification flag for the sample name column in the samplelist. By default \'SampleName\' is set as the column header name.\n"
+          "Used to specify the header for the sample name column in the samplelist. By default \'SampleName\' is set as the column header name.\n"
         )
         (
           "sindex1", po::value<std::string>( &opts_demux->sample_idx1 )->default_value( "Index1" ),
-          "Optional name specification flag for the index 1 column in the samplelist. By default \'Index1\' is set as the column header name.\n"
+          "Used to specify the header for the index 1 column in the samplelist. By default \'Index1\' is set as the column header name.\n"
         )
         (
           "sindex2", po::value<std::string>( &opts_demux->sample_idx2 )->default_value( "Index2" ),
-          "Optional name specification flag for the index 2 column in the samplelist. By default \'Index2\' is set as the column header name.\n"
+          "Used to specify the header for the index 2 column in the samplelist. By default \'Index2\' is set as the column header name.\n"
         )
         ( "diagnostic_info,d", po::value<std::string>( &opts_demux->diagnostic_fname )->default_value( "" ),
           "Include this flag with an output file name to collect diagnostic information on read pair matches in map. The file will be formated with tab delimited "
