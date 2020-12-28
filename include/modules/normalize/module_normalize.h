@@ -100,8 +100,7 @@ class module_normalize : public module
      * average for each sample column in a set of data.
      * @param norm_diffs Pointer to the location to store the differences that
      *        were found, one per column (sample).
-     * @param avg_neg_score The mean of provided negative control score.
-     * @param data The counts to get the diffs for.
+     * @param peptide_avgs The means of provided negative controls.
      **/
     void compute_diff( matrix<double> *norm_diffs,
                         std::vector<double> *peptide_avgs );
@@ -112,14 +111,17 @@ class module_normalize : public module
      * for each sample column in a set of data.
      * @param norm_diff_ratios Pointer to the location to store the difference
      *        ratios that were found, one per column (sample).
-     * @param avg_neg_score The mean of provided negative control score.
-     * @param data The counts to get the diff ratios for.
+     * @param peptide_avgs The means of provided negative controls.
      **/
     void compute_diff_ratio( matrix<double> *norm_diff_ratios,
                         std::vector<double> *peptide_avgs );
 
     /**
-     *
+     * Compute the ratio of norm socres to negative control score averages for
+     * each sample column in a set of data.
+     * @param norm_diff_ratios Pointer to the location to store the difference
+     *        ratios that were found, one per column (sample).
+     * @param peptide_avgs The means of provided negative controls.
      **/
     void compute_ratio( matrix<double> *norm_diff_ratios,
                         std::vector<double> *peptide_avgs );
