@@ -94,7 +94,7 @@ def main():
 
         fig.savefig("%s/%s.%s" % (opts.outDir, opts.snDelim.join(sNames), opts.plotType), dpi=300, bbox_inches='tight')
 
-
+        fig.close()
 #----------------------End of main()
 
 
