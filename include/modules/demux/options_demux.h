@@ -24,6 +24,7 @@ public:
     std::string sample_idx1;
     std::string sample_idx2;
     std::string diagnostic_fname;
+    bool pos_toggle;
     std::tuple<std::size_t, std::size_t, std::size_t> index1_data; //!< 0 = start, 1 = len, 2 = num_mismatches
     std::tuple<std::size_t, std::size_t, std::size_t> index2_data; //!< 0 = start, 1 = len, 2 = num_mismatches
     std::tuple<std::size_t, std::size_t, std::size_t> seq_data;     //!< 0 = start, 1 = len, 2 = num_mismatches

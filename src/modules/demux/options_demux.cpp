@@ -20,6 +20,7 @@ std::string options_demux::get_arguments()
                   " --sindex1               " << sample_idx1 << "\n" <<
                   " --sindex2               " << sample_idx2 << "\n" <<
                   " --library               " << library_fname << "\n" <<
+                  " --include_toggle         " << pos_toggle << "\n" <<
                   " --read_per_loop         " << read_per_loop << "\n" <<
                   " --num_threads           " << num_threads << "\n" <<
                   " --seq                   " << tup_to_string( seq_data ) << "\n" <<

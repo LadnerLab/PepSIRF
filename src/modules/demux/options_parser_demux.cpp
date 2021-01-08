@@ -142,8 +142,14 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
           "phred33/64 score for a read at the expected locations of the DNA tag is not at least "
           "this then the read will be discarded.\n"
         )
-        ( "num_threads,t", po::value<int>( &opts_demux->num_threads )->default_value( opts_demux->DEFAULT_NUM_THREADS ), "Number of threads to use for analyses.\n" );
-
+        ( "num_threads,t", po::value<int>( &opts_demux->num_threads )->default_value( opts_demux->DEFAULT_NUM_THREADS ),
+        "Number of threads to use for analyses.\n"
+        )
+        ( "include_toggle", po::value<bool>( &opts_demux->pos_toggle)->default_value( true ),
+          "The position toggling for the indexes. By default this is set to true. By setting this flag to true, the position toggling will be turned on and the normal "
+          "ref-dependent based demux behavior is used. By setting this flag to false, the position toggling will be turned off and only the exact location "
+          "specified will be checked for a match.\n"
+        );
 
     po::store( po::command_line_parser( argc, *argv ).options( desc ).allow_unregistered().run(), vm);
 

@@ -265,14 +265,16 @@ void module_demux::run( options *opts )
                                 {
                                     idx2_match = _find_with_shifted_mismatch( index_map, reads[ read_index ],
                                                                                index_idx, std::get<2>( d_opts->index2_data ),
-                                                                               reverse_start, reverse_length
+                                                                               std::make_pair( reverse_start, reverse_length ),
+                                                                               d_opts->pos_toggle
                                                                              );
                             }
                             else
                                 {
                                     idx2_match = _find_with_shifted_mismatch( index_map, r2_seqs[ read_index ],
                                                                                index_idx, std::get<2>( d_opts->index2_data ),
-                                                                               reverse_start, reverse_length
+                                                                               std::make_pair( reverse_start, reverse_length ),
+                                                                               d_opts->pos_toggle
                                                                              );
                                 }
                         }
@@ -281,7 +283,8 @@ void module_demux::run( options *opts )
                     // for this index. This gives the index of the location at the sequence to increment
                     idx1_match = _find_with_shifted_mismatch( index_map, reads[ read_index ],
                                                                index_idx, std::get<2>( d_opts->index1_data ),
-                                                               forward_start, forward_length
+                                                               std::make_pair( forward_start, forward_length ),
+                                                               d_opts->pos_toggle
                                                              );
 
                     if( match_found()
@@ -347,7 +350,14 @@ void module_demux::run( options *opts )
                                 }
                             else
                                 {
-
+                                    // Give warning in case of toggle flag == true and ref-dependent == false:
+                                    // If the position shift flag is toggled, give a warning that the flag is toggled while demux is running in ref-independent mode.
+                                    // This may result in erroneous DNA tag calls.
+                                    if( d_opts->pos_toggle )
+                                        {
+                                            std::cout << "Warning: The position toggling flag \'--include_toggle\' is set to true and demux is "
+                                            "running in ref-independent mode. This may result in erroneous DNA tag calls.\n";
+                                        }
                                     et_seq_search<seq_map,false> library_searcher( lib_idx, reference_counts, num_samples );
 
 
@@ -423,7 +433,7 @@ void module_demux::run( options *opts )
     std::cout << processed_success << " records were found to be a match out of "
               << processed_total << " (" << ( (long double) processed_success / (long double) processed_total ) * 100
               << "%) successful.\n";
-    std::cout << std::fixed << std::setprecision( 1 )
+    std::cout << std::fixed << std::setprecision( 2 )
               << ( ( long double ) idx1_match_total / ( long double ) processed_total ) * 100.00 << "% " <<
                         idx1_match_total << " of total records matched index 1.\n"
               << ( ( long double ) idx2_match_total / ( long double ) processed_total ) * 100.00 << "% " <<

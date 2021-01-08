@@ -116,16 +116,20 @@ class module_demux : public module
      * @param num_mism The maximum number of mismatches (i.e. the maximum hamming distance)
      *        to tolerate when searching for imperfectly-matched sequences. Any matches that are
      *        found within this distance are included, and the minimum distance is used.
-     * @param f_start The start index at which we should look for probe_seq.
-     * @param f_len The expected length of probe_seq, we search map for the substring of probe_seq
-     *        starting at position f_start and ending at position f_len.
+     * @param idx_specs A pair of specifications used for sequence index. First, f_start, is the index at which
+     *        we should look for probe_seq. Second, f_len, is the expected length of probe_seq, we search map
+     *        for the substring of probe_seq starting at position f_start and ending at position f_len.
+     * @param shift_pos_toggle
+     * @param ref_dependent 
+     * 
      * @returns Iterator to the match if found, map.end() otherwise
      **/
     template<class M>
         typename M::iterator _find_with_shifted_mismatch( M &map,
                                                           sequence probe_seq,
                                                           sequence_indexer& idx, std::size_t num_mism,
-                                                          std::size_t f_start, std::size_t f_len
+                                                          std::pair<std::size_t,std::size_t> idx_specs,
+                                                          bool shift_pos_toggle
                                                          )
         {
             std::vector<std::pair<sequence *, int>> query_matches;
@@ -134,7 +138,7 @@ class module_demux : public module
 
             unsigned int num_matches = 0;
 
-            std::string substr = probe_seq.seq.substr( f_start, f_len );
+            std::string substr = probe_seq.seq.substr( idx_specs.first, idx_specs.second );
 
             // Note: hash( sequence& seq ) = hash( seq.seq )
             auto temp = map.find( sequence( "", substr ) );
@@ -145,14 +149,14 @@ class module_demux : public module
                     return temp;
                 }
 
-            if( f_start > 0 ) // check that we are not shifting left from the beginning
+            if( idx_specs.first > 0 ) // check that we are not shifting left from the beginning
                 {
-                    substr = probe_seq.seq.substr( f_start - 1, f_len );
+                    substr = probe_seq.seq.substr( idx_specs.first - 1, idx_specs.second );
                     temp = map.find( sequence( "", substr ) );
 
                     if( temp == map.end() )
                         {
-                            substr = probe_seq.seq.substr( f_start - 2, f_len );
+                            substr = probe_seq.seq.substr( idx_specs.first - 2, idx_specs.second );
                             temp = map.find( sequence( "", substr ) );
                         }
 
@@ -164,30 +168,33 @@ class module_demux : public module
 
             // shift one to the right, look for exact match.
             // but only if we have enough substring to search
-            if( f_start + 1 + f_len <= probe_seq.seq.length() )
+            // and the position toggle flag is true.
+            if( shift_pos_toggle )
                 {
-                    substr = probe_seq.seq.substr( f_start + 1, f_len );
-                    temp = map.find( sequence( "", substr ) );
-                }
-
-            // look for a match at the expected coordinates within
-            // the number of mismatches that are tolerated
-            if( num_mism > 0 && temp == map.end() )
-                {
-                    substr = probe_seq.seq.substr( f_start, f_len );
-                    seq_temp = sequence( "", substr );
-                    num_matches = idx.query( query_matches,
-                                             seq_temp,
-                                             num_mism
-                                           );
-                    if( num_matches
-                        && !_multiple_best_matches( query_matches ) )
+                    if( idx_specs.first + 1 + idx_specs.second <= probe_seq.seq.length() )
                         {
-                            best_match = _get_min_dist( query_matches );
-                            temp = map.find( *best_match );
+                            substr = probe_seq.seq.substr( idx_specs.first + 1, idx_specs.second );
+                            temp = map.find( sequence( "", substr ) );
+                        }
+
+                    // look for a match at the expected coordinates within
+                    // the number of mismatches that are tolerated
+                    if( num_mism > 0 && temp == map.end() )
+                        {
+                            substr = probe_seq.seq.substr( idx_specs.first, idx_specs.second );
+                            seq_temp = sequence( "", substr );
+                            num_matches = idx.query( query_matches,
+                                                    seq_temp,
+                                                    num_mism
+                                                );
+                            if( num_matches
+                                && !_multiple_best_matches( query_matches ) )
+                                {
+                                    best_match = _get_min_dist( query_matches );
+                                    temp = map.find( *best_match );
+                                }
                         }
                 }
-
             // return the match, if found. Otherwise, map.end() is returned
             return temp;
         }
