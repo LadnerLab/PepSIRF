@@ -55,6 +55,7 @@ void module_demux::run( options *opts )
     if( d_opts->samplelist_fname.empty() )
         {
             std::cout << "WARNING: A samplelist has not been provided. Demux will default to outputing counts to a single sample column.\n";
+            samplelist = std::vector<sample>{ sample( "id1", "id2", "Default probe", 0 ) };
         }
     else
         {
@@ -99,8 +100,9 @@ void module_demux::run( options *opts )
                 }
             index_seqs     = fasta_p.parse( d_opts->index_fname );
             create_index_map( index_map, index_seqs, samplelist );
-            add_seqs_to_map( reference_counts, library_seqs, samplelist.size() );
         }
+    
+    add_seqs_to_map( reference_counts, library_seqs, samplelist.size() );
 
     sequential_map<sequence, sample> sample_table;
     sequential_map<sequence,sample>::size_type num_samples = index_map.size();
@@ -294,9 +296,6 @@ void module_demux::run( options *opts )
 
                                     if( seq_match != reference_counts.end() )
                                         {
-                                            std::cout <<
-                                            seq_match->first.seq << ", " <<
-                                            seq_match->second->size() << "\n";      //testing
                                             seq_match->second->at( 0 ) += 1;
                                             ++processed_success;
                                         }
@@ -516,14 +515,16 @@ void module_demux::run( options *opts )
     std::cout << processed_success << " records were found to be a match out of "
               << processed_total << " (" << ( (long double) processed_success / (long double) processed_total ) * 100
               << "%) successful.\n";
-    std::cout << std::fixed << std::setprecision( 1 )
-              << ( ( long double ) idx1_match_total / ( long double ) processed_total ) * 100.00 << "% " <<
-                        idx1_match_total << " of total records matched index 1.\n"
-              << ( ( long double ) idx2_match_total / ( long double ) processed_total ) * 100.00 << "% " <<
-                        idx2_match_total << " of total records matched index 1 + index 2.\n"
-              << ( ( long double ) var_reg_match_total / ( long double ) processed_total ) * 100.00 << "% " <<
-                        var_reg_match_total << " of total records matched index 1 + index 2 + DNA tag.\n";
-
+    if( !d_opts->samplelist_fname.empty() )
+        {
+            std::cout << std::fixed << std::setprecision( 1 )
+                    << ( ( long double ) idx1_match_total / ( long double ) processed_total ) * 100.00 << "% " <<
+                                idx1_match_total << " of total records matched index 1.\n"
+                    << ( ( long double ) idx2_match_total / ( long double ) processed_total ) * 100.00 << "% " <<
+                                idx2_match_total << " of total records matched index 1 + index 2.\n"
+                    << ( ( long double ) var_reg_match_total / ( long double ) processed_total ) * 100.00 << "% " <<
+                                var_reg_match_total << " of total records matched index 1 + index 2 + DNA tag.\n";
+        }
     if( d_opts->concatemer.length() > 0 )
         {
             std::cout << "The concatemer sequence was found " << concatemer_found << " times (" <<
