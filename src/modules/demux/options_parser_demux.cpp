@@ -36,7 +36,7 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
           "then this file can be uncompressed or compressed using gzip. In this case, the file format will be automatically determined.\n"
           "Note that if this argument is not supplied, only \"index1\" will be used to identify samples.\n"
         )
-        ( "index,i", po::value<std::string>( &opts_demux->index_fname )->required(), "Name of fasta-formatted file containing forward and "
+        ( "index,i", po::value<std::string>( &opts_demux->index_fname )->default_value( "" ), "Name of fasta-formatted file containing forward and "
                                                                                      "(potentially) reverse index sequences. Sequence names must match "
                                                                                      "exactly with those supplied in the \"samplelist\".\n")
         ( "library,l", po::value<std::string>( &opts_demux->library_fname )->default_value( "" ), "Fasta-formatted file containing reference DNA tags. "
@@ -107,7 +107,7 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
           "Note: When this mode is used, the name of the aggregate sequence will be the sequence that was a result of the translation. "
           "Therefore, this mode is most appropriate for use with reference-independent demultiplexing.\n"
         )
-        ( "samplelist,s", po::value<std::string>( &opts_demux->samplelist_fname )->required(), "A tab-delimited list of samples with a header row "
+        ( "samplelist,s", po::value<std::string>( &opts_demux->samplelist_fname )->default_value( "" ), "A tab-delimited list of samples with a header row "
           "and one sample per line. This file must contain at least one index column and one sample name column. Multiple index columns may be included. "
           "This file can also include additional columns that will not be used for the demultiplexing. "
           "Specify which columns to use with the \"--sname\", \"--sindex1\", and \"--sindex2\" flags.\n"
