@@ -69,10 +69,18 @@ void module_demux::run( options *opts )
 
     if( reference_dependent )
         {
+            if( default_value ) // How can I set the toggle on for dependent by default and off for independent by default while still allowing user override
+                {
+                    d_opts->pos_toggle = true;
+                }
             library_seqs   = fasta_p.parse( d_opts->library_fname );
         }
     else
         {
+            if( default_value )
+                {
+                    d_opts->pos_toggle = false;
+                }
             std::cout << "WARNING: A set of reference sequences was not provided. "
                       << "Demux will be run in reference-independent mode, where each "
                       << "read is treated as its own reference.\n";
@@ -355,7 +363,7 @@ void module_demux::run( options *opts )
                                     // This may result in erroneous DNA tag calls.
                                     if( d_opts->pos_toggle )
                                         {
-                                            std::cout << "Warning: The position toggling flag \'--include_toggle\' is set to true and demux is "
+                                            std::cout << "WARNING: The position toggling flag \'--include_toggle\' is set to true and demux is "
                                             "running in ref-independent mode. This may result in erroneous DNA tag calls.\n";
                                         }
                                     et_seq_search<seq_map,false> library_searcher( lib_idx, reference_counts, num_samples );
