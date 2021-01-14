@@ -48,31 +48,36 @@ void module_normalize::run( options *opts )
     if( !neg_scores.file_name.empty() )
         peptide_scoring::parse_peptide_scores( neg_scores, n_opts->neg_control );
 
-    if( !n_opts->neg_names.empty() && !n_opts->neg_id.empty() )
+    if(    n_opts->approach == "diff"
+        || n_opts->approach == "ratio"
+        || n_opts->approach == "diff_ratio" )
         {
-            std::cout << "Norm does not currently support usage of both negative id [--negative_id,-s] "
-                            "and negative names [--negative_names,-n]. Negative names will be used.\n";
-            boost::split( neg_filter, n_opts->neg_names, boost::is_any_of( "," ) );
-        }
-    else if( !n_opts->neg_names.empty() )
-        {
-            boost::split( neg_filter, n_opts->neg_names, boost::is_any_of( "," ) );
-        }
-    else if( !n_opts->neg_id.empty() )
-        {
-            if( !neg_scores.file_name.empty() )
+            if( !n_opts->neg_names.empty() && !n_opts->neg_id.empty() )
                 {
-                    filter_neg_control_start( &neg_scores, &neg_filter, n_opts->neg_id );
+                    std::cout << "Norm does not currently support usage of both negative id [--negative_id,-s] "
+                                    "and negative names [--negative_names,-n]. Negative names will be used.\n";
+                    boost::split( neg_filter, n_opts->neg_names, boost::is_any_of( "," ) );
                 }
-            else // if data matrix of sb/neg samples is not provided, use input matrix
+            else if( !n_opts->neg_names.empty() )
                 {
-                    filter_neg_control_start( &original_scores, &neg_filter, n_opts->neg_id );
+                    boost::split( neg_filter, n_opts->neg_names, boost::is_any_of( "," ) );
                 }
-        }
-    else
-        {
-            throw std::runtime_error( "Error: Must use approach for identifying negative controls. "
-                                    "Either a negative id [--negative_id,-s] or negative names [--negative_names,-n]." );
+            else if( !n_opts->neg_id.empty() )
+                {
+                    if( !neg_scores.file_name.empty() )
+                        {
+                            filter_neg_control_start( &neg_scores, &neg_filter, n_opts->neg_id );
+                        }
+                    else // if data matrix of sb/neg samples is not provided, use input matrix
+                        {
+                            filter_neg_control_start( &original_scores, &neg_filter, n_opts->neg_id );
+                        }
+                }
+            else
+                {
+                    throw std::runtime_error( "ERROR: Must use approach for identifying negative controls. "
+                                            "Either a negative id [--negative_id,-s] or negative names [--negative_names,-n]." );
+                }
         }
 
     // vector of averages for each peptide to be used in diff, ratio, and diff-ratio approaches.

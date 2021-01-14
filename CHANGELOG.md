@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- Norm no longer forcing input of id or names for use with negative control.
 
 ## [1.3.4] - 2020-12-28
 - Penrich now uses a tab-delimited file containing a matrix file name and its threshold(s) per each line. A matrix file may contain zscores or normalized counts of each peptide.
