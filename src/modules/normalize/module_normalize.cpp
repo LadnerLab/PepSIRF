@@ -45,9 +45,11 @@ void module_normalize::run( options *opts )
     std::size_t sample_size;
 
     // Use negative control if provided
-    if( !neg_scores.file_name.empty() )
-        peptide_scoring::parse_peptide_scores( neg_scores, n_opts->neg_control );
-
+    if( !n_opts->neg_control.empty() )
+        {
+            peptide_scoring::parse_peptide_scores( neg_scores, n_opts->neg_control );
+            neg_scores.scores.transpose();
+        }
     if(    n_opts->approach == "diff"
         || n_opts->approach == "ratio"
         || n_opts->approach == "diff_ratio" )
@@ -64,7 +66,7 @@ void module_normalize::run( options *opts )
                 }
             else if( !n_opts->neg_id.empty() )
                 {
-                    if( !neg_scores.file_name.empty() )
+                    if( !n_opts->neg_control.empty() )
                         {
                             filter_neg_control_start( &neg_scores, &neg_filter, n_opts->neg_id );
                         }
@@ -76,7 +78,7 @@ void module_normalize::run( options *opts )
             else
                 {
                     throw std::runtime_error( "ERROR: Must use approach for identifying negative controls. "
-                                            "Either a negative id [--negative_id,-s] or negative names [--negative_names,-n]." );
+                                            "Either a negative id [--negative_id,-s] or negative names [--negative_names,-n].\n" );
                 }
         }
 
@@ -87,8 +89,7 @@ void module_normalize::run( options *opts )
 
     if( n_opts->approach == "diff" )
         {
-            // get average -- Remove second type of function. Only need to pass the averages and the original scores then.
-            if( neg_scores.file_name.empty() )
+            if( n_opts->neg_control.empty() )
                 get_neg_average( &original_scores, &neg_filter, &peptide_averages );
             else
                 get_neg_average( &neg_scores, &neg_filter, &peptide_averages );
@@ -97,7 +98,7 @@ void module_normalize::run( options *opts )
         }
     else if( n_opts->approach == "ratio" )
         {
-            if( neg_scores.file_name.empty() )
+            if( n_opts->neg_control.empty() )
                 get_neg_average( &original_scores, &neg_filter, &peptide_averages );
             else
                 get_neg_average( &neg_scores, &neg_filter, &peptide_averages );
@@ -106,7 +107,7 @@ void module_normalize::run( options *opts )
         }
     else if( n_opts->approach == "diff_ratio" )
         {
-            if( neg_scores.file_name.empty() )
+            if( n_opts->neg_control.empty() )
                 get_neg_average( &original_scores, &neg_filter, &peptide_averages );
             else
                 get_neg_average( &neg_scores, &neg_filter, &peptide_averages );
@@ -130,7 +131,7 @@ void module_normalize::run( options *opts )
         }
     else
         {
-            throw std::runtime_error( "Error: Provided approach '" + n_opts->approach + "'. Valid approach must be specified.\n"
+            throw std::runtime_error( "ERROR: Provided approach '" + n_opts->approach + "'. Valid approach must be specified.\n"
             "Available approaches:\n(Default) col_sum\nsize_factors\ndiff\nratio\ndiff_ratio\n"
             "See norm [--help,-h] for further information.\n" );
         }
@@ -154,21 +155,19 @@ void module_normalize::get_neg_average( peptide_score_data_sample_major *control
                                         std::unordered_set<std::string> *neg_filter,
                                         std::vector<double> *pep_averages )
 {
-    for( std::size_t curr_pep = 0; curr_pep < control->pep_names.size(); ++curr_pep )
+    for( std::size_t curr_pep = 0; curr_pep < control->scores.ncols(); ++curr_pep )
         {
-            double n_mean = 0.0;
+            double n_sum = 0.0;
             std::size_t total_samples = 0;
-            for( std::size_t curr_samp = 0; curr_samp < control->sample_names.size(); ++curr_samp )
+            for( std::size_t curr_samp = 0; curr_samp < control->scores.nrows(); ++curr_samp )
                 {
-                    // if the current sample from the control data is a specified sample name to filter,
-                    // then include in finding mean for current peptide
                     if( neg_filter->find( control->sample_names.at( curr_samp ) ) != neg_filter->end() )
                         {
-                            n_mean += control->scores.at( curr_pep, curr_samp );
+                            n_sum += control->scores.at( curr_samp, curr_pep );
                             ++total_samples;
                         }
                 }
-            pep_averages->at(curr_pep) = n_mean/total_samples;
+            pep_averages->at(curr_pep) = n_sum/total_samples;
         }
 }
 
@@ -235,7 +234,9 @@ void module_normalize::compute_diff( matrix<double> *norm_diffs,
             for( std::size_t curr_samp = 0; curr_samp < norm_diffs->ncols(); ++curr_samp )
                 {
                     // store the result in that coordinate of the norm_diffs
-                    norm_diffs->at(curr_pep, curr_samp) -= neg_mean;
+                    norm_diffs->at( curr_pep, curr_samp ) =
+                                        norm_diffs->at( curr_pep, curr_samp ) - neg_mean;
+                                        
                 }
         }
 }
@@ -246,12 +247,10 @@ void module_normalize::compute_ratio( matrix<double> *norm_ratios,
     for( std::size_t curr_pep = 0; curr_pep < norm_ratios->nrows(); ++curr_pep )
         {
             double neg_mean = peptide_avgs->at(curr_pep);
-            // for each sample in data
             for( std::size_t curr_samp = 0; curr_samp < norm_ratios->ncols(); ++curr_samp )
                 {
-                    // store the result in that coordinate of the norm_diffs
                     norm_ratios->at( curr_pep, curr_samp ) =
-                                        norm_ratios->at(curr_pep,curr_samp)/neg_mean;
+                                        norm_ratios->at( curr_pep, curr_samp )/neg_mean;
                 }
         }
 }
@@ -262,15 +261,12 @@ void module_normalize::compute_diff_ratio( matrix<double> *norm_diff_ratios,
     for( std::size_t curr_pep = 0; curr_pep < norm_diff_ratios->nrows(); ++curr_pep )
         {
             double neg_mean = peptide_avgs->at(curr_pep);
-            // for each sample in data
             for( std::size_t curr_samp = 0; curr_samp < norm_diff_ratios->ncols(); ++curr_samp )
                 {
-                    // store the result in that coordinate of the norm_diffs
                     norm_diff_ratios->at( curr_pep, curr_samp ) =
-                                        (norm_diff_ratios->at(curr_pep,curr_samp) - neg_mean)/neg_mean;
+                                        (norm_diff_ratios->at( curr_pep, curr_samp ) - neg_mean)/neg_mean;
                 }
         }
-
 }
 
 void module_normalize::compute_size_factors( std::vector<double> *size_factors,
