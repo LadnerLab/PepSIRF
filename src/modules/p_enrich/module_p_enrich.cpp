@@ -58,6 +58,16 @@ void module_p_enrich::run( options *opts )
 
     pairs_file.close();
 
+    auto output_path = fs_tools::path( p_opts->out_dirname );
+    bool dir_exists = !fs_tools::create_directories( output_path );
+
+    if( dir_exists )
+        {
+            std::cout << "WARNING: the directory '" << p_opts->out_dirname
+                      << "' exists, any files with "
+                      << "colliding filenames will be overwritten!\n";
+        }
+
     bool raw_counts_included = !p_opts->in_raw_scores_fname.empty();
 
     if( raw_counts_included )
@@ -73,24 +83,11 @@ void module_p_enrich::run( options *opts )
                 {
                     return std::stod( val );
                 });
-
         }
-
-    auto output_path = fs_tools::path( p_opts->out_dirname );
-    bool dir_exists = !fs_tools::create_directories( output_path );
-
-    if( dir_exists )
-        {
-            std::cout << "WARNING: the directory '" << p_opts->out_dirname
-                      << "' exists, any files with "
-                      << "colliding filenames will be overwritten!\n";
-        }
-
     using sample_name_set = std::unordered_set<std::string>;
     sample_name_set raw_score_sample_names{ raw_scores.sample_names.begin(),
-            raw_scores.sample_names.end()
-            };
-
+                                            raw_scores.sample_names.end()
+                                            };
     
     peptide_score_data_sample_major *curr_matrix_ptr;
     for( std::size_t sample_idx = 0; sample_idx < sample_pairs.size(); ++sample_idx )
