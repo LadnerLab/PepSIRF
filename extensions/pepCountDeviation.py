@@ -15,6 +15,7 @@ def main():
     p.add_option('-r', '--raw',  help='A matrix containing raw scores for samples of interest. [None, REQ]')
     p.add_option('-n', '--normControl',  help='A matrix containing normalized scores for the negative control samples, which will be used to calculate peptide relative abundance. [None, REQ]')
     p.add_option('-o', '--out', help='Name for output file, which will contain an estimate of number of missing peptides, given read count, for each sample [None, REQ]')
+    p.add_option('-u', '--upperValue', type='int', default=0, help='Upper value to consider in calculations. Values equal to or less than this value will be compared with expectations [0]')
     opts, args = p.parse_args()
     
     # Generate relative probabilities of different peptides
@@ -35,17 +36,17 @@ def main():
         fout.write("Sample\tMissingPeptides\n")
         for s, inf in rawD.items():
             rc = sum(inf.values())
-            zeros = sum([1 for x in inf.values() if x==0])
-            missing = expectUniq(probD, rc) - (numPeps-zeros)
+            zeros = sum([1 for x in inf.values() if x<=opts.upperValue])
+            missing = expectUniq(probD, rc, opts) - (numPeps-zeros)
             fout.write("%s\t%d\n" % (s,missing))
             counter+=1
-            print(counter)
+            print(counter, s, zeros, missing)
 
 #----------------------End of main()
 
 
-def expectUniq(probD, readCount):
-    totProb =  sum([1-poisson.cdf(0, readCount*(v)) for k,v in probD.items()])
+def expectUniq(probD, readCount, opts):
+    totProb =  sum([1-poisson.cdf(opts.upperValue, readCount*(v)) for k,v in probD.items()])
     return totProb
 
 def probeProb(normD, controls):
