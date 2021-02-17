@@ -48,7 +48,7 @@ void module_normalize::run( options *opts )
     if( !n_opts->neg_control.empty() )
         {
             peptide_scoring::parse_peptide_scores( neg_scores, n_opts->neg_control );
-            neg_scores.scores.transpose();
+            neg_scores.scores = neg_scores.scores.transpose();
         }
     if(    n_opts->approach == "diff"
         || n_opts->approach == "ratio"
@@ -155,15 +155,15 @@ void module_normalize::get_neg_average( peptide_score_data_sample_major *control
                                         std::unordered_set<std::string> *neg_filter,
                                         std::vector<double> *pep_averages )
 {
-    for( std::size_t curr_pep = 0; curr_pep < control->scores.ncols(); ++curr_pep )
+    for( std::size_t curr_pep = 0; curr_pep < control->pep_names.size(); ++curr_pep )
         {
             double n_sum = 0.0;
             std::size_t total_samples = 0;
-            for( std::size_t curr_samp = 0; curr_samp < control->scores.nrows(); ++curr_samp )
+            for( std::size_t curr_samp = 0; curr_samp < control->sample_names.size(); ++curr_samp )
                 {
                     if( neg_filter->find( control->sample_names.at( curr_samp ) ) != neg_filter->end() )
                         {
-                            n_sum += control->scores.at( curr_samp, curr_pep );
+                            n_sum += control->scores.at( curr_pep, curr_samp );
                             ++total_samples;
                         }
                 }
