@@ -1,155 +1,197 @@
 #!/bin/bash
 
-echo "PepSIRF Module Testing"
-echo "======================"
+# How to use:
+# Please provide the following space delimited arguments in this order:
+# $1= build directory
+# $2= output directory
+# $3= raw score matrix filename
+# $4= list of names for filtering in norm
+# $5= id for filtering in norm
+# example
+# ./pepsirf_module_test.sh ~/Documents/work/PepSIRF/build ~/Documents/work/PepSIRF/test/norm_penrich_module_testing ~/Documents/work/PepSIRF/test/test_raw_matrix.tsv S_000,S_001,S_002,S_003,S_004,S_005,S_006,S_007 S_
 
+echo "PepSIRF Module Testing"
+echo "=================================================================="
 echo "[Normalize Module]"
 
-let passed=0
-let failed=0
-#
+mkdir $2
+mkdir $2'/norm_single_matrix_output'
+mkdir $2'/norm_dual_matrix_output'
+
 echo "Combination: diff approach, a single matrix, name filter"
-echo "-------"
-../build/pepsirf norm \
--p 'test_raw_matrix.tsv' \
+echo "----------------"
+$1/pepsirf norm \
+-p $3 \
 -a 'diff' \
--n 'test_samplenames_norm.txt' \
---precision '8' \
--o 'norm_module_testing_02.10/test_diff_names_norm_output.tsv'
-echo "-------"
-#
+-n $4 \
+-o $2'/norm_single_matrix_output/test_diff_names_norm_output.tsv'
+echo '----------------------------------------------------------'
+
+
+
 echo "Combination: ratio approach, a single matrix, name filter"
-echo "-------"
-../build/pepsirf norm \
--p 'test_raw_matrix.tsv' \
+echo "----------------"
+$1/pepsirf norm \
+-p $3 \
 -a 'ratio' \
--n 'test_samplenames_norm.txt' \
---precision '8' \
--o 'norm_module_testing_02.10/test_ratio_names_norm_output.tsv'
-echo "-------"
-#
+-n $4 \
+-o $2'/norm_single_matrix_output/test_ratio_names_norm_output.tsv'
+echo "----------------------------------------------------------"
+
+
+
 echo "Combination: diff ratio approach, a single matrix, name filter"
-echo "-------"
-../build/pepsirf norm \
--p 'test_raw_matrix.tsv' \
+echo "----------------"
+$1/pepsirf norm \
+-p $3 \
 -a 'diff_ratio' \
--n 'test_samplenames_norm.txt' \
---precision '8' \
--o 'norm_module_testing_02.10/test_diffratio_names_norm_output.tsv'
-echo "-------"
-#
+-n $4 \
+-o $2'/norm_single_matrix_output/test_diffratio_names_norm_output.tsv'
+echo "----------------------------------------------------------"
+
+
+
 echo "Combination: diff approach, two matrices, name filter"
-echo "-------"
-../build/pepsirf norm \
--p 'test_raw_matrix.tsv' \
---negative_control 'test_raw_matrix.tsv' \
--n 'test_samplenames_norm.txt' \
+echo "----------------"
+$1/pepsirf norm \
+-p $3 \
+--negative_control $3 \
+-n $4 \
 -a 'diff' \
---precision '8' \
--o 'norm_module_testing_02.10/test_diff_separate_neg_control_names_norm_output.tsv'
-echo "-------"
-#
+-o $2'/norm_dual_matrix_output/test_diff_names_norm_output.tsv'
+echo "----------------------------------------------------------"
+
+
+
 echo "Combination: ratio approach, two matrices, name filter"
-echo "-------"
-../build/pepsirf norm \
--p 'test_raw_matrix.tsv' \
---negative_control 'test_raw_matrix.tsv' \
--n 'test_samplenames_norm.txt' \
+echo "----------------"
+$1/pepsirf norm \
+-p $3 \
+--negative_control $3 \
+-n $4 \
 -a 'ratio' \
---precision '8' \
--o 'norm_module_testing_02.10/test_ratio_separate_neg_control_names_norm_output.tsv'
-echo "-------"
-#
+-o $2'/norm_dual_matrix_output/test_ratio_names_norm_output.tsv'
+echo "----------------------------------------------------------"
+
+
+
 echo "Combination: diff ratio approach, two matrices, name filter"
-echo "-------"
-../build/pepsirf norm \
--p 'test_raw_matrix.tsv' \
---negative_control 'test_raw_matrix.tsv' \
--n 'test_samplenames_norm.txt' \
+echo "----------------"
+$1/pepsirf norm \
+-p $3 \
+--negative_control $3 \
+-n $4 \
 -a 'diff_ratio' \
---precision '8' \
--o 'norm_module_testing_02.10/test_diffratio_separate_neg_control_names_norm_output.tsv'
-echo "-------"
-#
+-o $2'/norm_dual_matrix_output/test_diffratio_names_norm_output.tsv'
+echo "----------------------------------------------------------"
+
+
+
 echo "Combination: diff approach, single matrix, id filter"
-echo "-------"
-../build/pepsirf norm \
--p 'test_raw_matrix.tsv' \
+echo "----------------"
+$1/pepsirf norm \
+-p $3 \
 -a 'diff' \
--s 'S_' \
---precision '8' \
--o 'norm_module_testing_02.10/test_diff_id_norm_output.tsv'
-echo "-------"
-#
+-s $5 \
+-o $2'/norm_single_matrix_output/test_diff_id_norm_output.tsv'
+echo "----------------------------------------------------------"
+
+
+
 echo "Combination: ratio approach, single matrix, id filter"
-echo "-------"
-../build/pepsirf norm \
--p 'test_raw_matrix.tsv' \
+echo "----------------"
+$1/pepsirf norm \
+-p $3 \
 -a 'ratio' \
--s 'S_' \
---precision '8' \
--o 'norm_module_testing_02.10/test_ratio_id_norm_output.tsv'
-echo "-------"
-#
+-s $5 \
+-o $2'/norm_single_matrix_output/test_ratio_id_norm_output.tsv'
+echo "----------------------------------------------------------"
+
+
+
 echo "Combination: diff ratio approach, single matrix, id filter"
-echo "-------"
-../build/pepsirf norm \
--p 'test_raw_matrix.tsv' \
+echo "----------------"
+$1/pepsirf norm \
+-p $3 \
 -a 'diff_ratio' \
--s 'S_' \
---precision '8' \
--o 'norm_module_testing_02.10/test_diffratio_id_norm_output.tsv'
-echo "-------"
-#
+-s $5 \
+-o $2'/norm_single_matrix_output/test_diffratio_id_norm_output.tsv'
+echo "----------------------------------------------------------"
+
+
+
 echo "Combination: diff approach, two matrices, id filter"
-echo "-------"
-../build/pepsirf norm \
--p 'test_raw_matrix.tsv' \
+echo "----------------"
+$1/pepsirf norm \
+-p $3 \
 -a 'diff' \
---negative_control 'test_raw_matrix.tsv' \
--s 'S_' \
---precision '8' \
--o 'norm_module_testing_02.10/test_diff_separate_neg_control_id_norm_output.tsv'
-echo "-------"
-#
+--negative_control $3 \
+-s $5 \
+-o $2'/norm_dual_matrix_output/test_diff_id_norm_output.tsv'
+echo "----------------------------------------------------------"
+
+
+
 echo "Combination: ratio approach, two matrices, id filter"
-echo "-------"
-../build/pepsirf norm \
--p 'test_raw_matrix.tsv' \
+echo "----------------"
+$1/pepsirf norm \
+-p $3 \
 -a 'ratio' \
---negative_control 'test_raw_matrix.tsv' \
--s 'S_' \
---precision '8' \
--o 'norm_module_testing_02.10/test_ratio_separate_neg_control_id_norm_output.tsv'
-echo "-------"
-#
+--negative_control $3 \
+-s $5 \
+-o $2'/norm_dual_matrix_output/test_ratio_id_norm_output.tsv'
+echo "----------------------------------------------------------"
+
+
+
 echo "Combination: diff ratio approach, two matrices, id filter"
-echo "-------"
-../build/pepsirf norm \
--p 'test_raw_matrix.tsv' \
+echo "----------------"
+$1/pepsirf norm \
+-p $3 \
 -a 'diff_ratio' \
---negative_control 'test_raw_matrix.tsv' \
--s 'S_' \
---precision '8' \
--o 'norm_module_testing_02.10/test_diffratio_separate_neg_control_id_norm_output.tsv'
-echo "-------"
-#
+--negative_control $3 \
+-s $5 \
+-o $2'/norm_dual_matrix_output/test_diffratio_id_norm_output.tsv'
+echo "----------------------------------------------------------"
+
+
+
 echo "Combination: size factors approach, single matrix"
-echo "-------"
-../build/pepsirf norm \
--p 'test_raw_matrix.tsv' \
+echo "----------------"
+$1/pepsirf norm \
+-p $3 \
 -a 'size_factors' \
---precision '8' \
--o 'norm_module_testing_02.10/test_diff_names_norm_output.tsv'
-echo "-------"
-#
+-o $2'/test_size_factors_norm_output.tsv'
+echo "----------------------------------------------------------"
+
+
+
 echo "Combination: col sum approach, single matrix"
-echo "-------"
-../build/pepsirf norm \
--p 'test_raw_matrix.tsv' \
+echo "----------------"
+$1/pepsirf norm \
+-p $3 \
 -a 'col_sum' \
---precision '8' \
--o 'norm_module_testing_02.10/test_diff_names_norm_output.tsv'
-echo "-------"
+-o $2'/test_col_sum_norm_output.tsv'
+echo "----------------------------------------------------------"
+echo "=================================================================="
+
+echo " "
+echo "Comparing Single Matrix to Dual Matrix"
+echo "=================================================================="
+diff -yr $2'/norm_dual_matrix_output' $2'/norm_single_matrix_output' > $2'/norm_matrix_usage_comparison_results.txt'
+diff -sr $2'/norm_dual_matrix_output' $2'/norm_single_matrix_output'
+echo "=================================================================="
+
+echo " "
+echo "Comparing id to name list"
+echo "=================================================================="
+diff -s $2'/norm_single_matrix_output/test_diff_names_norm_output.tsv' $2'/norm_single_matrix_output/test_diff_id_norm_output.tsv'
+diff -s $2'/norm_single_matrix_output/test_ratio_names_norm_output.tsv' $2'/norm_single_matrix_output/test_ratio_id_norm_output.tsv'
+diff -s $2'/norm_single_matrix_output/test_diffratio_names_norm_output.tsv' $2'/norm_single_matrix_output/test_diffratio_id_norm_output.tsv'
+diff -s $2'/norm_dual_matrix_output/test_diff_names_norm_output.tsv' $2'/norm_dual_matrix_output/test_diff_id_norm_output.tsv'
+diff -s $2'/norm_dual_matrix_output/test_ratio_names_norm_output.tsv' $2'/norm_dual_matrix_output/test_ratio_id_norm_output.tsv'
+diff -s $2'/norm_dual_matrix_output/test_diffratio_names_norm_output.tsv' $2'/norm_dual_matrix_output/test_diffratio_id_norm_output.tsv'
+echo "=================================================================="
 
 
+echo "[pEnrich Module]"
