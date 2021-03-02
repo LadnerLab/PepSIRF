@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.5] - 2021-03-02
+- Fixed penrich bug with threshold verification for enrichment candidates and raw score pairs.
+- Fixed bug with norm which forced input of id or names for use with negative control.
+- Fixed bug with norm incorrectly accessing matrix elements for diff, ratio, diffratio.
+
 ## [1.3.4] - 2020-12-28
 - Penrich now uses a tab-delimited file containing a matrix file name and its threshold(s) per each line. A matrix file may contain zscores or normalized counts of each peptide.
 - Demux sample list may now include more than 3 columns for demultiplexing. A header name must now be specified for each column in the list to specify the sample name column, index 1 column and potentially index 2 column. Updated comments to drop reference to forward and reverse indexes - now index 1 and index 2.

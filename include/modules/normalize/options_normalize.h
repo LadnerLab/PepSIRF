@@ -49,7 +49,7 @@ class options_normalize : public options
     /**
      * Number of digits of precision for the output.
      **/
-    std::size_t precision_digits;
+    int precision_digits;
 
 
 };
