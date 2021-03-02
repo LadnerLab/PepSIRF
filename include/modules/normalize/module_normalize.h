@@ -119,11 +119,11 @@ class module_normalize : public module
     /**
      * Compute the ratio of norm socres to negative control score averages for
      * each sample column in a set of data.
-     * @param norm_diff_ratios Pointer to the location to store the difference
-     *        ratios that were found, one per column (sample).
+     * @param norm_ratios Pointer to the location to store the
+     *        ratios that were found, one per column .
      * @param peptide_avgs The means of provided negative controls.
      **/
-    void compute_ratio( matrix<double> *norm_diff_ratios,
+    void compute_ratio( matrix<double> *norm_ratios,
                         std::vector<double> *peptide_avgs );
 };
 
