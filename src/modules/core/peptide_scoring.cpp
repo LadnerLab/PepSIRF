@@ -115,7 +115,7 @@ void peptide_scoring::write_peptide_scores( std::ostream& output,
 
             for( inner_index = 0; inner_index < data.sample_names.size(); ++inner_index )
                 {
-                    output << std::fixed << std::setprecision( 15 ) << data.scores( index, inner_index );
+                    output << data.scores( index, inner_index );
 
                     if( inner_index < data.sample_names.size() - 1 )
                         {
