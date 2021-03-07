@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-import matplotlib as mpl
-mpl.rcParams['pdf.fonttype'] = 42
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
+#import matplotlib as mpl
+#mpl.rcParams['pdf.fonttype'] = 42
+#import matplotlib.pyplot as plt
+#import matplotlib.patches as patches
 
 import argparse, re, subprocess
 import inout as io
