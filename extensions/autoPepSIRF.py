@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import argparse, re, subprocess
+import argparse, re, subprocess, glob
 import inout as io
 from collections import defaultdict
 
@@ -211,9 +211,13 @@ def main():
         
             #Read in counts
             rcD = io.fileDictHeader(args.readCounts, "Sample name", "Sum of probe scores")
-            readCountBoxplot(list(rcD.values()), args)
+            boxplot(list(rcD.values()), "readCountBoxplot.png", args.rawThresh)
     
-    #        if args.thresh and args.pairs and base:
+            if args.thresh and args.pairs and base:
+                enrFiles = glob.glob("%s/*enriched.txt" % (enrDir))
+                enrCounts = [len(io.fileList(f, header=False)) for f in enrFiles]
+                if len(enrCounts) > 0:
+                    boxplot(enrCounts, "enrichedCountBoxplot.png", "200")
 
 #----------------------End of main()
 
@@ -230,11 +234,12 @@ def makeDirName(args):
     else:
         return dirName[:-1]
 
-def readCountBoxplot(counts, args):
+def boxplot(counts, outname, thresh = None):
     fig,ax = plt.subplots(1,1,figsize=(4, 4),facecolor='w')
     ax.boxplot([float(x) for x in counts])
-    ax.hlines([float(x) for x in args.rawThresh.split(",")], 0.5, 1.5, linestyle="--")
-    plt.savefig("readCountBoxplot.png",dpi=300,bbox_inches='tight')
+    if thresh:
+        ax.hlines([float(x) for x in thresh.split(",")], 0.5, 1.5, linestyle="--")
+    plt.savefig(outname,dpi=300,bbox_inches='tight')
     
 ###------------------------------------->>>>    
 
