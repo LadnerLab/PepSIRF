@@ -1,13 +1,20 @@
 #!/usr/bin/env python
 
-#import matplotlib as mpl
-#mpl.rcParams['pdf.fonttype'] = 42
-#import matplotlib.pyplot as plt
-#import matplotlib.patches as patches
-
 import argparse, re, subprocess
 import inout as io
 from collections import defaultdict
+
+# If matplotlib is available, generate some summary figures
+try: 
+    import matplotlib as mpl
+    mpl.rcParams['pdf.fonttype'] = 42
+    import matplotlib.pyplot as plt
+    matplotReady=True
+        
+    
+except:
+    print("Not generating figures because of error. Check to see if matplotlib is available.")
+    matplotReady=False
 
 # Used to automate several consecutive analyses with PepSIRF and to summarize the results
 
@@ -192,7 +199,22 @@ def main():
 
         print(cmd)
         subprocess.run(cmd, shell=True)
+
     
+    if matplotReady:
+        if args.raw:
+            #Generate reac counts file
+            args.readCounts = "%s_RC.tsv" % (base)
+            cmd = '%s info -i %s -c %s >> info.out' % (args.binary, args.raw, args.readCounts)
+            print(cmd)
+            subprocess.run(cmd, shell=True)
+        
+            #Read in counts
+            rcD = io.fileDictHeader(args.readCounts, "Sample name", "Sum of probe scores")
+            readCountBoxplot(list(rcD.values()), args)
+    
+    #        if args.thresh and args.pairs and base:
+
 #----------------------End of main()
 
 def makeDirName(args):
@@ -208,6 +230,12 @@ def makeDirName(args):
     else:
         return dirName[:-1]
 
+def readCountBoxplot(counts, args):
+    fig,ax = plt.subplots(1,1,figsize=(4, 4),facecolor='w')
+    ax.boxplot([float(x) for x in counts])
+    ax.hlines([float(x) for x in args.rawThresh.split(",")], 0.5, 1.5, linestyle="--")
+    plt.savefig("readCountBoxplot.png",dpi=300,bbox_inches='tight')
+    
 ###------------------------------------->>>>    
 
 if __name__ == "__main__":
