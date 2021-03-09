@@ -113,8 +113,8 @@ def main():
         
     if args.bins and args.diff:
         # Generate Z scores
-        args.zscore = "%s_Z.tsv" % (base)
-        args.znan = "%s_Z.nan" % (base)
+        args.zscore = "%s_Z-HDI%d.tsv" % (base, int(args.hdi*100))
+        args.znan = "%s_Z-HDI%d.nan" % (base, int(args.hdi*100))
         cmd = '%s zscore -s %s -o %s -n %s -b "%s" -d %f >> zscore.out' % (args.binary, args.diff, args.zscore, args.znan, args.bins, args.hdi)
         print(cmd)
         subprocess.run(cmd, shell=True)
