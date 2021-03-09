@@ -40,13 +40,13 @@ def main():
 
     #Create output dir
     if os.path.isdir(opts.outDir):
-        print("The output direory %s already exists!" % (opts.outDir))
+        print("The output diretory %s already exists!" % (opts.outDir))
     else:
         os.mkdir(opts.outDir)
 
     #Read in data file 
     dataD = io.fileDictFullRowNames(opts.data, opts.delim)
-    
+
     #Prep negative control data for plotting on x-axis, this will be the same across all of the plots
     if opts.negMatrix:
         negD = io.fileDictFullRowNames(opts.negMatrix, opts.delim)
@@ -94,7 +94,7 @@ def main():
 
         fig.savefig("%s/%s.%s" % (opts.outDir, opts.snDelim.join(sNames), opts.plotType), dpi=300, bbox_inches='tight')
 
-        fig.close()
+        plt.close(fig)
 #----------------------End of main()
 
 
