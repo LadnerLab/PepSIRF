@@ -252,13 +252,21 @@ form {
 }
 
 .navbar {
+  display: flex;
+  width: 100%;
+  border-collapse: collapse;
+  border: none;
+  background: #212121;
+}
+
+.navlinks {
   position: relative;
   margin: 0 auto;
   height: 64px;
   background-color: #212121;
 }
 
-.navbar ul {
+.navlinks ul {
   display: inline-block;
   list-style-type: none;
   padding: 0;
@@ -266,14 +274,12 @@ form {
   position: relative;
 }
 
-.navlinks {
-  float: left;
-  position: relative;
-  margin: 0 auto;
-  width: 100%;
+ul li {
+  display: table-cell;
+  margin: 0;
 }
 
-.navlinks a {
+ul li a {
   display: block;
   color: white;
   text-align: center;
@@ -282,8 +288,39 @@ form {
   padding: 20px 32px;
 }
 
-.navlinks a:hover {
+ul li a:hover {
   background-color: #0090ff;
+}
+
+.accordion {
+  background-color: #212121;
+  color: white;
+  cursor: pointer;
+  padding: 22px;
+  width: 100%;
+  text-align: left;
+  border: none;
+  outline: none;
+  font-size: 125%;
+}
+
+.active, .accordion:hover {
+  background-color: #414141;
+}
+
+.expanded {
+  display: block!important;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font: inherit;
+}
+
+#pane1, #pane2, #pane3, #pane4, #pane5, #pane6 {
+  padding: 0 18px;
+  background-color: white;
+  display: none;
+  overflow: hidden;
 }
 
 /*******************************************************************************

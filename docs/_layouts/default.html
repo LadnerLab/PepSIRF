@@ -26,17 +26,15 @@
             </section>
           {% endif %}
         </header>
-    <div class="navbar">
-      <ul><li class="navlinks"><a href="/PepSIRF/">Home</a></li></ul>
-      <ul><li class="navlinks"><a href="/PepSIRF/installation/">Installation</a></li></ul>
-      <ul><li class="navlinks"><a href="/PepSIRF/modules/">Modules</a></li></ul>
-      <ul><li class="navlinks"><a href="/PepSIRF/examples">Examples</a></li></ul>
-    <!-- {% for page in site.pages %}
-        {% if page.title %}
-            <ul><li class="navlinks"><a href="{{ site.baseurl }}{{ page.url }}">{{ page.title }}</a></li></ul>
-        {% endif %}
-    {% endfor %} -->
-    </div>
+        <div class="navbar">
+            <div class="navlinks">
+            {% for page in site.pages %}
+                {% if page.title %}
+                    <ul><li class="navlinks"><a href="{{ site.baseurl }}{{ page.url }}">{{ page.title }}</a></li></ul>
+                {% endif %}
+            {% endfor %}
+            </div>
+        </div>
     </div>
     <!-- MAIN CONTENT -->
     <div id="main_content_wrap" class="outer">
@@ -65,5 +63,20 @@
         ga('send', 'pageview');
       </script>
     {% endif %}
+
+    <script>
+      function expand(id)
+      {
+        var pane = document.getElementById(id);
+        if (pane.className.indexOf("expanded") == -1)
+        {
+          pane.className += "expanded";
+        }
+        else
+        {
+          pane.className = pane.className.replace( "expanded", "");
+        }
+      }
+    </script>
   </body>
 </html>
