@@ -3,6 +3,7 @@
 import argparse, re, subprocess, glob
 import inout as io
 from collections import defaultdict
+import itertools as it
 
 # If matplotlib is available, generate some summary figures
 try: 
