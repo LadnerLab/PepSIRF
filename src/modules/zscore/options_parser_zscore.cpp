@@ -32,7 +32,20 @@ bool options_parser_zscore::parse( int argc, char ***argv, options *opts )
           "format as output by the demux and subjoin modules. "
           "Raw or normalized read counts can be used.\n"
         )
-        ( "bins,b", po::value( &opts_zscore->in_bins_fname )->required(),
+        ( "bins,b", po::value( &opts_zscore->in_bins_fname )->required()
+          ->notifier( [&]( std::string input_filename )->void
+                      {
+
+                        // test whether the second row, second column and every column on contains a double
+                        // if the bin file contains a double, then it is not a bin file and a runtime error should be thrown.
+                        std::ifstream input_f{ input_filename };
+                        if( input_f.fail() )
+                            {
+                              throw std::runtime_error( "Unable to open threshold_file input.\n" );
+                            }
+                        std::string line;
+                      }
+                      ),
           "Name of the file containing bins, one bin per line, as output by the bin module. "
           "Each bin contains a tab-delimited list of peptide names.\n"
         )
