@@ -28,9 +28,11 @@ module_subjoin::parse_namelist( std::vector<std::string>& dest,
                     boost::split( split_line, line, boost::is_any_of( "\t" ) );
 
                     // replace the old name with the new
-                    if( split_line.size() == 2 && split_line[ 1 ].length() > 0 )
+                    if( split_line.size() == 2 && split_line[ 1 ].length() > 0 
+                    
+                    )
                         {
-                            dest.emplace_back( split_line[ 1 ] );
+                            dest.emplace_back( split_line[ 0 ] );
                             ret_val.emplace_back( std::make_pair( split_line[ 0 ],
                                                                   split_line[ 1 ]
                                                                 )
@@ -80,7 +82,6 @@ void module_subjoin::run( options *opts )
 
     time.start();
 
-    // for all of the ( score_matrix, names_to_filter ) pairs:
     #pragma omp parallel for num_threads( 2 ) private( idx ) schedule( dynamic ) \
             shared( matrix_name_pairs, parsed_score_data )
     for( idx = 0; idx < matrix_name_pairs.size(); ++idx )
@@ -95,108 +96,95 @@ void module_subjoin::run( options *opts )
             peptide_scoring::parse_peptide_scores( my_data,
                                                 matrix_name_list
                                                 );
-                if( use_peptide_names )
-                    {
-                        my_data.scores = my_data.scores.transpose();
-                    }
+            if( use_peptide_names )
+                {
+                    my_data.scores = my_data.scores.transpose();
+                }
 
-                // parse the peptide scores
-                std::vector<std::string> peptide_name_list;
-                name_replacement_list replacement_names;
-                if( score_name_pair.second.empty() )
-                    {
-                        std::string line;
-                        std::ifstream matrix_names( matrix_name_list,
-                                                     std::ios_base::in );
-                        std::getline( matrix_names, line );
+            // parse the peptide scores
+            std::vector<std::string> peptide_name_list;
+            name_replacement_list replacement_names;
+            if( score_name_pair.second.empty() )
+                {
+                    std::string line;
+                    std::ifstream matrix_names( matrix_name_list,
+                                                    std::ios_base::in );
+                    std::getline( matrix_names, line );
 
-                        boost::split( peptide_name_list, line, boost::is_any_of( "\t" ) );
+                    boost::split( peptide_name_list, line, boost::is_any_of( "\t" ) );
 
-                    }
-                else
-                    {
-                        std::ifstream names_list( score_name_pair.second,
-                                                std::ios_base::in
-                                                );
-                        replacement_names = parse_namelist( peptide_name_list, names_list );
-                    }
-                auto replace_begin = use_peptide_names ? my_data.pep_names.begin()
+                }
+            else
+                {
+                    std::ifstream names_list( score_name_pair.second,
+                                            std::ios_base::in
+                                            );
+                    replacement_names = parse_namelist( peptide_name_list, names_list );
+                }
+            auto replace_begin = use_peptide_names ? my_data.pep_names.begin()
                                       : my_data.sample_names.begin();
 
-                auto replace_end = use_peptide_names ? my_data.sample_names.end()
-                                      : my_data.sample_names.end();
+            auto replace_end = use_peptide_names ? my_data.sample_names.end()
+                                    : my_data.sample_names.end();
 
-                for( const auto& name_repl_pair : replacement_names )
-                    {
-                        if( my_data.scores.get_row_labels().find( name_repl_pair.first )
-                            != my_data.scores.get_row_labels().end()
-                          )
-                            {
-                                my_data.scores.set_row_label( name_repl_pair.first,
-                                                              name_repl_pair.second
-                                                              );
-                                std::replace( replace_begin,
-                                              replace_end,
-                                              name_repl_pair.first,
-                                              name_repl_pair.second
-                                              );
-                            }
-                        else
-                            {
-                                    std::cout << "WARNING: The sample "
-                                          << name_repl_pair.first
-                                          << " was not found in "
-                                          << "the input matrix, "
-                                          << "and will not be included in the output.\n";
-                            }
-                    }
-
-                // filter the data, assign to the scores and peptide name list
-                std::unordered_set<std::string> names;
-
-                if( use_peptide_names )
-                    {
-                        names.insert( my_data.pep_names.begin(),
-                                      my_data.pep_names.end()
-                                      );
-
-                    }
-                else
-                    {
-                        names.insert( my_data.sample_names.begin(),
-                                      my_data.sample_names.end()
+            std::unordered_set<std::string> names;
+            std::size_t curr_name_idx;
+            if( use_peptide_names )
+                {
+                    names.insert( my_data.pep_names.begin(),
+                                    my_data.pep_names.end()
                                     );
-                    }
-
-                std::vector<std::string> filter_list;
-
-                std::for_each( peptide_name_list.begin(),
-                               peptide_name_list.end(),
-                               [&]( const std::string& name )
-                               -> void { bool res = names.find( name )
-                                       != names.end();
-                                   if( !res )
-                                       {
-                                           if( boost::to_lower_copy( name ) != "sequence name" )
-                                                {
-                                                    std::cout << "WARNING: The sample "
-                                                            << name
-                                                            << " was not found in "
-                                                            << "the input matrix, "
-                                                            << "and will not be included in the output.\n";
-                                                }
-                                       }
-                                   else
-                                       {
-                                           filter_list.emplace_back( name );
-                                       }
-                               }
-                             );
-
-
-
-                my_data.scores = my_data.scores.filter_rows( filter_list );
-                my_data.pep_names = filter_list;
+                }
+            else
+                {
+                    names.insert( my_data.sample_names.begin(),
+                                    my_data.sample_names.end()
+                                );
+                }
+            // verify given filter names exist
+            for( curr_name_idx = 0; curr_name_idx < peptide_name_list.size(); curr_name_idx++ )
+                {
+                    if( names.find( peptide_name_list[ curr_name_idx ] )  == names.end()
+                        && boost::to_lower_copy( peptide_name_list[ curr_name_idx ] ) != "sequence name" )
+                        {
+                            std::cout << "WARNING: The sample "
+                                    << peptide_name_list[ curr_name_idx ]
+                                    << " was not found in "
+                                    << "the input matrix, "
+                                    << "and will not be included in the output.\n";
+                            peptide_name_list.erase( peptide_name_list.begin() + curr_name_idx );
+                        }
+                }
+            // filter out unused rows
+            my_data.scores = my_data.scores.filter_rows( peptide_name_list );
+            my_data.pep_names = peptide_name_list;
+            std::vector<std::string> filter_list;
+            std::size_t curr_replacement_idx = 0;
+            for( curr_name_idx = 0; curr_name_idx < peptide_name_list.size(); curr_name_idx++ )
+                {
+                    if( names.find( peptide_name_list[ curr_name_idx ] ) != names.end() )
+                        {
+                            // if the name is found and has a replacement for output, then use the replacement name as the filter.
+                            if( curr_replacement_idx < replacement_names.size()
+                                && replacement_names[ curr_replacement_idx ].first == peptide_name_list[ curr_name_idx ] )
+                                {
+                                    filter_list.emplace_back( replacement_names[ curr_replacement_idx ].second );
+                                    my_data.scores.set_row_label( replacement_names[ curr_replacement_idx ].first,
+                                                            replacement_names[ curr_replacement_idx ].second
+                                                        );
+                                    std::replace( replace_begin,
+                                                replace_end,
+                                                replacement_names[ curr_replacement_idx ].first,
+                                                replacement_names[ curr_replacement_idx ].second
+                                                );
+                                    curr_replacement_idx++;
+                                }
+                            else
+                                {
+                                    filter_list.emplace_back( peptide_name_list[ curr_name_idx ] );
+                                }
+                        }
+                }
         }
 
     std::ofstream output( s_opts->out_matrix_fname, std::ios_base::out );
