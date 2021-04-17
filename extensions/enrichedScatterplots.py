@@ -61,7 +61,6 @@ def main():
     peptideNames = list(negD[negNames[0]].keys())
     
     x = [np.mean([float(negD[sn][pn]) for sn in negNames]) for pn in peptideNames]
-
     
     # Read in lists of enriched peptides
     enrFiles = glob.glob("%s/*%s" % (opts.enrDir, opts.enrExt))
