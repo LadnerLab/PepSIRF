@@ -170,9 +170,6 @@ void module_demux::run( options *opts )
     // are read from the file
     while( fastq_p.parse( reads_file_ref, reads, d_opts->read_per_loop  ) )
         {
-            std::size_t idx1_match_count = 0;
-            std::size_t idx2_match_count = 0;
-            std::size_t var_reg_match_count = 0;
 
             if( r2_reads_included )
                 {
@@ -182,8 +179,8 @@ void module_demux::run( options *opts )
 
            #pragma omp parallel for private( seq_iter, nuc_seq, read_index, index_str, adapter, sample_id,  \
                                               idx2_match, idx1_match ) \
-               shared( seq_start, seq_length, d_opts, num_samples, reference_counts, library_seqs, index_seqs, r2_seqs, diagnostic_map ) \
-                reduction( +:processed_total, var_reg_match_count, idx1_match_count, idx2_match_count, processed_success, concatemer_found ) \
+               shared( seq_start, seq_length, d_opts, num_samples, reference_counts, library_seqs, index_seqs, r2_seqs ) \
+                reduction( +:processed_total, idx1_match_total, idx2_match_total, var_reg_match_total, processed_success, concatemer_found ) \
                 schedule( dynamic )
 
             for( read_index = 0; read_index < reads.size(); ++read_index )
@@ -196,6 +193,7 @@ void module_demux::run( options *opts )
                         {
                             if( idx1_match != index_map.end() )
                                 {
+                                    ++idx1_match_total;
                                     // When diagnostic file output is included, increment f & r index for associated sample name
                                     if( !d_opts->diagnostic_fname.empty() )
                                         {
@@ -207,7 +205,7 @@ void module_demux::run( options *opts )
                                                         }
                                                 }
                                         }
-                                    ++idx1_match_count;
+
                                     if( reverse_length == 0 )
                                         {
                                             return true;
@@ -215,18 +213,21 @@ void module_demux::run( options *opts )
                                     if( reverse_length != 0
                                         && idx2_match != index_map.end() )
                                         {
-                                            if( !d_opts->diagnostic_fname.empty() )
+                                            std::string index_seq_concat = idx1_match->first.seq + idx2_match->first.seq;
+                                            if( index_map.find( sequence("", index_seq_concat ) ) != index_map.end() )
+                                                ++idx2_match_total;
+                                            for( auto& sample : diagnostic_map )
                                                 {
-                                                    for( auto& sample : diagnostic_map )
+                                                    if( idx2_match->first.name.compare( sample.first.second ) == 0
+                                                        && idx1_match->first.name.compare( sample.first.first ) == 0 )
                                                         {
-                                                            if( idx2_match->first.name.compare( sample.first.second ) == 0
-                                                                && idx1_match->first.name.compare( sample.first.first ) == 0 )
+                                                            if( !d_opts->diagnostic_fname.empty() )
                                                                 {
                                                                     sample.second.second.at( 1 ) += 1;
                                                                 }
+                                                            
                                                         }
                                                 }
-                                            ++idx2_match_count;
                                             return true;
                                         }
                                 }
@@ -283,7 +284,6 @@ void module_demux::run( options *opts )
                                                                index_idx, std::get<2>( d_opts->index1_data ),
                                                                forward_start, forward_length
                                                              );
-
                     if( match_found()
                         && quality_match()
                       )
@@ -306,7 +306,7 @@ void module_demux::run( options *opts )
                                             std::cout << "ref match\n";
                                             sample_id = idx1_match->second.id;
                                             seq_match->second->at( sample_id ) += 1;
-                                            var_reg_match_count++;
+                                            var_reg_match_total++;
                                             ++processed_success;
                                             if( !d_opts->diagnostic_fname.empty() )
                                                 {
@@ -329,7 +329,7 @@ void module_demux::run( options *opts )
                                                 {
                                                     sample_id = d_id->second.id;
                                                     seq_match->second->at( sample_id ) += 1;
-                                                    var_reg_match_count++;
+                                                    var_reg_match_total++;
                                                     ++processed_success;
                                                     if( !d_opts->diagnostic_fname.empty() )
                                                         {
@@ -404,9 +404,6 @@ void module_demux::run( options *opts )
                     // record the number of records that are processed
                     ++processed_total;
                 }
-            idx1_match_total += idx1_match_count;
-            idx2_match_total += idx2_match_count;
-            var_reg_match_total += var_reg_match_count;
 
             reads.clear();
             r2_seqs.clear();
@@ -423,7 +420,7 @@ void module_demux::run( options *opts )
     std::cout << processed_success << " records were found to be a match out of "
               << processed_total << " (" << ( (long double) processed_success / (long double) processed_total ) * 100
               << "%) successful.\n";
-    std::cout << std::fixed << std::setprecision( 1 )
+    std::cout << std::fixed << std::setprecision( 2 )
               << ( ( long double ) idx1_match_total / ( long double ) processed_total ) * 100.00 << "% " <<
                         idx1_match_total << " of total records matched index 1.\n"
               << ( ( long double ) idx2_match_total / ( long double ) processed_total ) * 100.00 << "% " <<
@@ -661,10 +658,16 @@ void module_demux::create_index_map( sequential_map<sequence, sample>& map,
     for( index = 0; index < index_seqs.size(); ++index )
         {
             st_table[ index_seqs[ index ].name ] = index_seqs[ index ].seq;
-            map[ sequence( index_seqs[ index ].name,
-                           index_seqs[ index ].seq
-                         )
-               ] = samplelist[ 0 ];
+            for( const auto& sample : samplelist )
+                {
+                    if( sample.get_first_id().compare(index_seqs[index].name) == 0
+                        || sample.get_second_id().compare(index_seqs[index].name) == 0 )
+                        {
+                             map[ sequence( index_seqs[ index ].name,
+                                            index_seqs[ index ].seq)
+                                ] = samplelist[ 0 ];
+                        }
+                }
         }
 
     for( index = 0; index < samplelist.size(); ++index )
