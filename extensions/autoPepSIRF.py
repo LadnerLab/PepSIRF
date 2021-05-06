@@ -40,7 +40,7 @@ def main():
     threshArgs = parser.add_argument_group('thresholds')
     threshArgs.add_argument("--zThresh", default="6,10", help="Z score threshold. Can include up to two floating points separated by a comma.")
     threshArgs.add_argument("--csThresh", default="20", help="Colum-Sum norm count threshold. Can include up to two floating points separated by a comma.")
-    threshArgs.add_argument("--sbdrThresh",  default="4", help="Negative control ratio threshold. Can include up to two floating points separated by a comma.")
+    threshArgs.add_argument("--sbdrThresh",  default=False, help="Negative control ratio threshold. Can include up to two floating points separated by a comma.")
     threshArgs.add_argument('--rawThresh',  default="488000", help='Total raw read count for a sample to be included in enrichment analyses. Can include up to two floating points separated by a comma.')
     threshArgs.add_argument('--hdi',  default=0.95, type=float, help='The highest density interval to be used for calculation of mean and stdev in the zscore module.')
 
@@ -55,7 +55,7 @@ def main():
 
     args = parser.parse_args()
     
-    #Creat base string for output files
+    #Create base string for output files
     if args.raw:
         base = ".".join(args.raw.split(".")[:-1])
     elif args.colsum:
@@ -187,7 +187,7 @@ def main():
                 fout.write("%s\t%s\n" % (args.zscore, args.zThresh))
             if args.colsum:
                 fout.write("%s\t%s\n" % (args.colsum, args.csThresh))
-            if args.diffratio:
+            if args.diffratio and args.sbdrThresh:
                 fout.write("%s\t%s\n" % (args.diffratio, args.sbdrThresh))
     
     # Run p_enrich module
