@@ -11,7 +11,7 @@ from collections import defaultdict
 def main():
 
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument("pepFile", help="A file containing a list of peptide names", nargs='*')
+    parser.add_argument("pepFile", help="One or more files, each containing a list of peptide names", nargs='*')
     parser.add_argument("-n", "--name", help="Column name for peptide names in metadata file", default="CodeName")
     parser.add_argument("-c", "--cat", help="Column name for category of interest in metadata file", default="Species")
     
