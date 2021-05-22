@@ -243,6 +243,18 @@ def main():
             for r1, r2 in pD.items():
                 scatter(csD[r1], r1, csD[r2], r2, "colsumRepScatters/%s_%s_CS.%s" % (r1, r2, args.scatterFormat), plotLog=True)
 
+        #Z score scatterplot generation
+        if args.repZscatters and args.zscore and args.pairs:
+            if not os.path.isdir("zRepScatters"):
+                os.mkdir("zRepScatters")
+            else:
+                print("Warning: 'zRepScatters' already exists! Z score replicate scatterplots will be placed within existing directory.")
+            
+            pD = io.fileDict(args.pairs, header=False)
+            csD = io.fileDictFull(args.zscore, valType="float", rowNames=True)
+            for r1, r2 in pD.items():
+                scatter(csD[r1], r1, csD[r2], r2, "zRepScatters/%s_%s_Z.%s" % (r1, r2, args.scatterFormat), plotLog=False)
+
 
 #----------------------End of main()
 
