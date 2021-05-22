@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-import argparse, re, subprocess, glob
+import argparse, re, subprocess, glob, os
+import numpy as np
 import inout as io
 from collections import defaultdict
 import itertools as it
@@ -52,6 +53,11 @@ def main():
     enrichArgs = parser.add_argument_group('enrich options')
     enrichArgs.add_argument("--sEnrich", default=False, action="store_true", help="Generate lists of enriched peptides separately for each pulldown. Will actually run p_enrich, but with the same sample specified for each replicate.")
     enrichArgs.add_argument("--inferPairs", default=False, action="store_true", help="Infer sample pairs from names. This option assumes names of replicates will be identical with the exception of a final string denoted with a '_'. For example, these names would be considered two replicates of the same sample: VW_100_1X_A and VW_100_1X_B")
+
+    outArgs = parser.add_argument_group('output options')
+    enrichArgs.add_argument("--repZscatters", default=False, action="store_true", help="Generate scatter plots comparing Z scores for all sample pairs. Even if set at command line, will be turned off when '--sEnrich' is used.")
+    enrichArgs.add_argument("--repCSscatters", default=False, action="store_true", help="Generate scatter plots comparing colu_sum normalized scores for all sample pairs. Even if set at command line, will be turned off when '--sEnrich' is used.")
+    enrichArgs.add_argument("--scatterFormat", default="png", help="Output file format for replicate scatterplots.")
 
     args = parser.parse_args()
     
@@ -149,6 +155,7 @@ def main():
         else:
             print("No file was providing for generating a list of sample names.")
     
+    
     # Generate pairs file, if not provided
     if not args.pairs and args.names and base:
         sNames = io.fileList(args.names, header=False)
@@ -158,7 +165,11 @@ def main():
             with open(args.pairs, "w") as fout:
                 for sn in sNames:
                     fout.write("%s\t%s\n" % (sn, sn))
-
+            
+            # Turn off replicate scatterplot generation, as these will not be true replicates
+            args.repZscatters = False
+            args.repCSscatters = False
+            
         elif args.inferPairs:
             pDict = defaultdict(list)
             for each in sNames:
@@ -220,7 +231,38 @@ def main():
                 if len(enrCounts) > 0:
                     boxplot(enrCounts, "enrichedCountBoxplot.png", "200")
 
+        #Norm read count scatterplot generation
+        if args.repCSscatters and args.colsum and args.pairs:
+            if not os.path.isdir("colsumRepScatters"):
+                os.mkdir("colsumRepScatters")
+            else:
+                print("Warning: 'colsumRepScatters' already exists! Col_Sum replicate scatterplots will be placed within existing directory.")
+            
+            pD = io.fileDict(args.pairs, header=False)
+            csD = io.fileDictFull(args.colsum, valType="float", rowNames=True)
+            for r1, r2 in pD.items():
+                scatter(csD[r1], r1, csD[r2], r2, "colsumRepScatters/%s_%s_CS.%s" % (r1, r2, args.scatterFormat), plotLog=True)
+
+
 #----------------------End of main()
+
+def scatter(x, xName, y, yName, outname, plotLog=True):
+    #Generate plot
+    fig,ax = plt.subplots(1,1,figsize=(5,5),facecolor='w')            
+    
+    if plotLog:
+        ax.scatter(np.log10(np.array(x)+1), np.log10(np.array(y)+1), alpha=0.5, s=5)
+        ax.set_xlabel("%s log10(score+1)" % xName, fontsize=15)
+        ax.set_ylabel("%s log10(score+1)" % yName, fontsize=15)
+        
+    else:
+        ax.scatter(x, y, alpha=0.5, s=5)
+        ax.set_xlabel("%s" % xName, fontsize=15)
+        ax.set_ylabel("%s" % yName, fontsize=15)
+
+    fig.savefig(outname, dpi=300, bbox_inches='tight')
+    plt.close(fig)
+
 
 def makeDirName(args):
     dirName = ""
