@@ -7,16 +7,19 @@ import optparse, os, subprocess, re
 def main():
     usage = '%prog [options]'
     p = optparse.OptionParser()
-    p.add_option('-e', '--enriched',  help='List of enriched peptide names, one per line. [None, REQ]')
-    p.add_option('-p', '--peps',  help='Fasta file peptide sequences. [None, REQ]')
+    p.add_option('-p', '--peps',  help='Fasta file with peptide sequences. [None, REQ]')
+    p.add_option('-e', '--enriched',  help="List of enriched peptide names, one per line. Optional, if you don't want to cluster all sequences in the '--peps' fasta. [OPT]")
     p.add_option('-o', "--outDir", default="epiClusts", help='Name for opts.outDirctory in which output files will be generated. This opts.outDirctory should NOT exist already. [epiClusts]')
-    p.add_option('-m', '--map',  help='File containing map to link names in enriched list to those in pep fasta. [OPT]')
-    p.add_option('--mapOrder', default=1,  type='int', help='Integer indicate the column # of the name labels in the enriched list. Must be 1 or 2 (1-based)[1]')
-    p.add_option('-s', '--species',  help='File containing link between species taxonomy IDs and full names. [OPT]')
+
     p.add_option('-k', '--ksize', default=6, type='int', help='Kmer size to use to cluster peptides. [6]')
     p.add_option('--minK', default=4, type='int', help='Minimum # of shared kmers to cluster [4]')
     p.add_option('--minProp', default=0.2, type='float', help='Minimum proportion of pairwise comparisons to meet threshold in order to combine clusters. Must be between 0-1. [0.2]')
     p.add_option('--muscle', default="muscle3.8.31_i86darwin64", help='How to call Muscle aligner on your machine. [muscle3.8.31_i86darwin64]')
+
+    p.add_option('-s', '--species',  help='File containing link between species taxonomy IDs and full names. [OPT]')
+    p.add_option('-m', '--map',  help='File containing map to link names in enriched list to those in pep fasta. [OPT]')
+    p.add_option('--mapOrder', default=1,  type='int', help='Integer indicate the column # of the name labels in the enriched list. Must be 1 or 2 (1-based)[1]')
+
 
     opts, args = p.parse_args()
     
@@ -24,7 +27,10 @@ def main():
     pepDict = read_fasta_dict_upper(opts.peps)
 
     #Read in Enriched peptides
-    peps = filelist(opts.enriched)
+    if opts.enriched:
+        peps = filelist(opts.enriched)
+    else:
+        peps = list(pepDict.keys())
 
     #Read in name map, if provided
     if opts.map:
