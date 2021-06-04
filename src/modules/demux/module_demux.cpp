@@ -199,7 +199,7 @@ void module_demux::run( options *opts )
                                         {
                                             for( auto& sample : diagnostic_map )
                                                 {
-                                                    if( idx1_match->first.name.compare( sample.first.first ) == 0 )
+                                                    if( idx1_match->first.name == sample.first.first )
                                                         {
                                                             sample.second.second.at( 0 ) += 1;
                                                         }
@@ -218,14 +218,10 @@ void module_demux::run( options *opts )
                                                 ++idx2_match_total;
                                             for( auto& sample : diagnostic_map )
                                                 {
-                                                    if( idx2_match->first.name.compare( sample.first.second ) == 0
-                                                        && idx1_match->first.name.compare( sample.first.first ) == 0 )
+                                                    if( idx2_match->first.name == sample.first.second
+                                                        && idx1_match->first.name == sample.first.first )
                                                         {
-                                                            if( !d_opts->diagnostic_fname.empty() )
-                                                                {
-                                                                    sample.second.second.at( 1 ) += 1;
-                                                                }
-                                                            
+                                                            sample.second.second.at( 1 ) += 1;                                                            
                                                         }
                                                 }
                                             return true;
