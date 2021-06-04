@@ -53,16 +53,16 @@ bool options_parser_zscore::parse( int argc, char ***argv, options *opts )
                           {
                             is_double = true;
                             try
-                            {
-                              std::stod(col);
-                            }
-                            catch(...)
-                            {
-                              is_double = false;
-                            }
-                            if( is_double || col == "nan" || col == "inf" )
                               {
-                                throw std::runtime_error( "Bins file '" + input_filename + "' provided contains double values. Verify the bins file is valid.\n");
+                                std::stod(col);
+                              }
+                            catch(...)
+                              {
+                                is_double = false;
+                              }
+                            if( is_double )
+                              {
+                                throw std::runtime_error( "Bins file '" + input_filename + "' provided contains score values. Verify the bins file is valid.\n");
                               }
                           }
                       }
