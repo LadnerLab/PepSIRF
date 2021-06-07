@@ -9,6 +9,7 @@ import numpy as np
 import matplotlib as mpl
 mpl.rcParams['pdf.fonttype'] = 42
 import matplotlib.pyplot as plt
+plt.switch_backend('agg')
 from scipy.interpolate import griddata
     
 # Used to generate plots for identifying proper enrichment thresholds
@@ -24,7 +25,7 @@ def main():
 
     reqArgs = parser.add_argument_group('Required Arguments')
     reqArgs.add_argument("-y", "--yMat", help="Score matrix from which y-axis values will be derived.", required=True)
-    reqArgs.add_argument("-s", "--samples", help="File containing sample names. One row should be provided per plot. Multiple names can be provided per line, separated by commas; values from these samples will be average for the plot.", required=True)
+    reqArgs.add_argument("-s", "--samples", help="File containing sample names. One row should be provided per plot. Multiple names can be provided per line, separated by tabs; values from these samples will be average for the plot.", required=True)
     reqArgs.add_argument("-c", "--controls", help="Comma-separated list of control names. Average values from these samples will be plotted on the x-axis", required=True)
     reqArgs.add_argument("-t", "--thresh", help="Threshold file for plot contours. Tab-delimited file with one line per score matrix. The 1st column should contain a short descriptor that will be added to output names. The 2nd column should be the file path to the score matrix. And the 3rd column should be a comma-sep list of thresholds to contour on plots.")
 
