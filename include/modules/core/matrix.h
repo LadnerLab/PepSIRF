@@ -868,6 +868,29 @@ class labeled_matrix : public matrix<ValType>
                          this->row_labels
                        );
         }
+    /**
+     * Update the row labels for this matrix.
+     * @param labels A vector containing the replacement labels.
+     * @post The vector labels must be in the same order as the original labels
+     **/
+    void update_row_labels( const std::vector<std::string> labels )
+        {
+            update_labels( labels,
+                           this->row_labels );
+        }
+
+    /**
+     * Update the col labels for this matrix.
+     * @param labels A vector containing the replacement labels.
+     * @post The vector labels must be in the same order as the original labels.
+     *       If these are not in the same order, then the labels may be
+     *       incorrectly assigned.
+     **/
+    void update_col_labels( const std::vector<std::string> labels )
+        {
+            update_labels( labels,
+                           this->col_labels );
+        }
 
     /**
      * Get the row labels of the matrix, store them in
@@ -1174,6 +1197,25 @@ class labeled_matrix : public matrix<ValType>
                     )
         {
             std::uint32_t idx = 0;
+            label_dest.reserve( std::distance( labels.begin(), labels.end() ) );
+
+            for( const auto& iter_loc : labels )
+                {
+                    label_dest.emplace( iter_loc, idx++ );
+                }
+        }
+    /**
+     * Clears the locally-stored labels for the matrix and emplaces each label from labels.
+     * Each label is stored in label_dest with the value corresponding to the labels index.
+     * @param labels An ordered list of labels to be stored in matrix.
+     * @param label_dest The place to store the label/index mappings.
+     * @post labels is set as vector because an ordered list is necessary to associate index to label.
+     **/
+    void update_labels( const std::vector<std::string> &labels,
+                        std::unordered_map<LabelType, std::uint32_t>& label_dest )
+        {
+            std::uint32_t idx = 0;
+            label_dest.clear();
             label_dest.reserve( std::distance( labels.begin(), labels.end() ) );
 
             for( const auto& iter_loc : labels )
