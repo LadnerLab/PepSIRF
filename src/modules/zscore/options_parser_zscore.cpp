@@ -62,7 +62,9 @@ bool options_parser_zscore::parse( int argc, char ***argv, options *opts )
                               }
                             if( is_double )
                               {
-                                throw std::runtime_error( "Bins file '" + input_filename + "' provided contains score values. Verify the bins file is valid.\n");
+                                throw std::runtime_error( "Bins file '" + input_filename +
+                                "' provided contains score values. Verify the bins file is valid.\n" +
+                                "Note: this error could also be triggered IF your peptide names include 'inf' or 'nan' (case insensitive).\n");
                               }
                           }
                       }
