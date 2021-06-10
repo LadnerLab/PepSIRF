@@ -10,7 +10,7 @@ import numpy as np
 import inout as io             #Available at https://github.com/jtladner/Modules
 
 # This script is used for generating scatterplots comparing control and experimental samples, with enriched peptides highlighted with a different color
-
+# training comment
 def main():
     usage = '%prog [options]'
     p = optparse.OptionParser()
