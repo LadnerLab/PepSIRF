@@ -10,7 +10,7 @@ import numpy as np
 import inout as io             #Available at https://github.com/jtladner/Modules
 
 # This script is used for generating scatterplots comparing control and experimental samples, with enriched peptides highlighted with a different color
-# training comment
+
 def main():
     usage = '%prog [options]'
     p = optparse.OptionParser()
@@ -35,6 +35,8 @@ def main():
     p.add_option('--plotLog', default=False, action="store_true", help="Use if you want axes to be shown on a log-scale. [False]")
     p.add_option('--negColor', default="#1b9e77", help='Color to use for Unenriched peptides. [#1b9e77]')
     p.add_option('--posColor', default="#d95f02", help='Color to use for Enenriched peptides. [#d95f02]')
+    p.add_option('--ptsSize', default="10", help='Size to use for plotted points. [10]')
+    p.add_option('--ptsTrans', default="0.5", help='Transparency to use for plotted points. [0.5]')
 
     opts, args = p.parse_args()
 
@@ -80,9 +82,9 @@ def main():
         fig,ax = plt.subplots(1,1,figsize=(5,5),facecolor='w')            
         
         if opts.plotLog:
-            ax.scatter(np.log10(x), np.log10(y), c=c, alpha=0.5)
+            ax.scatter(np.log10(x), np.log10(y), c=c, alpha=float(opts.ptsTrans), s=float(opts.ptsSize))
         else:
-            ax.scatter(x, y, c=c, alpha=0.5)
+            ax.scatter(x, y, c=c, alpha=float(opts.ptsTrans), s=float(opts.ptsSize))
 
         ax.set_ylabel(",".join(sNames), fontsize=15)
         ax.set_xlabel(opts.xLabel, fontsize=15)
