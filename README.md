@@ -4,7 +4,7 @@
 
 Visit our GitHub Pages website: [https://ladnerlab.github.io/PepSIRF/](https://ladnerlab.github.io/PepSIRF/)
 
-### Current Version: v1.3.5
+### Current Version: v1.3.6
 
 ### Dependencies
 - cmake version 3.9 or higher.
