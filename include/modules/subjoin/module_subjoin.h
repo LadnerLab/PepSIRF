@@ -16,7 +16,7 @@ class module_subjoin : public module
  public:
     module_subjoin();
 
-    using name_replacement_list = std::vector<std::pair<std::string,std::string>>;
+    using name_replacement_list = std::unordered_map<std::string,std::string>;
 
     /**
      * Run the subjoin module.
@@ -26,14 +26,13 @@ class module_subjoin : public module
     /**
      * Parse a list of names from the input stream.
      * There should be one name per line in the stream.
-     * @param dest The location to store names, 
-     *        this method will store items found in file at 
-     *        the end of the vector.
+     * @param dest The location to store names to be used in the matrix. 
+     *        This method will store names from the first column of namelist.
      * @param file A stream to read names from.
-     * @returns a list of the names that should be replaced in 
+     * @returns a list name pairs used to replace existing names in 
      *          the output. Each entry in the list will be 
      *          a pair of strings, with the first being the original name
-     *          and the second the new value.
+     *          and the second the new/replacement name.
      **/
     name_replacement_list
         parse_namelist( std::vector<std::string>& dest,

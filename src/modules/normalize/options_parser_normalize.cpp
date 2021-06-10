@@ -32,7 +32,7 @@ bool options_parser_normalize::parse( int argc, char ***argv, options *opts )
         )
         ( "peptide_scores,p", po::value<std::string>( &opts_normalize->peptide_scores_fname ),
           "Name of tab-delimited matrix file containing peptide scores. "
-          "This file should be in the same format as the output from the deconv module.\n"
+          "This file should be in the same format as the output from the demux module.\n"
         )
         ( "normalize_approach,a", po::value<std::string>( &opts_normalize->approach )->default_value( "col_sum" ),
           "Options: \'col_sum\', \'size_factors\', \'diff\', \'ratio\', \'diff_ratio\', By default, col_sum normalization is used.\n"
