@@ -5,7 +5,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-- Demux module now includes a warning when index/barcode names from the samplelist are not included in the fasta file provided by (--index).
+
+## [1.3.6] - 2021-06-09
+- #96, demux module now includes a warning when index/barcode names from the samplelist are not included in the fasta file provided by (--index). The warning includes a list of missing names.
+- #97, zscore module now verifies the correct type of file is provided for (--bins). Assuming the incorrect file provided will be a score matrix tsv, the verification process is a check of the second line in the tsv. If a numerical value or 'inf' or 'NaN' is found, then an error is thrown with a message stating to check the file provided.
+- #99, subjoin module bug fixed with names in output score matrix. The subjoin module features the ability to update the sample/peptide names for the output matrix using a second column in the namelist file provided as the second file in the pair. In version 1.3.5, this feature did not work correctly where name updates to existing names in the matrix that themselves would be updated, was prone to error by mixing up the associated score column to the name. eg. an original name "pv1_001" changed to "pv1_101" and and "pv1_001" being used elsewhere in the renaming was prone to switching names around due to stochastic ordering of names in the matrix. This has been fixed by adding an 'upate_labels' method and altered structure of the container storing names from the namelist file. There is also now a check that the namelist file can be opened before continuing the run.
+- #100, demux module diagnostic feature added previously miscalculated counts for index1, pair, and var region matches. This was in part due to conditional checks for pair matches and the presence of barcode/index names from the index file that are not included in the samplelist file. The fix is to remove the unused names from the index file - only the generated container holding them, the file itself is not edited - and a more concise condition to verify a pair match occurred.
 
 ## [1.3.5] - 2021-03-02
 - Fixed penrich bug with threshold verification for enrichment candidates and raw score pairs.
