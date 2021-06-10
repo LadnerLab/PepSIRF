@@ -68,7 +68,7 @@ def main():
     #Generate plot for each list of enriched peptides
     for eF in enrFiles:
         enrichedD = io.fileEmptyDict(eF, header=False)
-        sNames = eF.split("/")[-1].split(opts.enrExt)[0].split(opts.snDelim)
+        sNames = os.path.basename(eF).split(opts.enrExt)[0].split(opts.snDelim)
         
         #Average values for y-axis
         y = [np.mean([float(dataD[sn][pn]) for sn in sNames]) for pn in peptideNames]
