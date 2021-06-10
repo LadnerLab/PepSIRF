@@ -22,6 +22,15 @@ class samplelist_parser
      * @returns vector of samples, one per line in the input file.
      **/
     std::vector<sample> parse( const options_demux *d_opts );
+
+    /**
+     * Verifies the sample IDs in the samplelist columns used are found in the index id set. Prints missing IDs as warning.
+     * @param index_seq_ids the unordered set that is compared against by the sample ids to verify ids used exist.
+     * @param sample_ids the unordered set that is checked to verify all ids used in the samplelist are existent in the index/barcode list.
+     * 
+     * @returns void
+     **/
+    void check_samples( std::unordered_set<std::string>& index_seq_ids, std::unordered_set<std::string>&  sample_ids );
 };
 
 #endif // SAMPLELIST_PARSER_HH_INCLUDED

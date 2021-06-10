@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- Demux module now includes a warning when index/barcode names from the samplelist are not included in the fasta file provided by (--index).
 
 ## [1.3.5] - 2021-03-02
 - Fixed penrich bug with threshold verification for enrichment candidates and raw score pairs.
