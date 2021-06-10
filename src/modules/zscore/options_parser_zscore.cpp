@@ -1,6 +1,5 @@
 #include "options_parser_zscore.h"
 #include "options_zscore.h"
-#include "file_io.h"
 #include <boost/program_options.hpp>
 
 options_parser_zscore::options_parser_zscore() = default;
@@ -32,41 +31,7 @@ bool options_parser_zscore::parse( int argc, char ***argv, options *opts )
           "format as output by the demux and subjoin modules. "
           "Raw or normalized read counts can be used.\n"
         )
-        ( "bins,b", po::value( &opts_zscore->in_bins_fname )->required()
-          ->notifier( [&]( std::string input_filename )->void
-                      {
-
-                        // test whether the second row, second column and every column on contains a double
-                        // if the bin file contains a double, then it is not a bin file and a runtime error should be thrown.
-                        std::ifstream input_f{ input_filename };
-                        if( input_f.fail() )
-                            {
-                              throw std::runtime_error( "Unable to open bins file.\n" );
-                            }
-                        std::string line;
-                        std::vector<std::string> first_row;
-                        getline( input_f, line );
-                        getline( input_f, line );
-                        boost::split( first_row, line, boost::is_any_of( "\t" ) );
-                        bool is_double = true;
-                        for( const auto& col : first_row )
-                          {
-                            is_double = true;
-                            try
-                            {
-                              std::stod(col);
-                            }
-                            catch(...)
-                            {
-                              is_double = false;
-                            }
-                            if( is_double || col == "nan" || col == "inf" )
-                              {
-                                throw std::runtime_error( "Bins file '" + input_filename + "' provided contains double values. Verify the bins file is valid.\n");
-                              }
-                          }
-                      }
-                      ),
+        ( "bins,b", po::value( &opts_zscore->in_bins_fname )->required(),
           "Name of the file containing bins, one bin per line, as output by the bin module. "
           "Each bin contains a tab-delimited list of peptide names.\n"
         )
