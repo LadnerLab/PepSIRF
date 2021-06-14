@@ -21,7 +21,6 @@ def main():
 
     #Lists of enriched peptides
     p.add_option('-e', '--enrDir',  help='Directory containing lists of enriched peptides. [None, REQ]')
-    p.add_option('-f', '--enrFile', help='Tab delimited file containing data that will be used to generate scatterplots. [None, OPT]')
     p.add_option('--enrExt', help='Common file ending for files containing enriched sets of peptides. Once removed, the remaining filename should consist only of sample name(s) [None, REQ]')
     p.add_option('--snDelim', default="~", help='Delimiter used to separate sample names in pEnrich files [~]')
     p.add_option('-f', '--enrFile', help='Tab delimited file containing data that will be used to generate scatterplots. [None, OPT]')
