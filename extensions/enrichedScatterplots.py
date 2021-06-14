@@ -24,6 +24,7 @@ def main():
     p.add_option('-f', '--enrFile', help='Tab delimited file containing data that will be used to generate scatterplots. [None, OPT]')
     p.add_option('--enrExt', help='Common file ending for files containing enriched sets of peptides. Once removed, the remaining filename should consist only of sample name(s) [None, REQ]')
     p.add_option('--snDelim', default="~", help='Delimiter used to separate sample names in pEnrich files [~]')
+    p.add_option('-f', '--enrFile', help='Tab delimited file containing data that will be used to generate scatterplots. [None, OPT]')
 
     #Negative contols
     p.add_option('--negMatrix',  help='Optional way to provide a separate data matrix for negative controls. If not provided, negative controls will be assumed to be from the same matrix as the experiemntal data  [None, OPT]')
