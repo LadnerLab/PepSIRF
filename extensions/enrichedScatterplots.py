@@ -21,6 +21,7 @@ def main():
 
     #Lists of enriched peptides
     p.add_option('-e', '--enrDir',  help='Directory containing lists of enriched peptides. [None, REQ]')
+    p.add_option('-f', '--enrFile', help='Tab delimited file containing data that will be used to generate scatterplots. [None, OPT]')
     p.add_option('--enrExt', help='Common file ending for files containing enriched sets of peptides. Once removed, the remaining filename should consist only of sample name(s) [None, REQ]')
     p.add_option('--snDelim', default="~", help='Delimiter used to separate sample names in pEnrich files [~]')
 
@@ -65,12 +66,30 @@ def main():
     x = [np.mean([float(negD[sn][pn]) for sn in negNames]) for pn in peptideNames]
     
     # Read in lists of enriched peptides
-    enrFiles = glob.glob("%s/*%s" % (opts.enrDir, opts.enrExt))
+    if opts.enrDir:
+        enrFiles = glob.glob("%s/*%s" % (opts.enrDir, opts.enrExt))
+    elif opts.enrFile:
+        filePath = {}
+        with open(opts.enrFile, 'r') as fin:
+            for line in fin:
+                filelist = line.strip("\n").split("\t")
+                filePath[filelist[0]] = []
+                i = 1
+                while i < len(filelist):
+                    if filelist[i] =='':
+                        i += 1
+                    else:
+                        filePath[filelist[0]].append(filelist[i])
+                        i += 1
+        enrFiles = list(filePath.keys())
 
     #Generate plot for each list of enriched peptides
     for eF in enrFiles:
         enrichedD = io.fileEmptyDict(eF, header=False)
-        sNames = os.path.basename(eF).split(opts.enrExt)[0].split(opts.snDelim)
+        if opts.enrDir:
+            sNames = os.path.basename(eF).split(opts.enrExt)[0].split(opts.snDelim)
+        elif opts.enrFile:
+            sNames = filePath[eF]
         
         #Average values for y-axis
         y = [np.mean([float(dataD[sn][pn]) for sn in sNames]) for pn in peptideNames]
