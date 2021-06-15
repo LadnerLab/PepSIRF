@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 mpl.rcParams['pdf.fonttype'] = 42
 
-
 import optparse, glob, os
 import numpy as np
 import inout as io             #Available at https://github.com/jtladner/Modules
@@ -21,9 +20,9 @@ def main():
 
     #Lists of enriched peptides
     p.add_option('-e', '--enrDir',  help='Directory containing lists of enriched peptides. [None, REQ]')
+    p.add_option('-f', '--enrFile', help='Tab delimited file containing data that will be used to generate scatterplots. [None, OPT]')
     p.add_option('--enrExt', help='Common file ending for files containing enriched sets of peptides. Once removed, the remaining filename should consist only of sample name(s) [None, REQ]')
     p.add_option('--snDelim', default="~", help='Delimiter used to separate sample names in pEnrich files [~]')
-    p.add_option('-f', '--enrFile', help='Tab delimited file containing data that will be used to generate scatterplots. [None, OPT]')
 
     #Negative contols
     p.add_option('--negMatrix',  help='Optional way to provide a separate data matrix for negative controls. If not provided, negative controls will be assumed to be from the same matrix as the experiemntal data  [None, OPT]')
@@ -66,9 +65,7 @@ def main():
     x = [np.mean([float(negD[sn][pn]) for sn in negNames]) for pn in peptideNames]
     
     # Read in lists of enriched peptides
-    if opts.enrDir:
-        enrFiles = glob.glob("%s/*%s" % (opts.enrDir, opts.enrExt))
-    elif opts.enrFile:
+    if opts.enrFile:
         filePath = {}
         with open(opts.enrFile, 'r') as fin:
             for line in fin:
@@ -82,14 +79,22 @@ def main():
                         filePath[filelist[0]].append(filelist[i])
                         i += 1
         enrFiles = list(filePath.keys())
+    elif opts.enrDir:
+        enrFiles = glob.glob("%s/*%s" % (opts.enrDir, opts.enrExt))
+    else:
+        print("Warning: No enriched directory or file provided. Must provide one.")
+
+    #Check if enriched directory and file were both provided and issue warning
+    if opts.enrFile and opts.enrDir:
+        print("Warning: An enriched directory and an enriched file were provided. File will be used, and directory will be ignored.")
 
     #Generate plot for each list of enriched peptides
     for eF in enrFiles:
         enrichedD = io.fileEmptyDict(eF, header=False)
-        if opts.enrDir:
-            sNames = os.path.basename(eF).split(opts.enrExt)[0].split(opts.snDelim)
-        elif opts.enrFile:
+        if opts.enrFile:
             sNames = filePath[eF]
+        elif opts.enrDir:
+            sNames = os.path.basename(eF).split(opts.enrExt)[0].split(opts.snDelim)
         
         #Average values for y-axis
         y = [np.mean([float(dataD[sn][pn]) for sn in sNames]) for pn in peptideNames]
