@@ -39,6 +39,10 @@ def main():
     p.add_option('--ptsTrans', type=float, default=0.5, help='Transparency to use for plotted points. [0.5]')
 
     opts, args = p.parse_args()
+    
+    #Check if enriched directory and file were both provided and issue warning
+    if opts.enrFile and opts.enrDir:
+        print("Warning: An enriched directory and an enriched file were provided. File will be used, and directory will be ignored.")
 
     #Create output dir
     if os.path.isdir(opts.outDir):
@@ -83,10 +87,6 @@ def main():
         enrFiles = glob.glob("%s/*%s" % (opts.enrDir, opts.enrExt))
     else:
         print("Warning: No enriched directory or file provided. Must provide one.")
-
-    #Check if enriched directory and file were both provided and issue warning
-    if opts.enrFile and opts.enrDir:
-        print("Warning: An enriched directory and an enriched file were provided. File will be used, and directory will be ignored.")
 
     #Generate plot for each list of enriched peptides
     for eF in enrFiles:
