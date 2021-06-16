@@ -79,6 +79,8 @@ def main():
     peptideNames = list(negD[negNames[0]].keys())
     
     x = [np.mean([float(negD[sn][pn]) for sn in negNames]) for pn in peptideNames]
+    if opts.plotLog:
+        x = [np.log10(point+opts.plotLog)for point in x]
     
     # Read in lists of enriched peptides
     if opts.enrFile:
@@ -108,33 +110,41 @@ def main():
         elif opts.enrDir:
             sNames = os.path.basename(eF).split(opts.enrExt)[0].split(opts.snDelim)
         
-        #Average values for y-axis
-        y = [np.mean([float(dataD[sn][pn]) for sn in sNames]) for pn in peptideNames]
+        # Remove any sample names that are not found in the dataD
+        sNames = [s for s in sNames if s in dataD]
         
-        #Determine color for each point
-        c = [opts.posColor if p in enrichedD else opts.negColor for p in peptideNames]
+        if len(sNames) > 0:
         
-        #Generate plot
-        fig,ax = plt.subplots(1,1,figsize=(5,5),facecolor='w')            
+            #Average values for y-axis
+            y = [np.mean([float(dataD[sn][pn]) for sn in sNames]) for pn in peptideNames]
         
-        if opts.plotLog:
-            x = [np.log10(point+opts.plotLog)for point in x]
-            y = [np.log10(point+opts.plotLog)for point in y]
-            ax.set_ylabel(",".join(sNames)+f" log10(value+{opts.plotLog})", fontsize=15)
-            ax.set_xlabel(opts.xLabel+f" log10(value+{opts.plotLog})", fontsize=15)
-        else:
-            ax.set_ylabel(",".join(sNames), fontsize=15)
-            ax.set_xlabel(opts.xLabel, fontsize=15)  
+            #Determine color for each point
+            c = [opts.posColor if p in enrichedD else opts.negColor for p in peptideNames]
+        
+            #Generate plot
+            fig,ax = plt.subplots(1,1,figsize=(5,5),facecolor='w')            
+        
+            if opts.plotLog:
+                y = [np.log10(point+opts.plotLog)for point in y]
+                ax.set_ylabel(",".join(sNames)+f" log10(value+{opts.plotLog})", fontsize=15)
+                ax.set_xlabel(opts.xLabel+f" log10(value+{opts.plotLog})", fontsize=15)
+            else:
+                ax.set_ylabel(",".join(sNames), fontsize=15)
+                ax.set_xlabel(opts.xLabel, fontsize=15)  
             
-        ax.scatter(x, y, c=c, alpha=opts.ptsTrans, s=opts.ptsSize)
+            ax.scatter(x, y, c=c, alpha=opts.ptsTrans, s=opts.ptsSize)
 
-#        if lim:
-#            ax.set_xlim(lim[0], lim[1])
-#            ax.set_ylim(lim[0], lim[1])
+    #        if lim:
+    #            ax.set_xlim(lim[0], lim[1])
+    #            ax.set_ylim(lim[0], lim[1])
 
-        fig.savefig("%s/%s.%s" % (opts.outDir, opts.snDelim.join(sNames), opts.plotType), dpi=300, bbox_inches='tight')
+            fig.savefig("%s/%s.%s" % (opts.outDir, opts.snDelim.join(sNames), opts.plotType), dpi=300, bbox_inches='tight')
 
-        plt.close(fig)
+            plt.close(fig)
+        
+        else:
+            print("Skipping %s because none of the associated replicates were found in %s" % (eF, opts.data))
+
 #----------------------End of main()
 
 
