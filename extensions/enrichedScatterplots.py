@@ -27,12 +27,13 @@ def main():
     #Negative contols
     p.add_option('--negMatrix',  help='Optional way to provide a separate data matrix for negative controls. If not provided, negative controls will be assumed to be from the same matrix as the experiemntal data  [None, OPT]')
     p.add_option('-c', '--negControls',  help='Comma-delimited names of samples to use as negative controls. If this is not provided, then all of the samples in the negative control matrix will be used [None, REQ]')
+    p.add_option('-i', '--negative_id', help='Optional approach for identifying negative controls. Provide a unique string at the start of all negative control samples. [None, OPT]')
     p.add_option('-x', '--xLabel', default="", help='Label to be used for x-axis. []')
 
     #Output controls
     p.add_option('-o', '--outDir', help='Directory name for output files. Will be created. [None]')
     p.add_option('--plotType', default="png", help='Type of plot to generate. This should be a file extension recognized by matplotlib, e.g., pdf, png, tiff [png]')
-    p.add_option('--plotLog', default=False, action="store_true", help="Use if you want axes to be shown on a log-scale. [False]")
+    p.add_option('--plotLog', type=float, default=False, help="Use if you want axes to be shown on a log-scale. Argument provided should be a float to add to the axes before calcluating the log value [False]")
     p.add_option('--negColor', default="#1b9e77", help='Color to use for Unenriched peptides. [#1b9e77]')
     p.add_option('--posColor', default="#d95f02", help='Color to use for Enenriched peptides. [#d95f02]')
     p.add_option('--ptsSize', type=float, default=10, help='Size to use for plotted points. [10]')
@@ -59,10 +60,21 @@ def main():
     else:
         negD = dataD
     
-    if not opts.negControls:
-        negNames = list(negD.keys())
-    else:
+    if opts.negative_id:
+        negNames = []
+        for name in negD.keys():
+            if name.startswith(opts.negative_id):
+                negNames.append(name)
+        if not negNames:
+            print("Warning: No samples found matching the provided negative ID")
+    elif opts.negControls:
         negNames = opts.negControls.split(",")
+    else:
+        if opts.negMatrix:
+            print("Warning: Using all samples in %s to generate x-axis values" % opts.negMatrix)
+        else:
+            print("Warning: Using all samples in %s to generate x-axis values" % opts.data)
+        negNames = list(negD.keys())
     
     peptideNames = list(negD[negNames[0]].keys())
     
@@ -106,12 +118,15 @@ def main():
         fig,ax = plt.subplots(1,1,figsize=(5,5),facecolor='w')            
         
         if opts.plotLog:
-            ax.scatter(np.log10(x), np.log10(y), c=c, alpha=opts.ptsTrans, s=opts.ptsSize)
+            x = [np.log10(point+opts.plotLog)for point in x]
+            y = [np.log10(point+opts.plotLog)for point in y]
+            ax.set_ylabel(",".join(sNames)+f" log10(value+{opts.plotLog})", fontsize=15)
+            ax.set_xlabel(opts.xLabel+f" log10(value+{opts.plotLog})", fontsize=15)
         else:
-            ax.scatter(x, y, c=c, alpha=opts.ptsTrans, s=opts.ptsSize)
-
-        ax.set_ylabel(",".join(sNames), fontsize=15)
-        ax.set_xlabel(opts.xLabel, fontsize=15)
+            ax.set_ylabel(",".join(sNames), fontsize=15)
+            ax.set_xlabel(opts.xLabel, fontsize=15)  
+            
+        ax.scatter(x, y, c=c, alpha=opts.ptsTrans, s=opts.ptsSize)
 
 #        if lim:
 #            ax.set_xlim(lim[0], lim[1])
