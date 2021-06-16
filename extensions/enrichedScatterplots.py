@@ -67,10 +67,14 @@ def main():
                 negNames.append(name)
         if not negNames:
             print("Warning: No samples found matching the provided negative ID")
-    elif not opts.negControls:
-        negNames = list(negD.keys())
+    elif opts.negControls:
+        negNames = opts.negControls.split(",")
     else:
-       negNames = opts.negControls.split(",")
+        if opts.negMatrix:
+            print("Warning: Using all samples in %s to generate x-axis values" % opts.negMatrix)
+        else:
+            print("Warning: Using all samples in %s to generate x-axis values" % opts.data)
+        negNames = list(negD.keys())
     
     peptideNames = list(negD[negNames[0]].keys())
     
@@ -116,8 +120,8 @@ def main():
         if opts.plotLog:
             x = [np.log10(point+opts.plotLog)for point in x]
             y = [np.log10(point+opts.plotLog)for point in y]
-            ax.set_ylabel(",".join(sNames)+f"log10(value+{opts.plotLog})", fontsize=15)
-            ax.set_xlabel(opts.xLabel+f"log10(value+{opts.plotLog})", fontsize=15)
+            ax.set_ylabel(",".join(sNames)+f" log10(value+{opts.plotLog})", fontsize=15)
+            ax.set_xlabel(opts.xLabel+f" log10(value+{opts.plotLog})", fontsize=15)
         else:
             ax.set_ylabel(",".join(sNames), fontsize=15)
             ax.set_xlabel(opts.xLabel, fontsize=15)  
