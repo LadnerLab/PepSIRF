@@ -58,6 +58,7 @@ def main():
     enrichArgs.add_argument("--repZscatters", default=False, action="store_true", help="Generate scatter plots comparing Z scores for all sample pairs. Even if set at command line, will be turned off when '--sEnrich' is used.")
     enrichArgs.add_argument("--repCSscatters", default=False, action="store_true", help="Generate scatter plots comparing colu_sum normalized scores for all sample pairs. Even if set at command line, will be turned off when '--sEnrich' is used.")
     enrichArgs.add_argument("--scatterFormat", default="png", help="Output file format for replicate scatterplots.")
+    enrichArgs.add_argument("--enrichedScatters", default=False, help="Generate scatter plots comparing col-sum normalized read counts between a sample and negative controls. Argument provided should be the path to enrichedScatterplots.py")
 
     args = parser.parse_args()
     
@@ -211,6 +212,10 @@ def main():
 
         print(cmd)
         subprocess.run(cmd, shell=True)
+    # Turn off enriched scatterplots generation, as they cannot be run without a list of enriched peptides
+    elif args.enrichedScatterplots and not args.thresh and not args.pairs and not base:
+        print("Warning: p_enrich module not run and list of enriched peptides not generated. --enrichedScatterplots will be set to False.")
+        args.enrichedScatterplots = False
 
     
     if matplotReady:
@@ -254,6 +259,20 @@ def main():
             csD = io.fileDictFull(args.zscore, valType="float", rowNames=True)
             for r1, r2 in pD.items():
                 scatter(csD[r1], r1, csD[r2], r2, "zRepScatters/%s_%s_Z.%s" % (r1, r2, args.scatterFormat), plotLog=False)
+                
+        #Enriched peptides scaterplot generation
+        if args.enrichedScatters and args.colsum:
+            cmd = ('python3 %s -d %s -e %s --enrExt _enriched.txt -x NegativeControl -o %s/enrichedScatterplots --plotLog 1' % (args.enrichedScatters, args.colsum, enrDir, enrDir))
+            
+            if args.negNormMat:
+                cmd += (' --negMatrix %s' % args.negNormMat)
+                
+                if args.negative_id:
+                    cmd += (' -i %s' % args.negative_id)
+                elif args.negative_names:
+                    cmd += (' -c %s' % args.negative_names)
+                    
+            subprocess.run(cmd, shell=True)
 
 
 #----------------------End of main()
