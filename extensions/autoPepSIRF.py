@@ -267,10 +267,10 @@ def main():
             if args.negNormMat:
                 cmd += (' --negMatrix %s' % args.negNormMat)
                 
-                if args.negative_id:
-                    cmd += (' -i %s' % args.negative_id)
-                elif args.negative_names:
-                    cmd += (' -c %s' % args.negative_names)
+            if args.negative_id:
+                cmd += (' -i %s' % args.negative_id)
+            elif args.negative_names:
+                cmd += (' -c %s' % args.negative_names)
                     
             subprocess.run(cmd, shell=True)
 
