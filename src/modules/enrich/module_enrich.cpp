@@ -1,0 +1,289 @@
+#include <boost/algorithm/string.hpp>
+#include <stdexcept>
+#include <numeric>
+#include <fstream>
+#include <iostream>
+
+#include "module_enrich.h"
+#include "time_keep.h"
+#include "omp_opt.h"
+#include "fs_tools.h"
+#include "predicate.h"
+#include "file_io.h"
+#include "setops.h"
+
+
+void module_enrich::run( options *opts )
+{
+    options_enrich *e_opts = (options_enrich*) opts;
+    time_keep::timer timer;
+    timer.start();
+
+    peptide_score_data_sample_major raw_scores;
+    peptide_score_data_sample_major *raw_scores_ptr = nullptr;
+    std::vector<double> raw_score_params;
+    std::vector<std::pair<peptide_score_data_sample_major,std::vector<double>>> matrix_thresh_pairs;
+    matrix_thresh_pairs.resize( e_opts->matrix_thresh_fname_pairs.size() );
+    bool shorthand_output_filenames = e_opts->truncate_names;
+    std::size_t curr_matrix;
+
+    for( curr_matrix = 0; curr_matrix < e_opts->matrix_thresh_fname_pairs.size(); curr_matrix++ )
+        {
+            matrix_thresh_pairs[curr_matrix] = std::make_pair( peptide_score_data_sample_major(), std::vector<double>{ 0.0 } );
+            peptide_scoring::parse_peptide_scores( matrix_thresh_pairs[curr_matrix].first, e_opts->matrix_thresh_fname_pairs[ curr_matrix ].first );
+            std::vector<std::string> str_thresholds;
+            boost::split( str_thresholds, e_opts->matrix_thresh_fname_pairs[ curr_matrix ].second, boost::is_any_of( "," ) );
+            matrix_thresh_pairs[curr_matrix].second.resize( str_thresholds.size() );
+            std::transform( str_thresholds.begin(), str_thresholds.end(), matrix_thresh_pairs[curr_matrix].second.begin(),
+                [&]( const std::string& val)
+                {
+                    return std::stod( val );
+                });
+        }
+
+    std::ifstream samples_file;
+    std::vector<module_enrich::sample_type> samples_list;
+    if( !e_opts->in_samples_fname.empty() )
+        {
+            samples_file.open( e_opts->in_samples_fname );
+            if( samples_file.fail() )
+                {
+                    throw std::runtime_error( "Unable to open the provided samples file" );
+                }
+
+            samples_list = parse_samples( samples_file );
+
+            samples_file.close();
+
+        }
+    // if no samples file is given, then all samples will be included and treated as samples assayed in single replicate.
+    if( samples_list.empty() )
+        {
+            std::for_each( matrix_thresh_pairs[0].first.sample_names.begin(), matrix_thresh_pairs[0].first.sample_names.end(),
+                    [&]( std::string sample_name )
+                        {
+                            samples_list.emplace_back( module_enrich::sample_type{sample_name} );
+                        });
+        }
+    auto output_path = fs_tools::path( e_opts->out_dirname );
+    bool dir_exists = !fs_tools::create_directories( output_path );
+
+    if( dir_exists )
+        {
+            std::cout << "WARNING: the directory '" << e_opts->out_dirname
+                      << "' exists, any files with "
+                      << "colliding filenames will be overwritten!\n";
+        }
+
+    bool raw_counts_included = !e_opts->in_raw_scores_fname.empty();
+
+    if( raw_counts_included )
+        {
+            peptide_scoring::parse_peptide_scores( raw_scores, e_opts->in_raw_scores_fname );
+            raw_scores_ptr = &raw_scores;
+
+            std::vector<std::string> str_constraints;
+            boost::split( str_constraints, e_opts->raw_scores_params_str, boost::is_any_of( "," ) );
+            raw_score_params = {0.0};
+            std::transform( str_constraints.begin(), str_constraints.end(), raw_score_params.begin(),
+                [&]( const std::string& val)
+                {
+                    return std::stod( val );
+                });
+        }
+    using sample_name_set = std::set<std::string>;
+    sample_name_set raw_score_sample_names{ raw_scores.sample_names.begin(),
+                                            raw_scores.sample_names.end()
+                                            };
+    
+    peptide_score_data_sample_major *curr_matrix_ptr;
+    for( std::size_t sample_idx = 0; sample_idx < samples_list.size(); ++sample_idx )
+        {
+            bool raw_count_enriched = true;
+            std::vector<std::string> enriched_probes;
+            std::vector<std::vector<double>> raw_score_lists;
+            std::vector<std::map<std::string,std::vector<double>>> all_enrichment_candidates;
+            all_enrichment_candidates.resize( matrix_thresh_pairs.size() );
+            raw_score_lists.resize( raw_scores.scores.ncols() );
+            std::vector<double> col_sums;
+
+            if( raw_counts_included )
+                {
+                    get_raw_scores( &raw_score_lists, raw_scores_ptr, samples_list[sample_idx] );
+                    col_sums = get_raw_sums( raw_score_lists );
+                }
+
+            raw_count_enriched = raw_counts_included
+                ? ( raw_count_enriched && thresholds_met( col_sums, raw_score_params ) )
+                : true;
+            if( raw_count_enriched )
+            {
+                // Get candidates for each input matrix for the current sample
+                for( curr_matrix = 0; curr_matrix < matrix_thresh_pairs.size(); ++curr_matrix )
+                    {
+                        curr_matrix_ptr = &matrix_thresh_pairs[curr_matrix].first;
+
+                        sample_name_set matrix_sample_names{ curr_matrix_ptr->sample_names.begin(),
+                            curr_matrix_ptr->sample_names.end() };
+                        sample_name_set samples_sample_names{ samples_list[sample_idx].begin(), samples_list[sample_idx].end() };
+
+                        if( raw_counts_included &&
+                        ( raw_score_sample_names.size() != matrix_sample_names.size() ) )
+                            {
+                                throw std::runtime_error( "The samplenames provided in each input file are "
+                                                        "not the same.\n"
+                                                        );
+                            }
+                        // bool first_in = matrix_sample_names.find( samples_list[sample_idx].first )
+                        //             != matrix_sample_names.end();
+                        // bool second_in = matrix_sample_names.find( samples_list[sample_idx].second )
+                        //             != matrix_sample_names.end();
+                        std::vector<std::string> sample_diffs;
+                        std::set_difference( samples_sample_names.begin(), samples_sample_names.end(),
+                                             matrix_sample_names.begin(), matrix_sample_names.end(), sample_diffs.begin() );
+                        // if some samples are not found that are provided by samples option, then throw an error
+                        if( !sample_diffs.empty() && sample_diffs.size() != samples_sample_names.size() )
+                            {
+                                std::cout <<  "The listed samples were not found in matrix '"
+                                          <<  curr_matrix_ptr->file_name
+                                          <<  "'.\n";
+                                for( auto sample = sample_diffs.begin(); sample != sample_diffs.end(); sample++ )
+                                    {
+                                        std::cout << *sample << "\n";
+                                    }
+                                throw std::runtime_error( "Verify the correct sample names are provided in (--samples,-s).\n");
+                                
+                            }
+                        else if( sample_diffs.size() == samples_sample_names.size() )
+                        // if all of the samples are not found that are provided by samples option, then give a warning that these samples were not in the matrix.
+                            {
+                                std::cout <<  "WARNING: The listed samples were not found in matrix '"
+                                          <<  curr_matrix_ptr->file_name
+                                          <<  "' and will be skipped.\n";
+                                for( auto sample = sample_diffs.begin(); sample != sample_diffs.end(); sample++ )
+                                    {
+                                        std::cout << *sample << "\n";
+                                    }
+                            }
+                        else
+                            {
+                                //create a vector of enrichment candidates - each vector of paired scores for a thresholds file provided
+                                get_enrichment_candidates( &all_enrichment_candidates[curr_matrix],
+                                                        curr_matrix_ptr,
+                                                        samples_list[ sample_idx ]
+                                                        );
+
+                            }
+                    }
+
+                // verify all candidates of the same peptide name are equal to or over given thresholds
+                for( const auto& candidate : all_enrichment_candidates[0] )
+                    {
+                        std::string pep_name = candidate.first;
+                        std::size_t valid_candidates = 0;
+                        for( std::size_t curr_map = 0; curr_map < all_enrichment_candidates.size(); ++curr_map )
+                            {
+                                if( thresholds_met( all_enrichment_candidates[curr_map].at( pep_name ),
+                                                matrix_thresh_pairs[curr_map].second ) )
+                                    ++valid_candidates;
+                            }
+                    
+                        if( valid_candidates == matrix_thresh_pairs.size() )
+                            {
+                                enriched_probes.emplace_back( pep_name );
+                            }
+                    }
+            }
+            // What if for output, if there are more than 3 samplenames,
+            // then do what Jason said about the "S_000~S_001~_S_002_#more_enriched.txt" (if they use the option otherwise let it include all.)
+
+            if( !enriched_probes.empty() )
+                {
+                    std::string outf_name = e_opts->out_dirname + '/';
+                    if( shorthand_output_filenames && samples_list[sample_idx].size() > 3 )
+                        {
+                            for( std::size_t name_idx = 0; name_idx < 3; name_idx++ )
+                                {
+                                    outf_name += samples_list[sample_idx][name_idx] + e_opts->out_fname_join;
+                                }
+                            outf_name += std::to_string(samples_list[sample_idx].size() - 3) + "more" + e_opts->out_suffix;
+                        }
+                    else
+                        {
+                            for( std::size_t name_idx = 0; name_idx < samples_list[sample_idx].size() - 1; name_idx++ )
+                                {
+                                    outf_name += samples_list[sample_idx][name_idx] + e_opts->out_fname_join;
+                                }
+                            outf_name += *(samples_list[sample_idx].end() - 1) + e_opts->out_suffix;
+                        }
+                    std::ofstream out_file{ outf_name, std::ios_base::out };
+
+                    pepsirf_io::write_file( out_file,
+                                            enriched_probes.begin(),
+                                            enriched_probes.end(),
+                                            "\n"
+                                        );
+                }
+
+        }
+}
+std::vector<module_enrich::sample_type> module_enrich::parse_samples( std::istream& file )
+{
+    std::vector<sample_type> return_val;
+
+    std::string current_line;
+    std::vector<std::string> values;
+    // reserve the min expected amount
+    values.reserve( 1 );
+
+    while( std::getline( file, current_line ) )
+        {
+            if( current_line.find("\r") != std::string::npos )
+                current_line.erase( current_line.find( "\r" ) );
+            boost::split( values,
+                          current_line,
+                          boost::is_any_of( "\t" )
+                       );
+            return_val.emplace_back(values);
+            
+        }
+
+    return return_val;
+}
+
+void module_enrich::get_enrichment_candidates( std::map<std::string,std::vector<double>> *enrichment_candidates,
+                                            const peptide_score_data_sample_major *matrix_score_data,
+                                            const std::vector<std::string> sample_names
+                                          )
+{
+    std::vector<paired_score> candidates;
+    std::size_t pep_idx;
+
+    for( pep_idx = 0; pep_idx < matrix_score_data->pep_names.size(); ++pep_idx )
+        {
+            std::string pep_name = matrix_score_data->pep_names[ pep_idx ];
+            std::vector<double> matrix_scores;
+            for( const auto& name : sample_names )
+                {
+                    matrix_scores.emplace_back( matrix_score_data->scores( name, pep_name ) );
+                }
+            enrichment_candidates->emplace( pep_name, matrix_scores );
+        }
+
+}
+
+void module_enrich::get_raw_scores( std::vector<std::vector<double>> *raw_scores_dest,
+                                      const peptide_score_data_sample_major *raw_score_data,
+                                      const std::vector<std::string> sample_names )
+{
+    for( std::size_t pep_idx = 0; pep_idx < raw_score_data->pep_names.size(); ++pep_idx )
+    {
+        std::vector<double> raw_scores;
+
+        for( const auto& name : sample_names )
+            {
+                raw_scores.emplace_back( raw_score_data->scores( name, raw_score_data->pep_names[pep_idx] ) );
+            }
+        raw_scores_dest->at( pep_idx ) = raw_scores;
+    }
+}

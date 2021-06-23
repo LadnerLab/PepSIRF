@@ -15,8 +15,8 @@ namespace modules
     const std::unordered_set<std::string> module_names = { "demux", "deconv",
                                                            "norm", "subjoin",
                                                            "zscore", "link",
-                                                           "bin", "s_enrich",
-                                                           "p_enrich", "info"
+                                                           "bin", "enrich",
+                                                           "info"
                                                          };
 
     // a 'StringLike' is something that is string-constructible, i.e.

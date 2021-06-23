@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- #114, s_enrich and p_enrich have been merged into a single module 'enrich'. A single and pair of samplenames work with the same behavior as s_ and p_enrich respectively. Additionally, >2 replicates can be analyzed to generate enriched peptides. See help options for an update on the options.
 
 ## [1.3.6] - 2021-06-09
 - #96, demux module now includes a warning when index/barcode names from the samplelist are not included in the fasta file provided by (--index). The warning includes a list of missing names.
