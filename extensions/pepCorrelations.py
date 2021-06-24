@@ -9,6 +9,11 @@ Created on Tue Jun 22 11:27:34 2021
 import pandas as pd
 import optparse
 import csv
+import os
+
+import matplotlib.pyplot as plt
+import matplotlib as mpl
+mpl.rcParams['pdf.fonttype'] = 42
 
 def main():
     p = optparse.OptionParser()
@@ -17,13 +22,17 @@ def main():
     p.add_option('-d', '--data',  help='Matrix containing data that will be used to generate correlations [none, REQ]')
     
     #Correlation controls
-    p.add_option('--minMax', type=float, default=100, help='minimum maximum value [100]')
-    p.add_option('-m', '--method', default='kendall', help='method of correlation to compute pairwise correlation (kendall, pearson, spearman) [kendall]')
+    p.add_option('--minMax', type=float, default=100, help='Minimum maximum value [100]')
+    p.add_option('-m', '--method', default='kendall', help='Method of correlation to compute pairwise correlation (kendall, pearson, spearman) [kendall]')
     p.add_option('--minCorr', type=float, default=0.5, help='Minimum correlation to be written in output file (0-1 inclusive) [0.5]')
+    
+    #Pairs controls
+    p.add_option('--pairScatter', default=False, help='Generate scatter plots comparing the pairs of peptides above the threshold. Provide output directory [none]')
     
     #Output Controls
     p.add_option('-o', '--output', help='File name for output file [none, REQ]') 
     p.add_option('-s','--speciesD', default=False, help='Matirx containing data that will be used to find species names of peptides [none]')
+    
     
     opts, args = p.parse_args()
     
@@ -38,6 +47,11 @@ def main():
             df[a] = b
     
     cmCorr = df.corr(method=opts.method)
+    
+    if opts.pairScatter:
+        #create dictionary of peptide data
+        pD = df.to_dict('list')
+
     
     if opts.speciesD:
         #Read in species data file
@@ -80,6 +94,34 @@ def main():
                                     species2 = df[pep]['Species']
                                     
                             tsv_writer.writerow([pep1, pep2, species1, species2, corr])
+                            
+    #Generate peptide pair scatters above given threshold
+    if opts.pairScatter:
+        if not os.path.isdir(opts.pairScatter):
+            os.mkdir(opts.pairScatter)
+        else:
+            print("Warning: The output directory %s already exists!" % opts.pairScatter)
+        
+        fig,ax = plt.subplots(1,1,figsize=(5,5),facecolor='w')
+        
+        for pep1,corrS in cmCorr.iteritems():
+            for pep2, corr in corrS.iteritems():
+                if corr >= opts.minCorr:
+                    if pep1 != pep2:
+                        for pep in pD:
+                            #Generate x and y values for scatter plots
+                            if pep == pep1:
+                                x = pD[pep]
+                                
+                            if pep == pep2:
+                                y = pD[pep]
+                                
+                        ax.scatter(x, y, alpha=0.5, c='blue')
+                        
+                        
+                        fig.savefig('%s/%s~%s' % (opts.pairScatter, pep1, pep2), dpi=300, bbox_inches='tight')
+                        plt.close(fig)
+    
                         
 #----------------------End of main()
 
