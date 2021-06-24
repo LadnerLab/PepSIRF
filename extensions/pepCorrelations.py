@@ -109,16 +109,18 @@ def main():
                 if corr >= opts.minCorr:
                     if pep1 != pep2:
                         for pep in pD:
-                            #Generate x and y values for scatter plots
+                            #Generate x and y values/labels for scatter plots
                             if pep == pep1:
                                 x = pD[pep]
+                                xLabel = pep1
                                 
                             if pep == pep2:
                                 y = pD[pep]
+                                yLabel = pep2
                                 
                         ax.scatter(x, y, alpha=0.5, c='blue')
-                        
-                        
+                        ax.set_xlabel(xLabel, fontsize=15)
+                        ax.set_ylabel(yLabel, fontsize=15)
                         fig.savefig('%s/%s~%s' % (opts.pairScatter, pep1, pep2), dpi=300, bbox_inches='tight')
                         plt.close(fig)
     
