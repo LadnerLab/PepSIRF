@@ -7,6 +7,7 @@ mpl.rcParams['pdf.fonttype'] = 42
 import optparse
 import numpy as np
 import statistics as stat
+import csv
 
 # The goal of this script is to plot bin-level differences in norm counts for enriched peptides vs. background, in order to estimate relative levels of signal-to-noise across samples and runs
 
@@ -20,6 +21,7 @@ def main():
     p.add_option('-u', '--upper', type="int", help="Upper percentile to use to calculate average value for 'signal'. Must be between 0 and 100, inclusive. [None, REQ]")
     p.add_option('-l', '--lower', type="int", help="Lower percentile to use to calculate average value for 'noise'. Must be between 0 and 100, inclusive. [None, REQ]")
     p.add_option('-o', '--out', help='Base name for output files. [None, REQ]')
+    p.add_option('--generateFig', default=False, help='Generate figure. Specify the output file name. [None, OPTS]')
     p.add_option('--fig', default="png", help="Figure format to output.")
     p.add_option('--width', default=15, type=int, help="Figure width.")
     p.add_option('--height', default=4, type=int, help="Figure height.")
@@ -31,9 +33,30 @@ def main():
     # Read in bins
     bins = readGroups(opts.bins)
     
-    # Open figure 
-    fig,ax = plt.subplots(1,1,figsize=(opts.width, opts.height),facecolor='w')
-
+    # Open figure if flag provided
+    if opts.generateFig:
+        fig,ax = plt.subplots(1,1,figsize=(opts.width, opts.height),facecolor='w')
+    
+    #create list to collect all sample names for individual output header
+    sampleN = ['bin']
+    
+    #create dictionaries to collect low, up, and diff values
+    lowD = {}
+    upD = {}
+    diffD = {}
+    
+    #Step through each matrix file to collect samples names and bin numbers
+    with open(opts.input, "r") as fin:
+            for line in fin:
+                fileStr,fileLoc = line.rstrip("\n").split("\t")
+                sD = parseCounts(fileLoc)
+                for samp, cD in sD.items():
+                    sampleN.append(samp)
+                    for i, g in enumerate(bins):
+                        lowD[i] = []
+                        upD[i] = []
+                        diffD[i] = []
+                        
     
     # Open output file for writing
     with open("%s.tsv" % (opts.out), "w") as fout:
@@ -49,10 +72,9 @@ def main():
                 
                 # Read in matrix
                 sD = parseCounts(fileLoc)
-                
-                
-                for samp, cD in sD.items():
 
+                for samp, cD in sD.items():
+                    
                     # Create list to collect all bin diffs
                     diffL = []
 
@@ -67,17 +89,58 @@ def main():
                         upAvg = np.mean(upperVals)
                         loAvg = np.mean(lowerVals)
                         
+                        #collect upper and lower percentile values
+                        upD[i].append(upAvg)
+                        lowD[i].append(loAvg)
+                        
                         diff = upAvg-loAvg
                         diffL.append(diff)
                         
+                        #collect difference values
+                        diffD[i].append(diff)
+                        
                         fout.write("%s\t%s\t%d\t%.5f\t%.5f\t%.5f\n" % (samp, fileStr, i, upAvg, loAvg, diff))
                 
-                    # Add line to plot
-                    ax.plot(list(range(len(diffL))), diffL, c=colors[matCount], label=fileStr, alpha=0.5)
+                    # Add line to plot if flag provided
+                    if opts.generateFig:
+                        ax.plot(list(range(len(diffL))), diffL, c=colors[matCount], label=fileStr, alpha=0.5)
+        if opts.generateFig:
+            fig.legend()
+            fig.savefig("%s.%s" % (opts.generateFig, opts.fig),dpi=300,bbox_inches='tight')
+    
+    #Open upper values output file for writing
+    with open("%s_up%d.tsv" % (opts.out, opts.upper), 'w', newline='') as file_out:
+        tsv_writer = csv.writer(file_out, delimiter='\t')
         
-        fig.legend()
-        fig.savefig("%s.%s" % (opts.out, opts.fig),dpi=300,bbox_inches='tight')
-
+        #Write header into output file
+        tsv_writer.writerow(sampleN)
+        
+        #Write bin number and upper values into output file
+        for bn in upD:
+            tsv_writer.writerow([bn] + upD[bn])
+            
+    #Open lower values output file for writing
+    with open("%s_low%d.tsv" % (opts.out, opts.lower), 'w', newline='') as file_out:
+        tsv_writer = csv.writer(file_out, delimiter='\t')
+        
+        #Write header into output file
+        tsv_writer.writerow(sampleN)
+        
+        #Write bin number and lower values into output file
+        for bn in lowD:
+            tsv_writer.writerow([bn] + lowD[bn])
+            
+    #Open difference values output file for writing
+    with open("%s_diff.tsv" % (opts.out), 'w', newline='') as file_out:
+        tsv_writer = csv.writer(file_out, delimiter='\t')
+        
+        #Write header into output file
+        tsv_writer.writerow(sampleN)
+        
+        #Write bin number and difference values into output file
+        for bn in diffD:
+            tsv_writer.writerow([bn] + diffD[bn])
+        
 #----------------------End of main()
 
 
