@@ -213,7 +213,7 @@ def main():
         print(cmd)
         subprocess.run(cmd, shell=True)
     # Turn off enriched scatterplots generation, as they cannot be run without a list of enriched peptides
-    elif args.enrichedScatterplots and not args.thresh and not args.pairs and not base:
+    elif args.enrichedScatterplots:
         print("Warning: p_enrich module not run and list of enriched peptides not generated. --enrichedScatterplots will be set to False.")
         args.enrichedScatterplots = False
 
@@ -269,10 +269,13 @@ def main():
                 
             if args.negative_id:
                 cmd += (' -i %s' % args.negative_id)
-            elif args.negative_names:
+                
+            if args.negative_names:
                 cmd += (' -c %s' % args.negative_names)
                     
             subprocess.run(cmd, shell=True)
+        elif args.enrichedScatters:
+            print("Warning: plots will not be generated because colsum is not set")
 
 
 #----------------------End of main()
