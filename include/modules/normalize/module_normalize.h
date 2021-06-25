@@ -49,7 +49,7 @@ class module_normalize : public module
      **/
     void get_neg_average( peptide_score_data_sample_major *control,
                                             std::unordered_set<std::string> *neg_filter,
-                                            std::vector<double> *pep_averages );
+                                            std::unordered_map<std::string,double> *pep_averages );
 
 
     /**
@@ -102,8 +102,8 @@ class module_normalize : public module
      *        were found, one per column (sample).
      * @param peptide_avgs The means of provided negative controls.
      **/
-    void compute_diff( matrix<double> *norm_diffs,
-                        std::vector<double> *peptide_avgs );
+    void compute_diff( peptide_score_data_sample_major *norm_diffs,
+                        std::unordered_map<std::string,double> *peptide_avgs );
 
     /**
      * Compute the difference and ratio:
@@ -113,8 +113,8 @@ class module_normalize : public module
      *        ratios that were found, one per column (sample).
      * @param peptide_avgs The means of provided negative controls.
      **/
-    void compute_diff_ratio( matrix<double> *norm_diff_ratios,
-                        std::vector<double> *peptide_avgs );
+    void compute_diff_ratio( peptide_score_data_sample_major *norm_diff_ratios,
+                        std::unordered_map<std::string,double> *peptide_avgs );
 
     /**
      * Compute the ratio of norm socres to negative control score averages for
@@ -123,8 +123,8 @@ class module_normalize : public module
      *        ratios that were found, one per column .
      * @param peptide_avgs The means of provided negative controls.
      **/
-    void compute_ratio( matrix<double> *norm_ratios,
-                        std::vector<double> *peptide_avgs );
+    void compute_ratio( peptide_score_data_sample_major *norm_ratios,
+                        std::unordered_map<std::string,double> *peptide_avgs );
 };
 
 #endif // MODULE_NORMALIZE_HH_INCLUDED

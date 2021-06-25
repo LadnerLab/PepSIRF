@@ -83,8 +83,7 @@ void module_normalize::run( options *opts )
         }
 
     // vector of averages for each peptide to be used in diff, ratio, and diff-ratio approaches.
-    std::vector<double> peptide_averages;
-    peptide_averages.resize( original_scores.pep_names.size() );
+    std::unordered_map<std::string,double> peptide_averages;
     sample_size = original_scores.sample_names.size();
 
     if( n_opts->approach == "diff" )
@@ -94,7 +93,7 @@ void module_normalize::run( options *opts )
             else
                 get_neg_average( &neg_scores, &neg_filter, &peptide_averages );
 
-            compute_diff( &original_scores.scores, &peptide_averages );
+            compute_diff( &original_scores, &peptide_averages );
         }
     else if( n_opts->approach == "ratio" )
         {
@@ -103,7 +102,7 @@ void module_normalize::run( options *opts )
             else
                 get_neg_average( &neg_scores, &neg_filter, &peptide_averages );
 
-            compute_ratio( &original_scores.scores, &peptide_averages );
+            compute_ratio( &original_scores, &peptide_averages );
         }
     else if( n_opts->approach == "diff_ratio" )
         {
@@ -112,7 +111,7 @@ void module_normalize::run( options *opts )
             else
                 get_neg_average( &neg_scores, &neg_filter, &peptide_averages );
 
-            compute_diff_ratio( &original_scores.scores, &peptide_averages );
+            compute_diff_ratio( &original_scores, &peptide_averages );
         }
     else if( n_opts->approach == "size_factors" )
         {
@@ -153,7 +152,7 @@ void module_normalize::run( options *opts )
 
 void module_normalize::get_neg_average( peptide_score_data_sample_major *control,
                                         std::unordered_set<std::string> *neg_filter,
-                                        std::vector<double> *pep_averages )
+                                        std::unordered_map<std::string,double> *pep_averages )
 {
     for( std::size_t curr_pep = 0; curr_pep < control->pep_names.size(); ++curr_pep )
         {
@@ -167,7 +166,7 @@ void module_normalize::get_neg_average( peptide_score_data_sample_major *control
                             ++total_samples;
                         }
                 }
-            pep_averages->at(curr_pep) = n_sum/total_samples;
+            pep_averages->emplace(control->pep_names.at(curr_pep), n_sum/total_samples);
         }
 }
 
@@ -224,47 +223,51 @@ void module_normalize::normalize_counts( matrix<double> *original_scores,
         }
 }
 
-void module_normalize::compute_diff( matrix<double> *norm_diffs,
-                                     std::vector<double> *peptide_avgs )
+void module_normalize::compute_diff( peptide_score_data_sample_major *norm_diffs,
+                                     std::unordered_map<std::string,double> *peptide_avgs )
 {
-    for( std::size_t curr_pep = 0; curr_pep < norm_diffs->nrows(); ++curr_pep )
+    for( const auto& name_score_pair : *peptide_avgs )
         {
-            double neg_mean = peptide_avgs->at(curr_pep);
-            // for each sample in data
-            for( std::size_t curr_samp = 0; curr_samp < norm_diffs->ncols(); ++curr_samp )
+            std::string peptide_name = name_score_pair.first;
+            double neg_mean = name_score_pair.second;
+            for( std::size_t curr_samp = 0; curr_samp < norm_diffs->scores.ncols(); ++curr_samp )
                 {
                     // store the result in that coordinate of the norm_diffs
-                    norm_diffs->at( curr_pep, curr_samp ) =
-                                        norm_diffs->at( curr_pep, curr_samp ) - neg_mean;
+                    norm_diffs->scores.at( peptide_name, norm_diffs->sample_names.at(curr_samp) ) = 
+                    norm_diffs->scores.at( peptide_name, norm_diffs->sample_names.at(curr_samp) ) - neg_mean;
                                         
                 }
         }
 }
 
-void module_normalize::compute_ratio( matrix<double> *norm_ratios,
-                                     std::vector<double> *peptide_avgs )
+void module_normalize::compute_ratio( peptide_score_data_sample_major *norm_ratios,
+                                     std::unordered_map<std::string,double> *peptide_avgs )
 {
-    for( std::size_t curr_pep = 0; curr_pep < norm_ratios->nrows(); ++curr_pep )
+    for( const auto& name_score_pair : *peptide_avgs )
         {
-            double neg_mean = peptide_avgs->at(curr_pep);
-            for( std::size_t curr_samp = 0; curr_samp < norm_ratios->ncols(); ++curr_samp )
+            std::string peptide_name = name_score_pair.first;
+            double neg_mean = name_score_pair.second;
+            for( std::size_t curr_samp = 0; curr_samp < norm_ratios->scores.ncols(); ++curr_samp )
                 {
-                    norm_ratios->at( curr_pep, curr_samp ) =
-                                        norm_ratios->at( curr_pep, curr_samp )/neg_mean;
+                    // store the result in that coordinate of the norm_diffs
+                    norm_ratios->scores.at( peptide_name, norm_ratios->sample_names.at(curr_samp) ) =
+                    norm_ratios->scores.at( peptide_name, norm_ratios->sample_names.at(curr_samp) )/neg_mean;
                 }
         }
 }
 
-void module_normalize::compute_diff_ratio( matrix<double> *norm_diff_ratios,
-                                           std::vector<double> *peptide_avgs )
+void module_normalize::compute_diff_ratio( peptide_score_data_sample_major *norm_diff_ratios,
+                                           std::unordered_map<std::string,double> *peptide_avgs )
 {
-    for( std::size_t curr_pep = 0; curr_pep < norm_diff_ratios->nrows(); ++curr_pep )
+    for( const auto& name_score_pair : *peptide_avgs )
         {
-            double neg_mean = peptide_avgs->at(curr_pep);
-            for( std::size_t curr_samp = 0; curr_samp < norm_diff_ratios->ncols(); ++curr_samp )
+            std::string peptide_name = name_score_pair.first;
+            double neg_mean = name_score_pair.second;
+            for( std::size_t curr_samp = 0; curr_samp < norm_diff_ratios->scores.ncols(); ++curr_samp )
                 {
-                    norm_diff_ratios->at( curr_pep, curr_samp ) =
-                                        (norm_diff_ratios->at( curr_pep, curr_samp ) - neg_mean)/neg_mean;
+                    // store the result in that coordinate of the norm_diffs
+                    norm_diff_ratios->scores.at( peptide_name, norm_diff_ratios->sample_names.at(curr_samp) ) = 
+                    (norm_diff_ratios->scores.at( peptide_name, norm_diff_ratios->sample_names.at(curr_samp) ) - neg_mean)/neg_mean;
                 }
         }
 }
