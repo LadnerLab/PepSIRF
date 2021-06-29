@@ -22,7 +22,8 @@ include_directories(include/modules/subjoin)
 include_directories(include/modules/zscore)
 include_directories(include/modules/bin)
 include_directories(include/modules/link)
-include_directories(include/modules/enrich)
+include_directories(include/modules/s_enrich)
+include_directories(include/modules/p_enrich)
 include_directories(include/modules/info)
 include_directories(lib)
 
@@ -39,7 +40,8 @@ set(PepSIRF_MODULES
     modules_normalize modules_subjoin
 	modules_zscore modules_bin
 	modules_link
-	modules_enrich
+	modules_s_enrich
+	modules_p_enrich
 	modules_info
    )
 
@@ -139,10 +141,14 @@ add_library( modules_link STATIC src/modules/link/module_link.cpp
 				src/modules/link/options_parser_link.cpp
 				src/modules/link/metadata_map.cpp
 		   )
+add_library( modules_s_enrich STATIC src/modules/s_enrich/module_s_enrich.cpp
+				src/modules/s_enrich/options_s_enrich.cpp
+				src/modules/s_enrich/options_parser_s_enrich.cpp
+		   )
 
-add_library( modules_enrich STATIC src/modules/enrich/module_enrich.cpp
-				src/modules/enrich/options_enrich.cpp
-				src/modules/enrich/options_parser_enrich.cpp
+add_library( modules_p_enrich STATIC src/modules/p_enrich/module_p_enrich.cpp
+				src/modules/p_enrich/options_p_enrich.cpp
+				src/modules/p_enrich/options_parser_p_enrich.cpp
 				src/modules/core/predicate.cpp
 		   )
 

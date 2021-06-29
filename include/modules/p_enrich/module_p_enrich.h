@@ -1,19 +1,20 @@
-#ifndef MODULE_ENRICH_HH_INCLUDED
-#define MODULE_ENRICH_HH_INCLUDED
+#ifndef MODULE_P_ENRICH_HH_INCLUDED
+#define MODULE_P_ENRICH_HH_INCLUDED
 #include <string>
 #include <type_traits>
 
 #include "module.h"
-#include "options_enrich.h"
+#include "options_p_enrich.h"
 #include "peptide_scoring.h"
 #include "paired_score.h"
 #include <map>
 
-class module_enrich : public module
+class module_p_enrich : public module
 {
 
 public:
-    using sample_type = std::vector<std::string>;
+
+    using sample_type = std::pair<std::string,std::string>;
     /**
      * Run the bin module, passing
      * the options specified by a user.
@@ -23,9 +24,10 @@ public:
     /**
      * Parse a list of sample names from a stream.
      * @param file The stream from which samples should be read.
+     * @throws std::runtime_exception if the file is not formatted correctly.
      * @pre file.good()
-     * @returns a vector of sets of strings representing the input
-     *          sample name sets.
+     * @returns a vector of pairs of strings representing the input
+     *          sample name pairs.
      **/
     std::vector<sample_type> parse_samples( std::istream& file );
 
@@ -69,13 +71,15 @@ public:
      * @returns true if the threshold is met, false otherwise.
      **/
     template<typename ValType>
-    bool thresholds_met( const std::vector<ValType> values,
+    bool thresholds_met( const std::pair<ValType,ValType> values,
                              const std::vector<double> thresholds
                            )
     {
+        const ValType& a = values.first;
+        const ValType& b = values.second;
 
-        if( *std::max_element( values.begin(), values.end() ) >= *std::max_element( thresholds.begin(), thresholds.end() )
-            && *std::min_element( values.begin(), values.end() ) >= *std::min_element( thresholds.begin(), thresholds.end() )
+        if( std::max( a, b ) >= *std::max_element( thresholds.begin(), thresholds.end() )
+            && std::min( a, b ) >= *std::min_element( thresholds.begin(), thresholds.end() )
           )
             return true;
         else
@@ -84,23 +88,28 @@ public:
 
     /**
      * Get the sums for raw scores in a sequence of
-     * raw_scores.
-     * @param raw_scores a vector containing vectors of raw scores.
-     * @returns a vector of doubles, each value is a sample score being the
-     *          sum of all raw scores at each consecutive index sample.
-     *          Ex. samples assayed in 2 replicate(duplicate) will result in
-     *          a vector of 2 raw sums where a 4 replicate will result in
-     *          a vector of 4 raw sums.
+     * paired_scores.
+     * @note Statically checks that Iterator iterates over
+     *       values of type paired_score.
+     * @tparam Iterator an iterator with operator++ over wich
+     *         to evaluate items.
+     * @param begin The first item in the range [begin, end)
+     * @param end the last item in the range [begin, end)
+     * @returns a pair of doubles, the first being the sum of each
+     *          item's raw_score.first value. The second value
+     *          is similarly the sum of each item's raw_score.second
      **/
-    std::vector<double> get_raw_sums( std::vector<std::vector<double>> raw_scores )
+    template<typename Iterator>
+    std::pair<double,double> get_raw_sums( Iterator begin,
+                                           Iterator end
+                                         )
     {
-        
-        std::vector<double> sums( raw_scores[0].size(), 0.0 );
-        std::size_t raw_score_lists_idx;
-        
-        for( raw_score_lists_idx = 0; raw_score_lists_idx < raw_scores.size(); raw_score_lists_idx++ )
+        std::pair<double,double> sums{ 0.0, 0.0 };
+
+        for( auto& current = begin; current != end; ++current )
             {
-                std::transform( raw_scores[raw_score_lists_idx].begin(), raw_scores[raw_score_lists_idx].end(), sums.begin(), sums.begin(), std::plus<double>());
+                sums.first  += current->first;
+                sums.second += current->second;
             }
 
         return sums;
@@ -108,13 +117,13 @@ public:
 
     /**
      * Get raw scores for each peptide in specified sample.
-     * @param raw_scores_dest The pointer to the location where raw score vectors will be stored.
+     * @param raw_scores_dest The pointer to the location where raw score pairs will be stored.
      * @param raw_score_data The pointer to the raw score data used to find raw scores.
-     * @param sample_names The pointer to the sample name vectors to get raw scores from.
+     * @param sample_names The pointer to the sample name pair to get raw scores from.
      **/
-    void get_raw_scores( std::vector<std::vector<double>> *raw_scores_dest,
+    void get_raw_scores( std::vector<std::pair<double,double>> *raw_scores_dest,
                                       const peptide_score_data_sample_major *raw_score_data,
-                                      const std::vector<std::string> sample_names );
+                                      const std::pair<std::string,std::string> sample_names );
 
     /**
      * Get enrichment candidates for peptides in a sample pair.
@@ -124,10 +133,10 @@ public:
      * @param sample_names the pair of samples to get enrichment candidates for.
      * @param returns void
      **/
-    void get_enrichment_candidates( std::map<std::string,std::vector<double>> *enrichment_candidates,
+    void get_enrichment_candidates( std::map<std::string,std::pair<double,double>> *enrichment_candidates,
                                             const peptide_score_data_sample_major *matrix_score_data,
-                                            const std::vector<std::string> sample_names
+                                            const std::pair<std::string,std::string> sample_names
                                   );
 };
 
-#endif // MODULE_ENRICH_HH_ENCLUDED
+#endif // MODULE_P_ENRICH_HH_ENCLUDED
