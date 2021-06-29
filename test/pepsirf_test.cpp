@@ -221,33 +221,33 @@ TEST_CASE( "Add seqs to map", "[module_demux]" )
 
 TEST_CASE( "samplelist_parser is able to read files that exist, properly creates errors when file cannot be found/read", "[samplelist_parser]" )
 {
-    // SECTION( "samplelist_parser is able to read a well-formed test")
-    // {
-    //     samplelist_parser slp;
-    //     std::string filename = "../test/test_samplelist.tsv";
+    SECTION( "samplelist_parser is able to read a well-formed test")
+    {
+        samplelist_parser slp;
+        std::string filename = "../test/test_samplelist.tsv";
 
-    //     auto vec = slp.parse( filename );
+        auto vec = slp.parse( filename );
 
-    //     REQUIRE( vec.size() == 96 );
-
-
-    //     unsigned int index = 0;
-    //     std::unordered_map<sample, int> s_map( vec.size() );
-    //     for( index = 0 ; index < vec.size(); ++index )
-    //         {
-    //             s_map[ vec[ index ] ] = vec[ index ].id;
-    //         }
-
-    //     REQUIRE( s_map.size() <= vec.size() );
-    // }
+        REQUIRE( vec.size() == 96 );
 
 
-    // SECTION( "samplelist_parser throws an error when a file is not found or incorrect format" )
-    // {
-    //     samplelist_parser sl;
-    //     REQUIRE_THROWS( sl.parse( "../test/test.fasta" ) );
-    //     REQUIRE_THROWS( sl.parse( "does_not_exist.tsv" ) );
-    // }
+        unsigned int index = 0;
+        std::unordered_map<sample, int> s_map( vec.size() );
+        for( index = 0 ; index < vec.size(); ++index )
+            {
+                s_map[ vec[ index ] ] = vec[ index ].id;
+            }
+
+        REQUIRE( s_map.size() <= vec.size() );
+    }
+
+
+    SECTION( "samplelist_parser throws an error when a file is not found or incorrect format" )
+    {
+        samplelist_parser sl;
+        REQUIRE_THROWS( sl.parse( "../test/test.fasta" ) );
+        REQUIRE_THROWS( sl.parse( "does_not_exist.tsv" ) );
+    }
 }
 
 TEST_CASE( "Test String Indexing", "[string_indexer]" )
