@@ -1,16 +1,15 @@
-#ifndef OPTIONS_ENRICH_HH_INCLUDED
-#define OPTIONS_ENRICH_HH_INCLUDED
+#ifndef OPTIONS_P_ENRICH_HH_INCLUDED
+#define OPTIONS_P_ENRICH_HH_INCLUDED
 #include "options.h"
 
 #include <string>
 #include <vector>
-#include <set>
 
-class options_enrich : public options
+class options_p_enrich : public options
 {
  public:
 
-    options_enrich()
+    options_p_enrich()
         : DEFAULT_OUTPUT_DIRNAME{ "paired" },
           DEFAULT_OUT_FNAME_JOIN{ "~" }
           {}
@@ -35,11 +34,9 @@ class options_enrich : public options
 
     std::string out_suffix;
 
-    bool truncate_names;
-
     const std::string DEFAULT_OUTPUT_DIRNAME;
     const std::string DEFAULT_OUT_FNAME_JOIN;
 
 };
 
-#endif // OPTIONS_ENRICH_HH_INCLUDED
+#endif // OPTIONS_P_ENRICH_HH_INCLUDED

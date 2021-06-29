@@ -1,4 +1,4 @@
-#include "options_parser_enrich.h"
+#include "options_parser_p_enrich.h"
 
 #include <boost/program_options.hpp>
 #include <boost/algorithm/string.hpp>
@@ -9,9 +9,9 @@
 #include "file_io.h"
 #include "predicate.h"
 
-bool options_parser_enrich::parse( int argc, char ***argv, options *opts )
+bool options_parser_p_enrich::parse( int argc, char ***argv, options *opts )
 {
-    options_enrich *opts_enrich = (options_enrich*) opts;
+    options_p_enrich *opts_p_enrich = (options_p_enrich*) opts;
 
     namespace po = boost::program_options;
     po::variables_map vm;
@@ -32,7 +32,7 @@ bool options_parser_enrich::parse( int argc, char ***argv, options *opts )
           "independent of order. Note that a peptide must meet each specified threshold "
           "(e.g., zscore, norm count and raw count) in order to be considered enriched.\n"
         )
-        ( "threshhold_file,t", po::value( &opts_enrich->threshold_fname )->required()->notifier(
+        ( "threshhold_file,t", po::value( &opts_p_enrich->threshold_fname )->required()->notifier(
                                 [&]( std::string input_filename )->void
                                   {
                                     std::ifstream input_f{ input_filename };
@@ -47,7 +47,7 @@ bool options_parser_enrich::parse( int argc, char ***argv, options *opts )
                                         boost::split( matrix_thresh_pairs, line, boost::is_any_of( "\t" ) );
                                         if( matrix_thresh_pairs.size() == 2 )
                                           {
-                                            opts_enrich->matrix_thresh_fname_pairs.emplace_back(
+                                            opts_p_enrich->matrix_thresh_fname_pairs.emplace_back(
                                                           std::make_pair( matrix_thresh_pairs[0], matrix_thresh_pairs[1] ) );
                                           }
                                         else
@@ -63,18 +63,18 @@ bool options_parser_enrich::parse( int argc, char ***argv, options *opts )
           "format output by the zscore module, with peptides on the rows and sample names on the columns. "
           "The provided thresholds should be comma-separated if more than one is provided for a single matrix file.\n"
         )
-        ( "samples,s", po::value( &opts_enrich->in_samples_fname ),
+        ( "samples,s", po::value( &opts_p_enrich->in_samples_fname ),
           "The name of the file containing sample pair information, denoting which "
           "samples, in the input matrices, are replicates. This file must be "
           "tab-delimited with one pair of samples per line.\n"
         )
-        ( "raw_scores,r", po::value( &opts_enrich->in_raw_scores_fname )
+        ( "raw_scores,r", po::value( &opts_p_enrich->in_raw_scores_fname )
           ->default_value( "" ),
           "Optionally, a tab-delimited matrix containing raw counts can be included. This matrix "
           "must contain the raw counts for each peptide. If included, '--raw_score_constraint' "
           "must also be specified.\n"
         )
-        ( "raw_score_constraint", po::value( &opts_enrich->raw_scores_params_str )
+        ( "raw_score_constraint", po::value( &opts_p_enrich->raw_scores_params_str )
           ->default_value( "" )
           ->notifier( [&]( const std::string& params_str ) -> void
                       {
@@ -96,7 +96,7 @@ bool options_parser_enrich::parse( int argc, char ***argv, options *opts )
           "This provides a way to impose a minimum read count for a sample to be evaluated.\n"
         )
         ( "outfile_suffix,x",
-          po::value( &opts_enrich->out_suffix )
+          po::value( &opts_p_enrich->out_suffix )
           ->default_value( "" ),
           "Suffix to add to all output files. Together, the sample name and the suffix "
           "will form the name of the output file for each sample. For example, with a "
@@ -105,22 +105,15 @@ bool options_parser_enrich::parse( int argc, char ***argv, options *opts )
           "'_enriched.txt' can be used. By default, no suffix is used.\n"
         )
         ( "join_on,j",
-          po::value( &opts_enrich->out_fname_join )
+          po::value( &opts_p_enrich->out_fname_join )
           ->default_value( "~" ),
           "A character or string to use to join replicate sample names in order to create "
           "output file names. For a pair of samples, A and B, the resulting file will "
           "have the name 'A~B' if this flag is not given. Otherwise, the given value will "
           "be used in place of '~'.\n"
          )
-        ( "output_filename_truncate", po::bool_switch( &opts_enrich->truncate_names )
-          ->default_value( false ),
-          "By default each filename in the output directory will include every sample name "
-          "joined by the 'join_on' value. Alternatively if more than double replicates are "
-          "being evaluated, then you may include this flag to stop the filenames from including "
-          "more than 3 samplenames in the output. The output names will be 'A~B~C~1more' for example.\n"
-        )
-        ( "output,o", po::value( &opts_enrich->out_dirname )
-          ->default_value( "enriched" ),
+        ( "output,o", po::value( &opts_p_enrich->out_dirname )
+          ->default_value( "paired" ),
           "Directory name to which output files will be written. An output file will be "
           "generated for each sample with at least one enriched peptide. This directory "
           "will be created by the module.\n"
