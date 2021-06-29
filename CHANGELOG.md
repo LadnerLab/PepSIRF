@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.7] - 2021-06-28
+- #125, norm module incorrectly stored peptide names with the assumption that in diff, diff-ratio, or ratio the control and original matrix are in the same order. The peptide names should not be assumed to be in the same order. This has been updated by changing the type of container used and the method of access.
+- #104, norm module help message updated. ('-p', '--peptide_scores') option in the norm help message states in the final sentence "This file should be in the same format as the output from the deconv module.". This is incorrect - deconv should be demux - it should read "This file should be in the same format as the output from the demux module.".
+
 ## [1.3.6] - 2021-06-09
 - #96, demux module now includes a warning when index/barcode names from the samplelist are not included in the fasta file provided by (--index). The warning includes a list of missing names.
 - #97, zscore module now verifies the correct type of file is provided for (--bins). Assuming the incorrect file provided will be a score matrix tsv, the verification process is a check of the second line in the tsv. If a numerical value or 'inf' or 'NaN' is found, then an error is thrown with a message stating to check the file provided.
