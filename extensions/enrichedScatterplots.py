@@ -21,7 +21,7 @@ def main():
     #Lists of enriched peptides
     p.add_option('-e', '--enrDir',  help='Directory containing lists of enriched peptides. [None, REQ]')
     p.add_option('-f', '--enrFile', help='Tab delimited file containing data that will be used to generate scatterplots. [None, OPT]')
-    p.add_option('-z', '--zenrFiles', help='Tab delimited file containing z score thresholds and related directories in ascending order. [None, OPT]')
+    p.add_option('-z', '--zenrFiles', help='Tab delimited file containing z score thresholds and related directories containing data that will be used to generate scatterplots. [None, OPT]')
     p.add_option('--enrExt', help='Common file ending for files containing enriched sets of peptides. Once removed, the remaining filename should consist only of sample name(s) [None, REQ]')
     p.add_option('--snDelim', default="~", help='Delimiter used to separate sample names in pEnrich files [~]')
 
@@ -156,12 +156,12 @@ def main():
         with open(opts.zenrFiles, 'r') as fin:
             for line in fin:
                 zT,dP = line.strip("\n").split("\t")
-                zThresh[zT] = []
-                zThresh[zT].append(dP)
+                zThresh[int(zT)] = []
+                zThresh[int(zT)].append(dP)      
                 
-        #collect z score thresholds in descending order
-        zScore = list(reversed(zThresh.keys()))
-                
+        #collect z score thresholds in ascending order
+        zScore = list((sorted(zThresh.keys())))
+
         #collect enriched file names
         enrichedD = {}
         for zS in zThresh:
@@ -170,15 +170,15 @@ def main():
                 for eF in enrFiles:
                     enrichedD[os.path.basename(eF)] = []
 
-        #collect file paths to the enriched files for each z score theshold
-        for zS in zThresh:
+        #collect file paths to the enriched files for each z score theshold in ascending order
+        for zS in zScore:
             for dP in zThresh[zS]:
                 enrFiles = glob.glob("%s/*%s" % (dP, opts.enrExt))
                 for eF in enrFiles:
                     for file in enrichedD:
                         if os.path.basename(eF) == file:
                             enrichedD[os.path.basename(eF)].append(eF)
-
+                            
         #generate plots for each enriched file
         for file in enrichedD:
             
@@ -226,10 +226,10 @@ def main():
                 ax.set_ylabel(",".join(sNames), fontsize=15)
                 ax.set_xlabel(opts.xLabel, fontsize=15)
             
-            #add legend items
+            #add legend items in descending order
             txtC = posC - 1
             txtA = 0.90
-            for zS in zScore:
+            for zS in list(reversed(zScore)):
                 ax.text(0.87,txtA,zS,c=clrs[txtC],fontsize=10,ha='center', va='center_baseline', transform=ax.transAxes)
                 txtC-=1
                 txtA-=0.05
