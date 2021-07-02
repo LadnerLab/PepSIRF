@@ -117,17 +117,7 @@ void module_enrich::run( options *opts )
             raw_count_enriched = raw_counts_included
                 ? ( raw_count_enriched && thresholds_met( col_sums, raw_score_params ) )
                 : true;
-            if( raw_counts_included && !raw_count_enriched )
-                {
-                    std::string samplenames = "";
-                    std::for_each( samples_list[sample_idx].begin(), samples_list[sample_idx].end() - 1,
-                        [&]( std::string name )
-                            {
-                                samplenames.append( name + ", " );
-                            });
-                    samplenames.append( *(samples_list[sample_idx].end() - 1) );                  
-                    enrichment_failures.emplace( samplenames, "raw" );
-                }
+
             if( raw_count_enriched )
             {
                 // Get candidates for each input matrix for the current sample
@@ -202,7 +192,18 @@ void module_enrich::run( options *opts )
                     }
             }
 
-            if( enriched_probes.empty() && !e_opts->out_enrichment_failure.empty() )
+            if( raw_counts_included && !raw_count_enriched && !e_opts->out_enrichment_failure.empty() )
+                {
+                    std::string samplenames = "";
+                    std::for_each( samples_list[sample_idx].begin(), samples_list[sample_idx].end() - 1,
+                        [&]( std::string name )
+                            {
+                                samplenames.append( name + ", " );
+                            });
+                    samplenames.append( *(samples_list[sample_idx].end() - 1) );                  
+                    enrichment_failures.emplace( samplenames, "raw" );
+                }
+            else if( enriched_probes.empty() && !e_opts->out_enrichment_failure.empty() )
                 {
                     std::string samplenames = "";
                     std::for_each( samples_list[sample_idx].begin(), samples_list[sample_idx].end() - 1,
