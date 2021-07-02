@@ -31,6 +31,8 @@ class options_enrich : public options
 
     std::string out_dirname;
 
+    std::string out_enrichment_failure;
+
     std::string out_fname_join;
 
     std::string out_suffix;

@@ -23,6 +23,7 @@ void module_enrich::run( options *opts )
     peptide_score_data_sample_major *raw_scores_ptr = nullptr;
     std::vector<double> raw_score_params;
     std::vector<std::pair<peptide_score_data_sample_major,std::vector<double>>> matrix_thresh_pairs;
+    std::unordered_map<std::string,std::string> enrichment_failures;
     matrix_thresh_pairs.resize( e_opts->matrix_thresh_fname_pairs.size() );
     bool shorthand_output_filenames = e_opts->truncate_names;
     std::size_t curr_matrix;
@@ -116,6 +117,7 @@ void module_enrich::run( options *opts )
             raw_count_enriched = raw_counts_included
                 ? ( raw_count_enriched && thresholds_met( col_sums, raw_score_params ) )
                 : true;
+
             if( raw_count_enriched )
             {
                 // Get candidates for each input matrix for the current sample
@@ -134,10 +136,6 @@ void module_enrich::run( options *opts )
                                                         "not the same.\n"
                                                         );
                             }
-                        // bool first_in = matrix_sample_names.find( samples_list[sample_idx].first )
-                        //             != matrix_sample_names.end();
-                        // bool second_in = matrix_sample_names.find( samples_list[sample_idx].second )
-                        //             != matrix_sample_names.end();
                         std::vector<std::string> sample_diffs;
                         std::set_difference( samples_sample_names.begin(), samples_sample_names.end(),
                                              matrix_sample_names.begin(), matrix_sample_names.end(), sample_diffs.begin() );
@@ -167,7 +165,7 @@ void module_enrich::run( options *opts )
                             }
                         else
                             {
-                                //create a vector of enrichment candidates - each vector of paired scores for a thresholds file provided
+
                                 get_enrichment_candidates( &all_enrichment_candidates[curr_matrix],
                                                         curr_matrix_ptr,
                                                         samples_list[ sample_idx ]
@@ -176,7 +174,6 @@ void module_enrich::run( options *opts )
                             }
                     }
 
-                // verify all candidates of the same peptide name are equal to or over given thresholds
                 for( const auto& candidate : all_enrichment_candidates[0] )
                     {
                         std::string pep_name = candidate.first;
@@ -194,10 +191,30 @@ void module_enrich::run( options *opts )
                             }
                     }
             }
-            // What if for output, if there are more than 3 samplenames,
-            // then do what Jason said about the "S_000~S_001~_S_002_#more_enriched.txt" (if they use the option otherwise let it include all.)
 
-            if( !enriched_probes.empty() )
+            if( raw_counts_included && !raw_count_enriched && !e_opts->out_enrichment_failure.empty() )
+                {
+                    std::string samplenames = "";
+                    std::for_each( samples_list[sample_idx].begin(), samples_list[sample_idx].end() - 1,
+                        [&]( std::string name )
+                            {
+                                samplenames.append( name + ", " );
+                            });
+                    samplenames.append( *(samples_list[sample_idx].end() - 1) );                  
+                    enrichment_failures.emplace( samplenames, "raw" );
+                }
+            else if( enriched_probes.empty() && !e_opts->out_enrichment_failure.empty() )
+                {
+                    std::string samplenames = "";
+                    std::for_each( samples_list[sample_idx].begin(), samples_list[sample_idx].end() - 1,
+                        [&]( std::string name )
+                            {
+                                samplenames.append( name + ", " );
+                            });
+                    samplenames.append( *(samples_list[sample_idx].end() - 1) );                  
+                    enrichment_failures.emplace( samplenames, "peptides" );
+                }
+            else if( !enriched_probes.empty() )
                 {
                     std::string outf_name = e_opts->out_dirname + '/';
                     if( shorthand_output_filenames && samples_list[sample_idx].size() > 3 )
@@ -225,6 +242,27 @@ void module_enrich::run( options *opts )
                                         );
                 }
 
+        }
+
+    if( !e_opts->out_enrichment_failure.empty() && !enrichment_failures.empty() )
+        {
+            std::string outf_name = e_opts->out_dirname + '/' + e_opts->out_enrichment_failure;
+            // write to file
+            std::ofstream out_file{ outf_name, std::ios_base::out };
+            out_file << "Replicates\tReason\n";
+            for( auto& line : enrichment_failures )
+                {
+                    out_file << line.first;
+                    if( line.second == "raw" )
+                        {
+                            out_file << "\tRaw read count threshold.\n";
+                        }
+                    else
+                        {
+                            out_file << "\tNo enriched peptides.\n";
+                        }
+                }
+            out_file.close();
         }
 }
 std::vector<module_enrich::sample_type> module_enrich::parse_samples( std::istream& file )

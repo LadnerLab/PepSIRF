@@ -19,15 +19,15 @@ bool options_parser_enrich::parse( int argc, char ***argv, options *opts )
     po::options_description desc( "PepSIRF "
                                   + format_version_string()
                                   + ": Peptide-based Serological Immune Response "
-                                  "Framework Paired (Duplicate) Enrichment module.\n",
+                                  "Framework Enrichment module.\n",
                                   line_width
                                 );
     desc.add_options()
         ( "help,h", "Produce help message and exit.\n"
-          "The p_enrich module determines which peptides are enriched in samples that "
-          "have been assayed in duplicate, as determined by user-specified thresholds. "
+          "The enrich module determines which peptides are enriched in samples that "
+          "have been assayed in n-replicate, as determined by user-specified thresholds. "
           "Thresholds are provided as comma-delimited pairs. In order for a peptide to "
-          "be considered enriched, both replicates must meet or exceed the lower threshold "
+          "be considered enriched, all replicates must meet or exceed the lower threshold "
           "and at least one replicate must meet or exceed the higher threshold, "
           "independent of order. Note that a peptide must meet each specified threshold "
           "(e.g., zscore, norm count and raw count) in order to be considered enriched.\n"
@@ -64,9 +64,9 @@ bool options_parser_enrich::parse( int argc, char ***argv, options *opts )
           "The provided thresholds should be comma-separated if more than one is provided for a single matrix file.\n"
         )
         ( "samples,s", po::value( &opts_enrich->in_samples_fname ),
-          "The name of the file containing sample pair information, denoting which "
+          "The name of the file containing sample information, denoting which "
           "samples, in the input matrices, are replicates. This file must be "
-          "tab-delimited with one pair of samples per line.\n"
+          "tab-delimited with each line a set of replicates.\n"
         )
         ( "raw_scores,r", po::value( &opts_enrich->in_raw_scores_fname )
           ->default_value( "" ),
@@ -94,6 +94,15 @@ bool options_parser_enrich::parse( int argc, char ***argv, options *opts )
           "The minimum total raw count a sample can have for all of its peptides in "
           "order for any of the peptides in that sample to be considered enriched. "
           "This provides a way to impose a minimum read count for a sample to be evaluated.\n"
+        )
+        ( "enrichment_failure_reason,f", po::value( &opts_enrich->out_enrichment_failure )
+          ->default_value( "" ),
+          "For each sample set that does not result in the generation of an enriched peptide file, "
+          "a row of two tab-delimited columns is provided: the first column provides the reason why "
+          "the associated samplenames do not result in an enriched peptide file and the second column "
+          "contains the replicates comma-delimited.\n"
+          "This file is output to the same directory as the enriched peptide files. The 'Reason' column "
+          "will contain one of the following: 'Raw read count threshold' or 'No enriched peptides'.\n"
         )
         ( "outfile_suffix,x",
           po::value( &opts_enrich->out_suffix )
