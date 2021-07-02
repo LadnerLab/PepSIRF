@@ -19,15 +19,15 @@ bool options_parser_enrich::parse( int argc, char ***argv, options *opts )
     po::options_description desc( "PepSIRF "
                                   + format_version_string()
                                   + ": Peptide-based Serological Immune Response "
-                                  "Framework Paired (Duplicate) Enrichment module.\n",
+                                  "Framework Enrichment module.\n",
                                   line_width
                                 );
     desc.add_options()
         ( "help,h", "Produce help message and exit.\n"
-          "The p_enrich module determines which peptides are enriched in samples that "
-          "have been assayed in duplicate, as determined by user-specified thresholds. "
+          "The enrich module determines which peptides are enriched in samples that "
+          "have been assayed in n-replicate, as determined by user-specified thresholds. "
           "Thresholds are provided as comma-delimited pairs. In order for a peptide to "
-          "be considered enriched, both replicates must meet or exceed the lower threshold "
+          "be considered enriched, all replicates must meet or exceed the lower threshold "
           "and at least one replicate must meet or exceed the higher threshold, "
           "independent of order. Note that a peptide must meet each specified threshold "
           "(e.g., zscore, norm count and raw count) in order to be considered enriched.\n"
@@ -64,9 +64,9 @@ bool options_parser_enrich::parse( int argc, char ***argv, options *opts )
           "The provided thresholds should be comma-separated if more than one is provided for a single matrix file.\n"
         )
         ( "samples,s", po::value( &opts_enrich->in_samples_fname ),
-          "The name of the file containing sample pair information, denoting which "
+          "The name of the file containing sample information, denoting which "
           "samples, in the input matrices, are replicates. This file must be "
-          "tab-delimited with one pair of samples per line.\n"
+          "tab-delimited with each line a set of replicates.\n"
         )
         ( "raw_scores,r", po::value( &opts_enrich->in_raw_scores_fname )
           ->default_value( "" ),
