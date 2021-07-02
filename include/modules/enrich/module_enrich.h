@@ -59,9 +59,9 @@ public:
     }
 
     /**
-     * Determine if the threshold for a given pair of values
+     * Determine if the threshold for a given list of values
      * is met.
-     * For a given pair of values to meet a given threshold,
+     * For a given list of values to meet a given threshold,
      * the smallest value must be greater than the smallest threshold
      * and the largest value must be greater than the largest threshold.
      * @param values The values to test
@@ -117,11 +117,12 @@ public:
                                       const std::vector<std::string> sample_names );
 
     /**
-     * Get enrichment candidates for peptides in a sample pair.
-     * @param enrichment_candidates pointer to map of paired score values for
-     *        each peptide where the key is the peptide name
+     * Get enrichment candidates for peptides in a sample list. Each candidate is a pair:
+     * (peptide name, list of scores for specified sample columns)
+     * @param enrichment_candidates pointer to map of score(s) for
+     *        each peptide where the key is the peptide name and the value is a list of >=1 scores.
      * @param matrix_score_data pointer to data containing normalized scores.
-     * @param sample_names the pair of samples to get enrichment candidates for.
+     * @param sample_names the list of samples to get enrichment candidates for.
      * @param returns void
      **/
     void get_enrichment_candidates( std::map<std::string,std::vector<double>> *enrichment_candidates,

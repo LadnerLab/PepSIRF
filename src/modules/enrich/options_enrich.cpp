@@ -18,7 +18,8 @@ std::string options_enrich::get_arguments()
                   << "--raw_score_constraint       " << raw_scores_params_str << "\n ";
         }
 
-    stream << "--outfile_suffix             " << out_suffix << "\n "
+    stream << "--enrichment_failure_reason  " << out_enrichment_failure << "\n"
+           << "--outfile_suffix             " << out_suffix << "\n "
            << "--join_on                    " << out_fname_join << "\n "
            << "--output_filename_truncate   "
            << "--output                     " << out_dirname << "\n "
