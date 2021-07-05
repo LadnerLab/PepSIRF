@@ -48,6 +48,17 @@ void module_link::run( options *opts )
             metadata_map mp = metadata_map();
             std::unordered_map<std::string, std::string> meta_map;
             mp.build_map( &meta_map, l_opts->metadata_fname );
+            //make this prettier
+            for(auto x : meta_map){
+                for(int i = 0; i < proteins.capacity(); i++)
+                {
+                    if(!(x.first.find(proteins[i].name) == std::string::npos))
+                    {
+                        throw std::runtime_error("Protein file contains sequences not represented in metadata file");
+                    }
+                }
+                break;
+            }
             create_prot_map( kmer_sp_map, proteins, l_opts->k, &meta_map );
         }
 
