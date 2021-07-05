@@ -15,8 +15,7 @@
 #include "options_zscore.h"
 #include "options_bin.h"
 #include "options_link.h"
-#include "options_s_enrich.h"
-#include "options_p_enrich.h"
+#include "options_enrich.h"
 #include "options_info.h"
 
 // options parsers for each module
@@ -27,8 +26,7 @@
 #include "options_parser_zscore.h"
 #include "options_parser_bin.h"
 #include "options_parser_link.h"
-#include "options_parser_s_enrich.h"
-#include "options_parser_p_enrich.h"
+#include "options_parser_enrich.h"
 #include "options_parser_info.h"
 
 // the modules themselves
@@ -39,8 +37,7 @@
 #include "module_zscore.h"
 #include "module_bin.h"
 #include "module_link.h"
-#include "module_s_enrich.h"
-#include "module_p_enrich.h"
+#include "module_enrich.h"
 #include "module_info.h"
 
 

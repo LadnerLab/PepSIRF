@@ -29,7 +29,7 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "list of likely taxa to which the assayed individual has likely been exposed. "
           "This module has two modes: batch and singular. In batch mode, the input given "
           "to '--enriched' is a directory containing files of enriched peptides for each "
-          "sample (e.g., as output by s_enrich or p_enrich). In this case, '--output' "
+          "sample (e.g., as output by enrich). In this case, '--output' "
           "is a directory where the output deconvolution reports will be written. In "
           "singular mode, both '--enriched' and '--output' are treated as files, not directories. "
           "The chosen mode is determined by the type of argument provided with '--enriched'. "
