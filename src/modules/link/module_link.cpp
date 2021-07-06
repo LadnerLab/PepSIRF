@@ -56,6 +56,7 @@ void module_link::run( options *opts )
                     if(!(element.first.find(proteins[i].name) == std::string::npos))
                     {
                         sequence_name = true;
+                        break;
                     }
                 }
                 if(!sequence_name){
