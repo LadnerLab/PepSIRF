@@ -18,7 +18,7 @@ class metadata_map
      * @param meta_map metadata retrieve address that will be used in species ID retrieval.
      * @param metadata_fname provides filename, name, and species. Delimited by commas.
     **/
-    void build_map( std::unordered_map<std::string, std::string> *meta_map, std::string metadata_fname );
+    std::size_t build_map( std::unordered_map<std::string, std::string> *meta_map, std::string metadata_fname );
    /**
      * Get the species ID using the unordered map built from the metadata file given.
      * @param meta_map unordered map address created from metadata file in metadata_map class.
