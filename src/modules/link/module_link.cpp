@@ -47,22 +47,10 @@ void module_link::run( options *opts )
             std::cout << "WARNING: Metadata file has been provided and will be implemented with taxonomic ID index ignored." << std::endl;
             metadata_map mp = metadata_map();
             std::unordered_map<std::string, std::string> meta_map;
-            mp.build_map( &meta_map, l_opts->metadata_fname );
-            for(const auto element : meta_map)
-            {
-                bool sequence_name = false;
-                for(int i = 0; i < proteins.capacity(); i++)
+            if(mp.build_map( &meta_map, l_opts->metadata_fname ) != proteins.size())
                 {
-                    if(!(element.first.find(proteins[i].name) == std::string::npos))
-                    {
-                        sequence_name = true;
-                        break;
-                    }
+                    throw std::runtime_error("Protein file contains sequences not represented in metadata file");
                 }
-                if(!sequence_name){
-                    throw std::runtime_error("Protein file contains sequence names not represented in metadata file.");
-                }
-            }
             create_prot_map( kmer_sp_map, proteins, l_opts->k, &meta_map );
         }
 
@@ -137,9 +125,14 @@ void module_link::create_prot_map( std::unordered_map<std::string,
 
     for( index = 0; index < sequences.size(); ++index )
         {
+            //fix Issue116 here
             ++num_prot;
             std::vector<std::string> kmers;
+            
+
             spec_id = verify_id_type( sequences[ index ].name, retriever );
+            
+
             kmer_tools::get_kmers( kmers, sequences[ index ].seq, k );
             std::unordered_map<std::string,std::size_t> val_map;
 

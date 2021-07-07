@@ -1,6 +1,6 @@
 #include "metadata_map.h"
 
-void metadata_map::build_map( std::unordered_map<std::string, std::string> *meta_map, std::string metadata_fname )
+std::size_t metadata_map::build_map( std::unordered_map<std::string, std::string> *meta_map, std::string metadata_fname )
     {
         std::vector<std::string> metadata_options;
         boost::split( metadata_options, metadata_fname, boost::is_any_of( "," ) );
@@ -38,12 +38,15 @@ void metadata_map::build_map( std::unordered_map<std::string, std::string> *meta
                     spec_index = count;
                 count++;
             }
+        count = 0;
         std::vector<std::string> metadata_row;
         while( std::getline( metadata_file, line) )
             {
                 boost::split( metadata_row, line, boost::is_any_of( "\t" ) );
                 meta_map->emplace( metadata_row.at( name_index ), metadata_row.at( spec_index ) );
+                ++count;
             }
+        return count;
     }
 
     std::string metadata_map::get_id( std::string sequence_data, std::unordered_map<std::string, std::string> *meta_map )
