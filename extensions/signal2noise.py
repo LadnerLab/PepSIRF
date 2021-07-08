@@ -21,8 +21,8 @@ def main():
     p.add_option('-l', '--lower', type="int", help="Lower percentile to use to calculate average value for 'noise'. Must be between 0 and 100, inclusive. [None, REQ]")
     p.add_option('-o', '--out', help='Base name for output files. [None, REQ]')
     p.add_option('--fig', default="png", help="Figure format to output.")
-    p.add_option('--width', default=15, type=int, help="Figure width.")
-    p.add_option('--height', default=4, type=int, help="Figure height.")
+    p.add_option('--width', default=15, type=int, help="Figure width. [15]")
+    p.add_option('--height', default=4, type=int, help="Figure height. [4]")
 
 #    p.add_option('--hpd', type="float", help="Highest posterior density to use for calculation of mean and standard deviation. Must be between 0 and 1. [None, REQ]")
 
