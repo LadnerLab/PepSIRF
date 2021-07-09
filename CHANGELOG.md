@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- #114, s_enrich and p_enrich have been merged into a single module 'enrich'. A single and pair of samplenames work with the same behavior as s_ and p_enrich respectively. Additionally, >2 replicates can be analyzed to generate enriched peptides. See help options for an update on the options.
+- #103, enrich (previously two separate modules, s_enrich and p_enrich) module now features an optional flag that outputs in a tsv failed enrichment replicate sets. Any set replicates which failed to generate enriched peptides is listed in this file. Each row contains a column for replicate samplenames and a column containing the reason.
 
 ## [1.3.7] - 2021-06-28
 - #125, norm module incorrectly stored peptide names with the assumption that in diff, diff-ratio, or ratio the control and original matrix are in the same order. The peptide names should not be assumed to be in the same order. This has been updated by changing the type of container used and the method of access.
