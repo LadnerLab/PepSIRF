@@ -255,11 +255,11 @@ void module_enrich::run( options *opts )
                     out_file << line.first;
                     if( line.second == "raw" )
                         {
-                            out_file << "\tRaw read count threshold.\n";
+                            out_file << "\tRaw read count threshold\n";
                         }
                     else
                         {
-                            out_file << "\tNo enriched peptides.\n";
+                            out_file << "\tNo enriched peptides\n";
                         }
                 }
             out_file.close();
