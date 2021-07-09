@@ -51,7 +51,7 @@ list( APPEND PepSIRF_LINK_LIBS
 if(OpenMP_FOUND)
   message( "OpenMP enabled" )
   list( APPEND PepSIRF_LINK_LIBS OpenMP::OpenMP_CXX )
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Xpreprocessor -fopenmp")
   add_definitions( -DENABLE_OPENMP )
 
 else()
