@@ -98,9 +98,9 @@ bool options_parser_enrich::parse( int argc, char ***argv, options *opts )
         ( "enrichment_failure_reason,f", po::value( &opts_enrich->out_enrichment_failure )
           ->default_value( "" ),
           "For each sample set that does not result in the generation of an enriched peptide file, "
-          "a row of two tab-delimited columns is provided: the first column provides the reason why "
-          "the sample did not result in an enriched peptide file and the second column "
-          "contains the replicate names (comma-delimited).\n"
+          "a row of two tab-delimited columns is provided: the first column "
+          "contains the replicate names (comma-delimited) and the second column provides the reason why "
+          "the sample did not result in an enriched peptide file.\n"
           "This file is output to the same directory as the enriched peptide files. The 'Reason' column "
           "will contain one of the following: 'Raw read count threshold' or 'No enriched peptides'.\n"
         )
