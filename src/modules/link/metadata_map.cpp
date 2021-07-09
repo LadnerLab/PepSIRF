@@ -55,6 +55,6 @@ void metadata_map::build_map( std::unordered_map<std::string, std::string> *meta
             }
         else
             {
-                return 0;
+                return "";
             }
     }
