@@ -213,9 +213,9 @@ def main():
         print(cmd)
         subprocess.run(cmd, shell=True)
     # Turn off enriched scatterplots generation, as they cannot be run without a list of enriched peptides
-    elif args.enrichedScatterplots:
-        print("Warning: p_enrich module not run and list of enriched peptides not generated. --enrichedScatterplots will be set to False.")
-        args.enrichedScatterplots = False
+    elif args.enrichedScatters:
+        print("Warning: p_enrich module not run and list of enriched peptides not generated. --enrichedScatters will be set to False.")
+        args.enrichedScatters = False
 
     
     if matplotReady:
