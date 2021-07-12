@@ -51,7 +51,8 @@ def main():
     controlArgs.add_argument("--negative_names", help="Optional approach for identifying negative controls. Comma-separated list of negative control sample names.")
 
     enrichArgs = parser.add_argument_group('enrich options')
-    enrichArgs.add_argument("--sEnrich", default=False, action="store_true", help="Generate lists of enriched peptides separately for each pulldown. Will actually run p_enrich, but with the same sample specified for each replicate.")
+    enrichArgs.add_argument("--v13", default=False, action="store_true", help="Flag to be used if using pepsirf version 1.3 to run p_ernich module. If not set, pepsirf version 1.4 will be assumed, and enrich module will be run.")
+    enrichArgs.add_argument("--sEnrich", default=False, action="store_true", help="Generate lists of enriched peptides separately for each pulldown. Will actually run p_enrich/enrich, but with the same sample specified for each replicate.")
     enrichArgs.add_argument("--inferPairs", default=False, action="store_true", help="Infer sample pairs from names. This option assumes names of replicates will be identical with the exception of a final string denoted with a '_'. For example, these names would be considered two replicates of the same sample: VW_100_1X_A and VW_100_1X_B")
 
     outArgs = parser.add_argument_group('output options')
@@ -61,6 +62,14 @@ def main():
     enrichArgs.add_argument("--enrichedScatters", default=False, help="Generate scatter plots comparing col-sum normalized read counts between a sample and negative controls. Argument provided should be the path to enrichedScatterplots.py")
 
     args = parser.parse_args()
+    
+    # Set enrichment module to be used per the version of pepsirf being used
+    if args.v13:
+        enrModule = "p_enrich"
+        enrOut = "penrich.out"
+    else:
+        enrModule = "enrich"
+        enrOut = "enrich.out"
     
     #Create base string for output files
     if args.raw:
@@ -189,7 +198,7 @@ def main():
                         print("Only one replicate found for %s: %s" % (simple, each))
 
         else:
-            print("To run p_enrich module, you must provide one of the following: '--pairs', '--inferPairs', '--sEnrich'")
+            print("To run %s module, you must provide one of the following: '--pairs', '--inferPairs', '--sEnrich'" % (enrModule))
 
     # Generate threshold file
     if not args.thresh and base:
@@ -202,19 +211,26 @@ def main():
             if args.diffratio and args.sbdrThresh:
                 fout.write("%s\t%s\n" % (args.diffratio, args.sbdrThresh))
     
-    # Run p_enrich module
+    # Run p_enrich/enrich module
     if args.thresh and args.pairs and base:
         enrDir = makeDirName(args)
         if args.raw:
-            cmd = '%s p_enrich -t %s -s %s -r %s --raw_score_constraint %s -x _enriched.txt -o %s >> penrich.out' % (args.binary, args.thresh, args.pairs, args.raw, args.rawThresh, enrDir)
+            cmd = '%s %s -t %s -s %s -r %s --raw_score_constraint %s -x _enriched.txt' % (args.binary, enrModule, args.thresh, args.pairs, args.raw, args.rawThresh)
+            if not args.v13:
+                cmd += ' -f enrichFailReasons.tsv'
+            cmd += ' -o %s >> %s' % (enrDir, enrOut)
         else:
-            cmd = '%s p_enrich -t %s -s %s -x _enriched.txt -o %s >> penrich.out' % (args.binary, args.thresh, args.pairs, enrDir)
+            cmd = '%s %s -t %s -s %s -x _enriched.txt' % (args.binary, enrModule, args.thresh, args.pairs)
+            if not args.v13:
+                cmd += ' -f enrichFailReasons.tsv'
+            cmd +=' -o %s >> %s' % (enrDir,enrOut)
 
         print(cmd)
         subprocess.run(cmd, shell=True)
+        
     # Turn off enriched scatterplots generation, as they cannot be run without a list of enriched peptides
     elif args.enrichedScatters:
-        print("Warning: p_enrich module not run and list of enriched peptides not generated. --enrichedScatters will be set to False.")
+        print("Warning: %s module not run and list of enriched peptides not generated. --enrichedScatters will be set to False." % (enrModule))
         args.enrichedScatters = False
 
     
