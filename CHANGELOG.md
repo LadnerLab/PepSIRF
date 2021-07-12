@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.4.0] - 2021-07-09
+- #117, CMakelists has been updated to include a new flag for the CXX flags: '-Xpreprocessor'. This flag is used to make compilation in different environments for cpp easier. This issue arose when pepsirf was attempted to be compiled in 'Big Sur' and failed to compile due to an error with '-fopenmp'.
+- #116, link module had occuring error when protein sequences were not found in the metadata map. This has been changed so the situation is handled and an error is thrown stating a sequence was not found in the metadata file.
 - #114, s_enrich and p_enrich have been merged into a single module 'enrich'. A single and pair of samplenames work with the same behavior as s_ and p_enrich respectively. Additionally, >2 replicates can be analyzed to generate enriched peptides. See help options for an update on the options.
 - #103, enrich (previously two separate modules, s_enrich and p_enrich) module now features an optional flag that outputs in a tsv failed enrichment replicate sets. Any set replicates which failed to generate enriched peptides is listed in this file. Each row contains a column for replicate samplenames and a column containing the reason.
 
