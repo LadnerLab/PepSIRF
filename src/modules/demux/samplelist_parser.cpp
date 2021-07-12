@@ -88,6 +88,16 @@ std::vector<sample> samplelist_parser::parse( const options_demux *d_opts )
                 }
             
             // store the series of sample headers into the sample obj.
+            for(int index = 0; index < vec.size(); ++index)
+            {
+                if(vec[index].name == name){
+                    std::cout << "WARNING: Sample list contains duplicate sample names" << std::endl;
+                }
+                if(vec[index].get_first_id() == id1 && vec[index].get_second_id() == id2){
+                    std::cout << "WARNING: Sample ID pairs are not unique" << std::endl;
+                }
+            }
+
             sample samp( id1, id2, name, sample_id );
             vec.push_back( samp );
             ++sample_id;
