@@ -215,9 +215,15 @@ def main():
     if args.thresh and args.pairs and base:
         enrDir = makeDirName(args)
         if args.raw:
-            cmd = '%s %s -t %s -s %s -r %s --raw_score_constraint %s -x _enriched.txt -o %s >> %s' % (args.binary, enrModule, args.thresh, args.pairs, args.raw, args.rawThresh, enrDir, enrOut)
+            cmd = '%s %s -t %s -s %s -r %s --raw_score_constraint %s -x _enriched.txt' % (args.binary, enrModule, args.thresh, args.pairs, args.raw, args.rawThresh)
+            if not args.v13:
+                cmd += ' -f enrichFailReasons.tsv'
+            cmd += ' -o %s >> %s' % (enrDir, enrOut)
         else:
-            cmd = '%s %s -t %s -s %s -x _enriched.txt -o %s >> %s' % (args.binary, enrModule, args.thresh, args.pairs, enrDir, enrOut)
+            cmd = '%s %s -t %s -s %s -x _enriched.txt' % (args.binary, enrModule, args.thresh, args.pairs)
+            if not args.v13:
+                cmd += ' -f enrichFailReasons.tsv'
+            cmd +=' -o %s >> %s' % (enrDir,enrOut)
 
         print(cmd)
         subprocess.run(cmd, shell=True)
