@@ -65,6 +65,9 @@ std::vector<sample> samplelist_parser::parse( const options_demux *d_opts )
                          "will not be used. By default this optional second index flag is set to \'Index2\'. See the demux \"--help\" flag for "
                          "further information.\n";
         }
+
+    bool duplicate_name = false;
+    bool duplicate_id_pair = false;
     
     while( std::getline( samplelist_stream, line ) )
         {
@@ -88,15 +91,22 @@ std::vector<sample> samplelist_parser::parse( const options_demux *d_opts )
                 }
             
             // store the series of sample headers into the sample obj.
-            for(int index = 0; index < vec.size(); ++index)
-            {
-                if(vec[index].name.compare(name) == 0){
-                    std::cout << "WARNING: Sample list contains duplicate sample names" << std::endl;
+            if(!(duplicate_name && duplicate_id_pair))
+                {
+                for(int index = 0; index < vec.size(); ++index)
+                    {
+                        if(vec[index].name == name)
+                            {
+                                std::cout << "WARNING: Sample list contains duplicate sample names" << std::endl;
+                                duplicate_name = true;
+                            }
+                        if(vec[index].get_first_id() == id1 && vec[index].get_second_id() == id2)
+                            {
+                                std::cout << "WARNING: Sample ID pairs are not unique" << std::endl;
+                                duplicate_id_pair = true;
+                            }
+                    }
                 }
-                if(vec[index].get_first_id().compare(id1) == 0 && vec[index].get_second_id().compare(id2) == 0){
-                    std::cout << "WARNING: Sample ID pairs are not unique" << std::endl;
-                }
-            }
 
             sample samp( id1, id2, name, sample_id );
             vec.push_back( samp );
