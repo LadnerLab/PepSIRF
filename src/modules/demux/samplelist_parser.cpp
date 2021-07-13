@@ -95,12 +95,12 @@ std::vector<sample> samplelist_parser::parse( const options_demux *d_opts )
                 {
                 for(int index = 0; index < vec.size(); ++index)
                     {
-                        if(vec[index].name == name)
+                        if(vec[index].name == name  && !duplicate_name)
                             {
                                 std::cout << "WARNING: Sample list contains duplicate sample names" << std::endl;
                                 duplicate_name = true;
                             }
-                        if(vec[index].get_first_id() == id1 && vec[index].get_second_id() == id2)
+                        if(vec[index].get_first_id() == id1 && vec[index].get_second_id() == id2 && !duplicate_id_pair)
                             {
                                 std::cout << "WARNING: Sample ID pairs are not unique" << std::endl;
                                 duplicate_id_pair = true;
