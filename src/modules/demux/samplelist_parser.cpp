@@ -19,6 +19,10 @@ std::vector<sample> samplelist_parser::parse( const options_demux *d_opts )
     bool id1_found = false;
     bool id2_found = false;
     std::vector<sample> vec;
+    bool duplicate_name = false;
+    bool duplicate_id_pair = false;
+    std::vector<std::string> d_names;
+    std::vector<std::string> d_id_pairs;
 
     if( !samplelist_stream.is_open() )
         {
@@ -66,8 +70,7 @@ std::vector<sample> samplelist_parser::parse( const options_demux *d_opts )
                          "further information.\n";
         }
 
-    bool duplicate_name = false;
-    bool duplicate_id_pair = false;
+
     
     while( std::getline( samplelist_stream, line ) )
         {
@@ -91,26 +94,47 @@ std::vector<sample> samplelist_parser::parse( const options_demux *d_opts )
                 }
             
             // store the series of sample headers into the sample obj.
-            if(!(duplicate_name && duplicate_id_pair))
+            for(int index = 0; index < vec.size(); ++index)
                 {
-                for(int index = 0; index < vec.size(); ++index)
-                    {
-                        if(vec[index].name == name  && !duplicate_name)
-                            {
-                                std::cout << "WARNING: Sample list contains duplicate sample names" << std::endl;
-                                duplicate_name = true;
-                            }
-                        if(vec[index].get_first_id() == id1 && vec[index].get_second_id() == id2 && !duplicate_id_pair)
-                            {
-                                std::cout << "WARNING: Sample ID pairs are not unique" << std::endl;
-                                duplicate_id_pair = true;
-                            }
-                    }
+                    if(vec[index].name == name  && !duplicate_name)
+                        {
+                            d_names.push_back(name);
+                            if(!duplicate_name)
+                                {
+                                    std::cout << "WARNING: Sample list contains duplicate sample names" << std::endl;
+                                    duplicate_name = true;
+                                }
+                        }
+                    if(vec[index].get_first_id() == id1 && vec[index].get_second_id() == id2)
+                        {
+                            d_id_pairs.push_back(id1 + " " + id2);
+                            if(!duplicate_id_pair)
+                                {
+                                    std::cout << "WARNING: Sample index pairs are not unique" << std::endl;
+                                    duplicate_id_pair = true;
+                                }
+                            
+                        }
                 }
-
             sample samp( id1, id2, name, sample_id );
             vec.push_back( samp );
             ++sample_id;
+        }
+    if(duplicate_name)
+        {
+            std::cout << "The following sample names are included more than once:" << std::endl;
+            for(int index = 0; index < d_names.size(); index++)
+                {
+                    std::cout << d_names[index] << std::endl;
+                }
+        }
+    if(duplicate_id_pair)
+        {
+            std::cout << "The following index pairs are included more than once:" << std::endl;
+            for(int index = 0; index < d_id_pairs.size(); index++)
+                {
+                    std::cout << d_id_pairs[index] << std::endl;
+                }
         }
     if( samplelist_stream.bad() )
         {
