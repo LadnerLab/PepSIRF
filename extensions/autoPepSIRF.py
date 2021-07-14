@@ -259,7 +259,7 @@ def main():
             else:
                 print("Warning: 'colsumRepScatters' already exists! Col_Sum replicate scatterplots will be placed within existing directory.")
             
-            pD = io.fileDictLists(args.pairs)
+            pD = io.fileDictLists(args.pairs, header=False)
             csD = io.fileDictFull(args.colsum, valType="float", rowNames=True)
             for r1, r2 in pD.items():
                 for r3 in r2:
@@ -272,7 +272,7 @@ def main():
             else:
                 print("Warning: 'zRepScatters' already exists! Z score replicate scatterplots will be placed within existing directory.")
             
-            pD = io.fileDictLists(args.pairs)
+            pD = io.fileDictLists(args.pairs, header=False)
             csD = io.fileDictFull(args.zscore, valType="float", rowNames=True)
             for r1, r2 in pD.items():
                 for r3 in r2:
