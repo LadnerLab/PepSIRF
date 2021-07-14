@@ -259,10 +259,11 @@ def main():
             else:
                 print("Warning: 'colsumRepScatters' already exists! Col_Sum replicate scatterplots will be placed within existing directory.")
             
-            pD = io.fileDict(args.pairs, header=False)
+            pD = io.fileDictLists(args.pairs)
             csD = io.fileDictFull(args.colsum, valType="float", rowNames=True)
             for r1, r2 in pD.items():
-                scatter(csD[r1], r1, csD[r2], r2, "colsumRepScatters/%s_%s_CS.%s" % (r1, r2, args.scatterFormat), plotLog=True)
+                for r3 in r2:
+                    scatter(csD[r1], r1, csD[r3], r3, "colsumRepScatters/%s_%s_CS.%s" % (r1, r3, args.scatterFormat), plotLog=True)
 
         #Z score scatterplot generation
         if args.repZscatters and args.zscore and args.pairs:
@@ -271,10 +272,11 @@ def main():
             else:
                 print("Warning: 'zRepScatters' already exists! Z score replicate scatterplots will be placed within existing directory.")
             
-            pD = io.fileDict(args.pairs, header=False)
+            pD = io.fileDictLists(args.pairs)
             csD = io.fileDictFull(args.zscore, valType="float", rowNames=True)
             for r1, r2 in pD.items():
-                scatter(csD[r1], r1, csD[r2], r2, "zRepScatters/%s_%s_Z.%s" % (r1, r2, args.scatterFormat), plotLog=False)
+                for r3 in r2:
+                    scatter(csD[r1], r1, csD[r3], r3, "zRepScatters/%s_%s_Z.%s" % (r1, r3, args.scatterFormat), plotLog=False)
                 
         #Enriched peptides scaterplot generation
         if args.enrichedScatters and args.colsum:
