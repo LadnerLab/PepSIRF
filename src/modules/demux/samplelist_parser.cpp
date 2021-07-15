@@ -19,10 +19,10 @@ std::vector<sample> samplelist_parser::parse( const options_demux *d_opts )
     bool id1_found = false;
     bool id2_found = false;
     std::vector<sample> vec;
+    std::map<std::string, std::size_t> names;
+    std::map<std::string, std::size_t> id_pairs;
     bool duplicate_name = false;
-    bool duplicate_id_pair = false;
-    std::vector<std::string> d_names;
-    std::vector<std::string> d_id_pairs;
+    bool duplicate_id = false;
 
     if( !samplelist_stream.is_open() )
         {
@@ -93,49 +93,37 @@ std::vector<sample> samplelist_parser::parse( const options_demux *d_opts )
                     sample_id_set.emplace( id2 );
                 }
             
-            // store the series of sample headers into the sample obj.
-            for(int index = 0; index < vec.size(); ++index)
-                {
-                    if(vec[index].name == name  && !duplicate_name)
-                        {
-                            d_names.push_back(name);
-                            if(!duplicate_name)
-                                {
-                                    std::cout << "WARNING: Sample list contains duplicate sample names" << std::endl;
-                                    duplicate_name = true;
-                                }
-                        }
-                    if(vec[index].get_first_id() == id1 && vec[index].get_second_id() == id2)
-                        {
-                            d_id_pairs.push_back(id1 + " " + id2);
-                            if(!duplicate_id_pair)
-                                {
-                                    std::cout << "WARNING: Sample index pairs are not unique" << std::endl;
-                                    duplicate_id_pair = true;
-                                }
-                            
-                        }
-                }
+            ++names[name];
+            ++id_pairs[id1 + " " + id2];
             sample samp( id1, id2, name, sample_id );
             vec.push_back( samp );
             ++sample_id;
         }
-    if(duplicate_name)
-        {
-            std::cout << "The following sample names are included more than once:" << std::endl;
-            for(int index = 0; index < d_names.size(); index++)
-                {
-                    std::cout << d_names[index] << std::endl;
-                }
+        for(auto member : names)
+            {
+                if(member.second > 1)
+                    {
+                        if(!duplicate_name)
+                            {
+                                std::cout << "WARNING: The following sequence names appear muptiple times" << std::endl;
+                                duplicate_name = true;
+                            }
+                        std::cout << member.first << " Counts: " << member.second << std::endl;
+                    }
         }
-    if(duplicate_id_pair)
-        {
-            std::cout << "The following index pairs are included more than once:" << std::endl;
-            for(int index = 0; index < d_id_pairs.size(); index++)
-                {
-                    std::cout << d_id_pairs[index] << std::endl;
-                }
-        }
+        for(auto member : id_pairs)
+            {
+                if(member.second > 1)
+                    {
+                        if(!duplicate_id)
+                            {
+                                std::cout << "WARNING: The following index pairs appear muptiple times" << std::endl;
+                                duplicate_id = true;
+                            }
+                        std::cout << member.first << " Counts: " << member.second << std::endl;
+                    }
+            }
+
     if( samplelist_stream.bad() )
         {
             throw std::runtime_error( "Encountered error while reading file. Verify sample list file is in .tsv format." );
