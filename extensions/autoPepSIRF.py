@@ -59,7 +59,7 @@ def main():
     enrichArgs.add_argument("--repZscatters", default=False, action="store_true", help="Generate scatter plots comparing Z scores for all sample pairs. Even if set at command line, will be turned off when '--sEnrich' is used.")
     enrichArgs.add_argument("--repCSscatters", default=False, action="store_true", help="Generate scatter plots comparing colu_sum normalized scores for all sample pairs. Even if set at command line, will be turned off when '--sEnrich' is used.")
     enrichArgs.add_argument("--scatterFormat", default="png", help="Output file format for replicate scatterplots.")
-    enrichArgs.add_argument("--enrichedScatters", default=False, help="Generate scatter plots comparing col-sum normalized read counts between a sample and negative controls. Argument provided should be the path to enrichedScatterplots.py")
+    enrichArgs.add_argument("--enrichedScatters", default=False, help="Generate scatter plots comparing col-sum normalized read counts between a sample and negative controls. Argument provided should mirror the way that should enrichedScatterplots.py  be called on your system.")
 
     args = parser.parse_args()
     
@@ -280,7 +280,7 @@ def main():
                 
         #Enriched peptides scaterplot generation
         if args.enrichedScatters and args.colsum:
-            cmd = ('python3 %s -d %s -e %s --enrExt _enriched.txt -x NegativeControl -o %s/enrichedScatterplots --plotLog 1' % (args.enrichedScatters, args.colsum, enrDir, enrDir))
+            cmd = ('%s -d %s -e %s --enrExt _enriched.txt -x NegativeControl -o %s/enrichedScatterplots --plotLog 1' % (args.enrichedScatters, args.colsum, enrDir, enrDir))
             
             if args.negNormMat:
                 cmd += (' --negMatrix %s' % args.negNormMat)
