@@ -56,10 +56,10 @@ def main():
     enrichArgs.add_argument("--inferPairs", default=False, action="store_true", help="Infer sample pairs from names. This option assumes names of replicates will be identical with the exception of a final string denoted with a '_'. For example, these names would be considered two replicates of the same sample: VW_100_1X_A and VW_100_1X_B")
 
     outArgs = parser.add_argument_group('output options')
-    enrichArgs.add_argument("--repZscatters", default=False, action="store_true", help="Generate scatter plots comparing Z scores for all sample pairs. Even if set at command line, will be turned off when '--sEnrich' is used.")
-    enrichArgs.add_argument("--repCSscatters", default=False, action="store_true", help="Generate scatter plots comparing colu_sum normalized scores for all sample pairs. Even if set at command line, will be turned off when '--sEnrich' is used.")
-    enrichArgs.add_argument("--scatterFormat", default="png", help="Output file format for replicate scatterplots.")
-    enrichArgs.add_argument("--enrichedScatters", default=False, help="Generate scatter plots comparing col-sum normalized read counts between a sample and negative controls. Argument provided should mirror the way that should enrichedScatterplots.py  be called on your system.")
+    outArgs.add_argument("--repZscatters", default=False, action="store_true", help="Generate scatter plots comparing Z scores for all sample pairs. Even if set at command line, will be turned off when '--sEnrich' is used.")
+    outArgs.add_argument("--repCSscatters", default=False, action="store_true", help="Generate scatter plots comparing colu_sum normalized scores for all sample pairs. Even if set at command line, will be turned off when '--sEnrich' is used.")
+    outArgs.add_argument("--scatterFormat", default="png", help="Output file format for replicate scatterplots.")
+    outArgs.add_argument("--enrichedScatters", default=False, help="Generate scatter plots comparing col-sum normalized read counts between a sample and negative controls. Argument provided should mirror the way that should enrichedScatterplots.py  be called on your system.")
 
     args = parser.parse_args()
     
