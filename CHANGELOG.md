@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- #57, demux now has an additional option for providing a tab-delimited file with 5 ordered columns: 1) index name, which should correspond to a header name in the sample sheet, 2) read name, which should be either "r1" or "r2" to specify whether the index is in "--input_r1" or "--input_r2", 3) index start location (0-based, inclusive), 4) index length and 5) number of mismatched to allow. Note: the last three columns correspond to the info currently provided on the command line with "--f_index" and "--r_index" (or "--index1" and "--index2", with recent changes). With this feature, the demux module can now analyze an arbitrary amount of indexes to be found in r1 or r2 input sequences.
+- #57, demux output diagnostics may now provide more index matches for flexibility with demux changes in #57.
 
 ## [1.4.0] - 2021-07-09
 - #117, CMakelists has been updated to include a new flag for the CXX flags: '-Xpreprocessor'. This flag is used to make compilation in different environments for cpp easier. This issue arose when pepsirf was attempted to be compiled in 'Big Sur' and failed to compile due to an error with '-fopenmp'.

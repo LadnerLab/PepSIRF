@@ -19,7 +19,7 @@
 #include "sequence_indexer.h"
 #include "sample.h"
 #include <iomanip>
-
+#include "fif_parser.h"
 
 /**
  * Class for running the demultiplex module. Given a file of reads and a file containing
@@ -66,7 +66,7 @@ class module_demux : public module
      * Writes output to diagnostic_fname. Output as tab-delimited file, with three columns, samplename, index pair matches, variable region matches.
      * Output is optional, defaulted as unused.
     **/
-    void write_diagnostic_output( options_demux* d_opts, std::map<std::pair<std::string,std::string>,
+    void write_diagnostic_output( options_demux* d_opts, std::map<std::vector<std::string>,
                                   std::pair<std::string,std::vector<std::size_t>>>& diagnostic_map );
 
     /**
@@ -204,7 +204,8 @@ class module_demux : public module
 
     void create_index_map( sequential_map<sequence, sample>& map,
                            std::vector<sequence>& index_seqs,
-                           std::vector<sample>& samplelist
+                           std::vector<sample>& samplelist,
+                           std::vector<flex_idx>& flexible_idx_data
                          );
 
     /**
