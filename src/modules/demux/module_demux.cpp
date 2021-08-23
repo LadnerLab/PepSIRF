@@ -102,8 +102,8 @@ void module_demux::run( options *opts )
         }
 
     index_seqs     = fasta_p.parse( d_opts->index_fname );
-
-    create_index_map( index_map, index_seqs, samplelist);
+    sequential_map<sequence, sample> seq_lookup;
+    create_index_map( index_map, index_seqs, samplelist, seq_lookup);
     sequential_map<sequence, sample> sample_table;
     sequential_map<sequence,sample>::size_type num_samples = index_map.size();
 
@@ -172,7 +172,7 @@ void module_demux::run( options *opts )
     std::istream& reads_file_ref = *reads_ptr;
     std::istream& r2_reads_ref   = *r2_reads_ptr;
     std::vector<std::pair<std::string,size_t>> index_match_totals;
-
+    std::size_t processed_indexes = 0;
     for( const auto& curr_index : flexible_idx_data )
         {
             index_match_totals.emplace_back( std::make_pair( curr_index.idx_name, 0 ) );
@@ -199,11 +199,11 @@ void module_demux::run( options *opts )
                     fastq_p.parse( r2_reads_ref, r2_seqs, d_opts->read_per_loop );
                 }
 
-           #pragma omp parallel for private( seq_iter, nuc_seq, read_index, index_str, adapter, sample_id,  \
-                                              idx_match_list ) \
-               shared( seq_start, seq_length, d_opts, num_samples, reference_counts, library_seqs, index_seqs, r2_seqs ) \
-                reduction( +:processed_total, processed_success, concatemer_found ) \
-                schedule( dynamic )
+        //    #pragma omp parallel for private( seq_iter, nuc_seq, read_index, index_str, adapter, sample_id,  \
+        //                                       idx_match_list ) \
+        //        shared( seq_start, seq_length, d_opts, num_samples, reference_counts, library_seqs, index_seqs, r2_seqs ) \
+        //         reduction( +:processed_total, processed_success, concatemer_found ) \
+        //         schedule( dynamic )
 
             for( read_index = 0; read_index < reads.size(); ++read_index )
                 {
@@ -260,7 +260,7 @@ void module_demux::run( options *opts )
                             sequential_map<sequence, sample>::iterator index_match;
                             if( index.read_name == "r1" )
                                 {
-                                    index_match = _find_with_shifted_mismatch( index_map, reads[ read_index ],
+                                    index_match = _find_with_shifted_mismatch( seq_lookup, reads[ read_index ],
                                                                             index_idx, index.num_mismatch,
                                                                             index.idx_start, index.idx_len
                                                                             );
@@ -269,20 +269,25 @@ void module_demux::run( options *opts )
                                 {
                                     if( r2_seqs.size() == 0 )
                                         {
-                                            index_match = _find_with_shifted_mismatch( index_map, reads[ read_index ],
+                                            index_match = _find_with_shifted_mismatch( seq_lookup, reads[ read_index ],
                                                                                     index_idx, index.num_mismatch,
                                                                                     index.idx_start, index.idx_len
                                                                                     );
                                         }
                                     else
                                         {
-                                            index_match = _find_with_shifted_mismatch( index_map, r2_seqs[ read_index ],
+                                            index_match = _find_with_shifted_mismatch( seq_lookup, r2_seqs[ read_index ],
                                                                                     index_idx, index.num_mismatch,
                                                                                     index.idx_start, index.idx_len
                                                                                     );
                                         }
                                 }
-                            
+                            if( index_match != index_map.end() && index.read_name == "r2" )
+                                {
+                                    processed_indexes++;
+                                    index_match->first.name;
+                                    index_match->first.seq;
+                                }
                             idx_match_list.push_back( index_match );
                         }
 
@@ -420,6 +425,7 @@ void module_demux::run( options *opts )
     std::cout << processed_success << " records were found to be a match out of "
               << processed_total << " (" << ( (long double) processed_success / (long double) processed_total ) * 100
               << "%) successful.\n";
+    std::cout << processed_indexes << " recorded index matches.\n";
     // loop through index match totals
     for( std::size_t fif_index = 0; fif_index < flexible_idx_data.size(); ++fif_index )
         {
@@ -648,10 +654,10 @@ void module_demux::_zero_vector( std::vector<std::size_t>* vec )
 
 void module_demux::create_index_map( sequential_map<sequence, sample>& map,
                                      std::vector<sequence>& index_seqs,
-                                     std::vector<sample>& samplelist
+                                     std::vector<sample>& samplelist,
+                                     sequential_map<sequence, sample>& seq_lookup
                                    )
 {
-    // sequential_map<std::string, std::string> st_table;
     std::unordered_map<std::string, std::string> updated_index_seqs;    
     for( auto& index : index_seqs )
         {
@@ -670,18 +676,16 @@ void module_demux::create_index_map( sequential_map<sequence, sample>& map,
                                     index_seq_found = true;
                                     // add the index seq to the updated list (order doesnt matter)
                                     updated_index_seqs.emplace( index.name, index.seq );
+                                    seq_lookup[sequence( "", index.seq )] = samplelist[curr_sample];
                                 }
                         }
                     curr_sample++;
                 }
         }
-    // now we need to add partial and complete match refs.
-        
     // future function: add_match_references -> add the partial matches and complete matches by creating 
     for( std::size_t curr_sample = 0; curr_sample < samplelist.size(); ++curr_sample )
         {
             std::string concat_seq = "";
-            // for the current index in the fid
             for( std::size_t curr_idx = 0; curr_idx < samplelist[curr_sample].string_ids.size(); ++curr_idx )
                 {
                     // obtain the barcode for the current index for the current sample and add to sequence concat to create element.

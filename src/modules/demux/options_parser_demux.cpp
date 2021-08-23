@@ -50,20 +50,6 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
           "records read a time. A higher value will result in more memory usage by the program, but will also result in fewer disk accesses, "
           "increasing performance of the program.\n"
         )
-        ( "fif,f", po::value<std::string>( &opts_demux->flexible_idx_fname )->default_value( "" )
-                   ->notifier( [&]( const std::string &val ) {
-                             if( vm["index1"].empty()
-                                 && val.empty() )
-                                {
-                                  throw std::runtime_error( "The option '--fif' or '--index1' must be provided.\n");
-                                }
-                    }),
-          "The flexible index file can be provided as an alternative to the '--index1' and '--index2' options. The file must use the following format: "
-          "a tab-delimited file with 5 ordered columns: 1) index name, which should correspond to a header name in the sample sheet, 2) read name, which "
-          "should be either 'r1' or 'r2' (not case-sensitive) to specify whether the index is in '--input_r1' or '--input_r2', 3) index start location (0-based, inclusive), 4) "
-          "index length and 5) number of mismatched to allow. '--index1', '--index2', '--sname', '--sindex1', and 'sindex2' will be ignored if this option is provided."
-          "\n"
-        )
         ( "index1", po::value<std::string>()
                      ->notifier( [&]( const std::string &vals ) {
                              opts_demux->set_info( &options_demux::index1_data,
@@ -97,6 +83,24 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
           "Positional information for index2, optional. This argument must be passed in the same format specified for \"--index1\". "
           "If \"--input2\" is provided, this positional information is assummed to refer to the reads contained in this second, index-only fastq file. "
           "If \"--input_r2\" is NOT provided, this positional information is assumed to refer to the reads contained in the \"--input_r1\" fastq file.\n"
+        )
+        ( "fif,f", po::value<std::string>( &opts_demux->flexible_idx_fname )->default_value( "" )
+                   ->notifier( [&]( const std::string &val ) {
+                              if( vm["index1"].empty()
+                                 && val.empty() )
+                                {
+                                  throw std::runtime_error( "The option '--fif' or '--index1' must be provided.\n");
+                                }
+                              else if( !vm["index1"].empty() && !val.empty() )
+                                {
+                                  std::cout << "WARNING: Both options '--fif' and '--index1' have been provided. The option '--fif' will be used.\n";
+                                }
+                    }),
+          "The flexible index file can be provided as an alternative to the '--index1' and '--index2' options. The file must use the following format: "
+          "a tab-delimited file with 5 ordered columns: 1) index name, which should correspond to a header name in the sample sheet, 2) read name, which "
+          "should be either 'r1' or 'r2' (not case-sensitive) to specify whether the index is in '--input_r1' or '--input_r2', 3) index start location (0-based, inclusive), 4) "
+          "index length and 5) number of mismatched to allow. '--index1', '--index2', '--sname', '--sindex1', and 'sindex2' will be ignored if this option is provided."
+          "\n"
         )
         ( "concatemer,c", po::value<std::string>( &opts_demux->concatemer ),
         "Concatenated adapter/primer sequences (optional). The presence of this sequence within a read indicates that the "
