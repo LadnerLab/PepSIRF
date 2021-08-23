@@ -204,8 +204,7 @@ class module_demux : public module
 
     void create_index_map( sequential_map<sequence, sample>& map,
                            std::vector<sequence>& index_seqs,
-                           std::vector<sample>& samplelist,
-                           std::vector<flex_idx>& flexible_idx_data
+                           std::vector<sample>& samplelist
                          );
 
     /**

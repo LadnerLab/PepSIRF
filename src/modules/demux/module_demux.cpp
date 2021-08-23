@@ -103,7 +103,7 @@ void module_demux::run( options *opts )
 
     index_seqs     = fasta_p.parse( d_opts->index_fname );
 
-    create_index_map( index_map, index_seqs, samplelist, flexible_idx_data );
+    create_index_map( index_map, index_seqs, samplelist);
     sequential_map<sequence, sample> sample_table;
     sequential_map<sequence,sample>::size_type num_samples = index_map.size();
 
@@ -172,7 +172,6 @@ void module_demux::run( options *opts )
     std::istream& reads_file_ref = *reads_ptr;
     std::istream& r2_reads_ref   = *r2_reads_ptr;
     std::vector<std::pair<std::string,size_t>> index_match_totals;
-    std::size_t var_reg_match_total = 0;
 
     for( const auto& curr_index : flexible_idx_data )
         {
@@ -201,38 +200,36 @@ void module_demux::run( options *opts )
                 }
 
            #pragma omp parallel for private( seq_iter, nuc_seq, read_index, index_str, adapter, sample_id,  \
-                                              idx2_match, idx1_match ) \
+                                              idx_match_list ) \
                shared( seq_start, seq_length, d_opts, num_samples, reference_counts, library_seqs, index_seqs, r2_seqs ) \
-                reduction( +:processed_total, index_match_totals, var_reg_match_total, processed_success, concatemer_found ) \
+                reduction( +:processed_total, processed_success, concatemer_found ) \
                 schedule( dynamic )
 
             for( read_index = 0; read_index < reads.size(); ++read_index )
                 {
-                    std::size_t curr_index = 0;
+                    
                     auto match_found = [&]() -> bool
                         {
-                            bool found_match = true;
                             std::string concat_idx_seq = "";
-                            while( found_match && curr_index < idx_match_list.size() )
+                            std::size_t curr_index = 0;
+                            while( curr_index < idx_match_list.size() )
                                 {
                                     // determine which indexes found matches
-                                    auto index_match = idx_match_list[curr_index];
+                                    sequential_map<sequence, sample>::iterator index_match = idx_match_list[curr_index];
                                     if( index_match != index_map.end() )
                                         {
                                             concat_idx_seq.append( index_match->first.seq );
-                                            index_match_totals[curr_index].second++;
+                                            if( index_map.find( sequence( "", concat_idx_seq ) ) != index_map.end() )
+                                                index_match_totals[curr_index].second++;
+                                            // diagnostic file update here
                                         }
                                     else
                                         {
-                                            found_match = false;
+                                            return false;
                                         }
-                                    ++curr_index;
+                                    curr_index++;
                                 }
-                            if( index_map.find( sequence( "", concat_idx_seq ) ) != index_map.end() )
-                                {
-                                    return true;
-                                }
-                            return false;
+                            return true;
                         };
 
                     auto found_concatemer = [&]() -> bool
@@ -310,18 +307,17 @@ void module_demux::run( options *opts )
                                             std::cout << "ref match\n";
                                             sample_id = idx_match_list[0]->second.id;
                                             seq_match->second->at( sample_id ) += 1;
-                                            var_reg_match_total++;
                                             ++processed_success;
                                         }
-                                    else if( idx_match_list.size() > 1
+                                    else if( flexible_idx_data.size() > 1
                                         && seq_match != reference_counts.end() )
                                         {
                                             std::string concat_idx = "";
-                                            for( const auto& index : idx_match_list )
+                                            for( std::size_t curr_index = 0; curr_index < idx_match_list.size(); curr_index++ )
                                                 {
-                                                    if( index != index_map.end() )
+                                                    if( idx_match_list[curr_index] != index_map.end() )
                                                         {
-                                                            concat_idx.append( index->first.seq );
+                                                            concat_idx.append( idx_match_list[curr_index]->first.seq );
                                                         }
                                                 }
 
@@ -331,8 +327,8 @@ void module_demux::run( options *opts )
                                                 {
                                                     sample_id = d_id->second.id;
                                                     seq_match->second->at( sample_id ) += 1;
-                                                    var_reg_match_total++;
                                                     ++processed_success;
+                                                    // diagnostic output file update here
                                                 }
                                         }
                                     else if( seq_match == reference_counts.end()
@@ -429,10 +425,10 @@ void module_demux::run( options *opts )
         {
             std::cout << std::fixed << std::setprecision( 2 )
                     << ( ( long double ) index_match_totals[fif_index].second / ( long double ) processed_total ) * 100.00 << "% " <<
-                                index_match_totals[fif_index].second << " of total records matched index '" << flexible_idx_data[fif_index].idx_name << "'.\n";
+                                index_match_totals[fif_index].second << " of total records matched '" << flexible_idx_data[fif_index].idx_name << "'.\n";
         }
-    std::cout << std::fixed << std::setprecision( 2 ) << ( ( long double ) var_reg_match_total / ( long double ) processed_total ) * 100.00 << "% " <<
-                                var_reg_match_total << " of total records matched provided indexes + DNA tag.\n";
+    std::cout << std::fixed << std::setprecision( 2 ) << ( ( long double ) processed_success / ( long double ) processed_total ) * 100.00 << "% " <<
+                                processed_success << " of total records matched provided indexes + DNA tag.\n";
     if( d_opts->concatemer.length() > 0 )
         {
             std::cout << "The concatemer sequence was found " << concatemer_found << " times (" <<
@@ -652,8 +648,7 @@ void module_demux::_zero_vector( std::vector<std::size_t>* vec )
 
 void module_demux::create_index_map( sequential_map<sequence, sample>& map,
                                      std::vector<sequence>& index_seqs,
-                                     std::vector<sample>& samplelist,
-                                     std::vector<flex_idx>& flexible_idx_data
+                                     std::vector<sample>& samplelist
                                    )
 {
     // sequential_map<std::string, std::string> st_table;
