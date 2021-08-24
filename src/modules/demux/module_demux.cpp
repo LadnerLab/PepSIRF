@@ -50,8 +50,7 @@ void module_demux::run( options *opts )
     parallel_map<sequence, std::size_t> non_perfect_match_seqs;
 
     sequential_map<sequence, sample> index_map;
-    using barcode = std::pair<std::string, std::vector<std::size_t>>;
-    std::map<std::string,std::vector<barcode>> diagnostic_map;
+    std::unordered_map<std::string, std::vector<std::tuple<std::string, std::string, std::size_t>>> diagnostic_map;
     omp_set_num_threads( opts->num_threads );
 
     total_time.start();;
@@ -182,10 +181,10 @@ void module_demux::run( options *opts )
         {
             for( const auto sample : samplelist )
                 {
-                    std::vector<barcode> barcodes;
+                    std::vector<std::tuple<std::string, std::string, std::size_t>> barcodes;
                     for( std::size_t curr_barcode = 0; curr_barcode < sample.string_ids.size(); ++curr_barcode )
                         {
-                            barcodes[curr_barcode] = std::make_pair( sample.string_ids[curr_barcode], std::vector<std::size_t>( sample.string_ids.size(), 0 ) );
+                            barcodes.emplace_back( std::make_tuple( index_match_totals[curr_barcode].first, sample.string_ids[curr_barcode], 0 ) );
                         }
                     diagnostic_map.emplace( sample.name, barcodes );
                 }
@@ -211,23 +210,47 @@ void module_demux::run( options *opts )
                     auto match_found = [&]() -> bool
                         {
                             std::string concat_idx_seq = "";
-                            std::size_t curr_index = 0;
-                            while( curr_index < idx_match_list.size() )
+                            
+                            std::vector<std::string> matched_ids;
+                            for( std::size_t curr_index = 0; curr_index < idx_match_list.size(); curr_index++ )
                                 {
                                     // determine which indexes found matches
                                     sequential_map<sequence, sample>::iterator index_match = idx_match_list[curr_index];
                                     if( index_match != index_map.end() )
                                         {
+                                            matched_ids.emplace_back( index_match->second.string_ids[curr_index] );
                                             concat_idx_seq.append( index_match->first.seq );
                                             if( index_map.find( sequence( "", concat_idx_seq ) ) != index_map.end() )
-                                                index_match_totals[curr_index].second++;
-                                            // diagnostic file update here
+                                                {
+                                                    index_match_totals[curr_index].second++;
+                                                    // future: update_diagnostic_data - or something
+                                                    if( !d_opts->diagnostic_fname.empty()
+                                                        && matched_ids.size() == curr_index + 1 )
+                                                        {
+                                                            for( auto& sample : diagnostic_map )
+                                                                {
+                                                                    std::size_t curr_barcode = 0;
+                                                                    bool matching_sample = true;
+                                                                    while( curr_barcode < matched_ids.size() && matching_sample )
+                                                                        {
+                                                                            if( std::get<1>( sample.second[curr_barcode] ) != matched_ids[curr_barcode] )
+                                                                                {
+                                                                                    matching_sample = false;
+                                                                                }
+                                                                            else if( curr_barcode == curr_index )
+                                                                                {
+                                                                                    std::get<2>(sample.second[curr_barcode]) += 1;
+                                                                                }
+                                                                            ++curr_barcode;
+                                                                        }
+                                                                }
+                                                        }
+                                                }
                                         }
                                     else
                                         {
                                             return false;
                                         }
-                                    curr_index++;
                                 }
                             return true;
                         };
@@ -334,6 +357,7 @@ void module_demux::run( options *opts )
                                                     seq_match->second->at( sample_id ) += 1;
                                                     ++processed_success;
                                                     // diagnostic output file update here
+                                                    // add to diagnostic_map element .second in diagnostic map - library usage: DNA tag match count. 
                                                 }
                                         }
                                     else if( seq_match == reference_counts.end()
@@ -414,18 +438,11 @@ void module_demux::run( options *opts )
             r2_seqs.clear();
             
         }
-    // if( !d_opts->diagnostic_fname.empty() )
-    //     {
-    //         write_diagnostic_output( d_opts, diagnostic_map );
-    //     }
-
     total_time.stop();
-
 
     std::cout << processed_success << " records were found to be a match out of "
               << processed_total << " (" << ( (long double) processed_success / (long double) processed_total ) * 100
               << "%) successful.\n";
-    std::cout << processed_indexes << " recorded index matches.\n";
     // loop through index match totals
     for( std::size_t fif_index = 0; fif_index < flexible_idx_data.size(); ++fif_index )
         {
@@ -468,6 +485,7 @@ void module_demux::run( options *opts )
                          );
         }
     write_outputs( d_opts->output_fname, reference_counts, samplelist );
+    write_diagnostic_output( d_opts, diagnostic_map);
 }
 
 
@@ -553,40 +571,55 @@ void module_demux::add_seqs_to_map( parallel_map<sequence, std::vector<std::size
         }
 }
 
-void module_demux::write_diagnostic_output( options_demux* d_opts, std::map<std::vector<std::string>,
-             std::pair<std::string,std::vector<std::size_t>>>& diagnostic_map )
+void module_demux::write_diagnostic_output( options_demux* d_opts, std::unordered_map<std::string,
+             std::vector<std::tuple<std::string, std::string,std::size_t>>>& diagnostic_map )
 {
     std::ofstream outfile( d_opts->diagnostic_fname, std::ios::out );
-    std::map<std::vector<std::string>,
-             std::pair<std::string,std::vector<std::size_t>>>::iterator sample_iter = diagnostic_map.begin();
+
     std::string header = "Sample name\t";
-    std::vector<std::string> header_index_cols;
-    // this should be for the size of the index columns? I'm looking to reserve this vector to the size of the num of indexes.
-    header_index_cols.reserve( diagnostic_map.begin()->second.second.size() );
-    // for the length of indexes provided by fif list
-    
-        // add to header the first index name to every column index from end to beginning.
-        // the total range should be reduced by 1. So the first column in this list doesn't have the second index concatenated to it.
+    std::string header_col = "";
+    std::size_t index_right_offset = 1; // offset used to create a window allowing a concatenation to occur over each iteration.
+    std::size_t num_indexes = diagnostic_map.begin()->second.size();
+    // create column header for diagnostic file
+    for( std::size_t curr_index = 0; curr_index < num_indexes; curr_index++ )
+        {
+            for( std::size_t index_left_offset = 0; index_left_offset < index_right_offset ; index_left_offset++ )
+                {
+                    if( index_left_offset != 0 )
+                        {
+                            header_col.append( " + " );
+                        }
+                    std::string index_name = std::get<0>( diagnostic_map.begin()->second[index_left_offset] );
+                    header_col.append(index_name);
+                }
+            header.append( header_col );
+            header.append( "\t");
+            ++index_right_offset;
+        }
     if( !d_opts->library_fname.empty() )
         {
-            header.append( "\tDNA Tag Matches" );
+            header.append( "DNA Tag Matches" );
         }
     header.append( "\n" );
     outfile << header;
-
-    for( std::size_t sample_index = 0; sample_index < diagnostic_map.size(); sample_index++ )
+    // output counts for index matches; sample major
+    std::unordered_map<std::string,
+             std::vector<std::tuple<std::string, std::string,std::size_t>>>::iterator sample_iter = diagnostic_map.begin();
+    for( std::size_t curr_sample = 0; curr_sample < diagnostic_map.size(); curr_sample++ )
         {
-            const std::string curr = sample_iter->second.first;
-            const std::vector<std::size_t> curr_counts = sample_iter->second.second;
-            outfile << curr << "\t" << curr_counts[ 0 ] << "\t"
-                << curr_counts[ 1 ];
-
+            std::string line = "";
+            line.append( sample_iter->first );
+            for( const auto& index : sample_iter->second )
+                {
+                    line.append( "\t" );
+                    line.append( std::to_string( std::get<2>( index ) ) );
+                }
+            outfile << line;
             if( !d_opts->library_fname.empty() )
                 {
-                    outfile << "\t" << curr_counts[ 2 ];
+                    
                 }
             outfile << "\n";
-
             ++sample_iter;
         }
 
