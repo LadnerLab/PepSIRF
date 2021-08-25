@@ -186,6 +186,10 @@ void module_demux::run( options *opts )
                         {
                             barcodes.emplace_back( std::make_tuple( index_match_totals[curr_barcode].first, sample.string_ids[curr_barcode], 0 ) );
                         }
+                    if( !d_opts->library_fname.empty() )
+                        {
+                            barcodes.emplace_back( std::make_tuple("DNA Tag", "", 0) );
+                        }
                     diagnostic_map.emplace( sample.name, barcodes );
                 }
         }
@@ -336,6 +340,10 @@ void module_demux::run( options *opts )
                                             sample_id = idx_match_list[0]->second.id;
                                             seq_match->second->at( sample_id ) += 1;
                                             ++processed_success;
+                                            if( !d_opts->diagnostic_fname.empty() )
+                                                {
+                                                    
+                                                }
                                         }
                                     else if( flexible_idx_data.size() > 1
                                         && seq_match != reference_counts.end() )
@@ -358,6 +366,11 @@ void module_demux::run( options *opts )
                                                     ++processed_success;
                                                     // diagnostic output file update here
                                                     // add to diagnostic_map element .second in diagnostic map - library usage: DNA tag match count. 
+                                                    if( !d_opts->diagnostic_fname.empty() )
+                                                        {
+                                                            auto barcode_records = diagnostic_map.find( d_id->second.name )->second;
+                                                            std::get<2>( barcode_records[idx_match_list.size() + 1] ) += 1;
+                                                        }
                                                 }
                                         }
                                     else if( seq_match == reference_counts.end()
@@ -413,7 +426,6 @@ void module_demux::run( options *opts )
                                                                                                     );
                                                             if( seq_match != reference_counts.end() )
                                                                 {
-
                                                                     sample_id = d_id->second.id;
                                                                     seq_match->second->at( sample_id ) += 1;
                                                                     ++processed_success;
@@ -615,10 +627,6 @@ void module_demux::write_diagnostic_output( options_demux* d_opts, std::unordere
                     line.append( std::to_string( std::get<2>( index ) ) );
                 }
             outfile << line;
-            if( !d_opts->library_fname.empty() )
-                {
-                    
-                }
             outfile << "\n";
             ++sample_iter;
         }
