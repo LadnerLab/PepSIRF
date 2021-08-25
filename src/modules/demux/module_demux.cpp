@@ -50,6 +50,7 @@ void module_demux::run( options *opts )
     parallel_map<sequence, std::size_t> non_perfect_match_seqs;
 
     sequential_map<sequence, sample> index_map;
+    std::map<std::string, std::size_t> id_duplicates;
     std::unordered_map<std::string, std::vector<std::tuple<std::string, std::string, std::size_t>>> diagnostic_map;
     omp_set_num_threads( opts->num_threads );
 
@@ -76,6 +77,17 @@ void module_demux::run( options *opts )
                 }
         }
     std::vector<sample> samplelist = samplelist_p.parse( d_opts );
+
+    //set the duplicate ids
+    for(auto samp : samplelist)
+        {
+            std::string id_str = "";
+            for(std::string str : samp.string_ids)
+            {
+                id_str += str;
+            }
+            id_duplicates[id_str]++;
+        }
 
     std::ifstream reads_file( d_opts->input_r1_fname, std::ios_base::in );
     std::ifstream r2_reads;
@@ -493,10 +505,11 @@ void module_demux::run( options *opts )
 
             write_outputs( d_opts->aggregate_fname,
                            agg_map,
-                           samplelist
+                           samplelist,
+                           id_duplicates
                          );
         }
-    write_outputs( d_opts->output_fname, reference_counts, samplelist );
+    write_outputs( d_opts->output_fname, reference_counts, samplelist, id_duplicates );
     write_diagnostic_output( d_opts, diagnostic_map);
 }
 
@@ -638,7 +651,8 @@ void module_demux::write_diagnostic_output( options_demux* d_opts, std::unordere
 
 void module_demux::write_outputs( std::string outfile_name,
                                   parallel_map<sequence, std::vector<std::size_t>*>& seq_scores,
-                                  std::vector<sample>& samples
+                                  std::vector<sample>& samples,
+                                  std::map<std::string, std::size_t> id_duplicates
                                 )
 {
     std::ofstream outfile( outfile_name, std::ofstream::out );

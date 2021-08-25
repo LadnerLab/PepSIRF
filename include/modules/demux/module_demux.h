@@ -87,7 +87,8 @@ class module_demux : public module
      **/
     void write_outputs( std::string outfile_name,
                         parallel_map<sequence, std::vector<std::size_t>*>& seq_scores,
-                        std::vector<sample>& samples
+                        std::vector<sample>& samples,
+                        std::map<std::string, std::size_t> id_duplicates
                       );
 
 
