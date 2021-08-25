@@ -35,9 +35,11 @@ void module_demux::run( options *opts )
     sequential_map<sequence, sample> index_map;
     std::map<std::pair<std::string,std::string>,
              std::pair<std::string,std::vector<std::size_t>>> diagnostic_map;
+    
+    std::map<std::string, std::size_t> sample_duplicates;
     omp_set_num_threads( opts->num_threads );
 
-    total_time.start();;
+    total_time.start();
 
     // vector to store the .fna sequences that represent a designed library
     std::vector<sequence> library_seqs;
@@ -453,10 +455,11 @@ void module_demux::run( options *opts )
 
             write_outputs( d_opts->aggregate_fname,
                            agg_map,
-                           samplelist
+                           samplelist,
+                           sample_duplicates
                          );
         }
-    write_outputs( d_opts->output_fname, reference_counts, samplelist );
+    write_outputs( d_opts->output_fname, reference_counts, samplelist, sample_duplicates );
 }
 
 
@@ -583,7 +586,8 @@ void module_demux::write_diagnostic_output( options_demux* d_opts, std::map<std:
 
 void module_demux::write_outputs( std::string outfile_name,
                                   parallel_map<sequence, std::vector<std::size_t>*>& seq_scores,
-                                  std::vector<sample>& samples
+                                  std::vector<sample>& samples, std::map<std::string, 
+                                  std::size_t> sample_duplicates
                                 )
 {
     std::ofstream outfile( outfile_name, std::ofstream::out );
@@ -591,7 +595,6 @@ void module_demux::write_outputs( std::string outfile_name,
 
     const std::string DELIMITER = "\t";
     const std::string NEWLINE   = "\n";
-
 
     std::size_t index        = 0;
     std::size_t second_index = 0;
