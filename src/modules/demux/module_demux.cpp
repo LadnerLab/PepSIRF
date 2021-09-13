@@ -213,11 +213,11 @@ void module_demux::run( options *opts )
                     fastq_p.parse( r2_reads_ref, r2_seqs, d_opts->read_per_loop );
                 }
 
-        //    #pragma omp parallel for private( seq_iter, nuc_seq, read_index, index_str, adapter, sample_id,  \
-        //                                       idx_match_list ) \
-        //        shared( seq_start, seq_length, d_opts, num_samples, reference_counts, library_seqs, index_seqs, r2_seqs ) \
-        //         reduction( +:processed_total, processed_success, concatemer_found ) \
-        //         schedule( dynamic )
+           #pragma omp parallel for private( seq_iter, nuc_seq, read_index, index_str, adapter, sample_id,  \
+                                              idx_match_list ) \
+               shared( seq_start, seq_length, d_opts, num_samples, reference_counts, library_seqs, index_seqs, r2_seqs ) \
+                reduction( +:processed_total, processed_success, concatemer_found ) \
+                schedule( dynamic )
 
             for( read_index = 0; read_index < reads.size(); ++read_index )
                 {
@@ -393,11 +393,6 @@ void module_demux::run( options *opts )
                                                                                     seq_length
                                                                                     );
 
-                                            // The issue is with the id. The master version has the id 0 for every index in the map, but this version associates the sample accurately 
-                                            // and this is 21 where it is an issue. I should find out whether the sample should be correct for each index match. I don't actually 
-                                            // understand why this is the way. Zane set each index, say F_2 to have its value be the first sample found in the samplelist...
-                                            // He then accesses the below condition with the fact of the sample id always being 0. This is pointless. I have removed incrementing the
-                                            // count for the seq match by referencing the index match. Now set to literal value.
                                             if( seq_match != reference_counts.end() )
                                                 {
                                                     seq_match->second->at(0) += 1;
