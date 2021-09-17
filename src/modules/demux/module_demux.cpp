@@ -213,11 +213,11 @@ void module_demux::run( options *opts )
                     fastq_p.parse( r2_reads_ref, r2_seqs, d_opts->read_per_loop );
                 }
 
-           #pragma omp parallel for private( seq_iter, nuc_seq, read_index, index_str, adapter, sample_id,  \
-                                              idx_match_list ) \
-               shared( seq_start, seq_length, d_opts, num_samples, reference_counts, library_seqs, index_seqs, r2_seqs ) \
-                reduction( +:processed_total, processed_success, concatemer_found ) \
-                schedule( dynamic )
+        //    #pragma omp parallel for private( seq_iter, nuc_seq, read_index, index_str, adapter, sample_id,  \
+        //                                       idx_match_list ) \
+        //        shared( seq_start, seq_length, d_opts, num_samples, reference_counts, library_seqs, index_seqs, r2_seqs ) \
+        //         reduction( +:processed_total, processed_success, concatemer_found ) \
+        //         schedule( dynamic )
 
             for( read_index = 0; read_index < reads.size(); ++read_index )
                 {
@@ -415,20 +415,16 @@ void module_demux::run( options *opts )
 
                                             if( d_id != index_map.end() )
                                                 {
-                                                    std::size_t n_found = reads[ read_index ].seq.find( "N" );
-                                                    if( n_found == std::string::npos )
+                                                    auto seq_match = library_searcher.find( reads[ read_index ],
+                                                                                            std::get<2>( d_opts->seq_data ),
+                                                                                            seq_start,
+                                                                                            seq_length
+                                                                                            );
+                                                    if( seq_match != reference_counts.end() )
                                                         {
-                                                            auto seq_match = library_searcher.find( reads[ read_index ],
-                                                                                                    std::get<2>( d_opts->seq_data ),
-                                                                                                    seq_start,
-                                                                                                    seq_length
-                                                                                                    );
-                                                            if( seq_match != reference_counts.end() )
-                                                                {
-                                                                    sample_id = d_id->second.id;
-                                                                    seq_match->second->at( sample_id ) += 1;
-                                                                    ++processed_success;
-                                                                }
+                                                            sample_id = d_id->second.id;
+                                                            seq_match->second->at( sample_id ) += 1;
+                                                            ++processed_success;
                                                         }
                                                 }
                                         }
