@@ -84,6 +84,8 @@ class module_demux : public module
      *        vector of each seq_score. Note that samples[ i ].id must equal j[ i ] for each
      *        j = 1, 2, ... j.size(), i.e. The id of a sample must correspond with its entry in
      *        the count vector.
+     * @param sample_duplicates map of dna tags. contains the number of each dna tag that 
+     *        appears in a run. used to determine the samples included in the output.
      **/
     void write_outputs( std::string outfile_name,
                         parallel_map<sequence, std::vector<std::size_t>*>& seq_scores,
