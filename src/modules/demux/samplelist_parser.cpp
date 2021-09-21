@@ -99,30 +99,30 @@ std::vector<sample> samplelist_parser::parse( const options_demux *d_opts )
             vec.push_back( samp );
             ++sample_id;
         }
-        for(auto member : names)
-            {
-                if(member.second > 1)
-                    {
-                        if(!duplicate_name)
-                            {
-                                std::cout << "WARNING: The following sequence names appear muptiple times" << std::endl;
-                                duplicate_name = true;
-                            }
-                        std::cout << member.first << " Counts: " << member.second << std::endl;
-                    }
+    for(auto member : names)
+        {                
+            if(member.second > 1)
+                {
+                    if(!duplicate_name)
+                        {
+                            std::cout << "WARNING: The following sequence names appear muptiple times" << std::endl;
+                            duplicate_name = true;
+                        }
+                    std::cout << member.first << " Counts: " << member.second << std::endl;
+                }
         }
-        for(auto member : id_pairs)
-            {
-                if(member.second > 1)
-                    {
-                        if(!duplicate_id)
-                            {
-                                std::cout << "WARNING: The following index pairs appear muptiple times" << std::endl;
-                                duplicate_id = true;
-                            }
-                        std::cout << member.first << " Counts: " << member.second << std::endl;
-                    }
-            }
+    for(auto member : id_pairs)
+        {
+            if(member.second > 1)
+                {
+                    if(!duplicate_id)
+                        {
+                            std::cout << "WARNING: The following index pairs appear muptiple times" << std::endl;
+                            duplicate_id = true;
+                        }
+                    std::cout << member.first << " Counts: " << member.second << std::endl;
+                }
+        }
 
     if( samplelist_stream.bad() )
         {
