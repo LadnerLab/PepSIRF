@@ -17,6 +17,10 @@ std::vector<sample> samplelist_parser::parse( const options_demux *d_opts )
     bool sname_found = false;
     bool index_found = false;
     std::vector<sample> vec;
+    std::map<std::string, std::size_t> names;
+    std::map<std::string, std::size_t> id_sets;
+    bool duplicate_name = false;
+    bool duplicate_id = false;
 
     if( !samplelist_stream.is_open() )
         {
@@ -26,7 +30,7 @@ std::vector<sample> samplelist_parser::parse( const options_demux *d_opts )
     std::getline( samplelist_stream, header_row );
     boost::trim_right( header_row );
     boost::split( split_line, header_row, boost::is_any_of( "\t" ) );
-    // This needs to be changed to be a nested for loop. Now that more than 2 indexes can be provided, it is not a check for whether 1 or two indexes are given.
+    
     for( std::size_t curr_col = 0; curr_col < split_line.size(); ++curr_col )
         {
             for( std::size_t curr_index = 0; curr_index < d_opts->sample_indexes.size(); ++curr_index )
@@ -60,10 +64,13 @@ std::vector<sample> samplelist_parser::parse( const options_demux *d_opts )
                                       "\"--fif\" option. Verify the correct indexes are provided and matching for both the \"--sindex\" option or the \"--fif\" option "
                                       "(depending on which is provided).\n" );
         }
+
+
     
     // adjust to fit any number of indexes.
     while( std::getline( samplelist_stream, line ) )
         {
+            std::string id_set = "";
             boost::trim_right( line );
             boost::split( split_line, line, boost::is_any_of( "\t" ) );
             std::vector<std::string> seqs;
@@ -71,15 +78,44 @@ std::vector<sample> samplelist_parser::parse( const options_demux *d_opts )
             name = split_line[ samplename_idx ];
             for( const auto& index : index_cols )
                 {
+                    id_set += split_line[index];
                     sample_id_set.emplace( split_line[index] );
                     index_col_ids.emplace_back( split_line[index] );
                 }
-            
+            ++names[name];
+            ++id_sets[id_set];
             // store the series of sample headers into the sample obj.
             sample samp( index_col_ids, name, sample_id );
             vec.push_back( samp );
             ++sample_id;
         }
+    // check for duplicate sample names
+    for( auto member : names )
+        {                
+            if( member.second > 1 )
+                {
+                    if( !duplicate_name )
+                        {
+                            std::cout << "WARNING: The following sequence names appear muptiple times" << std::endl;
+                            duplicate_name = true;
+                        }
+                    std::cout << member.first << " Counts: " << member.second << std::endl;
+                }
+        }
+    // check for duplicate id sets
+    for( auto member : id_sets )
+        {
+            if( member.second > 1 )
+                {
+                    if(!duplicate_id)
+                        {
+                            std::cout << "WARNING: The following index pairs appear muptiple times" << std::endl;
+                            duplicate_id = true;
+                        }
+                    std::cout << member.first << " Counts: " << member.second << std::endl;
+                }
+        }
+
     if( samplelist_stream.bad() )
         {
             throw std::runtime_error( "Encountered error while reading file. Verify sample list file is in .tsv format." );

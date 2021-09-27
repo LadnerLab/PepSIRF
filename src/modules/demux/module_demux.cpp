@@ -18,8 +18,6 @@ void module_demux::run( options *opts )
     // options from the command line
     options_demux *d_opts = (options_demux*) opts;
 
-    std::string index_str;
-
     // fif use case
     std::vector<flex_idx> flexible_idx_data;
     std::vector<sequential_map<sequence, sample>::iterator> idx_match_list;
@@ -203,7 +201,7 @@ void module_demux::run( options *opts )
                     fastq_p.parse( r2_reads_ref, r2_seqs, d_opts->read_per_loop );
                 }
 
-           #pragma omp parallel for private( seq_iter, nuc_seq, read_index, index_str, adapter, sample_id,  \
+           #pragma omp parallel for private( seq_iter, nuc_seq, read_index, adapter, sample_id,  \
                                               idx_match_list ) \
                shared( seq_start, seq_length, d_opts, num_samples, reference_counts, library_seqs, index_seqs, r2_seqs, seq_duplicates ) \
                 reduction( +:processed_total, processed_success, concatemer_found ) \
@@ -477,6 +475,10 @@ void module_demux::run( options *opts )
                 ( (long double) concatemer_found / (long double) processed_total ) * 100 << "% of total).\n";
         }
 
+    if( !d_opts->diagnostic_fname.empty() )
+        {
+            write_diagnostic_output( d_opts, diagnostic_map);
+        }
     if( d_opts->aggregate_fname.length() > 0  )
         {
             parallel_map<sequence, std::vector<std::size_t>*> agg_map;
@@ -505,7 +507,6 @@ void module_demux::run( options *opts )
                          );
         }
     write_outputs( d_opts->output_fname, reference_counts, samplelist, seq_duplicates );
-    write_diagnostic_output( d_opts, diagnostic_map);
 }
 
 
