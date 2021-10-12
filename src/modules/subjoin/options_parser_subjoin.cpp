@@ -133,6 +133,12 @@ bool options_parser_subjoin::parse( int argc, char ***argv, options *opts )
           "peptide (i.e. row) names instead of sample (i.e. column) names. With the inclusion of this flag, the input files will "
           "be filtered on peptide names (rows) instead of sample names (column).\n"
         )
+        ( "avg_reps,a", po::bool_switch( &opts_subjoin->average_replicates )->default_value( false )
+          ->notifier( [&]( bool val ){ opts_subjoin->use_sample_names = !val; } ),
+          "Flag to include if the name lists input to the input, \"--input\", options is to be treated as a list of sample names to reference "
+          "columns to average. The first column of the name list file should be the desired name in the output matrix. The following columns "
+          "will be the columns to average (per each line in the file)."
+        )
         ( "duplicate_evaluation,d", po::value<std::string>()->default_value( "include" )
           ->notifier( [&]( const std::string& provided_value )
                       {

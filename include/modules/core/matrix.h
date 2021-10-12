@@ -1274,7 +1274,7 @@ class labeled_matrix : public matrix<ValType>
         }
 
     /**
-     * Filter the cols in this matrix, keeping only the rows whose
+     * Filter the cols in this matrix, keeping only the cols whose
      * labels are found in the provided container.
      * @tparam ContainerType the type of container the labels are
      *         stored in. Must be iterable by a range-based for loop.

@@ -79,124 +79,192 @@ void module_subjoin::run( options *opts )
     time_keep::timer time;
 
     time.start();
-
-    #pragma omp parallel for num_threads( 2 ) private( idx ) schedule( dynamic ) \
-            shared( matrix_name_pairs, parsed_score_data )
-    for( idx = 0; idx < matrix_name_pairs.size(); ++idx )
+    if( !s_opts->average_replicates )
         {
-            auto &score_name_pair = matrix_name_pairs[ idx ];
-
-            peptide_score_data_sample_major&
-                my_data = parsed_score_data[ idx ];
-
-            std::string& matrix_name_list  = score_name_pair.first;
-            // parse the matrix
-            peptide_scoring::parse_peptide_scores( my_data,
-                                                matrix_name_list
-                                                );
-            if( use_peptide_names )
+            #pragma omp parallel for num_threads( 2 ) private( idx ) schedule( dynamic ) \
+                    shared( matrix_name_pairs, parsed_score_data )
+            for( idx = 0; idx < matrix_name_pairs.size(); ++idx )
                 {
-                    my_data.scores = my_data.scores.transpose();
-                }
+                    auto &score_name_pair = matrix_name_pairs[ idx ];
 
-            // parse the peptide scores
-            std::vector<std::string> orig_names;
-            name_replacement_list replacement_names;
-            if( !score_name_pair.second.empty() )
-                {
-                    std::ifstream names_list( score_name_pair.second,
-                                            std::ios_base::in
-                                            );
-                    if( names_list.fail() )
+                    peptide_score_data_sample_major&
+                        my_data = parsed_score_data[ idx ];
+
+                    std::string& matrix_name_list  = score_name_pair.first;
+                    // parse the matrix
+                    peptide_scoring::parse_peptide_scores( my_data,
+                                                        matrix_name_list
+                                                        );
+                    if( use_peptide_names )
                         {
-                            throw std::runtime_error( "Unable to open name list '" + score_name_pair.second + "'.\n" );
+                            my_data.scores = my_data.scores.transpose();
                         }
-                    replacement_names = parse_namelist( orig_names, names_list );
-                }
 
-            std::unordered_set<std::string> names;
-            
+                    // parse the peptide scores
+                    std::vector<std::string> orig_names;
+                    name_replacement_list replacement_names;
+                    if( !score_name_pair.second.empty() )
+                        {
+                            std::ifstream names_list( score_name_pair.second,
+                                                    std::ios_base::in
+                                                    );
+                            if( names_list.fail() )
+                                {
+                                    throw std::runtime_error( "Unable to open name list '" + score_name_pair.second + "'.\n" );
+                                }
+                            replacement_names = parse_namelist( orig_names, names_list );
+                        }
+
+                    std::unordered_set<std::string> names;
+                    
+                    if( use_peptide_names )
+                        {
+                            names.insert( my_data.pep_names.begin(),
+                                            my_data.pep_names.end()
+                                            );
+                        }
+                    else
+                        {
+                            names.insert( my_data.sample_names.begin(),
+                                            my_data.sample_names.end()
+                                        );
+                        }
+                    std::size_t curr_name_idx;
+                    // verify given names from namelist exist
+                    for( curr_name_idx = 0; curr_name_idx < orig_names.size(); curr_name_idx++ )
+                        {
+                            if( names.find( orig_names[ curr_name_idx ] )  == names.end()
+                                && boost::to_lower_copy( orig_names[ curr_name_idx ] ) != "sequence name" )
+                                {
+                                    std::cout << "WARNING: The sample "
+                                            << orig_names[ curr_name_idx ]
+                                            << " was not found in "
+                                            << "the input matrix, "
+                                            << "and will not be included in the output.\n";
+                                    orig_names.erase( orig_names.begin() + curr_name_idx );
+                                }
+                        }
+                    if( !score_name_pair.second.empty() )
+                        {
+                            // filter out unused rows using namelist file.
+                            my_data.scores = my_data.scores.filter_rows( orig_names );
+                            std::vector<std::string> new_rows;
+                            new_rows.resize(orig_names.size());
+                            // verify no duplicate names
+                            std::unordered_set<std::string> output_names;
+                            for( const auto& output_name : replacement_names )
+                                {
+                                    output_names.emplace(output_name.second);
+                                }
+                            if( output_names.size() != replacement_names.size() )
+                                {
+                                    throw std::runtime_error(
+                                    "Duplicate name found in output names provided by '--input' or '--multi_file'. "
+                                    "Verify name list sample/peptide names do not include duplicate names.\n"
+                                                            );
+                                }
+                            // replace original names with updates for output
+                            for( auto& orig_name : my_data.scores.get_row_labels() )
+                                {
+                                    std::pair<std::string,std::uint32_t> new_name = 
+                                             std::make_pair(replacement_names.find(orig_name.first)->second, orig_name.second);
+                                    new_rows[new_name.second] = new_name.first;
+                                }
+                            my_data.scores.update_row_labels( new_rows );
+                            my_data.sample_names = new_rows;          
+                        }
+                }
+            peptide_score_data_sample_major& joined_data =
+                        parsed_score_data[ 0 ];
+            for( uint idx = 1; idx < parsed_score_data.size(); ++idx )
+                {
+                    joined_data.scores = join_with_resolve_strategy( joined_data,
+                                                                    parsed_score_data[ idx ],
+                                                                    s_opts->
+                                                                    duplicate_resolution_strategy
+                                                                    );
+
+                }
+            std::ofstream output( s_opts->out_matrix_fname, std::ios_base::out );
             if( use_peptide_names )
                 {
-                    names.insert( my_data.pep_names.begin(),
-                                    my_data.pep_names.end()
-                                    );
+                    output << joined_data.scores;
                 }
             else
                 {
-                    names.insert( my_data.sample_names.begin(),
-                                    my_data.sample_names.end()
-                                );
+                    output << joined_data.scores.transpose();
                 }
-            std::size_t curr_name_idx;
-            // verify given names from namelist exist
-            for( curr_name_idx = 0; curr_name_idx < orig_names.size(); curr_name_idx++ )
-                {
-                    if( names.find( orig_names[ curr_name_idx ] )  == names.end()
-                        && boost::to_lower_copy( orig_names[ curr_name_idx ] ) != "sequence name" )
-                        {
-                            std::cout << "WARNING: The sample "
-                                    << orig_names[ curr_name_idx ]
-                                    << " was not found in "
-                                    << "the input matrix, "
-                                    << "and will not be included in the output.\n";
-                            orig_names.erase( orig_names.begin() + curr_name_idx );
-                        }
-                }
-            if( !score_name_pair.second.empty() )
-                {
-                    // filter out unused rows using namelist file.
-                    my_data.scores = my_data.scores.filter_rows( orig_names );
-                    std::vector<std::string> new_rows;
-                    new_rows.resize(orig_names.size());
-                    // verify no duplicate names
-                    std::unordered_set<std::string> output_names;
-                    for( const auto& output_name : replacement_names )
-                        {
-                            output_names.emplace(output_name.second);
-                        }
-                    if( output_names.size() != replacement_names.size() )
-                        {
-                            throw std::runtime_error(
-                            "Duplicate name found in output names provided by '--input' or '--multi_file'. "
-                            "Verify name list sample/peptide names do not include duplicate names.\n"
-                                                    );
-                        }
-                    // replace original names with updates for output
-                    for( auto& orig_name : my_data.scores.get_row_labels() )
-                        {
-                            std::pair<std::string,std::uint32_t> new_name = std::make_pair(replacement_names.find(orig_name.first)->second, orig_name.second);
-                            new_rows[new_name.second] = new_name.first;
-                        }
-                    my_data.scores.update_row_labels( new_rows );
-                    my_data.sample_names = new_rows;          
-                }
-        }
-
-    std::ofstream output( s_opts->out_matrix_fname, std::ios_base::out );
-
-
-    peptide_score_data_sample_major& joined_data =
-        parsed_score_data[ 0 ];
-
-    // join all of the matrices
-    for( uint idx = 1; idx < parsed_score_data.size(); ++idx )
-        {
-            joined_data.scores = join_with_resolve_strategy( joined_data,
-                                                             parsed_score_data[ idx ],
-                                                             s_opts->
-                                                             duplicate_resolution_strategy
-                                                             );
-
-        }
-
-    if( use_peptide_names )
-        {
-            output << joined_data.scores;
         }
     else
         {
-            output << joined_data.scores.transpose();
+            peptide_score_data_sample_major my_data;
+            // open matrix file
+            peptide_scoring::parse_peptide_scores( my_data,
+                                                   matrix_name_pairs[0].first
+                                                 );
+            // open name list file
+            std::ifstream names_list( matrix_name_pairs[0].second,
+                                                    std::ios_base::in
+                                                    );
+            if( names_list.fail() )
+                {
+                    throw std::runtime_error( "Unable to open name list '" + matrix_name_pairs[0].second + "'.\n" );
+                }
+            
+            // function: average specified matrices
+            std::vector<std::string> sample_names;
+            
+            // get new column names and columns to average
+            std::string line;
+            std::unordered_map<std::string, std::vector<std::string>> avg_cols_names;
+            while( getline( names_list, line ) )
+                {
+                    std::vector<std::string> sample_names;
+                    boost::split( sample_names, line, boost::is_any_of( "," ) );
+                    if( sample_names.size() < 2 )
+                        {
+                            throw std::runtime_error( "Name list file does not contain enough columns. See \"subjoin --help\" for more information.\n" );
+                        }
+                    std::string new_col = sample_names[0];
+                    sample_names.emplace_back( new_col );
+                    sample_names.erase( sample_names.begin() );
+                    avg_cols_names.emplace( sample_names[0], sample_names.end() );
+                }
+            peptide_score_data_sample_major new_matrix;
+            new_matrix.scores.set_col_labels( sample_names );
+            new_matrix.scores.set_row_labels( my_data.pep_names );
+            // for each peptide
+            for( std::size_t curr_row = 0; curr_row < my_data.pep_names.size(); ++curr_row )
+                {
+                    std::size_t sum = 0;
+                    // for each avg column for the new matrix
+                    for( const auto& orig_cols : avg_cols_names )
+                        {
+                            // for each original name column to average
+                            for( const auto& column_name : orig_cols.second )
+                                {
+                                    // if the original name is found in the existing matrix
+                                    if( !std::any_of( my_data.sample_names.begin(), my_data.sample_names.end(),
+                                                 [&]( std::string sample_name )
+                                                 {
+                                                     if( sample_name == column_name )
+                                                        {
+                                                            sum += my_data.scores.operator()( curr_row, sample_name );
+                                                        }
+                                                 })
+                                    )
+                                        {
+                                            std::cout << "WARNING: The sample \"" + column_name + "\" could not be found.\n";
+                                        }
+                                }
+                            // store the sum in the new matrix at the given peptide and sample name
+                            new_matrix.scores.operator()( curr_row, orig_cols.first ) = sum/orig_cols.second.size();
+                        }
+                    
+                }
+            // output new matrix
+            std::ofstream output( s_opts->out_matrix_fname, std::ios_base::out );
+            output << new_matrix.scores;
         }
 
     time.stop();
