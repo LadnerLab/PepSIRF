@@ -104,6 +104,19 @@ namespace peptide_scoring
                                peptide_score_data_sample_major& data
                              );
 
+    /**
+     * Write sample_names and pep_names to dest with scores set to '0'.
+     * dest maintained as sample major matrix.
+     * 
+     * @param dest 
+     * @param sample_names 
+     * @param pep_names 
+     */
+    void create_sample_major_score_matrix( peptide_score_data_sample_major &dest,
+                                           std::vector<std::string> sample_names,
+                                           std::vector<std::string> pep_names
+                                          );
+
 }; // namespace peptide_scoring
 
 #endif // PEPTIDE_SCORING_HH_INCLUDED

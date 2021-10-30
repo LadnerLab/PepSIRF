@@ -171,7 +171,7 @@ void module_subjoin::run( options *opts )
                                     new_rows[new_name.second] = new_name.first;
                                 }
                             my_data.scores.update_row_labels( new_rows );
-                            my_data.sample_names = new_rows;          
+                            my_data.sample_names = new_rows;
                         }
                 }
             peptide_score_data_sample_major& joined_data =
@@ -212,6 +212,7 @@ void module_subjoin::run( options *opts )
                 }
             
             std::vector<std::string> sample_names;
+            std::vector<std::string> new_sample_names;
             // get new column names and columns to average
             std::string line;
             std::unordered_map<std::string, std::vector<std::string>> avg_cols_names; // first=new sample name, second=list of columns to get avg
@@ -224,55 +225,46 @@ void module_subjoin::run( options *opts )
                             throw std::runtime_error( "Name list file does not contain enough columns. See \"subjoin --help\" for more information.\n" );
                         }
                     std::string new_col = sample_names[0];
-                    // sample_names.emplace_back( new_col );
                     sample_names.erase( sample_names.begin() );
+                    new_sample_names.emplace_back( new_col );
                     avg_cols_names.emplace( new_col, sample_names );
-                    
                 }
             peptide_score_data_sample_major new_matrix;
-            for( const auto& sample : avg_cols_names )
-                {
-                    new_matrix.sample_names.emplace_back( sample.first );
-                }
-            new_matrix.pep_names = my_data.pep_names;
-            new_matrix.scores = labeled_matrix<double, std::string>( my_data.pep_names.size(), new_matrix.sample_names.size() );
-            new_matrix.scores.set_col_labels( my_data.pep_names );
-            new_matrix.scores.set_row_labels( new_matrix.sample_names );
-            // new_matrix.scores = new_matrix.scores.transpose();
+            peptide_scoring::create_sample_major_score_matrix( new_matrix, new_sample_names, my_data.pep_names );
             // for each peptide
-            for( std::size_t curr_row = 0; curr_row < my_data.pep_names.size(); ++curr_row )
+            for( std::size_t curr_pep = 0; curr_pep < new_matrix.scores.ncols(); ++curr_pep )
                 {
-                    std::size_t sum = 0;
                     // for each avg column for the new matrix
                     for( const auto& orig_cols : avg_cols_names )
                         {
+                            std::size_t sum = 0;
                             // for each original name column to average
                             for( const auto& column_name : orig_cols.second )
                                 {
                                     // if the original name is found in the existing matrix
                                     if( std::none_of( my_data.sample_names.begin(), my_data.sample_names.end(),
-                                                 [&]( std::string sample_name )
-                                                 {
-                                                     if( sample_name == column_name )
+                                                    [&]( std::string sample_name )
+                                                    {
+                                                        if( sample_name == column_name )
                                                         {
-                                                            sum += my_data.scores( sample_name, curr_row  );
+                                                            sum += my_data.scores( column_name, curr_pep );
                                                             return true;
                                                         }
                                                     return false;
-                                                 })
+                                                    })
                                     )
                                         {
                                             std::cout << "WARNING: The sample \"" + column_name + "\" could not be found.\n";
                                         }
                                 }
                             // store the sum in the new matrix at the given peptide and sample name
-                            new_matrix.scores( orig_cols.first, curr_row ) = sum/orig_cols.second.size();
+                            new_matrix.scores( orig_cols.first, curr_pep ) = (double)sum/orig_cols.second.size();
                         }
                     
                 }
-            // output new matrix
             std::ofstream output( s_opts->out_matrix_fname, std::ios_base::out );
-            output << new_matrix.scores;
+            std::cout << new_matrix.scores.to_string();
+            output << new_matrix.scores.transpose();
         }
 
     time.stop();

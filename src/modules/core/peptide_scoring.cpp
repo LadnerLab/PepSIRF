@@ -126,4 +126,24 @@ void peptide_scoring::write_peptide_scores( std::ostream& output,
         }
 }
 
+void peptide_scoring::create_sample_major_score_matrix( peptide_score_data_sample_major &dest, std::vector<std::string> sample_names, std::vector<std::string> pep_names )
+{
+    dest.pep_names.reserve( pep_names.size() );
+    dest.sample_names.reserve( sample_names.size() );
+    dest.pep_names = pep_names;
+    dest.sample_names = sample_names;
+    dest.scores = labeled_matrix<double, std::string>( pep_names.size(), sample_names.size() );
+    for( std::size_t index = 0; index < pep_names.size(); ++index )
+        {
+            for( std::size_t count_index = 0; count_index < sample_names.size(); ++count_index )
+                {
+                    dest.scores( index, count_index ) = 0.0;
+                }
+        }
+
+    dest.scores.set_row_labels( dest.pep_names );
+    dest.scores.set_col_labels( dest.sample_names );
+    dest.scores = dest.scores.transpose();
+}
+
 
