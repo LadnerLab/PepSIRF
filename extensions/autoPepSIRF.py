@@ -280,10 +280,10 @@ def main():
                 
         #Enriched peptides scaterplot generation
         if args.enrichedScatters and args.colsum:
-            cmd = ('%s -d %s -e %s --enrExt _enriched.txt -x NegativeControl -o %s/enrichedScatterplots --plotLog 1' % (args.enrichedScatters, args.colsum, enrDir, enrDir))
+            cmd = ('"%s" -d %s -e %s --enrExt _enriched.txt -x NegativeControl -o %s/enrichedScatterplots --plotLog 1' % (args.enrichedScatters, args.colsum, enrDir, enrDir))
             
             if args.negNormMat:
-                cmd += (' --negMatrix %s' % args.negNormMat)
+                cmd += (' --negMatrix "%s"' % args.negNormMat)
                 
             if args.negative_id:
                 cmd += (' -i %s' % args.negative_id)
