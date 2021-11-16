@@ -84,7 +84,8 @@ def main():
         base = ".".join(args.zscore.split(".")[:-1])[:-2]
     else:
         base = None
-        print("Not going to be able to do much without a score matrix of some type.")
+        print("Not going to be able to do much without one of the following arguments: " +
+        " --raw, --colsum, --diff, --diffratio, --zscore. Refer to usage documentation.")
     
     
     # If a raw count matrix is provided, but a colusum norm matrix is NOT
