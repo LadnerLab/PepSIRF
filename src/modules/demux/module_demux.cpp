@@ -17,6 +17,7 @@ void module_demux::run( options *opts )
 {
     // options from the command line
     options_demux *d_opts = (options_demux*) opts;
+    
 
     std::string index_str;
 

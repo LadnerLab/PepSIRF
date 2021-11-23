@@ -151,6 +151,11 @@ add_library( modules_info STATIC src/modules/info/module_info.cpp
 			 src/modules/info/options_parser_info.cpp
 		   )
 
+#add_library( modules_qc STATIC src/modules/qc/module_qc.cpp 
+#       src/modules/     
+
+#)
+
 
 option( BUILD_TESTS "Determines whether to build tests." ON )
 
