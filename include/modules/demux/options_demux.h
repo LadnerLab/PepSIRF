@@ -19,10 +19,11 @@ public:
     std::string library_fname; //!< Filename containing a FASTA file containing a librry of amino acid peptide sequences.
     std::string output_fname; //!< Filename of file to write output to.
     std::string aggregate_fname; //!< Filename to write aggregate counts to.
+    std::string flexible_idx_fname;
     std::string samplelist_fname; //!< Name of tab-delimited file containing a list of samples.
     std::string samplename;
-    std::string sample_idx1;
-    std::string sample_idx2;
+    std::string indexes;
+    std::vector<std::string> sample_indexes;
     std::string diagnostic_fname;
     std::tuple<std::size_t, std::size_t, std::size_t> index1_data; //!< 0 = start, 1 = len, 2 = num_mismatches
     std::tuple<std::size_t, std::size_t, std::size_t> index2_data; //!< 0 = start, 1 = len, 2 = num_mismatches

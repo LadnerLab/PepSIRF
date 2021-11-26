@@ -5,6 +5,7 @@
 #include "noop_iterator.h"
 #include "file_io.h"
 
+#include <map>
 #include <limits>
 #include <iostream>
 #include <fstream>
@@ -14,6 +15,8 @@ module_zscore::module_zscore() = default;
 
 void module_zscore::run( options *opts )
 {
+    std::map<std::string, std::size_t> names_map;
+    std::size_t names_size = 0;
     options_zscore *z_opts = (options_zscore*) opts;
     time_keep::timer time;
     time.start();
@@ -33,6 +36,30 @@ void module_zscore::run( options *opts )
         }
 
     bin_collection peptide_bins = peptide_bin_io::parse_bins( bins_file );
+
+
+    for(std::size_t index = 0; index < peptide_bins.size(); ++index)
+        {
+            for(auto peptidename : peptide_bins.bins[index].peptide_names)
+                {
+                    ++names_map[peptidename];
+                    ++names_size;
+                }
+        }
+
+    if(names_size != input.pep_names.size())
+        {
+            throw std::runtime_error("Bins file does not match peptide file");
+        }
+
+    for(size_t index = 0; index < input.pep_names.size(); ++index)
+        {
+            if(names_map[input.pep_names[index]] != 1)
+            {
+                throw std::runtime_error("Bins file does not match peptide file");
+            }
+        }
+
 
     auto& zscore_matrix = input.scores;
     omp_set_num_threads( z_opts->num_threads );

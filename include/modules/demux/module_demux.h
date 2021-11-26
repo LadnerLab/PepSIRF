@@ -5,6 +5,7 @@
 #include <fstream>
 #include <limits>
 #include <algorithm>
+#include <unordered_map>
 #include <boost/algorithm/string.hpp>
 #include "omp_opt.h"
 
@@ -19,7 +20,7 @@
 #include "sequence_indexer.h"
 #include "sample.h"
 #include <iomanip>
-
+#include "fif_parser.h"
 
 /**
  * Class for running the demultiplex module. Given a file of reads and a file containing
@@ -66,8 +67,8 @@ class module_demux : public module
      * Writes output to diagnostic_fname. Output as tab-delimited file, with three columns, samplename, index pair matches, variable region matches.
      * Output is optional, defaulted as unused.
     **/
-    void write_diagnostic_output( options_demux* d_opts, std::map<std::pair<std::string,std::string>,
-                                  std::pair<std::string,std::vector<std::size_t>>>& diagnostic_map );
+    void write_diagnostic_output( options_demux* d_opts, std::unordered_map<std::string,
+             std::vector<std::tuple<std::string,std::string,std::size_t>>>& diagnostic_map );
 
     /**
      * Writes output to the outfile_name.
@@ -83,10 +84,13 @@ class module_demux : public module
      *        vector of each seq_score. Note that samples[ i ].id must equal j[ i ] for each
      *        j = 1, 2, ... j.size(), i.e. The id of a sample must correspond with its entry in
      *        the count vector.
+     * @param sample_duplicates map of dna tags. contains the number of each dna tag that 
+     *        appears in a run. used to determine the samples included in the output.
      **/
     void write_outputs( std::string outfile_name,
                         parallel_map<sequence, std::vector<std::size_t>*>& seq_scores,
-                        std::vector<sample>& samples
+                        std::vector<sample>& samples,
+                        std::map<std::string, std::size_t> seq_duplicates
                       );
 
 
@@ -122,11 +126,11 @@ class module_demux : public module
      * @returns Iterator to the match if found, map.end() otherwise
      **/
     template<class M>
-        typename M::iterator _find_with_shifted_mismatch( M &map,
-                                                          sequence probe_seq,
-                                                          sequence_indexer& idx, std::size_t num_mism,
-                                                          std::size_t f_start, std::size_t f_len
-                                                         )
+    typename M::iterator _find_with_shifted_mismatch( M& map,
+                                                      sequence probe_seq,
+                                                      sequence_indexer& idx, std::size_t num_mism,
+                                                      std::size_t f_start, std::size_t f_len
+                                                    )
         {
             std::vector<std::pair<sequence *, int>> query_matches;
             sequence *best_match = nullptr;
@@ -202,9 +206,16 @@ class module_demux : public module
      **/
     sequence *_get_min_dist( std::vector<std::pair<sequence *, int>>& matches );
 
+    /**
+     * Creates two maps (maybe this should be separated). One 'map' will contain the concatenated sequence combinations
+     * generating partial and complete match elements in 'map' used to later to determine if a match is found and the degree.
+     * The second map is used to create a referencable 'seq_lookup' map. Generated elements are single sequences with no "id"
+     * but only the sequence. This is used in finding matches with the 'find_with_shifted_mismatch' function.
+     **/
     void create_index_map( sequential_map<sequence, sample>& map,
                            std::vector<sequence>& index_seqs,
-                           std::vector<sample>& samplelist
+                           std::vector<sample>& samplelist,
+                           sequential_map<sequence, sample>& seq_lookup
                          );
 
     /**

@@ -15,10 +15,10 @@ std::string options_demux::get_arguments()
                   " --aa_counts             " << aggregate_fname << "\n" <<
                   " --translate_aggregates  " << std::boolalpha << translation_aggregation  << "\n" <<
                   " --index                 " << index_fname << "\n" <<
+                  " --fif                   " << flexible_idx_fname << "\n" <<
                   " --samplelist            " << samplelist_fname << "\n" <<
                   " --sname                 " << samplename << "\n" <<
-                  " --sindex1               " << sample_idx1 << "\n" <<
-                  " --sindex2               " << sample_idx2 << "\n" <<
+                  " --sindex                " << indexes << "\n" <<
                   " --library               " << library_fname << "\n" <<
                   " --read_per_loop         " << read_per_loop << "\n" <<
                   " --num_threads           " << num_threads << "\n" <<
