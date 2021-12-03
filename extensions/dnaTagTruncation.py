@@ -43,6 +43,12 @@ def main():
         for i, s in enumerate(newSeqs):
             countD[s].append(names[i])
         
+        # Write out file with non-unique names, one row per sequence that is non-unique
+        with open("trunc%d_%s_notUniqGrouped.tsv" % (each, baseName.split(".")[0]), "w") as foutG:
+            for k,v in countD.items():
+                if len(v) >1:
+                    foutG.write("%s\t%s\n" % (k, "\t".join(v)))
+        
         #Make list of sequences that are still unique, and another for those that aren't
         uniq = []
         notUniq = []
