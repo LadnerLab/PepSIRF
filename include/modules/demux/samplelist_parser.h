@@ -16,12 +16,13 @@ class samplelist_parser
  public:
     /**
      * Parse a tab-delimited file containing samples, one per line.
-     * @param d_opts The pointer references the demux options. Specifically
-     *               the samplelist filename and headers: samplename, 
-     *               index1 and index2 are accessed to create samples.
+     * @param samplelist_fname the samplelist filename
+     * @param sname samplename header
+     * @param index_fname sequence data filename
+     * @param indexes the headers for the indexes, default: Index1 and Index2
      * @returns vector of samples, one per line in the input file.
      **/
-    std::vector<sample> parse( const options_demux *d_opts );
+    std::vector<sample> parse( const std::string samplelist_fname, const std::string sname, const std::string index_fname, const std::vector<std::string> indexes );
 
     /**
      * Verifies the sample IDs in the samplelist columns used are found in the index id set. Prints missing IDs as warning.

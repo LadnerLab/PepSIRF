@@ -3,9 +3,9 @@
 #include <boost/algorithm/string.hpp>
 
 // Pass not just filename, but also the string array of headers
-std::vector<sample> samplelist_parser::parse( const options_demux *d_opts )
+std::vector<sample> samplelist_parser::parse( const std::string samplelist_fname, const std::string sname, const std::string index_fname, const std::vector<std::string> indexes )
 { 
-    std::ifstream samplelist_stream( d_opts->samplelist_fname );
+    std::ifstream samplelist_stream( samplelist_fname );
     std::size_t samplename_idx;
     std::vector<std::size_t> index_cols;
     std::string line, header_row;
@@ -21,7 +21,6 @@ std::vector<sample> samplelist_parser::parse( const options_demux *d_opts )
     std::map<std::string, std::size_t> id_sets;
     bool duplicate_name = false;
     bool duplicate_id = false;
-
     if( !samplelist_stream.is_open() )
         {
             throw std::runtime_error( "File could not be opened. Verify sample list file exists." );
@@ -33,14 +32,14 @@ std::vector<sample> samplelist_parser::parse( const options_demux *d_opts )
     
     for( std::size_t curr_col = 0; curr_col < split_line.size(); ++curr_col )
         {
-            for( std::size_t curr_index = 0; curr_index < d_opts->sample_indexes.size(); ++curr_index )
+            for( std::size_t curr_index = 0; curr_index < indexes.size(); ++curr_index )
                 {
-                    if( split_line.at( curr_col ) == d_opts->samplename )
+                    if( split_line.at( curr_col ) == sname )
                         {
                             sname_found = true;
                             samplename_idx = curr_col;
                         }
-                    else if( split_line.at( curr_col ) == d_opts->sample_indexes[curr_index] )
+                    else if( split_line.at( curr_col ) == indexes[curr_index] )
                         {
                             index_found = true;
                             index_cols.emplace_back( curr_col );
@@ -49,18 +48,18 @@ std::vector<sample> samplelist_parser::parse( const options_demux *d_opts )
         }
     if( !sname_found )
         {
-            throw std::runtime_error( "Error: The flag \"--sname\" value \'" + d_opts->samplename + "\' could not be found in the sample sheet. "
+            throw std::runtime_error( "The flag \"--sname\" value \'" + sname + "\' could not be found in the sample sheet. "
                                 "Verify the sample sheet contains the specified column header names. See demux \"--help\" flag for further help.\n" );
         }
     if( !index_found )
         {
-            throw std::runtime_error( "Error: The provided sample sheet does not contain index names found in either the \"--sindex\" option or the \"--fif\" option "
+            throw std::runtime_error( "The provided sample sheet does not contain index names found in either the \"--sindex\" option or the \"--fif\" option "
                                       "(depending on which was provided). "
                                       "Verify the sample sheet contains the correct column header names. See demux \"--help\" flag for further information.\n" );
         }
-    if( index_cols.size() != d_opts->sample_indexes.size() )
+    if( index_cols.size() != indexes.size() )
         {
-            throw std::runtime_error( "Error: The provided sample sheet does not contain all of the index names provided by either the \"--sindex\" or the "
+            throw std::runtime_error( "The provided sample sheet does not contain all of the index names provided by either the \"--sindex\" or the "
                                       "\"--fif\" option. Verify the correct indexes are provided and matching for both the \"--sindex\" option or the \"--fif\" option "
                                       "(depending on which is provided).\n" );
         }
@@ -120,7 +119,7 @@ std::vector<sample> samplelist_parser::parse( const options_demux *d_opts )
         {
             throw std::runtime_error( "Encountered error while reading file. Verify sample list file is in .tsv format." );
         }
-    std::ifstream index_stream( d_opts->index_fname );
+    std::ifstream index_stream( index_fname );
     if( !index_stream.is_open() )
         {
             throw std::runtime_error( "File could not be opened. Verify fasta file exists." );

@@ -250,7 +250,7 @@ TEST_CASE( "samplelist_parser is able to read files that exist, properly creates
     // }
 }
 
-TEST_CASE( "Test String Indexing", "[string_indexer]" )
+TEST_CASE( "Test String Indexing", "[sequence_indexer]" )
 {
     std::string origin = "";
     sequence_indexer si;
@@ -305,7 +305,7 @@ TEST_CASE( "Test String Indexing", "[string_indexer]" )
 
 }
 
-TEST_CASE( "Reference-independent Demultiplexing" )
+TEST_CASE( "Reference-independent Demultiplexing", "[module_demux]" )
 {
     std::vector<sequence>
         values
@@ -477,6 +477,19 @@ TEST_CASE( "Test Count Generation", "[module_demux]" )
 
     REQUIRE( seq_match != my_map.end() );
 
+}
+
+TEST_CASE( "Output duplicate samplelist names", "[module_demux]" )
+{
+    module_demux md;
+    options_demux opts;
+    opts.samplelist_fname = "../test/test_samplelist.tsv";
+   /* opts.flexible_idx_fname = ;
+    opts.seq_data = ;
+    opts.output_fname = ;
+    opts.samplelist_fname = ;*/
+    md.run(&opts)
+    
 }
 
 TEST_CASE( "Fastq_scorer", "[fastq_score]" )

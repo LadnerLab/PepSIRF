@@ -73,7 +73,6 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
           "Positional information for the DNA tags. This argument must be passed in the same format specified for \"index1\".\n"
         )
         ( "index2", po::value<std::string>()
-                     ->default_value( "0,0,0" )
                      ->notifier( [&]( const std::string &vals ) {
                              opts_demux->set_info( &options_demux::index2_data,
                                                     vals
@@ -137,13 +136,7 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
           "Used to specify the header for the sample name column in the samplelist. By default \'SampleName\' is set as the column header name.\n"
         )
         (
-          "sindex", po::value<std::string>( &opts_demux->indexes )->notifier(
-                                            [&]( const std::string &vals ) {
-                                                                              std::vector<std::string> indexes;
-                                                                              boost::split( indexes, vals, boost::is_any_of( ",") );
-                                                                              opts_demux->sample_indexes = indexes;
-                                                                           }
-                                          ),
+          "sindex", po::value<std::string>( &opts_demux->indexes )->default_value( "Index1,Index2" ),
           "Used to specify the header for the index 1 and optional index 2 column in the samplelist. This is an alternative to using the \"--fif\" option.\n"
         )
         ( "diagnostic_info,d", po::value<std::string>( &opts_demux->diagnostic_fname )->default_value( "" ),

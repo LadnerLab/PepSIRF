@@ -24,16 +24,21 @@ void module_demux::run( options *opts )
 
     if( d_opts->flexible_idx_fname.empty() )
         {
-            flexible_idx_data.emplace_back( d_opts->sample_indexes[0],            // index name
+            std::vector<std::string> indexes;
+            boost::split( indexes, d_opts->indexes, boost::is_any_of( ",") );
+            flexible_idx_data.emplace_back( indexes[0],            // index name
                                             "r1",                                 // read direction
                                             std::get<0>( d_opts->index1_data ),   // start
                                             std::get<1>( d_opts->index1_data ),   // length
                                             std::get<2>( d_opts->index1_data ) ); // num mismatch
-            flexible_idx_data.emplace_back( d_opts->sample_indexes[1],
+            if( std::get<1>(d_opts->index2_data) != 0 ) /* if no length is given then r2 was not provided*/
+                {
+                    flexible_idx_data.emplace_back( indexes[1],
                                             "r2",
                                             std::get<0>( d_opts->index2_data ),
                                             std::get<1>( d_opts->index2_data ),
                                             std::get<2>( d_opts->index2_data ));
+                }
         }
     else
         {
@@ -68,14 +73,14 @@ void module_demux::run( options *opts )
     // parse samplelist
     samplelist_parser samplelist_p;
 
-    if( !d_opts->flexible_idx_fname.empty() )
+    for( std::size_t curr_row = 0; curr_row < flexible_idx_data.size(); ++curr_row )
         {
-            for( std::size_t curr_row = 0; curr_row < flexible_idx_data.size(); ++curr_row )
-                {
-                    d_opts->sample_indexes.emplace_back( flexible_idx_data[curr_row].idx_name );
-                }
+            d_opts->sample_indexes.emplace_back( flexible_idx_data[curr_row].idx_name );
         }
-    std::vector<sample> samplelist = samplelist_p.parse( d_opts );
+    std::vector<sample> samplelist = samplelist_p.parse( d_opts->samplelist_fname,
+                                                         d_opts->samplename,
+                                                         d_opts->index_fname,
+                                                         d_opts->sample_indexes );
 
     std::ifstream reads_file( d_opts->input_r1_fname, std::ios_base::in );
     std::ifstream r2_reads;
@@ -231,16 +236,14 @@ void module_demux::run( options *opts )
                                                         {
                                                             for( auto& sample : diagnostic_map )
                                                                 {
-                                                                    std::size_t curr_barcode = 0;
-                                                                    while( curr_barcode < matched_ids.size()
-                                                                           && std::get<1>( sample.second[curr_barcode] ) == matched_ids[curr_barcode] )
+                                                                    for( std::size_t curr_barcode = 0; curr_barcode < matched_ids.size(); ++curr_barcode )
                                                                         {
                                                                             // if the current samples barcode id matches the current id from the found match
-                                                                            if( curr_barcode == curr_index )
+                                                                            if( std::get<1>( sample.second[curr_barcode] ) == matched_ids[curr_barcode]
+                                                                                )
                                                                                 {
                                                                                     std::get<2>(sample.second[curr_barcode]) += 1;
                                                                                 }
-                                                                            ++curr_barcode;
                                                                         }
                                                                 }
                                                         }
@@ -341,7 +344,7 @@ void module_demux::run( options *opts )
                                                                 }
                                                         }
 
-                                                     d_id = index_map.find( sequence( "", concat_idx ) );
+                                                    d_id = index_map.find( sequence( "", concat_idx ) );
                                                 }
                                             else
                                                 {
@@ -668,8 +671,8 @@ void module_demux::write_outputs( std::string outfile_name,
     header.append( NEWLINE );
 
     outfile << header;
-
-    for( index = 0; index < seq_scores.size(); ++index )
+    std::size_t num_scores = seq_scores.size();
+    for( index = 0; index < num_scores; ++index )
         {
             const sequence& curr = seq_iter->first;
             const std::vector<std::size_t> *curr_counts = seq_iter->second;
