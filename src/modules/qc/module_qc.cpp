@@ -13,6 +13,7 @@
 #include "fastq_sequence.h"
 #include "fastq_score.h"
 #include "fastq_parser.h"
+#include "samplelist_parser.h"
 
 
 void module_qc::run(options *opts)
@@ -46,7 +47,8 @@ void module_qc::run(options *opts)
     std::size_t read_index = 0;
     struct time_keep::timer total_time;
     sequential_map<sequence, sample> index_map;
-    std::vector<sample> samplelist;
+    samplelist_parser samplelist_p;
+    std::vector<sample> samplelist; //samplelist_p;
 
     std::vector<std::pair<std::string,size_t>> index_match_totals;
     for(const auto& curr_index : flexible_idx_data)
