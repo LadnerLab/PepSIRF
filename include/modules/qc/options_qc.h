@@ -1,0 +1,22 @@
+#include <string>
+#include <tuple>
+#include <sstream>
+#include <vector>
+#include "options.h"
+
+class options_qc : public options
+{
+    public:
+        options_qc(): DEFAULT_READ_PER_LOOP( 100000 ), DEFAULT_OUTPUT_FNAME( "output.csv" ){}
+        std::string idx_fname;
+        std::tuple<std::size_t, std::size_t, std::size_t> index1_data;
+        std::tuple<std::size_t, std::size_t, std::size_t> index2_data;
+        std::string samplelist_fname;
+        std::vector<std::string> sample_indexes;
+
+        long int read_per_loop;
+        const long int DEFAULT_READ_PER_LOOP;
+        const std::string DEFAULT_OUTPUT_FNAME;
+
+        std::string get_arguments();
+};
