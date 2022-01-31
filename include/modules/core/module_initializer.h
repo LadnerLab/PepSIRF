@@ -17,6 +17,7 @@
 #include "options_link.h"
 #include "options_enrich.h"
 #include "options_info.h"
+#include "options_qc.h"
 
 // options parsers for each module
 #include "options_parser_deconv.h"
@@ -28,6 +29,7 @@
 #include "options_parser_link.h"
 #include "options_parser_enrich.h"
 #include "options_parser_info.h"
+#include "options_parser_qc.h"
 
 // the modules themselves
 #include "module_deconv.h"

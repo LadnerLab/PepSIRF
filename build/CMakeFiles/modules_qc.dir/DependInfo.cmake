@@ -5,6 +5,8 @@ set(CMAKE_DEPENDS_LANGUAGES
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
   "/home/isaiah/Documents/pepsirf/PepSIRF/src/modules/qc/module_qc.cpp" "/home/isaiah/Documents/pepsirf/PepSIRF/build/CMakeFiles/modules_qc.dir/src/modules/qc/module_qc.cpp.o"
+  "/home/isaiah/Documents/pepsirf/PepSIRF/src/modules/qc/options_parser_qc.cpp" "/home/isaiah/Documents/pepsirf/PepSIRF/build/CMakeFiles/modules_qc.dir/src/modules/qc/options_parser_qc.cpp.o"
+  "/home/isaiah/Documents/pepsirf/PepSIRF/src/modules/qc/options_qc.cpp" "/home/isaiah/Documents/pepsirf/PepSIRF/build/CMakeFiles/modules_qc.dir/src/modules/qc/options_qc.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
 

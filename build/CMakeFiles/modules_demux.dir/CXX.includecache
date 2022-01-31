@@ -225,6 +225,8 @@ boost/algorithm/string.hpp
 -
 module_demux.h
 -
+options_qc.h
+../include/modules/demux/options_qc.h
 sample.h
 ../include/modules/demux/sample.h
 
@@ -273,6 +275,18 @@ stdexcept
 -
 options.h
 ../include/modules/parsers/options.h
+
+../include/modules/qc/options_qc.h
+string
+-
+tuple
+-
+sstream
+-
+vector
+-
+options.h
+../include/modules/qc/options.h
 
 ../lib/parallel_hashmap/phmap.h
 algorithm
@@ -475,6 +489,8 @@ predicate.h
 /home/isaiah/Documents/pepsirf/PepSIRF/src/modules/demux/samplelist_parser.cpp
 samplelist_parser.h
 /home/isaiah/Documents/pepsirf/PepSIRF/src/modules/demux/samplelist_parser.h
+options_qc.h
+/home/isaiah/Documents/pepsirf/PepSIRF/src/modules/demux/options_qc.h
 sstream
 -
 boost/algorithm/string.hpp

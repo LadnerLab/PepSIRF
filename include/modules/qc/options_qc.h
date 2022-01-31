@@ -1,3 +1,6 @@
+#ifndef OPTIONS_QC_HH_INCLUDED
+#define OPTIONS_QC_HH_INCLUDED
+
 #include <string>
 #include <tuple>
 #include <sstream>
@@ -27,3 +30,5 @@ class options_qc : public options
                                std::size_t>& data
                              );
 };
+
+#endif

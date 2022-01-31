@@ -81,8 +81,8 @@ void module_initializer::initialize( const std::string& mod_name )
         }
     else if( !mod_name.compare ("qc" ) )
         {
-            opts        = new options_demux();
-            opt_parser  = new options_parser_demux();
+            opts        = new options_qc();
+            opt_parser  = new options_parser_qc();
             mod         = new module_qc();
         }
     else

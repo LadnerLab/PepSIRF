@@ -155,7 +155,9 @@ add_library( modules_info STATIC src/modules/info/module_info.cpp
 		   )
 
 add_library( modules_qc STATIC src/modules/qc/module_qc.cpp 
-       src/modules/qc/module_qc.cpp     
+       src/modules/qc/module_qc.cpp
+       src/modules/qc/options_qc.cpp
+       src/modules/qc/options_parser_qc.cpp     
 )
 
 

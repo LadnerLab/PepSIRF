@@ -1,5 +1,7 @@
 file(REMOVE_RECURSE
   "CMakeFiles/modules_qc.dir/src/modules/qc/module_qc.cpp.o"
+  "CMakeFiles/modules_qc.dir/src/modules/qc/options_parser_qc.cpp.o"
+  "CMakeFiles/modules_qc.dir/src/modules/qc/options_qc.cpp.o"
   "libmodules_qc.a"
   "libmodules_qc.pdb"
 )

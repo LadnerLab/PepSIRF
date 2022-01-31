@@ -76,6 +76,8 @@ CMakeFiles/pepsirf_common.dir/src/modules/core/module_initializer.cpp.o: ../incl
 CMakeFiles/pepsirf_common.dir/src/modules/core/module_initializer.cpp.o: ../include/modules/parsers/fastq_parser.h
 CMakeFiles/pepsirf_common.dir/src/modules/core/module_initializer.cpp.o: ../include/modules/parsers/options_parser.h
 CMakeFiles/pepsirf_common.dir/src/modules/core/module_initializer.cpp.o: ../include/modules/qc/module_qc.h
+CMakeFiles/pepsirf_common.dir/src/modules/core/module_initializer.cpp.o: ../include/modules/qc/options_parser_qc.h
+CMakeFiles/pepsirf_common.dir/src/modules/core/module_initializer.cpp.o: ../include/modules/qc/options_qc.h
 CMakeFiles/pepsirf_common.dir/src/modules/core/module_initializer.cpp.o: ../include/modules/subjoin/module_subjoin.h
 CMakeFiles/pepsirf_common.dir/src/modules/core/module_initializer.cpp.o: ../include/modules/subjoin/options_parser_subjoin.h
 CMakeFiles/pepsirf_common.dir/src/modules/core/module_initializer.cpp.o: ../include/modules/subjoin/options_subjoin.h

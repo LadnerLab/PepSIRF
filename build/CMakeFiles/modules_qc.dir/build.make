@@ -70,17 +70,47 @@ CMakeFiles/modules_qc.dir/src/modules/qc/module_qc.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/modules_qc.dir/src/modules/qc/module_qc.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/isaiah/Documents/pepsirf/PepSIRF/src/modules/qc/module_qc.cpp -o CMakeFiles/modules_qc.dir/src/modules/qc/module_qc.cpp.s
 
+CMakeFiles/modules_qc.dir/src/modules/qc/options_qc.cpp.o: CMakeFiles/modules_qc.dir/flags.make
+CMakeFiles/modules_qc.dir/src/modules/qc/options_qc.cpp.o: ../src/modules/qc/options_qc.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/isaiah/Documents/pepsirf/PepSIRF/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/modules_qc.dir/src/modules/qc/options_qc.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/modules_qc.dir/src/modules/qc/options_qc.cpp.o -c /home/isaiah/Documents/pepsirf/PepSIRF/src/modules/qc/options_qc.cpp
+
+CMakeFiles/modules_qc.dir/src/modules/qc/options_qc.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/modules_qc.dir/src/modules/qc/options_qc.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/isaiah/Documents/pepsirf/PepSIRF/src/modules/qc/options_qc.cpp > CMakeFiles/modules_qc.dir/src/modules/qc/options_qc.cpp.i
+
+CMakeFiles/modules_qc.dir/src/modules/qc/options_qc.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/modules_qc.dir/src/modules/qc/options_qc.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/isaiah/Documents/pepsirf/PepSIRF/src/modules/qc/options_qc.cpp -o CMakeFiles/modules_qc.dir/src/modules/qc/options_qc.cpp.s
+
+CMakeFiles/modules_qc.dir/src/modules/qc/options_parser_qc.cpp.o: CMakeFiles/modules_qc.dir/flags.make
+CMakeFiles/modules_qc.dir/src/modules/qc/options_parser_qc.cpp.o: ../src/modules/qc/options_parser_qc.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/isaiah/Documents/pepsirf/PepSIRF/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/modules_qc.dir/src/modules/qc/options_parser_qc.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/modules_qc.dir/src/modules/qc/options_parser_qc.cpp.o -c /home/isaiah/Documents/pepsirf/PepSIRF/src/modules/qc/options_parser_qc.cpp
+
+CMakeFiles/modules_qc.dir/src/modules/qc/options_parser_qc.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/modules_qc.dir/src/modules/qc/options_parser_qc.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/isaiah/Documents/pepsirf/PepSIRF/src/modules/qc/options_parser_qc.cpp > CMakeFiles/modules_qc.dir/src/modules/qc/options_parser_qc.cpp.i
+
+CMakeFiles/modules_qc.dir/src/modules/qc/options_parser_qc.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/modules_qc.dir/src/modules/qc/options_parser_qc.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/isaiah/Documents/pepsirf/PepSIRF/src/modules/qc/options_parser_qc.cpp -o CMakeFiles/modules_qc.dir/src/modules/qc/options_parser_qc.cpp.s
+
 # Object files for target modules_qc
 modules_qc_OBJECTS = \
-"CMakeFiles/modules_qc.dir/src/modules/qc/module_qc.cpp.o"
+"CMakeFiles/modules_qc.dir/src/modules/qc/module_qc.cpp.o" \
+"CMakeFiles/modules_qc.dir/src/modules/qc/options_qc.cpp.o" \
+"CMakeFiles/modules_qc.dir/src/modules/qc/options_parser_qc.cpp.o"
 
 # External object files for target modules_qc
 modules_qc_EXTERNAL_OBJECTS =
 
 libmodules_qc.a: CMakeFiles/modules_qc.dir/src/modules/qc/module_qc.cpp.o
+libmodules_qc.a: CMakeFiles/modules_qc.dir/src/modules/qc/options_qc.cpp.o
+libmodules_qc.a: CMakeFiles/modules_qc.dir/src/modules/qc/options_parser_qc.cpp.o
 libmodules_qc.a: CMakeFiles/modules_qc.dir/build.make
 libmodules_qc.a: CMakeFiles/modules_qc.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/isaiah/Documents/pepsirf/PepSIRF/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX static library libmodules_qc.a"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/isaiah/Documents/pepsirf/PepSIRF/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Linking CXX static library libmodules_qc.a"
 	$(CMAKE_COMMAND) -P CMakeFiles/modules_qc.dir/cmake_clean_target.cmake
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/modules_qc.dir/link.txt --verbose=$(VERBOSE)
 

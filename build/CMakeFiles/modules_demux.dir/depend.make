@@ -48,6 +48,7 @@ CMakeFiles/modules_demux.dir/src/modules/demux/module_demux.cpp.o: ../include/mo
 CMakeFiles/modules_demux.dir/src/modules/demux/module_demux.cpp.o: ../include/modules/demux/translation_map.h
 CMakeFiles/modules_demux.dir/src/modules/demux/module_demux.cpp.o: ../include/modules/parsers/fasta_parser.h
 CMakeFiles/modules_demux.dir/src/modules/demux/module_demux.cpp.o: ../include/modules/parsers/fastq_parser.h
+CMakeFiles/modules_demux.dir/src/modules/demux/module_demux.cpp.o: ../include/modules/qc/options_qc.h
 CMakeFiles/modules_demux.dir/src/modules/demux/module_demux.cpp.o: ../lib/parallel_hashmap/phmap.h
 CMakeFiles/modules_demux.dir/src/modules/demux/module_demux.cpp.o: ../lib/parallel_hashmap/phmap_base.h
 CMakeFiles/modules_demux.dir/src/modules/demux/module_demux.cpp.o: ../lib/parallel_hashmap/phmap_bits.h
@@ -83,6 +84,7 @@ CMakeFiles/modules_demux.dir/src/modules/demux/samplelist_parser.cpp.o: ../inclu
 CMakeFiles/modules_demux.dir/src/modules/demux/samplelist_parser.cpp.o: ../include/modules/demux/samplelist_parser.h
 CMakeFiles/modules_demux.dir/src/modules/demux/samplelist_parser.cpp.o: ../include/modules/parsers/fasta_parser.h
 CMakeFiles/modules_demux.dir/src/modules/demux/samplelist_parser.cpp.o: ../include/modules/parsers/fastq_parser.h
+CMakeFiles/modules_demux.dir/src/modules/demux/samplelist_parser.cpp.o: ../include/modules/qc/options_qc.h
 CMakeFiles/modules_demux.dir/src/modules/demux/samplelist_parser.cpp.o: ../lib/parallel_hashmap/phmap.h
 CMakeFiles/modules_demux.dir/src/modules/demux/samplelist_parser.cpp.o: ../lib/parallel_hashmap/phmap_base.h
 CMakeFiles/modules_demux.dir/src/modules/demux/samplelist_parser.cpp.o: ../lib/parallel_hashmap/phmap_bits.h

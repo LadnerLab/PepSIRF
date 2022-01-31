@@ -1610,6 +1610,60 @@ src/modules/qc/module_qc.cpp.s:
 	$(MAKE) -f CMakeFiles/modules_qc.dir/build.make CMakeFiles/modules_qc.dir/src/modules/qc/module_qc.cpp.s
 .PHONY : src/modules/qc/module_qc.cpp.s
 
+src/modules/qc/options_parser_qc.o: src/modules/qc/options_parser_qc.cpp.o
+
+.PHONY : src/modules/qc/options_parser_qc.o
+
+# target to build an object file
+src/modules/qc/options_parser_qc.cpp.o:
+	$(MAKE) -f CMakeFiles/modules_qc.dir/build.make CMakeFiles/modules_qc.dir/src/modules/qc/options_parser_qc.cpp.o
+.PHONY : src/modules/qc/options_parser_qc.cpp.o
+
+src/modules/qc/options_parser_qc.i: src/modules/qc/options_parser_qc.cpp.i
+
+.PHONY : src/modules/qc/options_parser_qc.i
+
+# target to preprocess a source file
+src/modules/qc/options_parser_qc.cpp.i:
+	$(MAKE) -f CMakeFiles/modules_qc.dir/build.make CMakeFiles/modules_qc.dir/src/modules/qc/options_parser_qc.cpp.i
+.PHONY : src/modules/qc/options_parser_qc.cpp.i
+
+src/modules/qc/options_parser_qc.s: src/modules/qc/options_parser_qc.cpp.s
+
+.PHONY : src/modules/qc/options_parser_qc.s
+
+# target to generate assembly for a file
+src/modules/qc/options_parser_qc.cpp.s:
+	$(MAKE) -f CMakeFiles/modules_qc.dir/build.make CMakeFiles/modules_qc.dir/src/modules/qc/options_parser_qc.cpp.s
+.PHONY : src/modules/qc/options_parser_qc.cpp.s
+
+src/modules/qc/options_qc.o: src/modules/qc/options_qc.cpp.o
+
+.PHONY : src/modules/qc/options_qc.o
+
+# target to build an object file
+src/modules/qc/options_qc.cpp.o:
+	$(MAKE) -f CMakeFiles/modules_qc.dir/build.make CMakeFiles/modules_qc.dir/src/modules/qc/options_qc.cpp.o
+.PHONY : src/modules/qc/options_qc.cpp.o
+
+src/modules/qc/options_qc.i: src/modules/qc/options_qc.cpp.i
+
+.PHONY : src/modules/qc/options_qc.i
+
+# target to preprocess a source file
+src/modules/qc/options_qc.cpp.i:
+	$(MAKE) -f CMakeFiles/modules_qc.dir/build.make CMakeFiles/modules_qc.dir/src/modules/qc/options_qc.cpp.i
+.PHONY : src/modules/qc/options_qc.cpp.i
+
+src/modules/qc/options_qc.s: src/modules/qc/options_qc.cpp.s
+
+.PHONY : src/modules/qc/options_qc.s
+
+# target to generate assembly for a file
+src/modules/qc/options_qc.cpp.s:
+	$(MAKE) -f CMakeFiles/modules_qc.dir/build.make CMakeFiles/modules_qc.dir/src/modules/qc/options_qc.cpp.s
+.PHONY : src/modules/qc/options_qc.cpp.s
+
 src/modules/subjoin/module_subjoin.o: src/modules/subjoin/module_subjoin.cpp.o
 
 .PHONY : src/modules/subjoin/module_subjoin.o
@@ -1962,6 +2016,12 @@ help:
 	@echo "... src/modules/qc/module_qc.o"
 	@echo "... src/modules/qc/module_qc.i"
 	@echo "... src/modules/qc/module_qc.s"
+	@echo "... src/modules/qc/options_parser_qc.o"
+	@echo "... src/modules/qc/options_parser_qc.i"
+	@echo "... src/modules/qc/options_parser_qc.s"
+	@echo "... src/modules/qc/options_qc.o"
+	@echo "... src/modules/qc/options_qc.i"
+	@echo "... src/modules/qc/options_qc.s"
 	@echo "... src/modules/subjoin/module_subjoin.o"
 	@echo "... src/modules/subjoin/module_subjoin.i"
 	@echo "... src/modules/subjoin/module_subjoin.s"

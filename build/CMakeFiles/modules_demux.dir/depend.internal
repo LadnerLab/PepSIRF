@@ -49,6 +49,7 @@ CMakeFiles/modules_demux.dir/src/modules/demux/module_demux.cpp.o
  ../include/modules/demux/translation_map.h
  ../include/modules/parsers/fasta_parser.h
  ../include/modules/parsers/fastq_parser.h
+ ../include/modules/qc/options_qc.h
  ../lib/parallel_hashmap/phmap.h
  ../lib/parallel_hashmap/phmap_base.h
  ../lib/parallel_hashmap/phmap_bits.h
@@ -84,6 +85,7 @@ CMakeFiles/modules_demux.dir/src/modules/demux/samplelist_parser.cpp.o
  ../include/modules/demux/samplelist_parser.h
  ../include/modules/parsers/fasta_parser.h
  ../include/modules/parsers/fastq_parser.h
+ ../include/modules/qc/options_qc.h
  ../lib/parallel_hashmap/phmap.h
  ../lib/parallel_hashmap/phmap_base.h
  ../lib/parallel_hashmap/phmap_bits.h

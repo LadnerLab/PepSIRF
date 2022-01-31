@@ -24,7 +24,7 @@ std::string module_qc::get_name( )
 void module_qc::run(options *opts)
 {
     std::unordered_map<std::string, std::vector<std::tuple<std::string, std::string, std::size_t>>> matched_map;
-    options_qc *q_opts = (options_demux*)opts;
+    options_qc *q_opts = (options_qc*)opts;
     std::vector<flex_idx> flexible_idx_data;
 
     

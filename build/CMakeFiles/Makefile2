@@ -95,25 +95,25 @@ clean: CMakeFiles/pepsirf_test.dir/clean
 # Target rules for target CMakeFiles/pepsirf.dir
 
 # All Build rule for target.
+CMakeFiles/pepsirf.dir/all: CMakeFiles/modules_demux.dir/all
+CMakeFiles/pepsirf.dir/all: CMakeFiles/modules_zscore.dir/all
+CMakeFiles/pepsirf.dir/all: CMakeFiles/modules_bin.dir/all
+CMakeFiles/pepsirf.dir/all: CMakeFiles/modules_deconv.dir/all
+CMakeFiles/pepsirf.dir/all: CMakeFiles/modules_subjoin.dir/all
+CMakeFiles/pepsirf.dir/all: CMakeFiles/modules_normalize.dir/all
+CMakeFiles/pepsirf.dir/all: CMakeFiles/modules_link.dir/all
 CMakeFiles/pepsirf.dir/all: CMakeFiles/modules_enrich.dir/all
 CMakeFiles/pepsirf.dir/all: CMakeFiles/pepsirf_common.dir/all
 CMakeFiles/pepsirf.dir/all: CMakeFiles/modules_qc.dir/all
 CMakeFiles/pepsirf.dir/all: CMakeFiles/modules_info.dir/all
-CMakeFiles/pepsirf.dir/all: CMakeFiles/modules_deconv.dir/all
-CMakeFiles/pepsirf.dir/all: CMakeFiles/modules_subjoin.dir/all
-CMakeFiles/pepsirf.dir/all: CMakeFiles/modules_demux.dir/all
-CMakeFiles/pepsirf.dir/all: CMakeFiles/modules_zscore.dir/all
-CMakeFiles/pepsirf.dir/all: CMakeFiles/modules_bin.dir/all
-CMakeFiles/pepsirf.dir/all: CMakeFiles/modules_normalize.dir/all
-CMakeFiles/pepsirf.dir/all: CMakeFiles/modules_link.dir/all
 	$(MAKE) -f CMakeFiles/pepsirf.dir/build.make CMakeFiles/pepsirf.dir/depend
 	$(MAKE) -f CMakeFiles/pepsirf.dir/build.make CMakeFiles/pepsirf.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/isaiah/Documents/pepsirf/PepSIRF/build/CMakeFiles --progress-num=64,65 "Built target pepsirf"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/isaiah/Documents/pepsirf/PepSIRF/build/CMakeFiles --progress-num=66,67 "Built target pepsirf"
 .PHONY : CMakeFiles/pepsirf.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/pepsirf.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/isaiah/Documents/pepsirf/PepSIRF/build/CMakeFiles 82
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/isaiah/Documents/pepsirf/PepSIRF/build/CMakeFiles 84
 	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/pepsirf.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/isaiah/Documents/pepsirf/PepSIRF/build/CMakeFiles 0
 .PHONY : CMakeFiles/pepsirf.dir/rule
@@ -162,7 +162,7 @@ CMakeFiles/modules_deconv.dir/clean:
 CMakeFiles/modules_subjoin.dir/all:
 	$(MAKE) -f CMakeFiles/modules_subjoin.dir/build.make CMakeFiles/modules_subjoin.dir/depend
 	$(MAKE) -f CMakeFiles/modules_subjoin.dir/build.make CMakeFiles/modules_subjoin.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/isaiah/Documents/pepsirf/PepSIRF/build/CMakeFiles --progress-num=54,55,56,57,58 "Built target modules_subjoin"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/isaiah/Documents/pepsirf/PepSIRF/build/CMakeFiles --progress-num=56,57,58,59,60 "Built target modules_subjoin"
 .PHONY : CMakeFiles/modules_subjoin.dir/all
 
 # Build rule for subdir invocation for target.
@@ -216,7 +216,7 @@ CMakeFiles/modules_demux.dir/clean:
 CMakeFiles/modules_zscore.dir/all:
 	$(MAKE) -f CMakeFiles/modules_zscore.dir/build.make CMakeFiles/modules_zscore.dir/depend
 	$(MAKE) -f CMakeFiles/modules_zscore.dir/build.make CMakeFiles/modules_zscore.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/isaiah/Documents/pepsirf/PepSIRF/build/CMakeFiles --progress-num=59,60,61,62,63 "Built target modules_zscore"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/isaiah/Documents/pepsirf/PepSIRF/build/CMakeFiles --progress-num=61,62,63,64,65 "Built target modules_zscore"
 .PHONY : CMakeFiles/modules_zscore.dir/all
 
 # Build rule for subdir invocation for target.
@@ -351,7 +351,7 @@ CMakeFiles/modules_enrich.dir/clean:
 CMakeFiles/pepsirf_common.dir/all:
 	$(MAKE) -f CMakeFiles/pepsirf_common.dir/build.make CMakeFiles/pepsirf_common.dir/depend
 	$(MAKE) -f CMakeFiles/pepsirf_common.dir/build.make CMakeFiles/pepsirf_common.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/isaiah/Documents/pepsirf/PepSIRF/build/CMakeFiles --progress-num=66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82 "Built target pepsirf_common"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/isaiah/Documents/pepsirf/PepSIRF/build/CMakeFiles --progress-num=68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84 "Built target pepsirf_common"
 .PHONY : CMakeFiles/pepsirf_common.dir/all
 
 # Build rule for subdir invocation for target.
@@ -378,12 +378,12 @@ CMakeFiles/pepsirf_common.dir/clean:
 CMakeFiles/modules_qc.dir/all:
 	$(MAKE) -f CMakeFiles/modules_qc.dir/build.make CMakeFiles/modules_qc.dir/depend
 	$(MAKE) -f CMakeFiles/modules_qc.dir/build.make CMakeFiles/modules_qc.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/isaiah/Documents/pepsirf/PepSIRF/build/CMakeFiles --progress-num=52,53 "Built target modules_qc"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/isaiah/Documents/pepsirf/PepSIRF/build/CMakeFiles --progress-num=52,53,54,55 "Built target modules_qc"
 .PHONY : CMakeFiles/modules_qc.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/modules_qc.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/isaiah/Documents/pepsirf/PepSIRF/build/CMakeFiles 2
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/isaiah/Documents/pepsirf/PepSIRF/build/CMakeFiles 4
 	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/modules_qc.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/isaiah/Documents/pepsirf/PepSIRF/build/CMakeFiles 0
 .PHONY : CMakeFiles/modules_qc.dir/rule
@@ -429,25 +429,25 @@ CMakeFiles/modules_info.dir/clean:
 # Target rules for target CMakeFiles/pepsirf_test.dir
 
 # All Build rule for target.
+CMakeFiles/pepsirf_test.dir/all: CMakeFiles/modules_demux.dir/all
+CMakeFiles/pepsirf_test.dir/all: CMakeFiles/modules_zscore.dir/all
+CMakeFiles/pepsirf_test.dir/all: CMakeFiles/modules_bin.dir/all
+CMakeFiles/pepsirf_test.dir/all: CMakeFiles/modules_deconv.dir/all
+CMakeFiles/pepsirf_test.dir/all: CMakeFiles/modules_subjoin.dir/all
+CMakeFiles/pepsirf_test.dir/all: CMakeFiles/modules_normalize.dir/all
+CMakeFiles/pepsirf_test.dir/all: CMakeFiles/modules_link.dir/all
 CMakeFiles/pepsirf_test.dir/all: CMakeFiles/modules_enrich.dir/all
 CMakeFiles/pepsirf_test.dir/all: CMakeFiles/pepsirf_common.dir/all
 CMakeFiles/pepsirf_test.dir/all: CMakeFiles/modules_qc.dir/all
 CMakeFiles/pepsirf_test.dir/all: CMakeFiles/modules_info.dir/all
-CMakeFiles/pepsirf_test.dir/all: CMakeFiles/modules_deconv.dir/all
-CMakeFiles/pepsirf_test.dir/all: CMakeFiles/modules_subjoin.dir/all
-CMakeFiles/pepsirf_test.dir/all: CMakeFiles/modules_demux.dir/all
-CMakeFiles/pepsirf_test.dir/all: CMakeFiles/modules_zscore.dir/all
-CMakeFiles/pepsirf_test.dir/all: CMakeFiles/modules_bin.dir/all
-CMakeFiles/pepsirf_test.dir/all: CMakeFiles/modules_normalize.dir/all
-CMakeFiles/pepsirf_test.dir/all: CMakeFiles/modules_link.dir/all
 	$(MAKE) -f CMakeFiles/pepsirf_test.dir/build.make CMakeFiles/pepsirf_test.dir/depend
 	$(MAKE) -f CMakeFiles/pepsirf_test.dir/build.make CMakeFiles/pepsirf_test.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/isaiah/Documents/pepsirf/PepSIRF/build/CMakeFiles --progress-num=83,84 "Built target pepsirf_test"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/isaiah/Documents/pepsirf/PepSIRF/build/CMakeFiles --progress-num=85,86 "Built target pepsirf_test"
 .PHONY : CMakeFiles/pepsirf_test.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/pepsirf_test.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/isaiah/Documents/pepsirf/PepSIRF/build/CMakeFiles 82
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/isaiah/Documents/pepsirf/PepSIRF/build/CMakeFiles 84
 	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/pepsirf_test.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/isaiah/Documents/pepsirf/PepSIRF/build/CMakeFiles 0
 .PHONY : CMakeFiles/pepsirf_test.dir/rule
