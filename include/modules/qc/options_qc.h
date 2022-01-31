@@ -13,6 +13,8 @@ class options_qc : public options
         std::tuple<std::size_t, std::size_t, std::size_t> index2_data;
         std::string samplelist_fname;
         std::vector<std::string> sample_indexes;
+        std::string samplename;
+        std::string output_fname;
 
         long int read_per_loop;
         const long int DEFAULT_READ_PER_LOOP;

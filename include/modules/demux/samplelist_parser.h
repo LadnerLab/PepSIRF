@@ -9,6 +9,7 @@
 #include <utility>
 #include <boost/algorithm/string.hpp>
 #include <module_demux.h>
+#include "options_qc.h"
 #include "sample.h" 
 
 class samplelist_parser
@@ -22,6 +23,8 @@ class samplelist_parser
      * @returns vector of samples, one per line in the input file.
      **/
     std::vector<sample> parse( const options_demux *d_opts );
+    std::vector<sample> parse( const options_qc *q_opts );
+
 
     /**
      * Verifies the sample IDs in the samplelist columns used are found in the index id set. Prints missing IDs as warning.
