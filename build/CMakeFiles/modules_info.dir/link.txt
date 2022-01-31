@@ -1,2 +1,0 @@
-/usr/bin/ar qc libmodules_info.a  CMakeFiles/modules_info.dir/src/modules/info/module_info.cpp.o CMakeFiles/modules_info.dir/src/modules/info/options_info.cpp.o CMakeFiles/modules_info.dir/src/modules/info/options_parser_info.cpp.o
-/usr/bin/ranlib libmodules_info.a
