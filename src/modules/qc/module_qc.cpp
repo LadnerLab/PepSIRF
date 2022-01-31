@@ -1,5 +1,6 @@
 #include "module_qc.h"
-#include "options_qc.h"
+//#include "options_qc.h"
+#include "options_demux.h"
 #include "options.h"
 #include "fif_parser.h"
 #include <sstream>
@@ -14,15 +15,22 @@
 #include "fastq_score.h"
 #include "fastq_parser.h"
 #include "samplelist_parser.h"
+#include <vector>
 
+std::string module_qc::get_name( )
+{
+    return "qc";
+}
 
 void module_qc::run(options *opts)
 {
     std::unordered_map<std::string, std::vector<std::tuple<std::string, std::string, std::size_t>>> matched_map;
-    options_qc *q_opts = (options_qc*)opts;
+    options_demux *q_opts = (options_demux*)opts;
     std::vector<flex_idx> flexible_idx_data;
 
-    if(q_opts->idx_fname.empty() )
+    
+
+    if(q_opts->index_fname.empty() )
         {
             flexible_idx_data.emplace_back( q_opts->sample_indexes[0],
                                         "r1",
@@ -39,7 +47,7 @@ void module_qc::run(options *opts)
     else
         {
             fif_parser flex_parser;
-            flexible_idx_data = flex_parser.parse( q_opts->idx_fname );
+            flexible_idx_data = flex_parser.parse( q_opts->index_fname );
         }
 
     
@@ -48,8 +56,9 @@ void module_qc::run(options *opts)
     struct time_keep::timer total_time;
     sequential_map<sequence, sample> index_map;
     samplelist_parser samplelist_p;
-    std::vector<sample> samplelist; //samplelist_p;
+    std::vector<sample> samplelist = samplelist_p.parse( q_opts ); //samplelist_p;
 
+    
     std::vector<std::pair<std::string,size_t>> index_match_totals;
     for(const auto& curr_index : flexible_idx_data)
         {
@@ -67,6 +76,34 @@ void module_qc::run(options *opts)
                 }
             matched_map.emplace( sample.name, barcodes);
         }
+
+    std::ofstream outfile (q_opts->diagnostic_fname, std::ios::out);
+
+    std::string header = "Sample name\t";
+    std::size_t index_right_offset = 1;
+    std::size_t num_indexes = matched_map.begin()->second.size();
+
+    for( std::size_t curr_index = 0; curr_index < num_indexes; curr_index++)
+    {
+        std::string header_col = "";
+        for( std::size_t index_left_offset = 0; index_left_offset < index_right_offset; index_left_offset++)
+        {
+            if(index_left_offset != 0)
+            {
+                header_col.append( " + " );
+            }
+            std::string index_name = std::get<0>( matched_map.begin()->second[index_left_offset] );
+            header_col.append( index_name );
+        }
+
+        header.append(header_col);
+        header.append( "\t" );
+        ++index_right_offset;
+    }
+
+    header.append( "\n" );
+    outfile << header;
+    outfile.close();
     
 
 }

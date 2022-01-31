@@ -18,11 +18,7 @@ std::vector<sample> samplelist_parser::parse( const options_demux *d_opts )
     bool index_found = false;
     std::vector<sample> vec;
     std::map<std::string, std::size_t> names;
-<<<<<<< HEAD
-    std::map<std::string, std::size_t> id_pairs;
-=======
     std::map<std::string, std::size_t> id_sets;
->>>>>>> 2acbd8ee163936726fc80ca05b145eeefb64a1a5
     bool duplicate_name = false;
     bool duplicate_id = false;
 
@@ -86,28 +82,6 @@ std::vector<sample> samplelist_parser::parse( const options_demux *d_opts )
                     sample_id_set.emplace( split_line[index] );
                     index_col_ids.emplace_back( split_line[index] );
                 }
-<<<<<<< HEAD
-            else
-                {
-                    name = split_line[ samplename_idx ];
-                    id1 = split_line[ id1_col ];
-                    id2 = split_line[ id2_col ];
-                    sample_id_set.emplace( id1 );
-                    sample_id_set.emplace( id2 );
-                }
-            
-            ++names[name];
-            ++id_pairs[id1 + " " + id2];
-            sample samp( id1, id2, name, sample_id );
-            vec.push_back( samp );
-            ++sample_id;
-        }
-    for(auto member : names)
-        {
-            if(member.second > 1)
-                {
-                    if(!duplicate_name)
-=======
             ++names[name];
             ++id_sets[id_set];
             // store the series of sample headers into the sample obj.
@@ -121,7 +95,6 @@ std::vector<sample> samplelist_parser::parse( const options_demux *d_opts )
             if( member.second > 1 )
                 {
                     if( !duplicate_name )
->>>>>>> 2acbd8ee163936726fc80ca05b145eeefb64a1a5
                         {
                             std::cout << "WARNING: The following sequence names appear muptiple times" << std::endl;
                             duplicate_name = true;
@@ -129,16 +102,10 @@ std::vector<sample> samplelist_parser::parse( const options_demux *d_opts )
                     std::cout << member.first << " Counts: " << member.second << std::endl;
                 }
         }
-<<<<<<< HEAD
-    for(auto member : id_pairs)
-        {
-            if(member.second > 1)
-=======
     // check for duplicate id sets
     for( auto member : id_sets )
         {
             if( member.second > 1 )
->>>>>>> 2acbd8ee163936726fc80ca05b145eeefb64a1a5
                 {
                     if(!duplicate_id)
                         {

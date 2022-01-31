@@ -1,0 +1,2 @@
+/usr/bin/ar qc libmodules_zscore.a  CMakeFiles/modules_zscore.dir/src/modules/zscore/module_zscore.cpp.o CMakeFiles/modules_zscore.dir/src/modules/zscore/options_zscore.cpp.o CMakeFiles/modules_zscore.dir/src/modules/zscore/options_parser_zscore.cpp.o CMakeFiles/modules_zscore.dir/src/modules/bin/peptide_bin.cpp.o
+/usr/bin/ranlib libmodules_zscore.a

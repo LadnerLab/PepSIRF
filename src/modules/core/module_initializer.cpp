@@ -79,6 +79,12 @@ void module_initializer::initialize( const std::string& mod_name )
             opt_parser  = new options_parser_info();
             mod         = new module_info();
         }
+    else if( !mod_name.compare ("qc" ) )
+        {
+            opts        = new options_demux();
+            opt_parser  = new options_parser_demux();
+            mod         = new module_qc();
+        }
     else
         {
             throw std::runtime_error( "Invalid module name entered." );

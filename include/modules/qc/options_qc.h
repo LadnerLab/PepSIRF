@@ -19,4 +19,9 @@ class options_qc : public options
         const std::string DEFAULT_OUTPUT_FNAME;
 
         std::string get_arguments();
+
+        std::string tup_to_string( std::tuple<std::size_t,
+                               std::size_t,
+                               std::size_t>& data
+                             );
 };

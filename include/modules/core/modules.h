@@ -16,7 +16,7 @@ namespace modules
                                                            "norm", "subjoin",
                                                            "zscore", "link",
                                                            "bin", "enrich",
-                                                           "info"
+                                                           "info", "qc"
                                                          };
 
     // a 'StringLike' is something that is string-constructible, i.e.

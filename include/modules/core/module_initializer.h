@@ -39,6 +39,7 @@
 #include "module_link.h"
 #include "module_enrich.h"
 #include "module_info.h"
+#include "module_qc.h"
 
 
 /**

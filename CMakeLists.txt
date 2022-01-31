@@ -24,6 +24,7 @@ include_directories(include/modules/bin)
 include_directories(include/modules/link)
 include_directories(include/modules/enrich)
 include_directories(include/modules/info)
+include_directories(include/modules/qc)
 include_directories(lib)
 
 add_compile_options( "-Wall" "-std=c++11" "-Wextra" "-fvisibility=hidden"
@@ -41,6 +42,7 @@ set(PepSIRF_MODULES
 	modules_link
 	modules_enrich
 	modules_info
+  modules_qc
    )
 
 list( APPEND PepSIRF_LINK_LIBS
@@ -152,10 +154,9 @@ add_library( modules_info STATIC src/modules/info/module_info.cpp
 			 src/modules/info/options_parser_info.cpp
 		   )
 
-#add_library( modules_qc STATIC src/modules/qc/module_qc.cpp 
-#       src/modules/     
-
-#)
+add_library( modules_qc STATIC src/modules/qc/module_qc.cpp 
+       src/modules/qc/module_qc.cpp     
+)
 
 
 option( BUILD_TESTS "Determines whether to build tests." ON )
