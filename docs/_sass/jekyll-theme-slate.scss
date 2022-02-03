@@ -51,6 +51,7 @@ body {
   font-family: 'Myriad Pro', Calibri, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  min-width: 730px;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -256,6 +257,7 @@ form {
   margin: 0 auto;
   height: 64px;
   background-color: #212121;
+  min-width: 730px;
 }
 
 .navbar ul {
@@ -286,6 +288,71 @@ form {
   background-color: #0090ff;
 }
 
+.droplist {
+  display: none;
+  position: absolute;
+  background-color: #f9f9f9;
+  min-width: 40px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+  list-style-type: none;
+  margin: 20px -32px;
+}
+
+.drop-content {
+  width: 100%;
+}
+
+.drop-content a {
+  float: none;
+  color: black;
+  padding: 16px;
+  text-decoration: none;
+  display: block;
+  text-align: left;
+}
+
+.drop-content a:hover {
+  background-color: #0090ff;
+}
+
+.page-links {
+  float:left;
+  overflow: hidden;
+  margin: 0 auto;
+}
+
+.pages {
+  position: relative;
+  margin: 0 auto;
+  max-width: 1024px;
+}
+
+.dropdown {
+  float:left;
+  overflow: hidden;
+  margin: 0 auto;
+  padding: 20px 32px;
+}
+
+.dropdown .dropbutton {
+  border: none;
+  outline: none;
+  color: white;
+  font-size: inherit;
+  background-color: inherit;
+  font-family: inherit;
+  margin: 0;
+}
+
+.dropdown:hover {
+  background-color: #0090ff;
+}
+
+.dropdown:hover .droplist {
+  display: block;
+}
+
 /*******************************************************************************
 Full-Width Styles
 *******************************************************************************/
@@ -296,7 +363,7 @@ Full-Width Styles
 
 .inner {
   position: relative;
-  max-width: 920px;
+  max-width: 1024px;
   padding: 20px 10px;
   margin: 0 auto; }
 
