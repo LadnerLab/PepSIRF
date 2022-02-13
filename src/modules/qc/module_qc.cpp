@@ -83,23 +83,22 @@ void module_qc::run(options *opts)
     std::size_t num_indexes = matched_map.begin()->second.size();
 
     for( std::size_t curr_index = 0; curr_index < num_indexes; curr_index++)
-    {
-        std::string header_col = "";
-        for( std::size_t index_left_offset = 0; index_left_offset < index_right_offset; index_left_offset++)
         {
-            if(index_left_offset != 0)
-            {
-                header_col.append( " + " );
-            }
-            std::string index_name = std::get<0>( matched_map.begin()->second[index_left_offset] );
-            header_col.append( index_name );
+            std::string header_col = "";
+            for( std::size_t index_left_offset = 0; index_left_offset < index_right_offset; index_left_offset++)
+                {
+                    if(index_left_offset != 0)
+                        {
+                            header_col.append( " + " );
+                        }
+                    std::string index_name = std::get<0>( matched_map.begin()->second[index_left_offset] );
+                    header_col.append( index_name );
+                }
+
+            header.append(header_col);
+            header.append( "\t" );
+            ++index_right_offset;
         }
-
-        header.append(header_col);
-        header.append( "\t" );
-        ++index_right_offset;
-    }
-
     header.append( "\n" );
     outfile << header;
     outfile.close();

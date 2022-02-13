@@ -16,6 +16,8 @@ std::string options_qc::get_arguments()
                   " --sname                     " << samplename <<
                   " --outfile                   " << output_fname <<
                   "\n";
+
+    return str_stream.str();
 }
 
 std::string options_qc::tup_to_string( std::tuple<std::size_t, std::size_t, std::size_t>& data )

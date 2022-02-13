@@ -1,0 +1,2 @@
+/usr/bin/ar qc libmodules_bin.a  CMakeFiles/modules_bin.dir/src/modules/bin/module_bin.cpp.o CMakeFiles/modules_bin.dir/src/modules/bin/options_bin.cpp.o CMakeFiles/modules_bin.dir/src/modules/bin/options_parser_bin.cpp.o CMakeFiles/modules_bin.dir/src/modules/bin/peptide_bin.cpp.o CMakeFiles/modules_bin.dir/src/modules/bin/probe_rank.cpp.o
+/usr/bin/ranlib libmodules_bin.a

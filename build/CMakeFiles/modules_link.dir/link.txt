@@ -1,0 +1,2 @@
+/usr/bin/ar qc libmodules_link.a  CMakeFiles/modules_link.dir/src/modules/link/module_link.cpp.o CMakeFiles/modules_link.dir/src/modules/link/options_link.cpp.o CMakeFiles/modules_link.dir/src/modules/link/options_parser_link.cpp.o CMakeFiles/modules_link.dir/src/modules/link/metadata_map.cpp.o
+/usr/bin/ranlib libmodules_link.a

@@ -38,6 +38,9 @@ bool options_parser_qc::parse( int argc, char ***argv, options *opts )
         )
         ( "samplelist,s", "samplelist filename"
           ""
+        )
+        ( "output,o", "output filename"
+          ""
         );
 
 }
