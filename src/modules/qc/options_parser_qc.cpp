@@ -43,4 +43,18 @@ bool options_parser_qc::parse( int argc, char ***argv, options *opts )
           ""
         );
 
+        po::store( po::command_line_parser( argc, *argv ).options( desc ).run(), vm);
+
+        if( vm.count( "help" )
+        || argc == 2 // argc == 2 when 'pepsirf qc' is called
+      )
+        {
+            std::cout << desc << std::endl;
+            return false;
+        }
+    else
+        {
+            po::notify( vm );
+            return true;
+        }
 }
