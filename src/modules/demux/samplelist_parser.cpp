@@ -167,35 +167,50 @@ std::vector<sample> samplelist_parser::parse( const options_qc *q_opts )
         }
 
     std::getline( samplelist_stream, header_row );
+
+    //std::cout << header_row << std::endl;
+
     boost::trim_right( header_row );
     boost::split( split_line, header_row, boost::is_any_of( "\t" ) );
+
+    //std::cout << split_line.size() << std::endl;
     
     for( std::size_t curr_col = 0; curr_col < split_line.size(); ++curr_col )
         {
             for( std::size_t curr_index = 0; curr_index < q_opts->sample_indexes.size(); ++curr_index )
                 {
-                    if( split_line.at( curr_col ) == q_opts->samplename )
+                    std::string splitline = split_line.at( curr_col );
+
+                    if( splitline == q_opts->samplename )
                         {
                             sname_found = true;
                             samplename_idx = curr_col;
+
+                            //std::cout << q_opts->samplename << " name found \n";
                         }
-                    else if( split_line.at( curr_col ) == q_opts->sample_indexes[curr_index] )
+                    else if( splitline == q_opts->sample_indexes[curr_index] )
                         {
                             index_found = true;
                             index_cols.emplace_back( curr_col );
+
+                            std::cout << splitline << std::endl;
+                        }
+                    else
+                        {
+                            //std::cout << splitline;
                         }
                 }
         }
     if( !sname_found )
         {
             throw std::runtime_error( "Error: The flag \"--sname\" value \'" + q_opts->samplename + "\' could not be found in the sample sheet. "
-                                "Verify the sample sheet contains the specified column header names. See demux \"--help\" flag for further help.\n" );
+                                "Verify the sample sheet contains the specified column header names. See qc \"--help\" flag for further help.\n" );
         }
     if( !index_found )
         {
             throw std::runtime_error( "Error: The provided sample sheet does not contain index names found in either the \"--sindex\" option or the \"--fif\" option "
                                       "(depending on which was provided). "
-                                      "Verify the sample sheet contains the correct column header names. See demux \"--help\" flag for further information.\n" );
+                                      "Verify the sample sheet contains the correct column header names. See qc \"--help\" flag for further information.\n" );
         }
     if( index_cols.size() != q_opts->sample_indexes.size() )
         {

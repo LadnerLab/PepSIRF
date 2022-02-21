@@ -12,6 +12,8 @@ class options_qc : public options
     public:
         options_qc(): DEFAULT_READ_PER_LOOP( 100000 ), DEFAULT_OUTPUT_FNAME( "output.csv" ){}
         std::string idx_fname;
+        std::string input_r1_fname;
+        std::string input_r2_fname;
         std::tuple<std::size_t, std::size_t, std::size_t> index1_data;
         std::tuple<std::size_t, std::size_t, std::size_t> index2_data;
         std::string samplelist_fname;
@@ -29,6 +31,10 @@ class options_qc : public options
                                std::size_t,
                                std::size_t>& data
                              );
+
+        void set_info( std::tuple<std::size_t, std::size_t, std::size_t>
+                              options_qc:: *member, std::string info
+                            );
 };
 
 #endif

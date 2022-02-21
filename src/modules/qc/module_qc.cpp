@@ -12,7 +12,7 @@
 #include <unordered_map>
 #include "fastq_sequence.h"
 #include "fastq_score.h"
-#include "fastq_parser.h"
+//#include "fastq_parser.h"
 #include "samplelist_parser.h"
 #include <vector>
 
@@ -26,8 +26,6 @@ void module_qc::run(options *opts)
     std::unordered_map<std::string, std::vector<std::tuple<std::string, std::string, std::size_t>>> matched_map;
     options_qc *q_opts = (options_qc*)opts;
     std::vector<flex_idx> flexible_idx_data;
-
-    
 
     if(q_opts->idx_fname.empty() )
         {
@@ -51,11 +49,22 @@ void module_qc::run(options *opts)
 
     
 
-    std::size_t read_index = 0;
-    struct time_keep::timer total_time;
+    //std::size_t read_index = 0;
+    //struct time_keep::timer total_time;
     sequential_map<sequence, sample> index_map;
     samplelist_parser samplelist_p;
+
+    if( !q_opts->idx_fname.empty() )
+        {
+            for( std::size_t curr_row = 0; curr_row < flexible_idx_data.size(); ++curr_row )
+                {
+                    q_opts->sample_indexes.emplace_back( flexible_idx_data[curr_row].idx_name );
+                }
+        }
+
     std::vector<sample> samplelist = samplelist_p.parse( q_opts ); //samplelist_p;
+
+    //for( )
 
     
     std::vector<std::pair<std::string,size_t>> index_match_totals;
@@ -64,7 +73,7 @@ void module_qc::run(options *opts)
             index_match_totals.emplace_back( std::make_pair( curr_index.idx_name, 0));
         }
 
-    fastq_parser fastq_p;
+    //fastq_parser fastq_p;
 
     for( const auto sample : samplelist )
         {
