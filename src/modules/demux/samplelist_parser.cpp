@@ -193,7 +193,7 @@ std::vector<sample> samplelist_parser::parse( const options_qc *q_opts )
                             index_found = true;
                             index_cols.emplace_back( curr_col );
 
-                            std::cout << splitline << std::endl;
+                            //std::cout << splitline << std::endl;
                         }
                     else
                         {
