@@ -18,8 +18,6 @@ void module_demux::run( options *opts )
     // options from the command line
     options_demux *d_opts = (options_demux*) opts;
 
-    std::string index_str;
-
     // fif use case
     std::vector<flex_idx> flexible_idx_data;
     std::vector<sequential_map<sequence, sample>::iterator> idx_match_list;
@@ -50,11 +48,12 @@ void module_demux::run( options *opts )
     parallel_map<sequence, std::size_t> non_perfect_match_seqs;
 
     sequential_map<sequence, sample> index_map;
-    std::map<std::string, std::size_t> id_duplicates;
+    std::map<std::string, std::size_t> seq_duplicates;
     std::unordered_map<std::string, std::vector<std::tuple<std::string, std::string, std::size_t>>> diagnostic_map;
+
     omp_set_num_threads( opts->num_threads );
 
-    total_time.start();;
+    total_time.start();
 
     // vector to store the .fna sequences that represent a designed library
     std::vector<sequence> library_seqs;
@@ -68,26 +67,7 @@ void module_demux::run( options *opts )
     fastq_parser fastq_p;
     // parse samplelist
     samplelist_parser samplelist_p;
-
-    if( !d_opts->flexible_idx_fname.empty() )
-        {
-            for( std::size_t curr_row = 0; curr_row < flexible_idx_data.size(); ++curr_row )
-                {
-                    d_opts->sample_indexes.emplace_back( flexible_idx_data[curr_row].idx_name );
-                }
-        }
     std::vector<sample> samplelist = samplelist_p.parse( d_opts );
-
-    //set the duplicate ids
-    for(auto samp : samplelist)
-        {
-            std::string id_str = "";
-            for(std::string str : samp.string_ids)
-            {
-                id_str += str;
-            }
-            id_duplicates[id_str]++;
-        }
 
     std::ifstream reads_file( d_opts->input_r1_fname, std::ios_base::in );
     std::ifstream r2_reads;
@@ -213,11 +193,10 @@ void module_demux::run( options *opts )
                     fastq_p.parse( r2_reads_ref, r2_seqs, d_opts->read_per_loop );
                 }
 
-        //    #pragma omp parallel for private( seq_iter, nuc_seq, read_index, index_str, adapter, sample_id,  \
-        //                                       idx_match_list ) \
-        //        shared( seq_start, seq_length, d_opts, num_samples, reference_counts, library_seqs, index_seqs, r2_seqs ) \
-        //         reduction( +:processed_total, processed_success, concatemer_found ) \
-        //         schedule( dynamic )
+           #pragma omp parallel for private( seq_iter, nuc_seq, read_index, adapter, sample_id, idx_match_list ) \
+                   shared( seq_start, seq_length, d_opts, num_samples, reference_counts, library_seqs, index_seqs, r2_seqs, seq_duplicates ) \
+                   reduction( +:processed_total, processed_success, concatemer_found ) \
+                   schedule( dynamic )
 
             for( read_index = 0; read_index < reads.size(); ++read_index )
                 {
@@ -392,7 +371,16 @@ void module_demux::run( options *opts )
                                                                                     seq_start,
                                                                                     seq_length
                                                                                     );
-
+                                            // check for duplicate sequence
+                                            std::string seq_str = seq_match->first.name;
+                                            if( seq_duplicates.find( seq_str ) != seq_duplicates.end() )
+                                                {
+                                                    seq_duplicates[seq_str]++;
+                                                }
+                                            else
+                                                {
+                                                    seq_duplicates.insert( std::make_pair( seq_str, 1 ) );
+                                                }
                                             if( seq_match != reference_counts.end() )
                                                 {
                                                     seq_match->second->at(0) += 1;
@@ -420,6 +408,16 @@ void module_demux::run( options *opts )
                                                                                             seq_start,
                                                                                             seq_length
                                                                                             );
+                                                    // check for duplicate sequence
+                                                    std::string seq_str = seq_match->first.name;
+                                                    if( seq_duplicates.find( seq_str ) != seq_duplicates.end() )
+                                                        {
+                                                            seq_duplicates[seq_str]++;
+                                                        }
+                                                    else
+                                                        {
+                                                            seq_duplicates.insert( std::make_pair( seq_str, 1 ) );
+                                                        }
                                                     if( seq_match != reference_counts.end() )
                                                         {
                                                             sample_id = d_id->second.id;
@@ -468,6 +466,10 @@ void module_demux::run( options *opts )
                 ( (long double) concatemer_found / (long double) processed_total ) * 100 << "% of total).\n";
         }
 
+    if( !d_opts->diagnostic_fname.empty() )
+        {
+            write_diagnostic_output( d_opts, diagnostic_map);
+        }
     if( d_opts->aggregate_fname.length() > 0  )
         {
             parallel_map<sequence, std::vector<std::size_t>*> agg_map;
@@ -492,11 +494,10 @@ void module_demux::run( options *opts )
             write_outputs( d_opts->aggregate_fname,
                            agg_map,
                            samplelist,
-                           id_duplicates
+                           seq_duplicates
                          );
         }
-    write_outputs( d_opts->output_fname, reference_counts, samplelist, id_duplicates );
-    write_diagnostic_output( d_opts, diagnostic_map);
+    write_outputs( d_opts->output_fname, reference_counts, samplelist, seq_duplicates );
 }
 
 
@@ -634,7 +635,7 @@ void module_demux::write_diagnostic_output( options_demux* d_opts, std::unordere
 void module_demux::write_outputs( std::string outfile_name,
                                   parallel_map<sequence, std::vector<std::size_t>*>& seq_scores,
                                   std::vector<sample>& samples,
-                                  std::map<std::string, std::size_t> id_duplicates
+                                  std::map<std::string, std::size_t> seq_duplicates
                                 )
 {
     std::ofstream outfile( outfile_name, std::ofstream::out );
@@ -642,7 +643,6 @@ void module_demux::write_outputs( std::string outfile_name,
 
     const std::string DELIMITER = "\t";
     const std::string NEWLINE   = "\n";
-
 
     std::size_t index        = 0;
     std::size_t second_index = 0;
@@ -665,15 +665,18 @@ void module_demux::write_outputs( std::string outfile_name,
             const sequence& curr = seq_iter->first;
             const std::vector<std::size_t> *curr_counts = seq_iter->second;
 
-
-            outfile << curr.name << DELIMITER;
-
-            for( second_index = 0; second_index < curr_counts->size() - 1; ++second_index )
+            if( seq_duplicates.empty()
+                || ( seq_duplicates.find( curr.name ) != seq_duplicates.end() && seq_duplicates[curr.name] == 1 ) )
                 {
-                    outfile << curr_counts->at( second_index ) << DELIMITER;
-                }
-            outfile << curr_counts->at( curr_counts->size() - 1 ) << NEWLINE;
+                    outfile << curr.name << DELIMITER;
+                
 
+                    for( second_index = 0; second_index < curr_counts->size() - 1; ++second_index )
+                        {
+                            outfile << curr_counts->at( second_index ) << DELIMITER;
+                        }
+                    outfile << curr_counts->at( curr_counts->size() - 1 ) << NEWLINE;
+                }
             ++seq_iter;
             delete curr_counts;
         }
