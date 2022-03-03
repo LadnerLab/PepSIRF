@@ -694,6 +694,14 @@ void module_demux::write_outputs( std::string outfile_name,
             delete curr_counts;
         }
     outfile.close();
+
+    for( auto row : dups )
+        {
+            if( row.second > 1 )
+                {
+                    std::cout << "Duplicate: " << row.first << ", " << row.second;
+                }
+        }
 }
 
 void module_demux::_zero_vector( std::vector<std::size_t>* vec )
