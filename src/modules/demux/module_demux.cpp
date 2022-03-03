@@ -329,6 +329,9 @@ void module_demux::run( options *opts )
                                                                             seq_start,
                                                                             seq_length
                                                                           );
+                                    
+                                    seq_duplicates[ seq_match->first.name ] = 0;
+
                                     if( seq_match != reference_counts.end() )
                                         {
                                             
@@ -384,7 +387,7 @@ void module_demux::run( options *opts )
                                                                                     );
                                             // check for duplicate sequence
                                             std::string seq_str = seq_match->first.name;
-                                            if( seq_duplicates.find( seq_str ) != seq_duplicates.end() )
+                                            /*if( seq_duplicates.find( seq_str ) != seq_duplicates.end() )
                                                 {
                                                     seq_duplicates[seq_str]++;
                                                 }
@@ -396,7 +399,8 @@ void module_demux::run( options *opts )
                                                 {
                                                     seq_match->second->at(0) += 1;
                                                     ++processed_success;
-                                                }
+                                                }*/
+                                            seq_duplicates[ seq_str ] = 0;
                                         }
                                     else if( flexible_idx_data.size() > 1 )
                                         {
@@ -421,7 +425,7 @@ void module_demux::run( options *opts )
                                                                                             );
                                                     // check for duplicate sequence
                                                     std::string seq_str = seq_match->first.name;
-                                                    if( seq_duplicates.find( seq_str ) != seq_duplicates.end() )
+                                                    /*if( seq_duplicates.find( seq_str ) != seq_duplicates.end() )
                                                         {
                                                             seq_duplicates[seq_str]++;
                                                         }
@@ -435,6 +439,9 @@ void module_demux::run( options *opts )
                                                             seq_match->second->at( sample_id ) += 1;
                                                             ++processed_success;
                                                         }
+                                                        */
+
+                                                    seq_duplicates[seq_str] = 0;
                                                 }
                                         }
                                     else if( found_concatemer() )
@@ -673,18 +680,25 @@ void module_demux::write_outputs( std::string outfile_name,
             const sequence& curr = seq_iter->first;
             const std::vector<std::size_t> *curr_counts = seq_iter->second;
 
-            if( seq_duplicates.empty()
+            /*if( seq_duplicates.empty()
                 || ( seq_duplicates.find( curr.name ) != seq_duplicates.end() && seq_duplicates[curr.name] == 1 ) )
-                {
-                    outfile << curr.name << DELIMITER;
+                */
+
+               // {
+                    if( seq_duplicates[ curr.name ] == 0 )
+                    {
+                        ++seq_duplicates[ curr.name ];
+
+                        outfile << curr.name << DELIMITER;
                 
 
-                    for( second_index = 0; second_index < curr_counts->size() - 1; ++second_index )
-                        {
-                            outfile << curr_counts->at( second_index ) << DELIMITER;
-                        }
-                    outfile << curr_counts->at( curr_counts->size() - 1 ) << NEWLINE;
-                }
+                        for( second_index = 0; second_index < curr_counts->size() - 1; ++second_index )
+                            {
+                                outfile << curr_counts->at( second_index ) << DELIMITER;
+                            }
+                        outfile << curr_counts->at( curr_counts->size() - 1 ) << NEWLINE;
+                    }
+               // }
             ++seq_iter;
             delete curr_counts;
         }
