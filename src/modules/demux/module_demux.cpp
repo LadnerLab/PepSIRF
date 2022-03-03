@@ -50,7 +50,7 @@ void module_demux::run( options *opts )
     parallel_map<sequence, std::size_t> non_perfect_match_seqs;
 
     sequential_map<sequence, sample> index_map;
-    std::map<std::string, std::size_t> seq_duplicates;
+    //std::map<std::string, std::size_t> seq_duplicates;
     std::unordered_map<std::string, std::vector<std::tuple<std::string, std::string, std::size_t>>> diagnostic_map;
 
     omp_set_num_threads( opts->num_threads );
@@ -205,7 +205,7 @@ void module_demux::run( options *opts )
 
            #pragma omp parallel for private( seq_iter, nuc_seq, read_index, index_str, adapter, sample_id,  \
                                               idx_match_list ) \
-               shared( seq_start, seq_length, d_opts, num_samples, reference_counts, library_seqs, index_seqs, r2_seqs, seq_duplicates ) \
+               shared( seq_start, seq_length, d_opts, num_samples, reference_counts, library_seqs, index_seqs, r2_seqs) \
                 reduction( +:processed_total, processed_success, concatemer_found ) \
                 schedule( dynamic )
 
@@ -330,7 +330,7 @@ void module_demux::run( options *opts )
                                                                             seq_length
                                                                           );
                                     
-                                    seq_duplicates[ seq_match->first.name ] = 0;
+                                    //seq_duplicates[ seq_match->first.name ] = 0;
 
                                     if( seq_match != reference_counts.end() )
                                         {
@@ -400,7 +400,7 @@ void module_demux::run( options *opts )
                                                     seq_match->second->at(0) += 1;
                                                     ++processed_success;
                                                 }*/
-                                            seq_duplicates[ seq_str ] = 0;
+                                            //seq_duplicates[ seq_str ] = 0;
                                         }
                                     else if( flexible_idx_data.size() > 1 )
                                         {
@@ -441,7 +441,7 @@ void module_demux::run( options *opts )
                                                         }
                                                         */
 
-                                                    seq_duplicates[seq_str] = 0;
+                                                    //seq_duplicates[seq_str] = 0;
                                                 }
                                         }
                                     else if( found_concatemer() )
@@ -507,14 +507,13 @@ void module_demux::run( options *opts )
 
             write_outputs( d_opts->aggregate_fname,
                            agg_map,
-                           samplelist,
-                           seq_duplicates
+                           samplelist
                          );
         }
-    write_outputs( d_opts->output_fname, reference_counts, samplelist, seq_duplicates );
+    write_outputs( d_opts->output_fname, reference_counts, samplelist);
     write_diagnostic_output( d_opts, diagnostic_map);
 }
-
+                           //seq_duplicates
 
 std::string module_demux::get_name()
 {
@@ -649,8 +648,7 @@ void module_demux::write_diagnostic_output( options_demux* d_opts, std::unordere
 
 void module_demux::write_outputs( std::string outfile_name,
                                   parallel_map<sequence, std::vector<std::size_t>*>& seq_scores,
-                                  std::vector<sample>& samples,
-                                  std::map<std::string, std::size_t> seq_duplicates
+                                  std::vector<sample>& samples
                                 )
 {
     std::ofstream outfile( outfile_name, std::ofstream::out );
@@ -681,12 +679,6 @@ void module_demux::write_outputs( std::string outfile_name,
         {
             const sequence& curr = seq_iter->first;
             const std::vector<std::size_t> *curr_counts = seq_iter->second;
-
-            /*if( seq_duplicates.empty()
-                || ( seq_duplicates.find( curr.name ) != seq_duplicates.end() && seq_duplicates[curr.name] == 1 ) )
-                */
-
-               // {
                     if( ( ++dups [ curr.name ] ) == 1)
                         {
                             outfile << curr.name << DELIMITER;
@@ -698,24 +690,6 @@ void module_demux::write_outputs( std::string outfile_name,
                                 }
                             outfile << curr_counts->at( curr_counts->size() - 1 ) << NEWLINE;
                         }
-
-                    
-                    /*
-                    if( seq_duplicates[ curr.name ] == 0 )
-                    {
-                        ++seq_duplicates[ curr.name ];
-
-                        outfile << curr.name << DELIMITER;
-                
-
-                        for( second_index = 0; second_index < curr_counts->size() - 1; ++second_index )
-                            {
-                                outfile << curr_counts->at( second_index ) << DELIMITER;
-                            }
-                        outfile << curr_counts->at( curr_counts->size() - 1 ) << NEWLINE;
-                    }
-                    */
-               // }
             ++seq_iter;
             delete curr_counts;
         }
