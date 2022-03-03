@@ -675,6 +675,8 @@ void module_demux::write_outputs( std::string outfile_name,
 
     outfile << header;
 
+    std::map<std::string, std::size_t> dups;
+
     for( index = 0; index < seq_scores.size(); ++index )
         {
             const sequence& curr = seq_iter->first;
@@ -685,6 +687,20 @@ void module_demux::write_outputs( std::string outfile_name,
                 */
 
                // {
+                    if( ( ++dups [ curr.name ] ) == 1)
+                        {
+                            outfile << curr.name << DELIMITER;
+                
+
+                            for( second_index = 0; second_index < curr_counts->size() - 1; ++second_index )
+                                {
+                                    outfile << curr_counts->at( second_index ) << DELIMITER;
+                                }
+                            outfile << curr_counts->at( curr_counts->size() - 1 ) << NEWLINE;
+                        }
+
+                    
+                    /*
                     if( seq_duplicates[ curr.name ] == 0 )
                     {
                         ++seq_duplicates[ curr.name ];
@@ -698,6 +714,7 @@ void module_demux::write_outputs( std::string outfile_name,
                             }
                         outfile << curr_counts->at( curr_counts->size() - 1 ) << NEWLINE;
                     }
+                    */
                // }
             ++seq_iter;
             delete curr_counts;
