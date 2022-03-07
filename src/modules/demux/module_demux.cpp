@@ -679,7 +679,7 @@ void module_demux::write_outputs( std::string outfile_name,
         {
             const sequence& curr = seq_iter->first;
             const std::vector<std::size_t> *curr_counts = seq_iter->second;
-                    if( ( ++dups [ curr.name ] ) == 1)
+                    if( ( ++dups [ curr.seq ] ) == 1)
                         {
                             outfile << curr.name << DELIMITER;
                 
@@ -695,7 +695,7 @@ void module_demux::write_outputs( std::string outfile_name,
         }
     outfile.close();
 
-    for( auto row : dups )
+    for( const auto row : dups )
         {
             if( row.second > 1 )
                 {
