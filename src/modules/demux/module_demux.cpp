@@ -20,6 +20,8 @@ void module_demux::run( options *opts )
 
     std::string index_str;
 
+    std::map<std::string, std::size_t> duplicate_map;
+
     // fif use case
     std::vector<flex_idx> flexible_idx_data;
     std::vector<sequential_map<sequence, sample>::iterator> idx_match_list;
@@ -502,15 +504,16 @@ void module_demux::run( options *opts )
                 }
             else
                 {
-                    aggregate_counts( agg_map, reference_counts, samplelist.size() );
+                    aggregate_counts( agg_map, reference_counts, duplicate_map, samplelist.size() );
                 }
 
             write_outputs( d_opts->aggregate_fname,
                            agg_map,
+                           duplicate_map,
                            samplelist
                          );
         }
-    write_outputs( d_opts->output_fname, reference_counts, samplelist);
+    write_outputs( d_opts->output_fname, reference_counts, duplicate_map, samplelist);
     write_diagnostic_output( d_opts, diagnostic_map);
 }
                            //seq_duplicates
@@ -522,6 +525,7 @@ std::string module_demux::get_name()
 
 void module_demux::aggregate_counts( parallel_map<sequence, std::vector<std::size_t>*>& agg_map,
                                      parallel_map<sequence, std::vector<std::size_t>*>& count_map,
+                                     std::map<std::string, std::size_t> duplicate_map,
                                      size_t num_samples
                                    )
 {
@@ -532,6 +536,7 @@ void module_demux::aggregate_counts( parallel_map<sequence, std::vector<std::siz
     std::vector<std::size_t> *current_vec_agg   = nullptr;
     std::vector<std::size_t> *current_vec_count = nullptr;
     sequential_map<std::string, std::vector<std::size_t>*> ptr_map;
+    //std::map<std::string, std::size_t> duplicate_map;
 
     constexpr int NUM_DELIMITED_ITEMS = 2;
 
@@ -561,6 +566,8 @@ void module_demux::aggregate_counts( parallel_map<sequence, std::vector<std::siz
                 {
                     // add the sequence to agg_map, initialize its data
                     agg_map[ current ] = new std::vector<std::size_t>( num_samples );
+                    ++duplicate_map [ current.seq ];
+
                     ptr_map[ strs[ 0 ] ] = agg_map[ current ];
                     _zero_vector( agg_map[ current ] );
                 }
@@ -648,6 +655,7 @@ void module_demux::write_diagnostic_output( options_demux* d_opts, std::unordere
 
 void module_demux::write_outputs( std::string outfile_name,
                                   parallel_map<sequence, std::vector<std::size_t>*>& seq_scores,
+                                  std::map<std::string, std::size_t> duplicate_map,
                                   std::vector<sample>& samples
                                 )
 {
@@ -673,17 +681,14 @@ void module_demux::write_outputs( std::string outfile_name,
 
     outfile << header;
 
-    std::map<std::string, std::size_t> dups;
-
     for( index = 0; index < seq_scores.size(); ++index )
         {
             const sequence& curr = seq_iter->first;
+
             const std::vector<std::size_t> *curr_counts = seq_iter->second;
-                    if( ( ++dups [ curr.seq ] ) == 1)
+                    if(duplicate_map[curr.seq] == 1)
                         {
                             outfile << curr.name << DELIMITER;
-                
-
                             for( second_index = 0; second_index < curr_counts->size() - 1; ++second_index )
                                 {
                                     outfile << curr_counts->at( second_index ) << DELIMITER;
@@ -695,7 +700,7 @@ void module_demux::write_outputs( std::string outfile_name,
         }
     outfile.close();
 
-    for( const auto row : dups )
+    for( const auto row : duplicate_map )
         {
             if( row.second > 1 )
                 {

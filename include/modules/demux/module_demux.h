@@ -89,6 +89,7 @@ class module_demux : public module
      **/
     void write_outputs( std::string outfile_name,
                         parallel_map<sequence, std::vector<std::size_t>*>& seq_scores,
+                        std::map<std::string, std::size_t> duplicate_map,
                         std::vector<sample>& samples
                       );
 
@@ -246,6 +247,7 @@ class module_demux : public module
      **/
     void aggregate_counts( parallel_map<sequence, std::vector<std::size_t>*>& agg_map,
                            parallel_map<sequence, std::vector<std::size_t>*>& count_map,
+                           std::map<std::string, std::size_t> duplicate_map,
                            std::size_t num_samples
                          );
 
