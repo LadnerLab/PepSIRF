@@ -137,7 +137,7 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
           "Used to specify the header for the sample name column in the samplelist. By default \'SampleName\' is set as the column header name.\n"
         )
         (
-          "sindex", po::value<std::string>( &opts_demux->indexes )->notifier(
+          "sindex", po::value<std::string>( &opts_demux->indexes )->default_value("Index1,Index2")->notifier(
                                             [&]( const std::string &vals ) {
                                                                               std::vector<std::string> indexes;
                                                                               boost::split( indexes, vals, boost::is_any_of( ",") );
