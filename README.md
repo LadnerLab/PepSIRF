@@ -2,62 +2,37 @@
 
 <img src="./img/logo.png" alt="Your image title" width="1024"/>
 
-Visit our GitHub Pages website: [https://ladnerlab.github.io/PepSIRF/](https://ladnerlab.github.io/PepSIRF/)
+## GPL-3.0-or-later
 
 ### Current Version: v1.4.0
 
-### Dependencies
+Visit our [GitHub Pages website](https://ladnerlab.github.io/PepSIRF/)
+
+### System requirements
+- MacOS or Linux
+
+#### Tested versions
+- MacOS: 10.14, 10.15, 11
+- Linux: Mint 19.3, CentOS 7
+
+### Software dependencies
 - cmake version 3.9 or higher.
 - boost version 1.66 or higher.
 
-### Compiling/Building
-```
-mkdir build
-cd build
-cmake -DCMAKE_BUILD_TYPE=Release ..
-make pepsirf
-```
+### Installation
 
-Alternatively, one can use the included build script.
-```
-chmod +x build.sh
-./build.sh
-```
-Both of these options will create a ```pepsirf``` executable in the build directory.
+- See [here](https://ladnerlab.github.io/PepSIRF/installation/) for PepSIRF installation guide.
 
-### Running Tests
-```
-mkdir build
-cd build
-cmake -DCMAKE_BUILD_TYPE=Release ..
-make pepsirf_test
+- Typical installation time <5 minutes. 
 
-./pepsirf_test
-```
-#### Note: Building for HPC Clusters
-Some additional arguments may need to be specified, depending upon how your system's
-module system is managed. For example on NAU's Monsoon cluster:
-```
-cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DBOOST_ROOT=/packages/boost/1.66.0-gcc-6.2.0 ..
-```
+### Tutorials
 
-### Usage
-PepSIRF is a module-based program, and each module has its own set of arguments.
-```
-USAGE: pepsirf [ --help | module_name <module_args*> ]
---help, -h displays this message, while 'pepsirf module_name --help' will display the help for the module module_name.
-```
+- See [here](https://ladnerlab.github.io/PepSIRF/pepsirf-tutorials/) for PepSIRF tutorials.
 
-### Generating Code Documentation
-To create documentation for the code run the following:
-```
-cd doc
-doxygen doxygen.conf
-```
-From here you can either use the html or LaTeX versions.
-If you choose to use the LaTeX version, run the following:
-```
-cd latex
-make
-```
-This creates a file named ```refman.pdf```.
+#### Changelog
+
+- See [here](https://ladnerlab.github.io/PepSIRF/changelog/) for PepSIRF changelog.
+
+### Citation
+
+- Please cite [preprint](https://arxiv.org/abs/2007.05050) when using PepSIRF. 
