@@ -200,7 +200,7 @@ void module_demux::run( options *opts )
                     fastq_p.parse( r2_reads_ref, r2_seqs, d_opts->read_per_loop );
                 }
 
-           #pragma omp parallel for private( seq_iter, nuc_seq, read_index, index_str, adapter, sample_id,  \
+           #pragma omp parallel for private( seq_iter, nuc_seq, read_index, index_str, adapter, sample_id, duplicate_map,  \
                                               idx_match_list ) \
                shared( seq_start, seq_length, d_opts, num_samples, reference_counts, library_seqs, index_seqs, r2_seqs) \
                 reduction( +:processed_total, processed_success, concatemer_found ) \
@@ -327,6 +327,7 @@ void module_demux::run( options *opts )
                                                                           );
                                     if( seq_match != reference_counts.end() )
                                         {
+                                            // ++duplicate_map[seq_match->first.seq]; resulted in too many duplicates
                                             if( flexible_idx_data.size() > 1 )
                                                 {
                                                     std::string concat_idx = "";
@@ -349,7 +350,8 @@ void module_demux::run( options *opts )
                                                 {
                                                     sample_id = d_id->second.id;
                                                     seq_match->second->at( sample_id ) += 1;
-                                                    
+                                                    // dup count tried here, but didn't work
+                                                    // ++duplicate_map[seq_match->first.seq];
                                                     ++processed_success;
                                                     
                                                     if( !d_opts->diagnostic_fname.empty() )
@@ -419,7 +421,11 @@ void module_demux::run( options *opts )
             
         }
     total_time.stop();
-
+    // check for duplicates
+    for( const auto& library_seq : library_seqs )
+    {
+        ++duplicate_map[library_seq.seq];
+    }
     std::cout << processed_success << " records were found to be a match out of "
               << processed_total << " (" << ( (long double) processed_success / (long double) processed_total ) * 100
               << "%) successful.\n";
@@ -459,7 +465,7 @@ void module_demux::run( options *opts )
                 }
             else
                 {
-                    aggregate_counts( agg_map, reference_counts, duplicate_map, samplelist.size() );
+                    aggregate_counts( agg_map, reference_counts, samplelist.size() );
                 }
 
             write_outputs( d_opts->aggregate_fname,
@@ -480,7 +486,6 @@ std::string module_demux::get_name()
 
 void module_demux::aggregate_counts( parallel_map<sequence, std::vector<std::size_t>*>& agg_map,
                                      parallel_map<sequence, std::vector<std::size_t>*>& count_map,
-                                     std::map<std::string, std::size_t> duplicate_map,
                                      size_t num_samples
                                    )
 {
