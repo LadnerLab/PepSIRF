@@ -327,7 +327,6 @@ void module_demux::run( options *opts )
                                                                           );
                                     if( seq_match != reference_counts.end() )
                                         {
-                                            // ++duplicate_map[seq_match->first.seq]; resulted in too many duplicates
                                             if( flexible_idx_data.size() > 1 )
                                                 {
                                                     std::string concat_idx = "";
@@ -350,8 +349,6 @@ void module_demux::run( options *opts )
                                                 {
                                                     sample_id = d_id->second.id;
                                                     seq_match->second->at( sample_id ) += 1;
-                                                    // dup count tried here, but didn't work
-                                                    // ++duplicate_map[seq_match->first.seq];
                                                     ++processed_success;
                                                     
                                                     if( !d_opts->diagnostic_fname.empty() )
@@ -477,7 +474,6 @@ void module_demux::run( options *opts )
     write_outputs( d_opts->output_fname, reference_counts, duplicate_map, samplelist);
     write_diagnostic_output( d_opts, diagnostic_map);
 }
-                           //seq_duplicates
 
 std::string module_demux::get_name()
 {
@@ -496,7 +492,6 @@ void module_demux::aggregate_counts( parallel_map<sequence, std::vector<std::siz
     std::vector<std::size_t> *current_vec_agg   = nullptr;
     std::vector<std::size_t> *current_vec_count = nullptr;
     sequential_map<std::string, std::vector<std::size_t>*> ptr_map;
-    //std::map<std::string, std::size_t> duplicate_map;
 
     constexpr int NUM_DELIMITED_ITEMS = 2;
 
