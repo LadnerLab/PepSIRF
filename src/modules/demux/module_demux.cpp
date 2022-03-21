@@ -662,7 +662,7 @@ void module_demux::write_outputs( options_demux* d_opts,
     std::size_t count = 0;
     for( const auto row : duplicate_map )
         {
-            d_out << row.first << "\t" << row.second << std::endl;
+            d_out << row.second << "\t" << row.first << std::endl;
         }
 
     d_out.close();
