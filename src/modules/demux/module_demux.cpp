@@ -656,19 +656,13 @@ void module_demux::write_outputs( options_demux* d_opts,
         }
     outfile.close();
 
-    /*for( const auto row : duplicate_map )
-        {
-            if( row.second > 1 )
-                {
-                    std::cout << "Duplicate: " << row.first << ", " << row.second << "\n";
-                }
-        }*/
-    
-    std::ofstream d_out("output.txt", std::ofstream::out);
 
+    std::ofstream d_out("output.tsv", std::ofstream::out);
+
+    std::size_t count = 0;
     for( const auto row : duplicate_map )
         {
-            d_out << row.first << ": " << row.second << std::endl;
+            d_out << row.first << "\t" << row.second << std::endl;
         }
 
     d_out.close();
