@@ -656,13 +656,23 @@ void module_demux::write_outputs( options_demux* d_opts,
         }
     outfile.close();
 
-    for( const auto row : duplicate_map )
+    /*for( const auto row : duplicate_map )
         {
             if( row.second > 1 )
                 {
                     std::cout << "Duplicate: " << row.first << ", " << row.second << "\n";
                 }
+        }*/
+    
+    std::ofstream d_out("output.txt", std::ofstream::out);
+
+    for( const auto row : duplicate_map )
+        {
+            d_out << row.first << ": " << row.second << std::endl;
         }
+
+    d_out.close();
+
 }
 
 void module_demux::_zero_vector( std::vector<std::size_t>* vec )
