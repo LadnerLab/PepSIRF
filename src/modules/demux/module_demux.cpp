@@ -376,6 +376,12 @@ void module_demux::run( options *opts )
                                                                                     seq_start,
                                                                                     seq_length
                                                                                     );
+                                            
+                                            if( seq_match != reference_counts.end() )
+                                                {
+                                                    seq_match->second->at(0) += 1;
+                                                    ++processed_success;
+                                                }                
                                         }
                                     else if( flexible_idx_data.size() > 1 )
                                         {
@@ -398,6 +404,12 @@ void module_demux::run( options *opts )
                                                                                             seq_start,
                                                                                             seq_length
                                                                                             );
+                                                    if( seq_match != reference_counts.end() )
+                                                        {
+                                                            sample_id = d_id->second.id;
+                                                            seq_match->second->at( sample_id ) += 1;
+                                                            ++processed_success;
+                                                        }
                                                 }
                                         }
                                     else if( found_concatemer() )
