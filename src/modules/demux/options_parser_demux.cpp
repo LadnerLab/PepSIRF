@@ -51,7 +51,6 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
           "increasing performance of the program.\n"
         )
         ( "index1", po::value<std::string>()
-                     ->default_value( "0,0,0" )
                      ->notifier( [&]( const std::string &vals ) {
                              opts_demux->set_info( &options_demux::index1_data,
                                                     vals
@@ -64,7 +63,6 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
           "12, the index is 12 nucleotides long, and if a perfect match is not found, then up to one mismatch will be tolerated.\n."
         )
         ( "index2", po::value<std::string>()
-                     ->default_value( "0,0,0" )
                      ->notifier( [&]( const std::string &vals ) {
                              opts_demux->set_info( &options_demux::index2_data,
                                                     vals

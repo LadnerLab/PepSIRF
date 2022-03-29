@@ -29,11 +29,14 @@ void module_demux::run( options *opts )
                                             std::get<0>( d_opts->index1_data ),   // start
                                             std::get<1>( d_opts->index1_data ),   // length
                                             std::get<2>( d_opts->index1_data ) ); // num mismatch
-            flexible_idx_data.emplace_back( d_opts->sample_indexes[1],
-                                            "r2",
-                                            std::get<0>( d_opts->index2_data ),
-                                            std::get<1>( d_opts->index2_data ),
-                                            std::get<2>( d_opts->index2_data ));
+            if( !d_opts->input_r2_fname.empty() )
+                {
+                    flexible_idx_data.emplace_back( d_opts->sample_indexes[1],
+                                                    "r2",
+                                                    std::get<0>( d_opts->index2_data ),
+                                                    std::get<1>( d_opts->index2_data ),
+                                                    std::get<2>( d_opts->index2_data ));
+                }
         }
     else
         {
@@ -67,7 +70,7 @@ void module_demux::run( options *opts )
     fastq_parser fastq_p;
     // parse samplelist
     samplelist_parser samplelist_p;
-    std::vector<sample> samplelist = samplelist_p.parse( d_opts );
+    std::vector<sample> samplelist = samplelist_p.parse( d_opts, flexible_idx_data );
 
     std::ifstream reads_file( d_opts->input_r1_fname, std::ios_base::in );
     std::ifstream r2_reads;
@@ -173,7 +176,7 @@ void module_demux::run( options *opts )
             for( const auto sample : samplelist )
                 {
                     std::vector<std::tuple<std::string, std::string, std::size_t>> barcodes;
-                    for( std::size_t curr_barcode = 0; curr_barcode < sample.string_ids.size(); ++curr_barcode )
+                    for( std::size_t curr_barcode = 0; curr_barcode < index_match_totals.size(); ++curr_barcode )
                         {
                             barcodes.emplace_back( std::make_tuple( index_match_totals[curr_barcode].first, sample.string_ids[curr_barcode], 0 ) );
                         }

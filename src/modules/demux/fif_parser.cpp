@@ -26,7 +26,6 @@ std::vector<flex_idx> fif_parser::parse( const std::string fif_fname )
                         split_line[1][0] = std::tolower( split_line[1][0] );
                     }
                 flex_idx idx_data_elem( split_line[0], split_line[1], split_line[2], split_line[3], split_line[4] );
-
                 ret_idx_data.emplace_back( idx_data_elem );
 
             }
