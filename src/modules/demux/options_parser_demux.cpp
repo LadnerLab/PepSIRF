@@ -1,5 +1,7 @@
 #include "options_parser_demux.h"
 #include <stdexcept>
+#include <boost/algorithm/string.hpp>
+#include "predicate.h"
 
 options_parser_demux::options_parser_demux() = default;
 
@@ -49,7 +51,6 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
           "increasing performance of the program.\n"
         )
         ( "index1", po::value<std::string>()
-                     ->required()
                      ->notifier( [&]( const std::string &vals ) {
                              opts_demux->set_info( &options_demux::index1_data,
                                                     vals
@@ -83,6 +84,24 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
           "If \"--input2\" is provided, this positional information is assummed to refer to the reads contained in this second, index-only fastq file. "
           "If \"--input_r2\" is NOT provided, this positional information is assumed to refer to the reads contained in the \"--input_r1\" fastq file.\n"
         )
+        ( "fif,f", po::value<std::string>( &opts_demux->flexible_idx_fname )->default_value( "" )
+                   ->notifier( [&]( const std::string &val ) {
+                              if( vm["index1"].empty()
+                                 && val.empty() )
+                                {
+                                  throw std::runtime_error( "The option '--fif' or '--index1' must be provided.\n");
+                                }
+                              else if( !vm["index1"].empty() && !val.empty() )
+                                {
+                                  std::cout << "WARNING: Both options '--fif' and '--index1' have been provided. The option '--fif' will be used.\n";
+                                }
+                    }),
+          "The flexible index file can be provided as an alternative to the '--index1' and '--index2' options. The file must use the following format: "
+          "a tab-delimited file with 5 ordered columns: 1) index name, which should correspond to a header name in the sample sheet, 2) read name, which "
+          "should be either 'r1' or 'r2' (not case-sensitive) to specify whether the index is in '--input_r1' or '--input_r2', 3) index start location (0-based, inclusive), 4) "
+          "index length and 5) number of mismatched to allow. '--index1', '--index2', '--sname', '--sindex1', and 'sindex2' will be ignored if this option is provided."
+          "\n"
+        )
         ( "concatemer,c", po::value<std::string>( &opts_demux->concatemer ),
         "Concatenated adapter/primer sequences (optional). The presence of this sequence within a read indicates that the "
         "expected DNA tag is not present. If supplied, the number of times this concatemer is recorded in the input file is reported.\n"
@@ -110,19 +129,22 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
         ( "samplelist,s", po::value<std::string>( &opts_demux->samplelist_fname )->required(), "A tab-delimited list of samples with a header row "
           "and one sample per line. This file must contain at least one index column and one sample name column. Multiple index columns may be included. "
           "This file can also include additional columns that will not be used for the demultiplexing. "
-          "Specify which columns to use with the \"--sname\", \"--sindex1\", and \"--sindex2\" flags.\n"
+          "Specify which columns to use with the \"--sname\", \"--sindex1\", and \"--sindex2\" flags. "
+          "If \"-fif\" is used, then only \"-sname\" will be used. \n"
         )
         (
           "sname", po::value<std::string>( &opts_demux->samplename )->default_value( "SampleName" ),
           "Used to specify the header for the sample name column in the samplelist. By default \'SampleName\' is set as the column header name.\n"
         )
         (
-          "sindex1", po::value<std::string>( &opts_demux->sample_idx1 )->default_value( "Index1" ),
-          "Used to specify the header for the index 1 column in the samplelist. By default \'Index1\' is set as the column header name.\n"
-        )
-        (
-          "sindex2", po::value<std::string>( &opts_demux->sample_idx2 )->default_value( "Index2" ),
-          "Used to specify the header for the index 2 column in the samplelist. By default \'Index2\' is set as the column header name.\n"
+          "sindex", po::value<std::string>( &opts_demux->indexes )->default_value("Index1,Index2")->notifier(
+                                            [&]( const std::string &vals ) {
+                                                                              std::vector<std::string> indexes;
+                                                                              boost::split( indexes, vals, boost::is_any_of( ",") );
+                                                                              opts_demux->sample_indexes = indexes;
+                                                                           }
+                                          ),
+          "Used to specify the header for the index 1 and optional index 2 column in the samplelist. This is an alternative to using the \"--fif\" option.\n"
         )
         ( "diagnostic_info,d", po::value<std::string>( &opts_demux->diagnostic_fname )->default_value( "" ),
           "Include this flag with an output file name to collect diagnostic information on read pair matches in map. The file will be formated with tab delimited "
