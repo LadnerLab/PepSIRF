@@ -1,0 +1,2 @@
+/usr/bin/ar qc libmodules_normalize.a  CMakeFiles/modules_normalize.dir/src/modules/normalize/options_normalize.cpp.o CMakeFiles/modules_normalize.dir/src/modules/normalize/options_parser_normalize.cpp.o CMakeFiles/modules_normalize.dir/src/modules/core/module.cpp.o CMakeFiles/modules_normalize.dir/src/modules/normalize/module_normalize.cpp.o CMakeFiles/modules_normalize.dir/src/modules/core/peptide_scoring.cpp.o
+/usr/bin/ranlib libmodules_normalize.a

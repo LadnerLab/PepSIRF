@@ -1,0 +1,2 @@
+/usr/bin/ar qc libmodules_subjoin.a  CMakeFiles/modules_subjoin.dir/src/modules/subjoin/options_subjoin.cpp.o CMakeFiles/modules_subjoin.dir/src/modules/subjoin/options_parser_subjoin.cpp.o CMakeFiles/modules_subjoin.dir/src/modules/core/module.cpp.o CMakeFiles/modules_subjoin.dir/src/modules/subjoin/module_subjoin.cpp.o
+/usr/bin/ranlib libmodules_subjoin.a
