@@ -495,7 +495,10 @@ void module_demux::run( options *opts )
                          );
         }
     write_outputs( d_opts, reference_counts, duplicate_map, samplelist);
-    write_diagnostic_output( d_opts, diagnostic_map);
+    if( !d_opts->diagnostic_fname.empty() )
+        {
+            write_diagnostic_output( d_opts, diagnostic_map);
+        }
 }
 
 std::string module_demux::get_name()
