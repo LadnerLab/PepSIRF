@@ -285,39 +285,35 @@ void module_demux::run( options *opts )
                                         )
                                    );
                         };
-                    //!!START HERE!!//
-                    #pragma omp critical
-                        {
-                            for( const auto& index : flexible_idx_data )
+                        for( const auto& index : flexible_idx_data )
+                            {
+                                sequential_map<sequence, sample>::iterator index_match;
+                                if( index.read_name == "r1" )
+                                    {
+                                                index_match = _find_with_shifted_mismatch( seq_lookup, reads[ read_index ],
+                                                                        index_idx, index.num_mismatch,
+                                                                        index.idx_start, index.idx_len
+                                                                        );
+                                    }
+                                else
                                 {
-                                    sequential_map<sequence, sample>::iterator index_match;
-                                    if( index.read_name == "r1" )
+                                    if( r2_seqs.size() == 0 )
                                         {
                                             index_match = _find_with_shifted_mismatch( seq_lookup, reads[ read_index ],
-                                                                            index_idx, index.num_mismatch,
-                                                                            index.idx_start, index.idx_len
-                                                                            );
-                                        }
-                                    else
-                                        {
-                                        if( r2_seqs.size() == 0 )
-                                            {
-                                                index_match = _find_with_shifted_mismatch( seq_lookup, reads[ read_index ],
-                                                                                        index_idx, index.num_mismatch,
-                                                                                        index.idx_start, index.idx_len
-                                                                                        );
-                                            }
-                                    else
-                                        {
-                                            index_match = _find_with_shifted_mismatch( seq_lookup, r2_seqs[ read_index ],
                                                                                     index_idx, index.num_mismatch,
                                                                                     index.idx_start, index.idx_len
                                                                                     );
                                         }
+                                else
+                                    {
+                                        index_match = _find_with_shifted_mismatch( seq_lookup, r2_seqs[ read_index ],
+                                                                                index_idx, index.num_mismatch,
+                                                                                index.idx_start, index.idx_len
+                                                                                );
+                                    }
                                 }
                                 idx_match_list.push_back( index_match );
                             }
-                        }
                     
                     
                     //!!ENDHERE!!//
