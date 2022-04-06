@@ -204,7 +204,7 @@ void module_demux::run( options *opts )
                 }
 
            #pragma omp parallel for private( seq_iter, nuc_seq, read_index, index_str, adapter, sample_id, duplicate_map,  \
-                                              idx_match_list ) \
+                                              idx_match_list, index_match_totals) \
                shared( seq_start, seq_length, d_opts, num_samples, reference_counts, library_seqs, index_seqs, r2_seqs) \
                 reduction( +:processed_total, processed_success, concatemer_found ) \
                 schedule( dynamic )
