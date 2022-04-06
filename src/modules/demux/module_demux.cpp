@@ -226,7 +226,10 @@ void module_demux::run( options *opts )
                                             concat_idx_seq.append( index_match->first.seq );
                                             if( index_map.find( sequence( "", concat_idx_seq ) ) != index_map.end() )
                                                 {
-                                                    index_match_totals[curr_index].second++;
+                                                    #pragma omp critical
+                                                        {
+                                                            index_match_totals[curr_index].second++;
+                                                        }
                                                     // future: update_diagnostic_data - or something
                                                     if( !d_opts->diagnostic_fname.empty() )
                                                         {
