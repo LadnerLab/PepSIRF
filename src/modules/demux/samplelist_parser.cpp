@@ -18,7 +18,7 @@ std::vector<sample> samplelist_parser::parse( const options_demux *d_opts, const
     bool index_found = false;
     std::vector<sample> vec;
     std::map<std::string, std::size_t> names;
-    std::map<std::string, std::size_t> id_sets;
+    std::map<std::string, std::size_t> id_pairs;
     bool duplicate_name = false;
     bool duplicate_id = false;
 

@@ -2,6 +2,7 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/lexical_cast.hpp>
 #include <sstream>
+#include <vector>
 #include "options_demux.h"
 
 

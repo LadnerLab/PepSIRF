@@ -87,10 +87,10 @@ class module_demux : public module
      * @param sample_duplicates map of dna tags. contains the number of each dna tag that 
      *        appears in a run. used to determine the samples included in the output.
      **/
-    void write_outputs( std::string outfile_name,
+    void write_outputs( options_demux* d_opts,
                         parallel_map<sequence, std::vector<std::size_t>*>& seq_scores,
-                        std::vector<sample>& samples,
-                        std::map<std::string, std::size_t> seq_duplicates
+                        std::map<std::string, std::size_t> duplicate_map,
+                        std::vector<sample>& samples
                       );
 
 
