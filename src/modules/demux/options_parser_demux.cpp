@@ -62,18 +62,7 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
           "of mismatches that are tolerated for this index. An example is '--index1 12,12,1'. This says that the index starts at (0-based) position "
           "12, the index is 12 nucleotides long, and if a perfect match is not found, then up to one mismatch will be tolerated.\n."
         )
-        ( "seq", po::value<std::string>()
-                     ->required()
-                     ->notifier( [&]( const std::string &vals ) {
-                             opts_demux->set_info( &options_demux::seq_data,
-                                                    vals
-                                                 );
-                                                                }
-                               ),
-          "Positional information for the DNA tags. This argument must be passed in the same format specified for \"index1\".\n"
-        )
         ( "index2", po::value<std::string>()
-                     ->default_value( "0,0,0" )
                      ->notifier( [&]( const std::string &vals ) {
                              opts_demux->set_info( &options_demux::index2_data,
                                                     vals
@@ -83,6 +72,16 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
           "Positional information for index2, optional. This argument must be passed in the same format specified for \"--index1\". "
           "If \"--input2\" is provided, this positional information is assummed to refer to the reads contained in this second, index-only fastq file. "
           "If \"--input_r2\" is NOT provided, this positional information is assumed to refer to the reads contained in the \"--input_r1\" fastq file.\n"
+        )
+        ( "seq", po::value<std::string>()
+                     ->required()
+                     ->notifier( [&]( const std::string &vals ) {
+                             opts_demux->set_info( &options_demux::seq_data,
+                                                    vals
+                                                 );
+                                                                }
+                               ),
+          "Positional information for the DNA tags. This argument must be passed in the same format specified for \"index1\".\n"
         )
         ( "fif,f", po::value<std::string>( &opts_demux->flexible_idx_fname )->default_value( "" )
                    ->notifier( [&]( const std::string &val ) {
@@ -137,7 +136,7 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
           "Used to specify the header for the sample name column in the samplelist. By default \'SampleName\' is set as the column header name.\n"
         )
         (
-          "sindex", po::value<std::string>( &opts_demux->indexes )->default_value("Index1,Index2")->notifier(
+          "sindex", po::value<std::string>( &opts_demux->indexes )->default_value( "Index1,Index2" )->notifier(
                                             [&]( const std::string &vals ) {
                                                                               std::vector<std::string> indexes;
                                                                               boost::split( indexes, vals, boost::is_any_of( ",") );

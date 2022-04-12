@@ -3,7 +3,7 @@
 #include <boost/algorithm/string.hpp>
 
 // Pass not just filename, but also the string array of headers
-std::vector<sample> samplelist_parser::parse( const options_demux *d_opts )
+std::vector<sample> samplelist_parser::parse( const options_demux *d_opts, const std::vector<flex_idx> flexible_idx_data )
 { 
     std::ifstream samplelist_stream( d_opts->samplelist_fname );
     std::size_t samplename_idx;
@@ -30,21 +30,24 @@ std::vector<sample> samplelist_parser::parse( const options_demux *d_opts )
     std::getline( samplelist_stream, header_row );
     boost::trim_right( header_row );
     boost::split( split_line, header_row, boost::is_any_of( "\t" ) );
-    // This needs to be changed to be a nested for loop. Now that more than 2 indexes can be provided, it is not a check for whether 1 or two indexes are given.
-    for( std::size_t curr_col = 0; curr_col < split_line.size(); ++curr_col )
+    
+    for( std::size_t curr_index = 0; curr_index < flexible_idx_data.size(); ++curr_index )
         {
-            for( std::size_t curr_index = 0; curr_index < d_opts->sample_indexes.size(); ++curr_index )
+            for( std::size_t curr_col = 0; curr_col < split_line.size(); ++curr_col )
                 {
-                    if( split_line.at( curr_col ) == d_opts->samplename )
-                        {
-                            sname_found = true;
-                            samplename_idx = curr_col;
-                        }
-                    else if( split_line.at( curr_col ) == d_opts->sample_indexes[curr_index] )
+                    if( split_line.at( curr_col ) == flexible_idx_data[curr_index].idx_name )
                         {
                             index_found = true;
                             index_cols.emplace_back( curr_col );
                         }
+                }
+        }
+    for( std::size_t curr_col = 0; curr_col < split_line.size(); ++curr_col )
+        {
+            if( split_line.at( curr_col ) == d_opts->samplename )
+                {
+                    sname_found = true;
+                    samplename_idx = curr_col;
                 }
         }
     if( !sname_found )
@@ -58,7 +61,7 @@ std::vector<sample> samplelist_parser::parse( const options_demux *d_opts )
                                       "(depending on which was provided). "
                                       "Verify the sample sheet contains the correct column header names. See demux \"--help\" flag for further information.\n" );
         }
-    if( index_cols.size() != d_opts->sample_indexes.size() )
+    if( index_cols.size() != flexible_idx_data.size() )
         {
             throw std::runtime_error( "Error: The provided sample sheet does not contain all of the index names provided by either the \"--sindex\" or the "
                                       "\"--fif\" option. Verify the correct indexes are provided and matching for both the \"--sindex\" option or the \"--fif\" option "
@@ -70,6 +73,7 @@ std::vector<sample> samplelist_parser::parse( const options_demux *d_opts )
     // adjust to fit any number of indexes.
     while( std::getline( samplelist_stream, line ) )
         {
+            std::string id_set = "";
             boost::trim_right( line );
             boost::split( split_line, line, boost::is_any_of( "\t" ) );
             std::vector<std::string> seqs;
@@ -77,20 +81,23 @@ std::vector<sample> samplelist_parser::parse( const options_demux *d_opts )
             name = split_line[ samplename_idx ];
             for( const auto& index : index_cols )
                 {
+                    id_set += split_line[index];
                     sample_id_set.emplace( split_line[index] );
                     index_col_ids.emplace_back( split_line[index] );
                 }
-            
+            ++names[name];
+            ++id_sets[id_set];
             // store the series of sample headers into the sample obj.
             sample samp( index_col_ids, name, sample_id );
             vec.push_back( samp );
             ++sample_id;
         }
-    for(auto member : names)
-        {
-            if(member.second > 1)
+    // check for duplicate sample names
+    for( auto member : names )
+        {                
+            if( member.second > 1 )
                 {
-                    if(!duplicate_name)
+                    if( !duplicate_name )
                         {
                             std::cout << "WARNING: The following sequence names appear muptiple times" << std::endl;
                             duplicate_name = true;
@@ -98,9 +105,10 @@ std::vector<sample> samplelist_parser::parse( const options_demux *d_opts )
                     std::cout << member.first << " Counts: " << member.second << std::endl;
                 }
         }
-    for(auto member : id_pairs)
+    // check for duplicate id sets
+    for( auto member : id_sets )
         {
-            if(member.second > 1)
+            if( member.second > 1 )
                 {
                     if(!duplicate_id)
                         {

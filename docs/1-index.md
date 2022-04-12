@@ -3,7 +3,9 @@ layout: default
 title: Home
 permalink: /
 ---
+
 <img src="./assets/images/PepSIRF_logo_BW.png" alt="" width="1024">
+
 
 ### Current Version: v1.4.0
 

@@ -183,7 +183,7 @@ void module_demux::run( options *opts )
             for( const auto sample : samplelist )
                 {
                     std::vector<std::tuple<std::string, std::string, std::size_t>> barcodes;
-                    for( std::size_t curr_barcode = 0; curr_barcode < sample.string_ids.size(); ++curr_barcode )
+                    for( std::size_t curr_barcode = 0; curr_barcode < index_match_totals.size(); ++curr_barcode )
                         {
                             barcodes.emplace_back( std::make_tuple( index_match_totals[curr_barcode].first, sample.string_ids[curr_barcode], 0 ) );
                         }
@@ -207,7 +207,6 @@ void module_demux::run( options *opts )
                                               idx_match_list) \
                shared( seq_start, seq_length, d_opts, num_samples, reference_counts, library_seqs, index_seqs, r2_seqs) \
                 reduction( +:processed_total, processed_success, concatemer_found ) \
-                schedule( dynamic )
 
             for( read_index = 0; read_index < reads.size(); ++read_index )
                 {
@@ -467,6 +466,10 @@ void module_demux::run( options *opts )
                 ( (long double) concatemer_found / (long double) processed_total ) * 100 << "% of total).\n";
         }
 
+    if( !d_opts->diagnostic_fname.empty() )
+        {
+            write_diagnostic_output( d_opts, diagnostic_map);
+        }
     if( d_opts->aggregate_fname.length() > 0  )
         {
             parallel_map<sequence, std::vector<std::size_t>*> agg_map;
