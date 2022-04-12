@@ -31,7 +31,6 @@ std::vector<sample> samplelist_parser::parse( const options_demux *d_opts, const
     boost::trim_right( header_row );
     boost::split( split_line, header_row, boost::is_any_of( "\t" ) );
     
-    
     for( std::size_t curr_index = 0; curr_index < flexible_idx_data.size(); ++curr_index )
         {
             for( std::size_t curr_col = 0; curr_col < split_line.size(); ++curr_col )
