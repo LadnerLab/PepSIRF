@@ -7,6 +7,8 @@
 #include "fastq_score.h"
 #include "et_search.h"
 #include "nt_aa_translator.h"
+#include <thread>
+#include <mutex>
 
 module_demux::module_demux()
 {
@@ -19,6 +21,7 @@ void module_demux::run( options *opts )
     options_demux *d_opts = (options_demux*) opts;
 
     std::string index_str;
+    std::mutex mtx;
 
     std::map<std::string, std::size_t> duplicate_map;
 
@@ -201,7 +204,7 @@ void module_demux::run( options *opts )
                 }
 
            #pragma omp parallel for private( seq_iter, nuc_seq, read_index, index_str, adapter, sample_id, duplicate_map,  \
-                                              idx_match_list ) \
+                                              idx_match_list) \
                shared( seq_start, seq_length, d_opts, num_samples, reference_counts, library_seqs, index_seqs, r2_seqs) \
                 reduction( +:processed_total, processed_success, concatemer_found ) \
                 schedule( dynamic )
@@ -223,7 +226,10 @@ void module_demux::run( options *opts )
                                             concat_idx_seq.append( index_match->first.seq );
                                             if( index_map.find( sequence( "", concat_idx_seq ) ) != index_map.end() )
                                                 {
-                                                    index_match_totals[curr_index].second++;
+                                                    #pragma omp critical
+                                                        {
+                                                            index_match_totals[curr_index].second++;
+                                                        }
                                                     // future: update_diagnostic_data - or something
                                                     if( !d_opts->diagnostic_fname.empty() )
                                                         {
@@ -279,17 +285,17 @@ void module_demux::run( options *opts )
                                         )
                                    );
                         };
-                    for( const auto& index : flexible_idx_data )
-                        {
-                            sequential_map<sequence, sample>::iterator index_match;
-                            if( index.read_name == "r1" )
-                                {
-                                    index_match = _find_with_shifted_mismatch( seq_lookup, reads[ read_index ],
-                                                                            index_idx, index.num_mismatch,
-                                                                            index.idx_start, index.idx_len
-                                                                            );
-                                }
-                            else
+                        for( const auto& index : flexible_idx_data )
+                            {
+                                sequential_map<sequence, sample>::iterator index_match;
+                                if( index.read_name == "r1" )
+                                    {
+                                                index_match = _find_with_shifted_mismatch( seq_lookup, reads[ read_index ],
+                                                                        index_idx, index.num_mismatch,
+                                                                        index.idx_start, index.idx_len
+                                                                        );
+                                    }
+                                else
                                 {
                                     if( r2_seqs.size() == 0 )
                                         {
@@ -298,17 +304,19 @@ void module_demux::run( options *opts )
                                                                                     index.idx_start, index.idx_len
                                                                                     );
                                         }
-                                    else
-                                        {
-                                            index_match = _find_with_shifted_mismatch( seq_lookup, r2_seqs[ read_index ],
-                                                                                    index_idx, index.num_mismatch,
-                                                                                    index.idx_start, index.idx_len
-                                                                                    );
-                                        }
+                                else
+                                    {
+                                        index_match = _find_with_shifted_mismatch( seq_lookup, r2_seqs[ read_index ],
+                                                                                index_idx, index.num_mismatch,
+                                                                                index.idx_start, index.idx_len
+                                                                                );
+                                    }
                                 }
-
-                            idx_match_list.push_back( index_match );
-                        }
+                                idx_match_list.push_back( index_match );
+                            }
+                    
+                    
+                    //!!ENDHERE!!//
 
                     if( match_found()
                         && quality_match()
@@ -330,6 +338,8 @@ void module_demux::run( options *opts )
                                             if( flexible_idx_data.size() > 1 )
                                                 {
                                                     std::string concat_idx = "";
+                                                    #pragma omp critical
+                                                    {
                                                     for( std::size_t curr_index = 0; curr_index < idx_match_list.size(); curr_index++ )
                                                         {
                                                             if( idx_match_list[curr_index] != index_map.end() )
@@ -339,6 +349,7 @@ void module_demux::run( options *opts )
                                                         }
 
                                                      d_id = index_map.find( sequence( "", concat_idx ) );
+                                                    }
                                                 }
                                             else
                                                 {
@@ -484,7 +495,10 @@ void module_demux::run( options *opts )
                          );
         }
     write_outputs( d_opts, reference_counts, duplicate_map, samplelist);
-    write_diagnostic_output( d_opts, diagnostic_map);
+    if( !d_opts->diagnostic_fname.empty() )
+        {
+            write_diagnostic_output( d_opts, diagnostic_map);
+        }
 }
 
 std::string module_demux::get_name()
@@ -657,11 +671,11 @@ void module_demux::write_outputs( options_demux* d_opts,
             if(!ref_dep || duplicate_map[curr.seq] == 1)
                 {
                     outfile << curr.name << DELIMITER;
-                    for( second_index = 0; second_index < curr_counts->size() - 1; ++second_index )
+                    for( second_index = 0; second_index < samples.size() - 1; ++second_index )
                         {
                             outfile << curr_counts->at( second_index ) << DELIMITER;
                         }
-                    outfile << curr_counts->at( curr_counts->size() - 1 ) << NEWLINE;
+                    outfile << curr_counts->at( samples.size() - 1 ) << NEWLINE;
                 }
             ++seq_iter;
             delete curr_counts;

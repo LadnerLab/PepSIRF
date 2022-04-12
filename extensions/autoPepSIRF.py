@@ -51,16 +51,25 @@ def main():
     controlArgs.add_argument("--negative_names", help="Optional approach for identifying negative controls. Comma-separated list of negative control sample names.")
 
     enrichArgs = parser.add_argument_group('enrich options')
-    enrichArgs.add_argument("--sEnrich", default=False, action="store_true", help="Generate lists of enriched peptides separately for each pulldown. Will actually run p_enrich, but with the same sample specified for each replicate.")
+    enrichArgs.add_argument("--v13", default=False, action="store_true", help="Flag to be used if using pepsirf version 1.3 to run p_ernich module. If not set, pepsirf version 1.4 will be assumed, and enrich module will be run.")
+    enrichArgs.add_argument("--sEnrich", default=False, action="store_true", help="Generate lists of enriched peptides separately for each pulldown. Will actually run p_enrich/enrich, but with the same sample specified for each replicate.")
     enrichArgs.add_argument("--inferPairs", default=False, action="store_true", help="Infer sample pairs from names. This option assumes names of replicates will be identical with the exception of a final string denoted with a '_'. For example, these names would be considered two replicates of the same sample: VW_100_1X_A and VW_100_1X_B")
 
     outArgs = parser.add_argument_group('output options')
-    enrichArgs.add_argument("--repZscatters", default=False, action="store_true", help="Generate scatter plots comparing Z scores for all sample pairs. Even if set at command line, will be turned off when '--sEnrich' is used.")
-    enrichArgs.add_argument("--repCSscatters", default=False, action="store_true", help="Generate scatter plots comparing colu_sum normalized scores for all sample pairs. Even if set at command line, will be turned off when '--sEnrich' is used.")
-    enrichArgs.add_argument("--scatterFormat", default="png", help="Output file format for replicate scatterplots.")
-    enrichArgs.add_argument("--enrichedScatters", default=False, help="Generate scatter plots comparing col-sum normalized read counts between a sample and negative controls. Argument provided should be the path to enrichedScatterplots.py")
+    outArgs.add_argument("--repZscatters", default=False, action="store_true", help="Generate scatter plots comparing Z scores for all sample pairs. Even if set at command line, will be turned off when '--sEnrich' is used.")
+    outArgs.add_argument("--repCSscatters", default=False, action="store_true", help="Generate scatter plots comparing colu_sum normalized scores for all sample pairs. Even if set at command line, will be turned off when '--sEnrich' is used.")
+    outArgs.add_argument("--scatterFormat", default="png", help="Output file format for replicate scatterplots.")
+    outArgs.add_argument("--enrichedScatters", default=False, help="Generate scatter plots comparing col-sum normalized read counts between a sample and negative controls. Argument provided should mirror the way that should enrichedScatterplots.py  be called on your system.")
 
     args = parser.parse_args()
+    
+    # Set enrichment module to be used per the version of pepsirf being used
+    if args.v13:
+        enrModule = "p_enrich"
+        enrOut = "penrich.out"
+    else:
+        enrModule = "enrich"
+        enrOut = "enrich.out"
     
     #Create base string for output files
     if args.raw:
@@ -75,7 +84,8 @@ def main():
         base = ".".join(args.zscore.split(".")[:-1])[:-2]
     else:
         base = None
-        print("Not going to be able to do much without a score matrix of some type.")
+        print("Not going to be able to do much without one of the following arguments: " +
+        " --raw, --colsum, --diff, --diffratio, --zscore. Refer to usage documentation.")
     
     
     # If a raw count matrix is provided, but a colusum norm matrix is NOT
@@ -189,7 +199,7 @@ def main():
                         print("Only one replicate found for %s: %s" % (simple, each))
 
         else:
-            print("To run p_enrich module, you must provide one of the following: '--pairs', '--inferPairs', '--sEnrich'")
+            print("To run %s module, you must provide one of the following: '--pairs', '--inferPairs', '--sEnrich'" % (enrModule))
 
     # Generate threshold file
     if not args.thresh and base:
@@ -202,19 +212,26 @@ def main():
             if args.diffratio and args.sbdrThresh:
                 fout.write("%s\t%s\n" % (args.diffratio, args.sbdrThresh))
     
-    # Run p_enrich module
+    # Run p_enrich/enrich module
     if args.thresh and args.pairs and base:
         enrDir = makeDirName(args)
         if args.raw:
-            cmd = '%s p_enrich -t %s -s %s -r %s --raw_score_constraint %s -x _enriched.txt -o %s >> penrich.out' % (args.binary, args.thresh, args.pairs, args.raw, args.rawThresh, enrDir)
+            cmd = '%s %s -t %s -s %s -r %s --raw_score_constraint %s -x _enriched.txt' % (args.binary, enrModule, args.thresh, args.pairs, args.raw, args.rawThresh)
+            if not args.v13:
+                cmd += ' -f enrichFailReasons.tsv'
+            cmd += ' -o %s >> %s' % (enrDir, enrOut)
         else:
-            cmd = '%s p_enrich -t %s -s %s -x _enriched.txt -o %s >> penrich.out' % (args.binary, args.thresh, args.pairs, enrDir)
+            cmd = '%s %s -t %s -s %s -x _enriched.txt' % (args.binary, enrModule, args.thresh, args.pairs)
+            if not args.v13:
+                cmd += ' -f enrichFailReasons.tsv'
+            cmd +=' -o %s >> %s' % (enrDir,enrOut)
 
         print(cmd)
         subprocess.run(cmd, shell=True)
+        
     # Turn off enriched scatterplots generation, as they cannot be run without a list of enriched peptides
     elif args.enrichedScatters:
-        print("Warning: p_enrich module not run and list of enriched peptides not generated. --enrichedScatters will be set to False.")
+        print("Warning: %s module not run and list of enriched peptides not generated. --enrichedScatters will be set to False." % (enrModule))
         args.enrichedScatters = False
 
     
@@ -243,10 +260,11 @@ def main():
             else:
                 print("Warning: 'colsumRepScatters' already exists! Col_Sum replicate scatterplots will be placed within existing directory.")
             
-            pD = io.fileDict(args.pairs, header=False)
+            pD = io.fileDictLists(args.pairs, header=False)
             csD = io.fileDictFull(args.colsum, valType="float", rowNames=True)
             for r1, r2 in pD.items():
-                scatter(csD[r1], r1, csD[r2], r2, "colsumRepScatters/%s_%s_CS.%s" % (r1, r2, args.scatterFormat), plotLog=True)
+                for r3 in r2:
+                    scatter(csD[r1], r1, csD[r3], r3, "colsumRepScatters/%s_%s_CS.%s" % (r1, r3, args.scatterFormat), plotLog=True)
 
         #Z score scatterplot generation
         if args.repZscatters and args.zscore and args.pairs:
@@ -255,17 +273,18 @@ def main():
             else:
                 print("Warning: 'zRepScatters' already exists! Z score replicate scatterplots will be placed within existing directory.")
             
-            pD = io.fileDict(args.pairs, header=False)
+            pD = io.fileDictLists(args.pairs, header=False)
             csD = io.fileDictFull(args.zscore, valType="float", rowNames=True)
             for r1, r2 in pD.items():
-                scatter(csD[r1], r1, csD[r2], r2, "zRepScatters/%s_%s_Z.%s" % (r1, r2, args.scatterFormat), plotLog=False)
+                for r3 in r2:
+                    scatter(csD[r1], r1, csD[r3], r3, "zRepScatters/%s_%s_Z.%s" % (r1, r3, args.scatterFormat), plotLog=False)
                 
         #Enriched peptides scaterplot generation
         if args.enrichedScatters and args.colsum:
-            cmd = ('python3 %s -d %s -e %s --enrExt _enriched.txt -x NegativeControl -o %s/enrichedScatterplots --plotLog 1' % (args.enrichedScatters, args.colsum, enrDir, enrDir))
+            cmd = ('"%s" -d %s -e %s --enrExt _enriched.txt -x NegativeControl -o %s/enrichedScatterplots --plotLog 1' % (args.enrichedScatters, args.colsum, enrDir, enrDir))
             
             if args.negNormMat:
-                cmd += (' --negMatrix %s' % args.negNormMat)
+                cmd += (' --negMatrix "%s"' % args.negNormMat)
                 
             if args.negative_id:
                 cmd += (' -i %s' % args.negative_id)

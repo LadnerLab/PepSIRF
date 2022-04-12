@@ -27,15 +27,23 @@
           {% endif %}
         </header>
     <div class="navbar">
-      <ul><li class="navlinks"><a href="/PepSIRF/">Home</a></li></ul>
-      <ul><li class="navlinks"><a href="/PepSIRF/installation/">Installation</a></li></ul>
-      <ul><li class="navlinks"><a href="/PepSIRF/modules/">Modules</a></li></ul>
-      <ul><li class="navlinks"><a href="/PepSIRF/examples">Examples</a></li></ul>
-    <!-- {% for page in site.pages %}
-        {% if page.title %}
-            <ul><li class="navlinks"><a href="{{ site.baseurl }}{{ page.url }}">{{ page.title }}</a></li></ul>
-        {% endif %}
-    {% endfor %} -->
+      <div class="pages">
+        <div class="page-links">
+          {% for page in site.pages %}
+              {% if page.title and page.title != "AutoPepSIRF Tutorials"
+                              and page.title != "PepSIRF Tutorials" %}
+                  <ul><li class="navlinks"><a href="{{ site.baseurl }}{{ page.url }}">{{ page.title }}</a></li></ul>
+              {% endif %}
+          {% endfor %}
+          </div>
+        <div class="dropdown">
+          <button class="dropbutton">Tutorials</button>
+          <div class="droplist">
+            <li class="drop-content"><a href="{{ site.baseurl }}/pepsirf-tutorials">Manual PepSIRF Tutorial</a></li>
+            <li class="drop-content"><a href="{{ site.baseurl }}/autopepsirf-tutorials">Autopepsirf Tutorial</a></li>
+          </div>
+        </div>
+      </div>
     </div>
     </div>
     <!-- MAIN CONTENT -->

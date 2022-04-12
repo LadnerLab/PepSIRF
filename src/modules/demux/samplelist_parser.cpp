@@ -17,6 +17,10 @@ std::vector<sample> samplelist_parser::parse( const options_demux *d_opts )
     bool sname_found = false;
     bool index_found = false;
     std::vector<sample> vec;
+    std::map<std::string, std::size_t> names;
+    std::map<std::string, std::size_t> id_pairs;
+    bool duplicate_name = false;
+    bool duplicate_id = false;
 
     if( !samplelist_stream.is_open() )
         {
@@ -60,6 +64,8 @@ std::vector<sample> samplelist_parser::parse( const options_demux *d_opts )
                                       "\"--fif\" option. Verify the correct indexes are provided and matching for both the \"--sindex\" option or the \"--fif\" option "
                                       "(depending on which is provided).\n" );
         }
+
+
     
     // adjust to fit any number of indexes.
     while( std::getline( samplelist_stream, line ) )
@@ -80,6 +86,31 @@ std::vector<sample> samplelist_parser::parse( const options_demux *d_opts )
             vec.push_back( samp );
             ++sample_id;
         }
+    for(auto member : names)
+        {
+            if(member.second > 1)
+                {
+                    if(!duplicate_name)
+                        {
+                            std::cout << "WARNING: The following sequence names appear muptiple times" << std::endl;
+                            duplicate_name = true;
+                        }
+                    std::cout << member.first << " Counts: " << member.second << std::endl;
+                }
+        }
+    for(auto member : id_pairs)
+        {
+            if(member.second > 1)
+                {
+                    if(!duplicate_id)
+                        {
+                            std::cout << "WARNING: The following index pairs appear muptiple times" << std::endl;
+                            duplicate_id = true;
+                        }
+                    std::cout << member.first << " Counts: " << member.second << std::endl;
+                }
+        }
+
     if( samplelist_stream.bad() )
         {
             throw std::runtime_error( "Encountered error while reading file. Verify sample list file is in .tsv format." );
