@@ -671,7 +671,7 @@ void module_demux::write_outputs( options_demux* d_opts,
             if(!ref_dep || duplicate_map[curr.seq] == 1)
                 {
                     outfile << curr.name << DELIMITER;
-                    for( second_index = 0; second_index < curr_counts->size() - 1; ++second_index )
+                    for( second_index = 0; second_index < samples.size() - 1; ++second_index )
                         {
                             outfile << curr_counts->at( second_index ) << DELIMITER;
                         }
