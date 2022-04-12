@@ -675,7 +675,7 @@ void module_demux::write_outputs( options_demux* d_opts,
                         {
                             outfile << curr_counts->at( second_index ) << DELIMITER;
                         }
-                    outfile << curr_counts->at( curr_counts->size() - 1 ) << NEWLINE;
+                    outfile << curr_counts->at( samples.size() - 1 ) << NEWLINE;
                 }
             ++seq_iter;
             delete curr_counts;
