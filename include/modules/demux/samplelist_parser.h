@@ -9,7 +9,8 @@
 #include <utility>
 #include <boost/algorithm/string.hpp>
 #include <module_demux.h>
-#include "sample.h" 
+#include "sample.h"
+#include "fif_parser.h"
 
 class samplelist_parser
 {
@@ -21,7 +22,7 @@ class samplelist_parser
      *               index1 and index2 are accessed to create samples.
      * @returns vector of samples, one per line in the input file.
      **/
-    std::vector<sample> parse( const options_demux *d_opts );
+    std::vector<sample> parse( const options_demux *d_opts, const std::vector<flex_idx> flexible_idx_data );
 
     /**
      * Verifies the sample IDs in the samplelist columns used are found in the index id set. Prints missing IDs as warning.

@@ -32,6 +32,7 @@ public:
     std::string concatemer; //!< Concatenated primer sequences, we look for this in our reads to determine whether a peptide exists
     int phred_base;
     int min_phred_score;
+    int num_indexes;
 
     bool translation_aggregation;
 
