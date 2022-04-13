@@ -7,6 +7,8 @@
 #include "fastq_score.h"
 #include "et_search.h"
 #include "nt_aa_translator.h"
+#include <thread>
+#include <mutex>
 
 module_demux::module_demux()
 {
@@ -17,6 +19,11 @@ void module_demux::run( options *opts )
 {
     // options from the command line
     options_demux *d_opts = (options_demux*) opts;
+
+    std::string index_str;
+    std::mutex mtx;
+
+    std::map<std::string, std::size_t> duplicate_map;
 
     // fif use case
     std::vector<flex_idx> flexible_idx_data;
@@ -29,11 +36,14 @@ void module_demux::run( options *opts )
                                             std::get<0>( d_opts->index1_data ),   // start
                                             std::get<1>( d_opts->index1_data ),   // length
                                             std::get<2>( d_opts->index1_data ) ); // num mismatch
-            flexible_idx_data.emplace_back( d_opts->sample_indexes[1],
-                                            "r2",
-                                            std::get<0>( d_opts->index2_data ),
-                                            std::get<1>( d_opts->index2_data ),
-                                            std::get<2>( d_opts->index2_data ));
+            if( !d_opts->input_r2_fname.empty() )
+                {
+                    flexible_idx_data.emplace_back( d_opts->sample_indexes[1],
+                                                    "r2",
+                                                    std::get<0>( d_opts->index2_data ),
+                                                    std::get<1>( d_opts->index2_data ),
+                                                    std::get<2>( d_opts->index2_data ));
+                }
         }
     else
         {
@@ -48,7 +58,7 @@ void module_demux::run( options *opts )
     parallel_map<sequence, std::size_t> non_perfect_match_seqs;
 
     sequential_map<sequence, sample> index_map;
-    std::map<std::string, std::size_t> seq_duplicates;
+    //std::map<std::string, std::size_t> seq_duplicates;
     std::unordered_map<std::string, std::vector<std::tuple<std::string, std::string, std::size_t>>> diagnostic_map;
 
     omp_set_num_threads( opts->num_threads );
@@ -67,14 +77,6 @@ void module_demux::run( options *opts )
     fastq_parser fastq_p;
     // parse samplelist
     samplelist_parser samplelist_p;
-
-    if( !d_opts->flexible_idx_fname.empty() )
-        {
-            for( std::size_t curr_row = 0; curr_row < flexible_idx_data.size(); ++curr_row )
-                {
-                    d_opts->sample_indexes.emplace_back( flexible_idx_data[curr_row].idx_name );
-                }
-        }
     std::vector<sample> samplelist = samplelist_p.parse( d_opts );
 
     std::ifstream reads_file( d_opts->input_r1_fname, std::ios_base::in );
@@ -181,7 +183,7 @@ void module_demux::run( options *opts )
             for( const auto sample : samplelist )
                 {
                     std::vector<std::tuple<std::string, std::string, std::size_t>> barcodes;
-                    for( std::size_t curr_barcode = 0; curr_barcode < sample.string_ids.size(); ++curr_barcode )
+                    for( std::size_t curr_barcode = 0; curr_barcode < index_match_totals.size(); ++curr_barcode )
                         {
                             barcodes.emplace_back( std::make_tuple( index_match_totals[curr_barcode].first, sample.string_ids[curr_barcode], 0 ) );
                         }
@@ -201,15 +203,13 @@ void module_demux::run( options *opts )
                     fastq_p.parse( r2_reads_ref, r2_seqs, d_opts->read_per_loop );
                 }
 
-           #pragma omp parallel for private( seq_iter, nuc_seq, read_index, adapter, sample_id,  \
-                                              idx_match_list ) \
-               shared( seq_start, seq_length, d_opts, num_samples, reference_counts, library_seqs, index_seqs, r2_seqs, seq_duplicates ) \
+           #pragma omp parallel for private( seq_iter, nuc_seq, read_index, index_str, adapter, sample_id, duplicate_map,  \
+                                              idx_match_list) \
+               shared( seq_start, seq_length, d_opts, num_samples, reference_counts, library_seqs, index_seqs, r2_seqs) \
                 reduction( +:processed_total, processed_success, concatemer_found ) \
-                schedule( dynamic )
 
             for( read_index = 0; read_index < reads.size(); ++read_index )
                 {
-                    
                     auto match_found = [&]() -> bool
                         {
                             std::string concat_idx_seq = "";
@@ -225,7 +225,10 @@ void module_demux::run( options *opts )
                                             concat_idx_seq.append( index_match->first.seq );
                                             if( index_map.find( sequence( "", concat_idx_seq ) ) != index_map.end() )
                                                 {
-                                                    index_match_totals[curr_index].second++;
+                                                    #pragma omp critical
+                                                        {
+                                                            index_match_totals[curr_index].second++;
+                                                        }
                                                     // future: update_diagnostic_data - or something
                                                     if( !d_opts->diagnostic_fname.empty() )
                                                         {
@@ -281,17 +284,17 @@ void module_demux::run( options *opts )
                                         )
                                    );
                         };
-                    for( const auto& index : flexible_idx_data )
-                        {
-                            sequential_map<sequence, sample>::iterator index_match;
-                            if( index.read_name == "r1" )
-                                {
-                                    index_match = _find_with_shifted_mismatch( seq_lookup, reads[ read_index ],
-                                                                            index_idx, index.num_mismatch,
-                                                                            index.idx_start, index.idx_len
-                                                                            );
-                                }
-                            else
+                        for( const auto& index : flexible_idx_data )
+                            {
+                                sequential_map<sequence, sample>::iterator index_match;
+                                if( index.read_name == "r1" )
+                                    {
+                                                index_match = _find_with_shifted_mismatch( seq_lookup, reads[ read_index ],
+                                                                        index_idx, index.num_mismatch,
+                                                                        index.idx_start, index.idx_len
+                                                                        );
+                                    }
+                                else
                                 {
                                     if( r2_seqs.size() == 0 )
                                         {
@@ -300,17 +303,19 @@ void module_demux::run( options *opts )
                                                                                     index.idx_start, index.idx_len
                                                                                     );
                                         }
-                                    else
-                                        {
-                                            index_match = _find_with_shifted_mismatch( seq_lookup, r2_seqs[ read_index ],
-                                                                                    index_idx, index.num_mismatch,
-                                                                                    index.idx_start, index.idx_len
-                                                                                    );
-                                        }
+                                else
+                                    {
+                                        index_match = _find_with_shifted_mismatch( seq_lookup, r2_seqs[ read_index ],
+                                                                                index_idx, index.num_mismatch,
+                                                                                index.idx_start, index.idx_len
+                                                                                );
+                                    }
                                 }
-
-                            idx_match_list.push_back( index_match );
-                        }
+                                idx_match_list.push_back( index_match );
+                            }
+                    
+                    
+                    //!!ENDHERE!!//
 
                     if( match_found()
                         && quality_match()
@@ -329,10 +334,11 @@ void module_demux::run( options *opts )
                                                                           );
                                     if( seq_match != reference_counts.end() )
                                         {
-                                            
                                             if( flexible_idx_data.size() > 1 )
                                                 {
                                                     std::string concat_idx = "";
+                                                    #pragma omp critical
+                                                    {
                                                     for( std::size_t curr_index = 0; curr_index < idx_match_list.size(); curr_index++ )
                                                         {
                                                             if( idx_match_list[curr_index] != index_map.end() )
@@ -342,6 +348,7 @@ void module_demux::run( options *opts )
                                                         }
 
                                                      d_id = index_map.find( sequence( "", concat_idx ) );
+                                                    }
                                                 }
                                             else
                                                 {
@@ -356,7 +363,6 @@ void module_demux::run( options *opts )
                                                     
                                                     if( !d_opts->diagnostic_fname.empty() )
                                                         {
-                                                            
                                                             std::get<2>( diagnostic_map.find( d_id->second.name )->second[idx_match_list.size()] ) += 1;
                                                         }
                                                 }
@@ -380,21 +386,12 @@ void module_demux::run( options *opts )
                                                                                     seq_start,
                                                                                     seq_length
                                                                                     );
-                                            // check for duplicate sequence
-                                            std::string seq_str = seq_match->first.name;
-                                            if( seq_duplicates.find( seq_str ) != seq_duplicates.end() )
-                                                {
-                                                    seq_duplicates[seq_str]++;
-                                                }
-                                            else
-                                                {
-                                                    seq_duplicates.insert( std::make_pair( seq_str, 1 ) );
-                                                }
+                                            
                                             if( seq_match != reference_counts.end() )
                                                 {
                                                     seq_match->second->at(0) += 1;
                                                     ++processed_success;
-                                                }
+                                                }                
                                         }
                                     else if( flexible_idx_data.size() > 1 )
                                         {
@@ -417,16 +414,6 @@ void module_demux::run( options *opts )
                                                                                             seq_start,
                                                                                             seq_length
                                                                                             );
-                                                    // check for duplicate sequence
-                                                    std::string seq_str = seq_match->first.name;
-                                                    if( seq_duplicates.find( seq_str ) != seq_duplicates.end() )
-                                                        {
-                                                            seq_duplicates[seq_str]++;
-                                                        }
-                                                    else
-                                                        {
-                                                            seq_duplicates.insert( std::make_pair( seq_str, 1 ) );
-                                                        }
                                                     if( seq_match != reference_counts.end() )
                                                         {
                                                             sample_id = d_id->second.id;
@@ -453,7 +440,11 @@ void module_demux::run( options *opts )
             
         }
     total_time.stop();
-
+    // check for duplicates
+    for( const auto& library_seq : library_seqs )
+    {
+        ++duplicate_map[library_seq.seq];
+    }
     std::cout << processed_success << " records were found to be a match out of "
               << processed_total << " (" << ( (long double) processed_success / (long double) processed_total ) * 100
               << "%) successful.\n";
@@ -500,15 +491,18 @@ void module_demux::run( options *opts )
                     aggregate_counts( agg_map, reference_counts, samplelist.size() );
                 }
 
-            write_outputs( d_opts->aggregate_fname,
+            write_outputs( d_opts,
                            agg_map,
-                           samplelist,
-                           seq_duplicates
+                           duplicate_map,
+                           samplelist
                          );
         }
-    write_outputs( d_opts->output_fname, reference_counts, samplelist, seq_duplicates );
+    write_outputs( d_opts, reference_counts, duplicate_map, samplelist);
+    if( !d_opts->diagnostic_fname.empty() )
+        {
+            write_diagnostic_output( d_opts, diagnostic_map);
+        }
 }
-
 
 std::string module_demux::get_name()
 {
@@ -556,6 +550,7 @@ void module_demux::aggregate_counts( parallel_map<sequence, std::vector<std::siz
                 {
                     // add the sequence to agg_map, initialize its data
                     agg_map[ current ] = new std::vector<std::size_t>( num_samples );
+                    // count occurrences of distinct sequences
                     ptr_map[ strs[ 0 ] ] = agg_map[ current ];
                     _zero_vector( agg_map[ current ] );
                 }
@@ -578,7 +573,7 @@ void module_demux::add_seqs_to_map( parallel_map<sequence, std::vector<std::size
 
     input_map.reserve( seqs.size() );
 
-    // #pragma omp parallel for private( index ) shared ( seqs, input_map, num_samples )
+    #pragma omp parallel for private( index ) shared ( seqs, input_map, num_samples )
     for( index = 0; index < seqs.size(); ++index )
         {
             input_map[ seqs[ index ] ] = new std::vector<std::size_t>( num_samples );
@@ -641,14 +636,16 @@ void module_demux::write_diagnostic_output( options_demux* d_opts, std::unordere
 
 }
 
-void module_demux::write_outputs( std::string outfile_name,
+void module_demux::write_outputs( options_demux* d_opts,
                                   parallel_map<sequence, std::vector<std::size_t>*>& seq_scores,
-                                  std::vector<sample>& samples,
-                                  std::map<std::string, std::size_t> seq_duplicates
+                                  std::map<std::string, std::size_t> duplicate_map,
+                                  std::vector<sample>& samples
                                 )
 {
-    std::ofstream outfile( outfile_name, std::ofstream::out );
+    std::ofstream outfile( d_opts->output_fname, std::ofstream::out );
     parallel_map<sequence, std::vector<std::size_t>*>::iterator seq_iter = seq_scores.begin();
+
+    bool ref_dep = !d_opts->library_fname.empty();
 
     const std::string DELIMITER = "\t";
     const std::string NEWLINE   = "\n";
@@ -672,24 +669,33 @@ void module_demux::write_outputs( std::string outfile_name,
     for( index = 0; index < seq_scores.size(); ++index )
         {
             const sequence& curr = seq_iter->first;
-            const std::vector<std::size_t> *curr_counts = seq_iter->second;
 
-            if( seq_duplicates.empty()
-                || ( seq_duplicates.find( curr.name ) != seq_duplicates.end() && seq_duplicates[curr.name] == 1 ) )
+            const std::vector<std::size_t> *curr_counts = seq_iter->second;
+            if(!ref_dep || duplicate_map[curr.seq] == 1)
                 {
                     outfile << curr.name << DELIMITER;
-                
-
-                    for( second_index = 0; second_index < curr_counts->size() - 1; ++second_index )
+                    for( second_index = 0; second_index < samples.size() - 1; ++second_index )
                         {
                             outfile << curr_counts->at( second_index ) << DELIMITER;
                         }
-                    outfile << curr_counts->at( curr_counts->size() - 1 ) << NEWLINE;
+                    outfile << curr_counts->at( samples.size() - 1 ) << NEWLINE;
                 }
             ++seq_iter;
             delete curr_counts;
         }
     outfile.close();
+
+
+    std::ofstream d_out("output.tsv", std::ofstream::out);
+
+    std::size_t count = 0;
+    for( const auto row : duplicate_map )
+        {
+            d_out << row.second << "\t" << row.first << std::endl;
+        }
+
+    d_out.close();
+
 }
 
 void module_demux::_zero_vector( std::vector<std::size_t>* vec )
