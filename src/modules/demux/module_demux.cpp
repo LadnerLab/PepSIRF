@@ -77,7 +77,7 @@ void module_demux::run( options *opts )
     fastq_parser fastq_p;
     // parse samplelist
     samplelist_parser samplelist_p;
-    std::vector<sample> samplelist = samplelist_p.parse( d_opts );
+    std::vector<sample> samplelist = samplelist_p.parse( d_opts, flexible_idx_data );
 
     std::ifstream reads_file( d_opts->input_r1_fname, std::ios_base::in );
     std::ifstream r2_reads;
