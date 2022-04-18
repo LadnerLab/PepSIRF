@@ -671,14 +671,16 @@ void module_demux::write_outputs( options_demux* d_opts,
             const sequence& curr = seq_iter->first;
 
             const std::vector<std::size_t> *curr_counts = seq_iter->second;
+
+            std::size_t index_max = samples.size() > curr_counts->size() ? curr_counts->size() : samples.size();
             if(!ref_dep || duplicate_map[curr.seq] == 1)
                 {
                     outfile << curr.name << DELIMITER;
-                    for( second_index = 0; second_index < samples.size() - 1; ++second_index )
+                    for( second_index = 0; second_index < index_max - 1; ++second_index )
                         {
                             outfile << curr_counts->at( second_index ) << DELIMITER;
                         }
-                    outfile << curr_counts->at( samples.size() - 1 ) << NEWLINE;
+                    outfile << curr_counts->at( index_max - 1 ) << NEWLINE;
                 }
             ++seq_iter;
             delete curr_counts;
