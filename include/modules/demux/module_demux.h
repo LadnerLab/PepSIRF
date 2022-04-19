@@ -213,7 +213,7 @@ class module_demux : public module
      * but only the sequence. This is used in finding matches with the 'find_with_shifted_mismatch' function.
      **/
     void create_index_map( sequential_map<sequence, sample>& map,
-                           std::vector<sequence>& index_seqs,
+                           std::vector<sequence>& dna_tags,
                            std::vector<sample>& samplelist,
                            sequential_map<sequence, sample>& seq_lookup
                          );

@@ -67,7 +67,7 @@ void module_demux::run( options *opts )
 
     // vector to store the .fna sequences that represent a designed library
     std::vector<sequence> library_seqs;
-    std::vector<sequence> index_seqs;
+    std::vector<sequence> dna_tags;
     std::vector<fastq_sequence> r2_seqs;
     std::vector<fastq_sequence> reads;
 
@@ -102,9 +102,9 @@ void module_demux::run( options *opts )
                       << "read is treated as its own reference.\n";
         }
 
-    index_seqs     = fasta_p.parse( d_opts->index_fname );
+    dna_tags = fasta_p.parse( d_opts->index_fname );
     sequential_map<sequence, sample> seq_lookup;
-    create_index_map( index_map, index_seqs, samplelist, seq_lookup);
+    create_index_map( index_map, dna_tags, samplelist, seq_lookup);
     sequential_map<sequence, sample> sample_table;
     sequential_map<sequence,sample>::size_type num_samples = index_map.size();
 
@@ -126,7 +126,7 @@ void module_demux::run( options *opts )
     sequence_indexer index_idx;
 
     lib_idx.index( library_seqs );
-    index_idx.index( index_seqs );
+    index_idx.index( dna_tags );
 
     std::size_t sample_id = 0;
     std::istream *reads_ptr = &reads_file;
@@ -205,7 +205,7 @@ void module_demux::run( options *opts )
 
            #pragma omp parallel for private( seq_iter, nuc_seq, read_index, index_str, adapter, sample_id, duplicate_map,  \
                                               idx_match_list) \
-               shared( seq_start, seq_length, d_opts, num_samples, reference_counts, library_seqs, index_seqs, r2_seqs) \
+               shared( seq_start, seq_length, d_opts, num_samples, reference_counts, library_seqs, dna_tags, r2_seqs) \
                 reduction( +:processed_total, processed_success, concatemer_found ) \
 
             for( read_index = 0; read_index < reads.size(); ++read_index )
@@ -381,17 +381,25 @@ void module_demux::run( options *opts )
 
                                     if( flexible_idx_data.size() == 1 )
                                         {
-                                            auto seq_match = library_searcher.find( reads[ read_index ],
-                                                                                    std::get<2>( d_opts->seq_data ),
-                                                                                    seq_start,
-                                                                                    seq_length
-                                                                                    );
-                                            
-                                            if( seq_match != reference_counts.end() )
-                                                {
-                                                    seq_match->second->at(0) += 1;
-                                                    ++processed_success;
-                                                }                
+                                            // check sequence 
+                                            // d_id = index_map.find( sequence( "", idx_match_list[0]->first.seq ) );
+                                            // if( d_id != index_map.end() )
+                                            //     {
+                                                    auto seq_match = library_searcher.find( reads[ read_index ],
+                                                                                            std::get<2>( d_opts->seq_data ),
+                                                                                            seq_start,
+                                                                                            seq_length
+                                                                                            );
+                                                    
+                                                    
+                                                    if( seq_match != reference_counts.end() )
+                                                        {
+                                                            // if seq_match found, increase count for given sample
+                                                            auto sample_id = idx_match_list[0]->second.id;
+                                                            seq_match->second->at(sample_id) += 1;
+                                                            ++processed_success;
+                                                        }
+                                                // }           
                                         }
                                     else if( flexible_idx_data.size() > 1 )
                                         {
@@ -709,48 +717,65 @@ void module_demux::_zero_vector( std::vector<std::size_t>* vec )
         }
 }
 
-void module_demux::create_index_map( sequential_map<sequence, sample>& map,
-                                     std::vector<sequence>& index_seqs,
+void module_demux::create_index_map( sequential_map<sequence, sample>& index_map,
+                                     std::vector<sequence>& dna_tags,
                                      std::vector<sample>& samplelist,
                                      sequential_map<sequence, sample>& seq_lookup
                                    )
 {
-    std::unordered_map<std::string, std::string> updated_index_seqs;    
-    for( std::size_t index = 0; index < index_seqs.size(); ++index )
+    std::unordered_map<std::string, std::string> updated_index_seqs;
+
+    for( const auto& sample : samplelist )
+    {
+        std::string concat_sequence = "";
+        for( size_t sample_id_index = 0; sample_id_index < sample.string_ids.size(); sample_id_index++ )
         {
-            bool index_seq_found = false;
-            std::size_t curr_sample = 0;
-            // while the current index seq id has not been found in a sample and while there are still samples
-            while( !index_seq_found && curr_sample < samplelist.size() )
+            for( size_t dna_tag_index = 0; dna_tag_index < dna_tags.size(); dna_tag_index++ )
+            {
+                if( dna_tags[dna_tag_index].name.compare(sample.string_ids[sample_id_index]) == 0 )
                 {
-                    // look at each string id and compare
-                    for( std::size_t curr_id = 0; curr_id < samplelist[curr_sample].string_ids.size(); ++curr_id )
-                        {
-                            // if the current id does match the index seqs id
-                            if( index_seqs[index].name.compare( samplelist[curr_sample].string_ids[curr_id] ) == 0 )
-                                {
-                                    // mark as the index seq was found
-                                    index_seq_found = true;
-                                    // add the index seq to the updated list (order doesnt matter)
-                                    updated_index_seqs.emplace( index_seqs[index].name, index_seqs[index].seq );
-                                    seq_lookup[sequence( "", index_seqs[index].seq )] = samplelist[curr_sample];
-                                }
-                        }
-                    curr_sample++;
+                    seq_lookup[ sequence( "", dna_tags[dna_tag_index].seq ) ] = sample;
+                    concat_sequence += dna_tags[dna_tag_index].seq;
+                    index_map[ sequence( "", concat_sequence ) ] = sample;
                 }
+            }
         }
-    // future function: add_match_references -> add the partial matches and complete matches by creating 
-    for( std::size_t curr_sample = 0; curr_sample < samplelist.size(); ++curr_sample )
-        {
-            std::string concat_seq = "";
-            for( std::size_t curr_idx = 0; curr_idx < samplelist[curr_sample].string_ids.size(); ++curr_idx )
-                {
-                    // obtain the barcode for the current index for the current sample and add to sequence concat to create element.
-                    auto sample_seq = updated_index_seqs.find( samplelist[curr_sample].string_ids[curr_idx] )->second;
-                    concat_seq.append( sample_seq );
-                    map[ sequence( "", concat_seq ) ] = samplelist[ curr_sample ];
-                }
-        }
+    }
+    // for( std::size_t index = 0; index < index_seqs.size(); ++index )
+    //     {
+    //         bool index_seq_found = false;
+    //         std::size_t curr_sample = 0;
+    //         // while the current index seq id has not been found in a sample and while there are still samples
+    //         while( !index_seq_found && curr_sample < samplelist.size() )
+    //             {
+    //                 // look at each string id and compare
+    //                 for( std::size_t curr_id = 0; curr_id < samplelist[curr_sample].string_ids.size(); ++curr_id )
+    //                     {
+    //                         // if the current id does match the index seqs id
+    //                         if( index_seqs[index].name.compare( samplelist[curr_sample].string_ids[curr_id] ) == 0 )
+    //                             {
+    //                                 // mark as the index seq was found
+    //                                 index_seq_found = true;
+    //                                 // add the index seq to the updated list (order doesnt matter)
+    //                                 updated_index_seqs.emplace( index_seqs[index].name, index_seqs[index].seq );
+    //                                 seq_lookup[sequence( "", index_seqs[index].seq )] = samplelist[curr_sample];
+    //                             }
+    //                     }
+    //                 curr_sample++;
+    //             }
+    //     }
+    // // future function: add_match_references -> add the partial matches and complete matches by creating 
+    // for( std::size_t curr_sample = 0; curr_sample < samplelist.size(); ++curr_sample )
+    //     {
+    //         std::string concat_seq = "";
+    //         for( std::size_t curr_idx = 0; curr_idx < samplelist[curr_sample].string_ids.size(); ++curr_idx )
+    //             {
+    //                 // obtain the barcode for the current index for the current sample and add to sequence concat to create element.
+    //                 auto sample_seq = updated_index_seqs.find( samplelist[curr_sample].string_ids[curr_idx] )->second;
+    //                 concat_seq.append( sample_seq );
+    //                 map[ sequence( "", concat_seq ) ] = samplelist[ curr_sample ];
+    //             }
+    //     }
 }
 
 
