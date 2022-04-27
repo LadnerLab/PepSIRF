@@ -118,6 +118,10 @@ std::vector<sample> samplelist_parser::parse( const options_demux *d_opts, const
                     std::cout << member.first << " Counts: " << member.second << std::endl;
                 }
         }
+    if(duplicate_id)
+        {
+            throw std::runtime_error("Execution will be terminated");
+        }
 
     if( samplelist_stream.bad() )
         {
