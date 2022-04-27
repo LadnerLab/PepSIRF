@@ -52,18 +52,18 @@ std::vector<sample> samplelist_parser::parse( const options_demux *d_opts, const
         }
     if( !sname_found )
         {
-            throw std::runtime_error( "Error: The flag \"--sname\" value \'" + d_opts->samplename + "\' could not be found in the sample sheet. "
+            throw std::runtime_error( "The flag \"--sname\" value \'" + d_opts->samplename + "\' could not be found in the sample sheet. "
                                 "Verify the sample sheet contains the specified column header names. See demux \"--help\" flag for further help.\n" );
         }
     if( !index_found )
         {
-            throw std::runtime_error( "Error: The provided sample sheet does not contain index names found in either the \"--sindex\" option or the \"--fif\" option "
+            throw std::runtime_error( "The provided sample sheet does not contain index names found in either the \"--sindex\" option or the \"--fif\" option "
                                       "(depending on which was provided). "
                                       "Verify the sample sheet contains the correct column header names. See demux \"--help\" flag for further information.\n" );
         }
     if( index_cols.size() != flexible_idx_data.size() )
         {
-            throw std::runtime_error( "Error: The provided sample sheet does not contain all of the index names provided by either the \"--sindex\" or the "
+            throw std::runtime_error( "The provided sample sheet does not contain all of the index names provided by either the \"--sindex\" or the "
                                       "\"--fif\" option. Verify the correct indexes are provided and matching for both the \"--sindex\" option or the \"--fif\" option "
                                       "(depending on which is provided).\n" );
         }
