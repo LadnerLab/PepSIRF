@@ -90,6 +90,16 @@ void module_demux::run( options *opts )
         {
             r2_reads.open( d_opts->input_r2_fname, std::ios_base::in );
         }
+    else
+        {
+            // Should we give a warning for the case of how many index col names are given?
+            if( d_opts->sample_indexes.size() > 1 )
+                {
+                    std::cout << "WARNING: \"--input_r2\" does not include a filepath while more "
+                    "than one samplelist index column name has been given. See the \"--sname\" "
+                    "and \"--samplelist\" options for information on default values and usage.\n";
+                }
+        }
 
     const bool reference_dependent = !d_opts->library_fname.empty();
 
@@ -225,24 +235,6 @@ void module_demux::run( options *opts )
                                                     #pragma omp critical
                                                         {
                                                             index_match_totals[curr_index].second++;
-                                                            if( !d_opts->diagnostic_fname.empty() )
-                                                                {
-                                                                    // for each sample/index count element
-                                                                    for( auto& sample_index_count : diagnostic_map )
-                                                                        {
-                                                                            // if index matches current found match
-                                                                            if( sample_index_count.first.string_ids[curr_index].compare(matched_ids[curr_index]) == 0 )
-                                                                                {
-                                                                                    sample_index_count.second[curr_index] += 1;
-                                                                                }
-                                                                        
-                                                                        }
-                                                                    // auto matched_sample = diagnostic_map.find(index_match->second);
-                                                                    // if( matched_sample->first.string_ids[curr_index].compare(matched_ids[curr_index]) == 0 )
-                                                                    //     {
-                                                                    //         matched_sample->second[curr_index] += 1;
-                                                                    //     }
-                                                                }
                                                         }
                                                 }
                                             else
@@ -253,6 +245,28 @@ void module_demux::run( options *opts )
                                     else
                                         {
                                             return false;
+                                        }
+                                }
+                            if( !d_opts->diagnostic_fname.empty() )
+                                {
+                                    // for each sample/index count element
+                                    for( auto& sample_index_count : diagnostic_map )
+                                        {
+                                            std::size_t review_index = 0;
+                                            bool has_match = true;
+                                            // if index matches current found match and past index matches increment count
+                                            while( has_match && review_index < idx_match_list.size() )
+                                                {
+                                                    if( sample_index_count.first.string_ids[review_index].compare(matched_ids[review_index]) == 0 )
+                                                        {
+                                                            sample_index_count.second[review_index] += 1;
+                                                        }
+                                                    else
+                                                        {
+                                                            has_match = !has_match;
+                                                        }
+                                                    review_index++;
+                                                }
                                         }
                                 }
                             return true;
@@ -532,8 +546,10 @@ void module_demux::aggregate_counts( parallel_map<sequence, std::vector<std::siz
         // trim the '-ID' from the name of the sequence
             boost::split( strs, iter->first.name, boost::is_any_of( "-") );
 
-            std::string cpy = strs[ 0 ];
-            current = sequence( cpy, iter->first.seq );
+            std::string copy_name = strs[ 0 ];
+            std::string copy_seq = iter->first.seq;
+            current.set_name(copy_name);
+            current.set_seq(copy_seq);
 
             if( strs.size() != NUM_DELIMITED_ITEMS )
                 {
@@ -605,10 +621,7 @@ void module_demux::write_diagnostic_output( options_demux* d_opts, phmap::parall
 {
     std::ofstream outfile( d_opts->diagnostic_fname, std::ios::out );
     outfile << "Sample name\t";
-    // add first index name
     std::string header_column = "";
-    // std::string header_column = d_opts->sample_indexes[0] + "\t";
-    std::size_t last_index_name = 1;
     
     // create column header for diagnostic file
     // for each column name
@@ -620,30 +633,16 @@ void module_demux::write_diagnostic_output( options_demux* d_opts, phmap::parall
             while( curr_index_name < last_index_name )
                 {
                     // add index name
-                    header_column += d_opts->sample_indexes[curr_column];
-                    // add + if end of loop
+                    header_column += d_opts->sample_indexes[curr_index_name];
                     if( curr_index_name + 1 < last_index_name )
                         {
                             header_column += " + ";
                         }
                     curr_index_name++;
                 }
-            // add tab
             header_column += "\t";
         }
 
-    // for( std::size_t curr_column = 1; curr_column < d_opts->sample_indexes.size(); curr_column++ )
-    //     {
-    //         // header_column += d_opts->sample_indexes[curr_index_name];
-    //         // while more indexes names in column
-    //         while( curr_index_name < curr_column )
-    //             {
-    //                 header_column += " + " + d_opts->sample_indexes[curr_column];
-    //                 curr_index_name++;
-    //             }
-    //         curr_index_name = 0;
-    //         header_column += "\t";
-    //     }
     outfile << header_column;
     if( !d_opts->library_fname.empty() )
         {
@@ -721,10 +720,7 @@ void module_demux::write_outputs( options_demux* d_opts,
         }
     outfile.close();
 
-
     std::ofstream d_out("output.tsv", std::ofstream::out);
-
-    std::size_t count = 0;
     for( const auto row : duplicate_map )
         {
             d_out << row.second << "\t" << row.first << std::endl;
@@ -758,49 +754,14 @@ void module_demux::create_index_map( sequential_map<sequence, sample>& index_map
             {
                 if( dna_tags[dna_tag_index].name.compare(sample.string_ids[sample_id_index]) == 0 )
                 {
-                    seq_lookup[ sequence( "", dna_tags[dna_tag_index].seq ) ] = sample;
+                    seq_lookup.emplace( sequence( "", dna_tags[dna_tag_index].seq ), sample );
                     concat_sequence += dna_tags[dna_tag_index].seq;
-                    index_map[ sequence( "", concat_sequence ) ] = sample;
+                    index_map.emplace( sequence( "", concat_sequence ), sample );
                     break;
                 }
             }
         }
     }
-    // for( std::size_t index = 0; index < index_seqs.size(); ++index )
-    //     {
-    //         bool index_seq_found = false;
-    //         std::size_t curr_sample = 0;
-    //         // while the current index seq id has not been found in a sample and while there are still samples
-    //         while( !index_seq_found && curr_sample < samplelist.size() )
-    //             {
-    //                 // look at each string id and compare
-    //                 for( std::size_t curr_id = 0; curr_id < samplelist[curr_sample].string_ids.size(); ++curr_id )
-    //                     {
-    //                         // if the current id does match the index seqs id
-    //                         if( index_seqs[index].name.compare( samplelist[curr_sample].string_ids[curr_id] ) == 0 )
-    //                             {
-    //                                 // mark as the index seq was found
-    //                                 index_seq_found = true;
-    //                                 // add the index seq to the updated list (order doesnt matter)
-    //                                 updated_index_seqs.emplace( index_seqs[index].name, index_seqs[index].seq );
-    //                                 seq_lookup[sequence( "", index_seqs[index].seq )] = samplelist[curr_sample];
-    //                             }
-    //                     }
-    //                 curr_sample++;
-    //             }
-    //     }
-    // // future function: add_match_references -> add the partial matches and complete matches by creating 
-    // for( std::size_t curr_sample = 0; curr_sample < samplelist.size(); ++curr_sample )
-    //     {
-    //         std::string concat_seq = "";
-    //         for( std::size_t curr_idx = 0; curr_idx < samplelist[curr_sample].string_ids.size(); ++curr_idx )
-    //             {
-    //                 // obtain the barcode for the current index for the current sample and add to sequence concat to create element.
-    //                 auto sample_seq = updated_index_seqs.find( samplelist[curr_sample].string_ids[curr_idx] )->second;
-    //                 concat_seq.append( sample_seq );
-    //                 map[ sequence( "", concat_seq ) ] = samplelist[ curr_sample ];
-    //             }
-    //     }
 }
 
 

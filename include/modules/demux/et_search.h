@@ -114,13 +114,14 @@ public:
             query_matches;
         sequence *best_match = nullptr;
         sequence seq_temp;
+        std::string empty_string = "";
 
         std::uint32_t num_matches; 
 
         std::string substr = probe.seq.substr( start, len );
 
         // Note: hash( sequence& seq ) = hash( seq.seq )
-        auto temp = counts.find( sequence( "", substr ) );
+        auto temp = counts.find( sequence( empty_string, substr ) );
 
         // first check for an exact match in the expected location
         if( temp != counts.end() )
@@ -131,14 +132,14 @@ public:
         if( start > 0 )
             {
                 substr = probe.seq.substr( start - 1, len );
-                temp = counts.find( sequence( "", substr ) );
+                temp = counts.find( sequence( empty_string, substr ) );
 
                 if( temp == counts.end()
                     && start > 1
                   )
                     {
                         substr = probe.seq.substr( start - 2, len );
-                        temp = counts.find( sequence( "", substr ) );
+                        temp = counts.find( sequence( empty_string, substr ) );
                     }
 
                 if( temp != counts.end() )
@@ -152,7 +153,7 @@ public:
             if( start + 1 + len <= probe.seq.length() )
                 {
                     substr = probe.seq.substr( start + 1, len );
-                    temp = counts.find( sequence( "", substr ) );
+                    temp = counts.find( sequence( empty_string, substr ) );
                 }
 
             // look for a match at the expected coordinates within
@@ -160,7 +161,8 @@ public:
             if( hamming_tol > 0 && temp == counts.end() )
                 {
                     substr = probe.seq.substr( start, len );
-                    seq_temp = sequence( "", substr );
+                    seq_temp.set_name( empty_string );
+                    seq_temp.set_seq( substr );
                     num_matches = idx.query( query_matches,
                                              seq_temp,
                                              hamming_tol

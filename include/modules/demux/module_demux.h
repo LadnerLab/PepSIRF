@@ -139,13 +139,13 @@ class module_demux : public module
             std::vector<std::pair<sequence *, int>> query_matches;
             sequence *best_match = nullptr;
             sequence seq_temp;
-
+            std::string empty_string = "";
             unsigned int num_matches = 0;
 
             std::string substr = probe_seq.seq.substr( f_start, f_len );
 
             // Note: hash( sequence& seq ) = hash( seq.seq )
-            auto temp = map.find( sequence( "", substr ) );
+            auto temp = map.find( sequence( empty_string, substr ) );
 
             // first check for an exact match in the expected location
             if( temp != map.end() )
@@ -156,12 +156,12 @@ class module_demux : public module
             if( f_start > 0 ) // check that we are not shifting left from the beginning
                 {
                     substr = probe_seq.seq.substr( f_start - 1, f_len );
-                    temp = map.find( sequence( "", substr ) );
+                    temp = map.find( sequence( empty_string, substr ) );
 
                     if( temp == map.end() )
                         {
                             substr = probe_seq.seq.substr( f_start - 2, f_len );
-                            temp = map.find( sequence( "", substr ) );
+                            temp = map.find( sequence( empty_string, substr ) );
                         }
 
                     if( temp != map.end() )
@@ -175,7 +175,7 @@ class module_demux : public module
             if( f_start + 1 + f_len <= probe_seq.seq.length() )
                 {
                     substr = probe_seq.seq.substr( f_start + 1, f_len );
-                    temp = map.find( sequence( "", substr ) );
+                    temp = map.find( sequence( empty_string, substr ) );
                 }
 
             // look for a match at the expected coordinates within
@@ -183,7 +183,8 @@ class module_demux : public module
             if( num_mism > 0 && temp == map.end() )
                 {
                     substr = probe_seq.seq.substr( f_start, f_len );
-                    seq_temp = sequence( "", substr );
+                    seq_temp.set_name( empty_string );
+                    seq_temp.set_seq( substr );
                     num_matches = idx.query( query_matches,
                                              seq_temp,
                                              num_mism
