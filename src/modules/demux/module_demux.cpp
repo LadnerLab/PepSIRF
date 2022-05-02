@@ -213,10 +213,11 @@ void module_demux::run( options *opts )
            #pragma omp parallel for private( seq_iter, nuc_seq, read_index, index_str, adapter, sample_id, duplicate_map,  \
                                               idx_match_list) \
                shared( seq_start, seq_length, d_opts, num_samples, reference_counts, library_seqs, dna_tags, r2_seqs) \
-                reduction( +:processed_total, processed_success, concatemer_found ) \
+               reduction( +:processed_total, processed_success, concatemer_found ) \
 
             for( read_index = 0; read_index < reads.size(); ++read_index )
                 {
+                    // Identify found matches
                     auto match_found = [&]() -> bool
                         {
                             std::string concat_idx_seq = "";
@@ -235,6 +236,25 @@ void module_demux::run( options *opts )
                                                     #pragma omp critical
                                                         {
                                                             index_match_totals[curr_index].second++;
+                                                            for( auto& sample_index_count : diagnostic_map )
+                                                                {
+                                                                    // while matches are found, increment to current index
+                                                                    std::size_t review_index = 0;
+                                                                    bool has_match = true;
+                                                                    while( has_match && review_index < curr_index )
+                                                                        {
+                                                                            if( sample_index_count.first.string_ids[review_index].compare(matched_ids[review_index]) != 0 )
+                                                                                {
+                                                                                    has_match = !has_match;
+                                                                                }
+                                                                            review_index++;
+                                                                        }
+                                                                    if( has_match
+                                                                        && sample_index_count.first.string_ids[review_index].compare(matched_ids[review_index]) == 0 )
+                                                                        {
+                                                                            sample_index_count.second[review_index] += 1;
+                                                                        }
+                                                                }
                                                         }
                                                 }
                                             else
@@ -247,28 +267,30 @@ void module_demux::run( options *opts )
                                             return false;
                                         }
                                 }
-                            if( !d_opts->diagnostic_fname.empty() )
-                                {
-                                    // for each sample/index count element
-                                    for( auto& sample_index_count : diagnostic_map )
-                                        {
-                                            std::size_t review_index = 0;
-                                            bool has_match = true;
-                                            // if index matches current found match and past index matches increment count
-                                            while( has_match && review_index < idx_match_list.size() )
-                                                {
-                                                    if( sample_index_count.first.string_ids[review_index].compare(matched_ids[review_index]) == 0 )
-                                                        {
-                                                            sample_index_count.second[review_index] += 1;
-                                                        }
-                                                    else
-                                                        {
-                                                            has_match = !has_match;
-                                                        }
-                                                    review_index++;
-                                                }
-                                        }
-                                }
+                            // add matches to diagnostics
+                            // if( !d_opts->diagnostic_fname.empty() )
+                            //     {
+                            //         // for each sample/index count element
+                            //         for( auto& sample_index_count : diagnostic_map )
+                            //             {
+                            //                 std::size_t review_index = 0;
+                            //                 bool has_match = true;
+                            //                 // for each found match,
+                            //                 // if current reviewed index matches the current found match and past index matches increment count
+                            //                 while( has_match && review_index < idx_match_list.size() )
+                            //                     {
+                            //                         if( sample_index_count.first.string_ids[review_index].compare(idx_match_list[review_index]->second.string_ids[review_index]) == 0 )
+                            //                             {
+                            //                                 sample_index_count.second[review_index] += 1;
+                            //                             }
+                            //                         else
+                            //                             {
+                            //                                 has_match = !has_match;
+                            //                             }
+                            //                         review_index++;
+                            //                     }
+                            //             }
+                            //     }
                             return true;
                         };
 
@@ -295,45 +317,68 @@ void module_demux::run( options *opts )
                                         )
                                    );
                         };
-                        for( const auto& index : flexible_idx_data )
-                            {
-                                sequential_map<sequence, sample>::iterator index_match;
-                                if( index.read_name == "r1" )
-                                    {
-                                                index_match = _find_with_shifted_mismatch( seq_lookup, reads[ read_index ],
-                                                                        index_idx, index.num_mismatch,
-                                                                        index.idx_start, index.idx_len
-                                                                        );
-                                    }
-                                else
+                    // Add valid matches
+                    for( const auto& index : flexible_idx_data )
+                        {
+                            sequential_map<sequence, sample>::iterator index_match;
+                            if( index.read_name == "r1" )
                                 {
-                                    if( r2_seqs.size() == 0 )
-                                        {
                                             index_match = _find_with_shifted_mismatch( seq_lookup, reads[ read_index ],
-                                                                                    index_idx, index.num_mismatch,
-                                                                                    index.idx_start, index.idx_len
-                                                                                    );
-                                        }
-                                else
+                                                                    index_idx, index.num_mismatch,
+                                                                    index.idx_start, index.idx_len
+                                                                    );
+                                }
+                            else
+                            {
+                                if( r2_seqs.size() == 0 )
                                     {
-                                        index_match = _find_with_shifted_mismatch( seq_lookup, r2_seqs[ read_index ],
+                                        index_match = _find_with_shifted_mismatch( seq_lookup, reads[ read_index ],
                                                                                 index_idx, index.num_mismatch,
                                                                                 index.idx_start, index.idx_len
                                                                                 );
                                     }
+                            else
+                                {
+                                    index_match = _find_with_shifted_mismatch( seq_lookup, r2_seqs[ read_index ],
+                                                                            index_idx, index.num_mismatch,
+                                                                            index.idx_start, index.idx_len
+                                                                            );
                                 }
-                                idx_match_list.push_back( index_match );
                             }
-                    
-                    
-                    //!!ENDHERE!!//
-
+                            idx_match_list.push_back( index_match );
+                        }
+                    // Handle match found
                     if( match_found()
                         && quality_match()
                       )
                         {
                             using seq_map = parallel_map<sequence, std::vector<std::size_t>*>;
                             sequential_map<sequence,sample>::iterator d_id;
+                            
+                            // if( !d_opts->diagnostic_fname.empty() )
+                            //     {
+                            //         // for each sample/index count element
+                            //         for( auto& sample_index_count : diagnostic_map )
+                            //             {
+                            //                 std::size_t review_index = 0;
+                            //                 bool has_match = true;
+                            //                 // for each found match,
+                            //                 // if current reviewed index matches the current found match and past index matches increment count
+                            //                 while( has_match && review_index < idx_match_list.size() )
+                            //                     {
+                            //                         sequential_map<sequence, sample>::iterator index_match = idx_match_list[review_index];
+                            //                         if( sample_index_count.first.string_ids[review_index].compare( index_match->second.string_ids[review_index] ) == 0 )
+                            //                             {
+                            //                                 sample_index_count.second[review_index] += 1;
+                            //                             }
+                            //                         else
+                            //                             {
+                            //                                 has_match = !has_match;
+                            //                             }
+                            //                         review_index++;
+                            //                     }
+                            //             }
+                            //     }
                             if( reference_dependent )
                                 {
                                     et_seq_search<seq_map,true> library_searcher( lib_idx, reference_counts, num_samples );
@@ -468,11 +513,14 @@ void module_demux::run( options *opts )
               << processed_total << " (" << ( (long double) processed_success / (long double) processed_total ) * 100
               << "%) successful.\n";
     // loop through index match totals
+    std::string match_reference = "";
     for( std::size_t fif_index = 0; fif_index < flexible_idx_data.size(); ++fif_index )
         {
+            match_reference.append( flexible_idx_data[fif_index].idx_name );
             std::cout << std::fixed << std::setprecision( 2 )
                     << ( ( long double ) index_match_totals[fif_index].second / ( long double ) processed_total ) * 100.00 << "% " <<
-                                index_match_totals[fif_index].second << " of total records matched '" << flexible_idx_data[fif_index].idx_name << "'.\n";
+                                index_match_totals[fif_index].second << " of total records matched '" << match_reference << "'.\n";
+            match_reference.append( " + " );
         }
     if( reference_dependent )
         {
