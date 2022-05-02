@@ -236,25 +236,32 @@ void module_demux::run( options *opts )
                                                     #pragma omp critical
                                                         {
                                                             index_match_totals[curr_index].second++;
-                                                            for( auto& sample_index_count : diagnostic_map )
-                                                                {
-                                                                    // while matches are found, increment to current index
-                                                                    std::size_t review_index = 0;
-                                                                    bool has_match = true;
-                                                                    while( has_match && review_index < curr_index )
-                                                                        {
-                                                                            if( sample_index_count.first.string_ids[review_index].compare(matched_ids[review_index]) != 0 )
-                                                                                {
-                                                                                    has_match = !has_match;
-                                                                                }
-                                                                            review_index++;
-                                                                        }
-                                                                    if( has_match
-                                                                        && sample_index_count.first.string_ids[review_index].compare(matched_ids[review_index]) == 0 )
-                                                                        {
-                                                                            sample_index_count.second[review_index] += 1;
-                                                                        }
-                                                                }
+                                                            if( !d_opts->diagnostic_fname.empty() )
+                                                            {
+                                                                // for each sample/index count element
+                                                                for( auto& sample_index_count : diagnostic_map )
+                                                                    {
+                                                                        // while matches are found, increment to current index
+                                                                        std::size_t review_index = 0;
+                                                                        bool has_match = true;
+                                                                        // for each found match,
+                                                                        // verify up to current index that all matches are valid
+                                                                        while( has_match && review_index < curr_index )
+                                                                            {
+                                                                                if( sample_index_count.first.string_ids[review_index].compare(matched_ids[review_index]) != 0 )
+                                                                                    {
+                                                                                        has_match = !has_match;
+                                                                                    }
+                                                                                review_index++;
+                                                                            }
+                                                                        // increment count if indexes up to current match
+                                                                        if( has_match
+                                                                            && sample_index_count.first.string_ids[review_index].compare(matched_ids[review_index]) == 0 )
+                                                                            {
+                                                                                sample_index_count.second[review_index] += 1;
+                                                                            }
+                                                                    }
+                                                            }
                                                         }
                                                 }
                                             else
@@ -267,30 +274,6 @@ void module_demux::run( options *opts )
                                             return false;
                                         }
                                 }
-                            // add matches to diagnostics
-                            // if( !d_opts->diagnostic_fname.empty() )
-                            //     {
-                            //         // for each sample/index count element
-                            //         for( auto& sample_index_count : diagnostic_map )
-                            //             {
-                            //                 std::size_t review_index = 0;
-                            //                 bool has_match = true;
-                            //                 // for each found match,
-                            //                 // if current reviewed index matches the current found match and past index matches increment count
-                            //                 while( has_match && review_index < idx_match_list.size() )
-                            //                     {
-                            //                         if( sample_index_count.first.string_ids[review_index].compare(idx_match_list[review_index]->second.string_ids[review_index]) == 0 )
-                            //                             {
-                            //                                 sample_index_count.second[review_index] += 1;
-                            //                             }
-                            //                         else
-                            //                             {
-                            //                                 has_match = !has_match;
-                            //                             }
-                            //                         review_index++;
-                            //                     }
-                            //             }
-                            //     }
                             return true;
                         };
 
@@ -354,31 +337,7 @@ void module_demux::run( options *opts )
                         {
                             using seq_map = parallel_map<sequence, std::vector<std::size_t>*>;
                             sequential_map<sequence,sample>::iterator d_id;
-                            
-                            // if( !d_opts->diagnostic_fname.empty() )
-                            //     {
-                            //         // for each sample/index count element
-                            //         for( auto& sample_index_count : diagnostic_map )
-                            //             {
-                            //                 std::size_t review_index = 0;
-                            //                 bool has_match = true;
-                            //                 // for each found match,
-                            //                 // if current reviewed index matches the current found match and past index matches increment count
-                            //                 while( has_match && review_index < idx_match_list.size() )
-                            //                     {
-                            //                         sequential_map<sequence, sample>::iterator index_match = idx_match_list[review_index];
-                            //                         if( sample_index_count.first.string_ids[review_index].compare( index_match->second.string_ids[review_index] ) == 0 )
-                            //                             {
-                            //                                 sample_index_count.second[review_index] += 1;
-                            //                             }
-                            //                         else
-                            //                             {
-                            //                                 has_match = !has_match;
-                            //                             }
-                            //                         review_index++;
-                            //                     }
-                            //             }
-                            //     }
+    
                             if( reference_dependent )
                                 {
                                     et_seq_search<seq_map,true> library_searcher( lib_idx, reference_counts, num_samples );
