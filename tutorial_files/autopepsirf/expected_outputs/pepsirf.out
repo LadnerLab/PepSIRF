@@ -1,0 +1,7 @@
+pepsirf norm -a col_sum -p comboWR_raw_2mm_i1mm.tsv -o comboWR_raw_2mm_i1mm_CS.tsv >> norm.out
+pepsirf norm -a diff -p comboWR_raw_2mm_i1mm_CS.tsv -o comboWR_raw_2mm_i1mm_SBD.tsv  --negative_id SB  >> norm.out
+pepsirf norm -a diff_ratio -p comboWR_raw_2mm_i1mm_CS.tsv -o comboWR_raw_2mm_i1mm_SBDR.tsv  --negative_id SB  >> norm.out
+pepsirf zscore -s comboWR_raw_2mm_i1mm_SBD.tsv -o comboWR_raw_2mm_i1mm_Z-HDI75.tsv -n comboWR_raw_2mm_i1mm_Z-HDI75.nan -b "comboWR_raw_2mm_i1mm_b300r1_bins.tsv" -d 0.750000 >> zscore.out
+pepsirf info -i comboWR_raw_2mm_i1mm.tsv -s comboWR_raw_2mm_i1mm_SN.tsv >> info.out
+pepsirf enrich -t comboWR_raw_2mm_i1mm_thresh.tsv -s comboWR_raw_2mm_i1mm_PN.tsv -r comboWR_raw_2mm_i1mm.tsv --raw_score_constraint 15000 -x _enriched.txt -f enrichFailReasons.tsv -o 10Z-HDI75_20CS_15000raw >> enrich.out
+pepsirf info -i comboWR_raw_2mm_i1mm.tsv -c comboWR_raw_2mm_i1mm_RC.tsv >> info.out

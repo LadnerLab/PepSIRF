@@ -1,0 +1,11 @@
+PepSIRF (v1.4.0) 
+Starting module default module with arguments: 
+ --scores      comboWR_raw_2mm_i1mm_SBD.tsv
+ --bins        comboWR_raw_2mm_i1mm_b300r1_bins.tsv
+ --trim        2.5
+ --hdi         0.75
+--output      comboWR_raw_2mm_i1mm_Z-HDI75.tsv
+ --nan_report  comboWR_raw_2mm_i1mm_Z-HDI75.nan
+ --num_threads 2
+ 
+Took 0.222653 seconds.

@@ -1,0 +1,9 @@
+PepSIRF (v1.4.0) 
+Starting module default module with arguments: 
+ --input        comboWR_raw_2mm_i1mm.tsv
+ --get_samples  comboWR_raw_2mm_i1mm_SN.tsv
+ --get_probes   
+ --col_sums     
+ 
+Number of samples:  10
+Number of peptides: 15000

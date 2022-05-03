@@ -1,0 +1,7 @@
+PepSIRF (v1.4.0) 
+Starting module default module with arguments: 
+ --scores   comboWR_raw_2mm_i1mm_CS_neg_ctrl_only.tsv
+ --bin_size 300
+ --round_to 1
+ --output   comboWR_raw_2mm_i1mm_b300r1_bins.tsv
+Took 0.0732782 seconds.

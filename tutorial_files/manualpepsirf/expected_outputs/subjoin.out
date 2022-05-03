@@ -1,0 +1,8 @@
+PepSIRF (v1.4.0) 
+Starting module Subjoin with arguments: 
+ --input        comboWR_raw_2mm_i1mm_CS.tsv,neg_control_names.txt
+ --filter_peptide_names false
+ --duplicate_evaluation include
+ --output               comboWR_raw_2mm_i1mm_CS_neg_ctrl_only.tsv
+ 
+Took 0.0927229 seconds.

@@ -1,0 +1,22 @@
+PepSIRF (v1.4.0) 
+Starting module Norm with arguments: 
+ --peptide_scores     comboWR_raw_2mm_i1mm.tsv
+ --normalize_approach col_sum
+ --negative_control   
+ --negative_id        
+ --negative_names     
+ --precision   2
+ --output             comboWR_raw_2mm_i1mm_CS.tsv
+
+Took 0.130364 seconds.
+PepSIRF (v1.4.0) 
+Starting module Norm with arguments: 
+ --peptide_scores     comboWR_raw_2mm_i1mm_CS.tsv
+ --normalize_approach diff
+ --negative_control   
+ --negative_id        SB
+ --negative_names     
+ --precision   2
+ --output             comboWR_raw_2mm_i1mm_SBD.tsv
+
+Took 0.175575 seconds.

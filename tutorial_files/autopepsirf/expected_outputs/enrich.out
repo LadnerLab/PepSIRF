@@ -1,0 +1,11 @@
+PepSIRF (v1.4.0) 
+Starting module default module with arguments: 
+ --samples                    comboWR_raw_2mm_i1mm_PN.tsv
+ --threshhold_file            comboWR_raw_2mm_i1mm_thresh.tsv
+ --raw_scores                 comboWR_raw_2mm_i1mm.tsv
+ --raw_score_constraint       15000
+ --enrichment_failure_reason  enrichFailReasons.tsv
+--outfile_suffix             _enriched.txt
+ --join_on                    ~
+ --output_filename_truncate   --output                     10Z-HDI75_20CS_15000raw
+ 
