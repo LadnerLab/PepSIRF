@@ -55,7 +55,7 @@ Run autopepsirf.py wrapper to automatically run PepSIRF normalization, pair name
 -r comboWR_raw_2mm_i1mm.tsv \
 --negative_id SB \
 -b comboWR_raw_2mm_i1mm_b300r1_bins.tsv \
---rawThresh 250000 \
+--rawThresh 15000 \
 --zThresh 10 \
 --hdi 0.75 \
 --inferPairs \

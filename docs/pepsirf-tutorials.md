@@ -67,10 +67,10 @@ Generate lists of enriched peptides for each sample based on thresholds for Z sc
 + You will need to first create a tsv file with paired sample names. First get all sample names using PepSIRF info module. Then create a tab delimited file with column for replicate 1 and a column for replicate 2 (see *comboWR_raw_2mm_i1mm_PN.tsv* as example).
 
 ```
-info -i comboWR_raw_2mm_i1mm.tsv -s comboWR_raw_2mm_i1mm_SN.tsv >> info.out
+pepsirf info -i comboWR_raw_2mm_i1mm.tsv -s comboWR_raw_2mm_i1mm_SN.tsv >> info.out
 ```
 <br>
 ```
-pepsirf enrich -t comboWR_raw_2mm_i1mm_thresh.tsv -s comboWR_raw_2mm_i1mm_PN.tsv -r comboWR_raw_2mm_i1mm.tsv --raw_score_constraint 250000 -x _enriched.txt -f enrichFailReasons.tsv -o 10Z-HDI75_100CS_250000raw >> enrich.out
+pepsirf enrich -t comboWR_raw_2mm_i1mm_thresh.tsv -s comboWR_raw_2mm_i1mm_PN.tsv -r comboWR_raw_2mm_i1mm.tsv --raw_score_constraint 15000 -x _enriched.txt -f enrichFailReasons.tsv -o 10Z-HDI75_100CS_15000raw >> enrich.out
 ```
 <br>
