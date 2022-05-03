@@ -6,6 +6,7 @@ permalink: /pepsirf-tutorials/
 ### PepSeq Manual Outline
 
 Demultiplex the high-throughput sequencing data and assign raw read counts for each peptide.  In this example read 1 and 2 are input as gunzipped fastq files. The file containing the barcodes used in the sequencing run are input to the index flag. The list of samples linked to the barcodes is input to the sample list flag. A fasta file containing the nt sequences of the peptides without the adaptor sequences is passed to the library flag. In this example the unique DNA tag sequence starts at the 43rd nt, is 90nt long, and we are allowing for 2 mismatches in the DNA tag sequence (\-\-seq 43,90,2). The same order of numbers is used to indicate the start, length and number of allowed mismatches for index1 and index2.
+In this example, our [input directory](https://github.com/LadnerLab/PepSIRF/tree/master/tutorial_files/demux) will contain all of the files required.
 
 ```
 pepsirf demux --input_r1 sampled_R1.fastq.gz \
@@ -22,6 +23,8 @@ pepsirf demux --input_r1 sampled_R1.fastq.gz \
 -d diagnostics.out
 ```
 <br>
+
+For the remainder of the tutorial the [input directory](https://github.com/LadnerLab/PepSIRF/tree/master/tutorial_files/manualpepsirf) will contain the raw read files needed. Examples of the expected outputs can be found in the [expected output directory](https://github.com/LadnerLab/PepSIRF/tree/master/tutorial_files/manualpepsirf/expected_outputs)
 
 Using the pepsirf norm module with the col_sum flag, normalize the demultiplexed read counts to reads per million (RPM) to account for variability in sequencing depth between samples. **[PepSIRF norm, col_sum]**.
 
