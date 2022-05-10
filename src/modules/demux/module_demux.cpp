@@ -407,7 +407,14 @@ void module_demux::run( options *opts )
                                     else if( seq_match == reference_counts.end()
                                              && found_concatemer() )
                                         {
-                                            ++concatemer_found;
+#ifndef __clang__
+                                            #pragma omp critical
+                                                {
+#endif
+                                                    ++concatemer_found;
+#ifndef __clang__
+                                                }
+#endif
                                         }
                                 }
                             else
@@ -484,7 +491,14 @@ void module_demux::run( options *opts )
                                         }
                                     else if( found_concatemer() )
                                         {
-                                            ++concatemer_found;
+#ifndef __clang__
+                                            #pragma omp critical
+                                                {
+#endif
+                                                    ++concatemer_found;
+#ifndef __clang__
+                                                }
+#endif
                                         }
 
                                 }
