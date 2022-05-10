@@ -210,12 +210,19 @@ void module_demux::run( options *opts )
                     fastq_p.parse( r2_reads_ref, r2_seqs, d_opts->read_per_loop );
                 }
 
+#ifndef __clang__
+
            #pragma omp parallel for private( seq_iter, nuc_seq, read_index, index_str, adapter, sample_id, duplicate_map,  \
                                               idx_match_list) \
                shared( seq_start, seq_length, d_opts, num_samples, reference_counts, library_seqs, dna_tags, r2_seqs) \
                reduction( +:processed_total, processed_success, concatemer_found ) \
 
+
             for( read_index = 0; read_index < reads.size(); ++read_index )
+#endif //__clang__
+#ifdef __clang__
+            for( read_index = 0; read_index < reads.size(); ++read_index )
+#endif
                 {
                     // Identify found matches
                     auto match_found = [&]() -> bool
@@ -233,8 +240,10 @@ void module_demux::run( options *opts )
                                             concat_idx_seq.append( index_match->first.seq );
                                             if( index_map.find( sequence( "", concat_idx_seq ) ) != index_map.end() )
                                                 {
+#ifndef __clang__
                                                     #pragma omp critical
                                                         {
+#endif
                                                             index_match_totals[curr_index].second++;
                                                             if( !d_opts->diagnostic_fname.empty() )
                                                             {
@@ -262,7 +271,9 @@ void module_demux::run( options *opts )
                                                                             }
                                                                     }
                                                             }
+#ifndef __clang__
                                                         }
+#endif
                                                 }
                                             else
                                                 {
@@ -352,8 +363,10 @@ void module_demux::run( options *opts )
                                             if( flexible_idx_data.size() > 1 )
                                                 {
                                                     std::string concat_idx = "";
+#ifndef __clang__
                                                     #pragma omp critical
                                                     {
+#endif
                                                     for( std::size_t curr_index = 0; curr_index < idx_match_list.size(); curr_index++ )
                                                         {
                                                             if( idx_match_list[curr_index] != index_map.end() )
@@ -363,7 +376,9 @@ void module_demux::run( options *opts )
                                                         }
 
                                                      d_id = index_map.find( sequence( "", concat_idx ) );
+#ifndef __clang__
                                                     }
+#endif
                                                 }
                                             else
                                                 {
@@ -374,7 +389,14 @@ void module_demux::run( options *opts )
                                                 {
                                                     sample_id = d_id->second.id;
                                                     seq_match->second->at( sample_id ) += 1;
-                                                    ++processed_success;
+#ifndef __clang__
+                                                    #pragma omp critical
+                                                        {
+#endif
+                                                            ++processed_success;
+#ifndef __clang__
+                                                        }                                              
+#endif
                                                     
                                                     if( !d_opts->diagnostic_fname.empty() )
                                                         {
@@ -412,7 +434,15 @@ void module_demux::run( options *opts )
                                                     // if seq_match found, increase count for given sample
                                                     auto sample_id = idx_match_list[0]->second.id;
                                                     seq_match->second->at(sample_id) += 1;
-                                                    ++processed_success;
+#ifndef __clang__
+                                                    #pragma omp critical
+                                                        {
+#endif
+                                                            ++processed_success;
+#ifndef __clang__
+                                                        }
+#endif
+                                                    
                                                 }
                                                 // }           
                                         }
@@ -441,7 +471,14 @@ void module_demux::run( options *opts )
                                                         {
                                                             sample_id = d_id->second.id;
                                                             seq_match->second->at( sample_id ) += 1;
-                                                            ++processed_success;
+#ifndef __clang__
+                                                            #pragma omp critical
+                                                                {
+#endif
+                                                                    ++processed_success;
+#ifndef __clang__
+                                                                }
+#endif
                                                         }
                                                 }
                                         }
@@ -726,15 +763,6 @@ void module_demux::write_outputs( options_demux* d_opts,
             delete curr_counts;
         }
     outfile.close();
-
-    std::ofstream d_out("output.tsv", std::ofstream::out);
-    for( const auto row : duplicate_map )
-        {
-            d_out << row.second << "\t" << row.first << std::endl;
-        }
-
-    d_out.close();
-
 }
 
 void module_demux::_zero_vector( std::vector<std::size_t>* vec )
@@ -782,4 +810,3 @@ sequence *module_demux::_get_min_dist( std::vector<std::pair<sequence *, int>>& 
 {
     return std::get<0>( *matches.begin() );
 }
-
