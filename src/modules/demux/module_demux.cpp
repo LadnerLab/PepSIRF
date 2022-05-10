@@ -491,7 +491,17 @@ void module_demux::run( options *opts )
 
                         }
                     // record the number of records that are processed
-                    ++processed_total;
+#ifndef __clang__
+                    #pragma omp critical
+                        {
+#endif
+                            ++processed_total;
+#ifndef __clang__
+                        }
+#endif                       
+
+                    
+        
                     idx_match_list.clear();
                 }
 
