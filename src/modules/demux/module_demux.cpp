@@ -388,26 +388,41 @@ void module_demux::run( options *opts )
                                             if( d_id != index_map.end() )
                                                 {
                                                     sample_id = d_id->second.id;
-                                                    seq_match->second->at( sample_id ) += 1;
 #ifndef __clang__
                                                     #pragma omp critical
                                                         {
 #endif
-                                                            ++processed_success;
+                                                            seq_match->second->at( sample_id ) += 1;
 #ifndef __clang__
-                                                        }                                              
+                                                        }
 #endif
+                                                    ++processed_success;
                                                     
                                                     if( !d_opts->diagnostic_fname.empty() )
                                                         {
-                                                            diagnostic_map.find( d_id->second )->second[idx_match_list.size()] += 1;
+#ifndef __clang__
+                                                            #pragma omp critical
+                                                                {
+#endif
+                                                                    diagnostic_map.find( d_id->second )->second[idx_match_list.size()] += 1;
+#ifndef __clang__
+                                                                }
+#endif
+                                                            
                                                         }
                                                 }
                                         }
                                     else if( seq_match == reference_counts.end()
                                              && found_concatemer() )
                                         {
-                                            ++concatemer_found;
+#ifndef __clang__
+                                            #pragma omp critical
+                                                {
+#endif
+                                                    ++concatemer_found;
+#ifndef __clang__
+                                                }
+#endif
                                         }
                                 }
                             else
@@ -418,10 +433,6 @@ void module_demux::run( options *opts )
 
                                     if( flexible_idx_data.size() == 1 )
                                         {
-                                            // check sequence 
-                                            // d_id = index_map.find( sequence( "", idx_match_list[0]->first.seq ) );
-                                            // if( d_id != index_map.end() )
-                                            //     {
                                             auto seq_match = library_searcher.find( reads[ read_index ],
                                                                                     std::get<2>( d_opts->seq_data ),
                                                                                     seq_start,
@@ -433,18 +444,16 @@ void module_demux::run( options *opts )
                                                 {
                                                     // if seq_match found, increase count for given sample
                                                     auto sample_id = idx_match_list[0]->second.id;
-                                                    seq_match->second->at(sample_id) += 1;
 #ifndef __clang__
                                                     #pragma omp critical
                                                         {
 #endif
-                                                            ++processed_success;
+                                                            seq_match->second->at(sample_id) += 1;
 #ifndef __clang__
                                                         }
 #endif
-                                                    
-                                                }
-                                                // }           
+                                                    ++processed_success;
+                                                }        
                                         }
                                     else if( flexible_idx_data.size() > 1 )
                                         {
@@ -470,21 +479,29 @@ void module_demux::run( options *opts )
                                                     if( seq_match != reference_counts.end() )
                                                         {
                                                             sample_id = d_id->second.id;
-                                                            seq_match->second->at( sample_id ) += 1;
 #ifndef __clang__
                                                             #pragma omp critical
                                                                 {
 #endif
-                                                                    ++processed_success;
+                                                                    seq_match->second->at( sample_id ) += 1;
 #ifndef __clang__
                                                                 }
 #endif
+
+                                                            ++processed_success;
                                                         }
                                                 }
                                         }
                                     else if( found_concatemer() )
                                         {
-                                            ++concatemer_found;
+#ifndef __clang__
+                                            #pragma omp critical
+                                                {
+#endif
+                                                    ++concatemer_found;
+#ifndef __clang__
+                                                }
+#endif
                                         }
 
                                 }
