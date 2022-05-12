@@ -388,7 +388,15 @@ void module_demux::run( options *opts )
                                             if( d_id != index_map.end() )
                                                 {
                                                     sample_id = d_id->second.id;
-                                                    seq_match->second->at( sample_id ) += 1;
+#ifndef __clang__
+                                                    #pragma omp critical
+                                                        {
+#endif
+                                                            seq_match->second->at( sample_id ) += 1;
+#ifndef
+                                                        }
+#endif
+                                                    
 #ifndef __clang__
                                                     #pragma omp critical
                                                         {
@@ -400,7 +408,15 @@ void module_demux::run( options *opts )
                                                     
                                                     if( !d_opts->diagnostic_fname.empty() )
                                                         {
-                                                            diagnostic_map.find( d_id->second )->second[idx_match_list.size()] += 1;
+#ifndef __clang__
+                                                            #pragma omp critical
+                                                                {
+#endif
+                                                                    diagnostic_map.find( d_id->second )->second[idx_match_list.size()] += 1;
+#ifndef __clang__
+                                                                }
+#endif
+                                                            
                                                         }
                                                 }
                                         }
@@ -440,7 +456,15 @@ void module_demux::run( options *opts )
                                                 {
                                                     // if seq_match found, increase count for given sample
                                                     auto sample_id = idx_match_list[0]->second.id;
-                                                    seq_match->second->at(sample_id) += 1;
+#ifndef __clang__
+                                                    #pragma omp critical
+                                                        {
+#endif
+                                                            seq_match->second->at(sample_id) += 1;
+#ifndef __clang__
+                                                        }
+#endif
+                                                    
 #ifndef __clang__
                                                     #pragma omp critical
                                                         {
@@ -477,7 +501,16 @@ void module_demux::run( options *opts )
                                                     if( seq_match != reference_counts.end() )
                                                         {
                                                             sample_id = d_id->second.id;
-                                                            seq_match->second->at( sample_id ) += 1;
+#ifndef __clang__
+                                                            #pragma omp critical
+                                                                {
+#endif
+                                                                    seq_match->second->at( sample_id ) += 1;
+#ifndef __clang__
+                                                                }
+#endif
+
+                                                            
 #ifndef __clang__
                                                             #pragma omp critical
                                                                 {
