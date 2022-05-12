@@ -393,7 +393,7 @@ void module_demux::run( options *opts )
                                                         {
 #endif
                                                             seq_match->second->at( sample_id ) += 1;
-#ifndef
+#ifndef __clang__
                                                         }
 #endif
                                                     
