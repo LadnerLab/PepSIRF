@@ -396,15 +396,7 @@ void module_demux::run( options *opts )
 #ifndef __clang__
                                                         }
 #endif
-                                                    
-#ifndef __clang__
-                                                    #pragma omp critical
-                                                        {
-#endif
-                                                            ++processed_success;
-#ifndef __clang__
-                                                        }                                              
-#endif
+                                                    ++processed_success;
                                                     
                                                     if( !d_opts->diagnostic_fname.empty() )
                                                         {
@@ -441,10 +433,6 @@ void module_demux::run( options *opts )
 
                                     if( flexible_idx_data.size() == 1 )
                                         {
-                                            // check sequence 
-                                            // d_id = index_map.find( sequence( "", idx_match_list[0]->first.seq ) );
-                                            // if( d_id != index_map.end() )
-                                            //     {
                                             auto seq_match = library_searcher.find( reads[ read_index ],
                                                                                     std::get<2>( d_opts->seq_data ),
                                                                                     seq_start,
@@ -464,18 +452,8 @@ void module_demux::run( options *opts )
 #ifndef __clang__
                                                         }
 #endif
-                                                    
-#ifndef __clang__
-                                                    #pragma omp critical
-                                                        {
-#endif
-                                                            ++processed_success;
-#ifndef __clang__
-                                                        }
-#endif
-                                                    
-                                                }
-                                                // }           
+                                                    ++processed_success;
+                                                }        
                                         }
                                     else if( flexible_idx_data.size() > 1 )
                                         {
@@ -510,15 +488,7 @@ void module_demux::run( options *opts )
                                                                 }
 #endif
 
-                                                            
-#ifndef __clang__
-                                                            #pragma omp critical
-                                                                {
-#endif
-                                                                    ++processed_success;
-#ifndef __clang__
-                                                                }
-#endif
+                                                            ++processed_success;
                                                         }
                                                 }
                                         }
@@ -538,17 +508,7 @@ void module_demux::run( options *opts )
 
                         }
                     // record the number of records that are processed
-#ifndef __clang__
-                    #pragma omp critical
-                        {
-#endif
-                            ++processed_total;
-#ifndef __clang__
-                        }
-#endif                       
-
-                    
-        
+                    ++processed_total;
                     idx_match_list.clear();
                 }
 
