@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - #105, a check is added that verifys the bins provided to the Z score module. It is no longer possible to run the Z score module with the wrong set of bins.
 - #156, solved memory race condition in demux created during development of this release.
 - #163, solved memory race condition in demux that created incorrect counts.
+- #162, removed threading support on MacOS.
 
 ## [1.4.0] - 2021-07-09
 - #117, CMakelists has been updated to include a new flag for the CXX flags: '-Xpreprocessor'. This flag is used to make compilation in different environments for cpp easier. This issue arose when pepsirf was attempted to be compiled in 'Big Sur' and failed to compile due to an error with '-fopenmp'.
