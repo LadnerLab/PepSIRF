@@ -5,6 +5,7 @@
 #include <fstream>
 #include <limits>
 #include <algorithm>
+#include <unordered_map>
 #include <boost/algorithm/string.hpp>
 #include "omp_opt.h"
 
@@ -19,7 +20,7 @@
 #include "sequence_indexer.h"
 #include "sample.h"
 #include <iomanip>
-
+#include "fif_parser.h"
 
 /**
  * Class for running the demultiplex module. Given a file of reads and a file containing
@@ -66,8 +67,12 @@ class module_demux : public module
      * Writes output to diagnostic_fname. Output as tab-delimited file, with three columns, samplename, index pair matches, variable region matches.
      * Output is optional, defaulted as unused.
     **/
-    void write_diagnostic_output( options_demux* d_opts, std::map<std::pair<std::string,std::string>,
-                                  std::pair<std::string,std::vector<std::size_t>>>& diagnostic_map );
+    void write_diagnostic_output( options_demux* d_opts,
+                                  phmap::parallel_flat_hash_map<sample, std::vector<std::size_t>>& diagnostic_map );
+
+    void create_diagnostic_map( bool reference_dependent,
+                                phmap::parallel_flat_hash_map<sample,std::vector<std::size_t>>& diagnostic_map,
+                                std::vector<sample> samplelist );
 
     /**
      * Writes output to the outfile_name.
@@ -83,9 +88,12 @@ class module_demux : public module
      *        vector of each seq_score. Note that samples[ i ].id must equal j[ i ] for each
      *        j = 1, 2, ... j.size(), i.e. The id of a sample must correspond with its entry in
      *        the count vector.
+     * @param sample_duplicates map of dna tags. contains the number of each dna tag that 
+     *        appears in a run. used to determine the samples included in the output.
      **/
-    void write_outputs( std::string outfile_name,
+    void write_outputs( options_demux* d_opts,
                         parallel_map<sequence, std::vector<std::size_t>*>& seq_scores,
+                        std::map<std::string, std::size_t> duplicate_map,
                         std::vector<sample>& samples
                       );
 
@@ -122,22 +130,22 @@ class module_demux : public module
      * @returns Iterator to the match if found, map.end() otherwise
      **/
     template<class M>
-        typename M::iterator _find_with_shifted_mismatch( M &map,
-                                                          sequence probe_seq,
-                                                          sequence_indexer& idx, std::size_t num_mism,
-                                                          std::size_t f_start, std::size_t f_len
-                                                         )
+    typename M::iterator _find_with_shifted_mismatch( M& map,
+                                                      sequence probe_seq,
+                                                      sequence_indexer& idx, std::size_t num_mism,
+                                                      std::size_t f_start, std::size_t f_len
+                                                    )
         {
             std::vector<std::pair<sequence *, int>> query_matches;
             sequence *best_match = nullptr;
             sequence seq_temp;
-
+            std::string empty_string = "";
             unsigned int num_matches = 0;
 
             std::string substr = probe_seq.seq.substr( f_start, f_len );
 
             // Note: hash( sequence& seq ) = hash( seq.seq )
-            auto temp = map.find( sequence( "", substr ) );
+            auto temp = map.find( sequence( empty_string, substr ) );
 
             // first check for an exact match in the expected location
             if( temp != map.end() )
@@ -148,12 +156,12 @@ class module_demux : public module
             if( f_start > 0 ) // check that we are not shifting left from the beginning
                 {
                     substr = probe_seq.seq.substr( f_start - 1, f_len );
-                    temp = map.find( sequence( "", substr ) );
+                    temp = map.find( sequence( empty_string, substr ) );
 
                     if( temp == map.end() )
                         {
                             substr = probe_seq.seq.substr( f_start - 2, f_len );
-                            temp = map.find( sequence( "", substr ) );
+                            temp = map.find( sequence( empty_string, substr ) );
                         }
 
                     if( temp != map.end() )
@@ -167,7 +175,7 @@ class module_demux : public module
             if( f_start + 1 + f_len <= probe_seq.seq.length() )
                 {
                     substr = probe_seq.seq.substr( f_start + 1, f_len );
-                    temp = map.find( sequence( "", substr ) );
+                    temp = map.find( sequence( empty_string, substr ) );
                 }
 
             // look for a match at the expected coordinates within
@@ -175,7 +183,8 @@ class module_demux : public module
             if( num_mism > 0 && temp == map.end() )
                 {
                     substr = probe_seq.seq.substr( f_start, f_len );
-                    seq_temp = sequence( "", substr );
+                    seq_temp.set_name( empty_string );
+                    seq_temp.set_seq( substr );
                     num_matches = idx.query( query_matches,
                                              seq_temp,
                                              num_mism
@@ -202,9 +211,22 @@ class module_demux : public module
      **/
     sequence *_get_min_dist( std::vector<std::pair<sequence *, int>>& matches );
 
+    /**
+     * @note Creates two unordered multimaps based on DNA tag sequences referenced by the samplelist index columns.
+     * The 'seq_lookup' map will contain the associated sequence to the ids in the barcodes/DNA tags file (--index-column).
+     * Note only ids referenced in the samplelist file will be included.
+     * 'map' contains concatenated DNA tag sequences, order specified by the index sample column name (--fif or --sIndex).
+     * Example. The concatenation would follow as: Index1 sequence + Index2 sequence + Index3 sequence and so on. The accumulation of the sequences
+     * is added to 'map' from the first index to the last index id for each sample. So three elements: sequence Index1, sequence Index1 + Index2,
+     * and sequence Index1 + Index2 + Index3 will all be added.
+     * @param map unordered multimap with unsorted sequence and samples. Samples organized into buckets where key sequence is identical.
+     * This allows access to individual elements directly by the sequence object.
+     * @param seq_lookup identical in concept to the map.
+     **/
     void create_index_map( sequential_map<sequence, sample>& map,
-                           std::vector<sequence>& index_seqs,
-                           std::vector<sample>& samplelist
+                           std::vector<sequence>& dna_tags,
+                           std::vector<sample>& samplelist,
+                           sequential_map<sequence, sample>& seq_lookup
                          );
 
     /**
