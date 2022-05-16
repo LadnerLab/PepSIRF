@@ -1,10 +1,5 @@
 #!/usr/bin/env python
 
-import matplotlib.pyplot as plt
-import matplotlib as mpl
-mpl.rcParams['pdf.fonttype'] = 42
-
-
 import optparse, glob, os, sys
 #import inout as io             #Available at https://github.com/jtladner/Modules
 import matrixtools as mt             #Available at https://github.com/jtladner/Modules
