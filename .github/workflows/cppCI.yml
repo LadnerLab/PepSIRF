@@ -20,10 +20,15 @@ jobs:
     steps:
     - name: configure
       run:
+        sudo apt update
+        sudo apt install zlib1g
+        sudo apt install zlib1g-dev
+        sudo apt install -y libboost-all-dev
         cd ${{ github.workspace }}
         mkdir build
         cd build
         cmake -DCMAKE_BUILD_TYPE=Release ..
+        make pepsirf_test
 
     - name: configure
       run:
