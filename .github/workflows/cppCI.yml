@@ -18,12 +18,14 @@ jobs:
     runs-on: [ ubuntu-latest, macos-latest ]
 
     steps:
-    - uses: actions/checkout@v3
     - name: configure
-      run: ./configure
-    - name: make
-      run: make
-    - name: make check
-      run: make check
-    - name: make distcheck
-      run: make distcheck
+      run:
+        cd ${{ github.workspace }}
+        mkdir build
+        cd build
+        cmake -DCMAKE_BUILD_TYPE=Release ..
+
+    - name: configure
+      run:
+        cd build
+        ./pepsirf_test
