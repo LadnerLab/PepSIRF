@@ -83,7 +83,7 @@ TEST_CASE( "fasta_parser is able to read files that exist, properly creates erro
     {
         fasta_parser fp;
         std::vector<sequence> vec;
-        vec = fp.parse( "../test/test.fasta" );
+        vec = fp.parse( "../test/input_data/test.fasta" );
 
         REQUIRE( vec.size() == 110 );
 
@@ -123,7 +123,7 @@ TEST_CASE( "fasta_parser is able to read files that exist, properly creates erro
 TEST_CASE( "Parse Fastq", "[fastq_parser]" )
 {
     std::vector<fastq_sequence> seq_vec;
-    std::string fastq_fname = "../test/test_fastq.fastq";
+    std::string fastq_fname = "../test/input_data/test_fastq.fastq";
     std::ifstream in_file( fastq_fname, std::ios_base::in );
 
     fastq_parser parse;
@@ -195,7 +195,7 @@ TEST_CASE( "Add seqs to map", "[module_demux]" )
 
     std::vector<sequence> vec;
     std::size_t num_samples = 12;
-    vec = fp.parse( "../test/test.fasta" );
+    vec = fp.parse( "../test/input_data/test.fasta" );
 
     parallel_map<sequence, std::vector<std::size_t>*> my_map;
 
@@ -217,6 +217,52 @@ TEST_CASE( "Add seqs to map", "[module_demux]" )
             ++it;
         }
 
+}
+
+TEST_CASE( "Flexible Index File is used to provide index 1 and index 2 information", "[module_demux]" )
+{
+    // read a test flexible index file
+
+    // check data matches expected values written in flexible index file
+}
+
+TEST_CASE( "Diagnostics give a detailed count for the occurring read matches during a run", "[module_demux]" )
+{
+    // run demux using a real-world dataset (31250 records) with diagnostic output
+    module_demux d_mod;
+    options_demux d_opts;
+
+    d_opts.input_r1_fname = std::string("../test/input_data/test_input_r1_NS30.fastq");
+    d_opts.input_r2_fname = std::string("../test/input_data/test_input_r2_NS30.fastq");
+    d_opts.index_fname = std::string("../test/input_data/test_barcodes.fa");
+    d_opts.library_fname = std::string("../test/input_data/test_demux_library_NS30.fna");
+    d_opts.samplelist_fname = std::string("../test/input_data/test_samplelist_NS30.tsv");
+    d_opts.flexible_idx_fname = std::string( "" );
+    d_opts.output_fname = std::string("../test/test_demux_output.tsv");
+    d_opts.diagnostic_fname = std::string("../test/test_diagnostic_output.tsv");
+    d_opts.num_threads = 1;
+    d_opts.read_per_loop = 80000;
+    d_opts.samplename = "SampleName";
+    d_opts.indexes = "Index1,Index2";
+    d_opts.sample_indexes = { "Index1", "Index2" };
+    d_opts.set_info( &options_demux::seq_data, "43,90,2" );
+    d_opts.set_info( &options_demux::index1_data, "12,12,1" );
+    d_opts.set_info( &options_demux::index2_data,"0,8,1" );
+
+    d_mod.run(&d_opts);
+    // check diagnostic output diagnostic file matches expected
+    std::string expected = "../test/expected/test_expected_diagnostic_NS30.tsv";
+    std::string actual = "../test/test_diagnostic_output.tsv";
+    std::ifstream ifexpected( expected, std::ios_base::in );
+    std::ifstream ifactual( actual, std::ios_base::in );
+    std::string expected_line;
+    std::string actual_line;
+    for( std::size_t index = 0; index < 77; index++ )
+        {
+            std::getline( ifexpected, expected_line );
+            std::getline( ifactual, actual_line );
+            REQUIRE( expected_line.compare(actual_line) == 0 );
+        }
 }
 
 TEST_CASE( "samplelist_parser is able to read files that exist, properly creates errors when file cannot be found/read", "[samplelist_parser]" )
@@ -255,7 +301,7 @@ TEST_CASE( "Test String Indexing", "[string_indexer]" )
     std::string origin = "";
     sequence_indexer si;
     fastq_parser fp;
-    auto seqs = fp.parse( "../test/test_fastq.fastq" );
+    auto seqs = fp.parse( "../test/input_data/test_fastq.fastq" );
     std::vector<std::pair<sequence*,int>> result_set;
 
     std::vector<sequence> seqs_fastq;
@@ -406,7 +452,7 @@ TEST_CASE( "Test Count Generation", "[module_demux]" )
     std::size_t seq_start      = 0;
     std::size_t num_mismatches = 0;
 
-    vec_a = fp.parse( "../test/test_fastq.fastq" );
+    vec_a = fp.parse( "../test/input_data/test_fastq.fastq" );
 
     std::for_each( vec_a.begin(), vec_a.end(),
                    [&]( const sequence& seq )
@@ -1131,9 +1177,9 @@ TEST_CASE( "Deconv end_to_end", "[module_deconv]" )
     module_deconv mod;
     options_deconv opts;
 
-    opts.linked_fname = std::string( "../test/test_pep_linkages.tsv" );
+    opts.linked_fname = std::string( "../test/input_data/test_pep_linkages.tsv" );
     opts.output_fname = std::string( "../test/test_deconv_output.tsv" );
-    opts.enriched_fname = std::string( "../test/test_enriched_file.tsv" );
+    opts.enriched_fname = std::string( "../test/input_data/test_enriched_file.tsv" );
     opts.id_name_map_fname = std::string();
 
     opts.threshold = 00;
@@ -1359,8 +1405,8 @@ TEST_CASE( "get_kmer_frequency", "[kmer_tools]" )
 
     fasta_parser fp;
     std::vector<sequence> vec;
-    vec = fp.parse( "../test/test.fasta" );
-    std::ifstream input_stream( "../test/test_kmer_frequency.tsv",
+    vec = fp.parse( "../test/input_data/test.fasta" );
+    std::ifstream input_stream( "../test/input_data/test_kmer_frequency.tsv",
                                 std::ios_base::in
                               );
 
@@ -2023,12 +2069,12 @@ TEST_CASE( "Verify sums and minimum bin size resizing", "[module_bin]" )
         module_bin mod = module_bin();
         options_bin opt = options_bin();
         opt.min_bin_size = 300;
-        opt.input_scores_fname = "../test/test_bins.tsv";
+        opt.input_scores_fname = "../test/input_data/test_bins.tsv";
         opt.rounding_factor = 1;
         opt.output_bins_fname = "../test/test_bin_output.txt";
         mod.run( &opt );
         std::ifstream bin_output( opt.output_bins_fname, std::ios_base::in );
-        std::ifstream bin_expected_output( "../test/test_expected_bins.tsv",
+        std::ifstream bin_expected_output( "../test/expected/test_expected_bins.tsv",
                                                         std::ios_base::in );
         std::string expected_line;
         std::string output_line;
@@ -2237,25 +2283,27 @@ TEST_CASE( "Use of predicate logic", "[predicate]" )
 
 }
 
-// TEST_CASE( "Parsing samples file", "[module_enrich]" )
-// {
-//     module_enrich mod;
-//     std::string input_str;
-//     input_str = "sample1\tsample2\nsample3\tsample4\n";
+TEST_CASE( "Parsing samples file", "[module_enrich]" )
+{
+    module_enrich mod;
+    std::string input_str;
+    input_str = "sample1\tsample2\nsample3\tsample4\n";
 
-//     std::istringstream file;
-//     file.str( input_str );
-//     auto samples = mod.parse_samples( file );
+    std::istringstream file;
+    file.str( input_str );
+    auto samples = mod.parse_samples( file );
 
-//     REQUIRE( samples.size() == 2 );
+    REQUIRE( samples.size() == 2 );
 
-//     file.clear();
+    file.clear();
 
-//     file.str( "sample1\tsample2\tsample3\nsample4\tsample5\n" );
+    file.str( "sample1\tsample2\tsample3\nsample4\tsample5\nsample6\t\tsample7" );
 
-//     REQUIRE_THROWS( mod.parse_samples( file ) );
+    samples = mod.parse_samples( file );
 
-// }
+    REQUIRE( samples.size() == 3 );
+
+}
 
 TEST_CASE( "Meeting the threshold for a pair", "[module_enrich]" )
 {
@@ -2408,7 +2456,7 @@ TEST_CASE( "Determining whether a file is gzipped.", "[pepsirf_io]" )
 
     REQUIRE( pepsirf_io::is_gzipped( true_expected ) );
 
-    std::ifstream false_expected{ "../test/test.fasta" };
+    std::ifstream false_expected{ "../test/input_data/test.fasta" };
     REQUIRE( !pepsirf_io::is_gzipped( false_expected ) );
 }
 
@@ -2418,7 +2466,7 @@ TEST_CASE( "Subjoin name list filter is optional", "[module_subjoin]" )
     options_subjoin opts = options_subjoin();
     opts.use_sample_names = true;
     opts.out_matrix_fname = "../test/test_subjoin_output.txt";
-    opts.input_matrix_name_pairs.emplace_back( std::make_pair( "../test/test_score_matrix.tsv", "" ) );
+    opts.input_matrix_name_pairs.emplace_back( std::make_pair( "../test/input_data/test_score_matrix.tsv", "" ) );
     mod.run( &opts );
 }
 
@@ -2439,18 +2487,18 @@ TEST_CASE( "Metadata file can be given in place of taxonomic id index", "[module
         REQUIRE( id_index_spec_id.compare( metadata_spec_id ) == 0 );
     }
 
-    SECTION( "Verifying metadata file usage feature successfully performs and integrates with link module." )
-    {
-        module_link mod = module_link();
-        options_link opts = options_link();
-        opts.metadata_fname =  "../test/full_design_clean_min30_taxtweak_100perc_jingmens_2019-09-12_segment.metadata,Name,Species";
-        opts.prot_file_fname = "../test/full_design_clean_min30_taxtweak_100perc_jingmens_2019-09-12_segment.fasta";
-        opts.peptide_file_fname = "../test/PV1_10K3000_53_encoded_segment.faa";
-        opts.kmer_size = 7;
-        opts.output_fname = "../test/test_metadata_output.txt";
-        mod.run( &opts );
-        REQUIRE( !opts.output_fname.empty() );
-    }
+    // SECTION( "Verifying metadata file usage feature successfully performs and integrates with link module." )
+    // {
+    //     module_link mod;
+    //     options_link opts;
+    //     opts.metadata_fname =  "../test/input_data/full_design_clean_min30_taxtweak_100perc_jingmens_2019-09-12_segment.metadata,Name,Species";
+    //     opts.prot_file_fname = "../test/input_data/full_design_clean_min30_taxtweak_100perc_jingmens_2019-09-12_segment.fasta";
+    //     opts.peptide_file_fname = "../test/input_data/PV1_10K3000_53_encoded_segment.faa";
+    //     opts.kmer_size = 7;
+    //     opts.output_fname = "../test/test_metadata_output.txt";
+    //     mod.run( &opts );
+    //     REQUIRE( !opts.output_fname.empty() );
+    // }
 
 }
 
