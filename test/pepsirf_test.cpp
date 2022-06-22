@@ -240,8 +240,11 @@ TEST_CASE( "Diagnostics give a detailed count for the occurring read matches dur
     d_opts.flexible_idx_fname = std::string( "" );
     d_opts.output_fname = std::string("../test/test_demux_output.tsv");
     d_opts.diagnostic_fname = std::string("../test/test_diagnostic_output.tsv");
-    d_opts.num_threads = 1;
     d_opts.read_per_loop = 80000;
+    d_opts.aggregate_fname = std::string();
+    d_opts.concatemer = std::string();
+    d_opts.min_phred_score = 0;
+    d_opts.phred_base = 33;
     d_opts.samplename = "SampleName";
     d_opts.indexes = "Index1,Index2";
     d_opts.sample_indexes = { "Index1", "Index2" };
