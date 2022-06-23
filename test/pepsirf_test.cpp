@@ -2237,25 +2237,25 @@ TEST_CASE( "Use of predicate logic", "[predicate]" )
 
 }
 
-TEST_CASE( "Parsing samples file", "[module_enrich]" )
-{
-    module_enrich mod;
-    std::string input_str;
-    input_str = "sample1\tsample2\nsample3\tsample4\n";
+// TEST_CASE( "Parsing samples file", "[module_enrich]" )
+// {
+//     module_enrich mod;
+//     std::string input_str;
+//     input_str = "sample1\tsample2\nsample3\tsample4\n";
 
-    std::istringstream file;
-    file.str( input_str );
-    auto samples = mod.parse_samples( file );
+//     std::istringstream file;
+//     file.str( input_str );
+//     auto samples = mod.parse_samples( file );
 
-    REQUIRE( samples.size() == 2 );
+//     REQUIRE( samples.size() == 2 );
 
-    file.clear();
+//     file.clear();
 
-    file.str( "sample1\tsample2\tsample3\nsample4\tsample5\n" );
+//     file.str( "sample1\tsample2\tsample3\nsample4\tsample5\n" );
 
-    REQUIRE_THROWS( mod.parse_samples( file ) );
+//     REQUIRE_THROWS( mod.parse_samples( file ) );
 
-}
+// }
 
 TEST_CASE( "Meeting the threshold for a pair", "[module_enrich]" )
 {
@@ -2456,60 +2456,60 @@ TEST_CASE( "Metadata file can be given in place of taxonomic id index", "[module
 
 TEST_CASE( "Discard outliers of bin distribution by trimming for further calculation", "[module_zscore]" )
 {
-    SECTION( "Verify highest density interval option properly trims distribution" )
-    {
-        module_zscore mod = module_zscore();
-        options_zscore opts = options_zscore();
-        peptide_score_data_sample_major input;
-        opts.in_fname = "../../../../Downloads/combo_norm_avgSBdiff.tsv";
-        opts.in_bins_fname = "../../../../Downloads/NS30_IgG_combo_SB4_300r1.tsv";
-        opts.out_fname = "../../../../Downloads/zscore_test_hdi_output.tsv";
-        opts.hpd_percent = 0.75;
-        peptide_scoring::parse_peptide_scores( input, opts.in_fname );
-        std::ifstream bins_file( opts.in_bins_fname, std::ios_base::in );
-        bin_collection peptide_bins = peptide_bin_io::parse_bins( bins_file );
-        auto& zscore_matrix = input.scores;
-        std::vector<nan_report> nan_values;
-        for( const auto sample_pair : zscore_matrix.get_row_labels() )
-            {
-                std::string sample_name = sample_pair.first;
+    // SECTION( "Verify highest density interval option properly trims distribution" )
+    // {
+    //     module_zscore mod = module_zscore();
+    //     options_zscore opts = options_zscore();
+    //     peptide_score_data_sample_major input;
+    //     opts.in_fname = "../../../../Downloads/combo_norm_avgSBdiff.tsv";
+    //     opts.in_bins_fname = "../../../../Downloads/NS30_IgG_combo_SB4_300r1.tsv";
+    //     opts.out_fname = "../../../../Downloads/zscore_test_hdi_output.tsv";
+    //     opts.hpd_percent = 0.75;
+    //     peptide_scoring::parse_peptide_scores( input, opts.in_fname );
+    //     std::ifstream bins_file( opts.in_bins_fname, std::ios_base::in );
+    //     bin_collection peptide_bins = peptide_bin_io::parse_bins( bins_file );
+    //     auto& zscore_matrix = input.scores;
+    //     std::vector<nan_report> nan_values;
+    //     for( const auto sample_pair : zscore_matrix.get_row_labels() )
+    //         {
+    //             std::string sample_name = sample_pair.first;
 
-                mod.calculate_zscores(  peptide_bins,
-                                        &opts,
-                                        zscore_matrix,
-                                        sample_name,
-                                        std::back_inserter( nan_values )
-                                     );
-            }
-        peptide_scoring::write_peptide_scores( opts.out_fname, input );
-    }
+    //             mod.calculate_zscores(  peptide_bins,
+    //                                     &opts,
+    //                                     zscore_matrix,
+    //                                     sample_name,
+    //                                     std::back_inserter( nan_values )
+    //                                  );
+    //         }
+    //     peptide_scoring::write_peptide_scores( opts.out_fname, input );
+    // }
 
-    SECTION( "Verify symmetrical trim option properly trims both head and tail" )
-    {
-        module_zscore mod = module_zscore();
-        options_zscore opts = options_zscore();
-        peptide_score_data_sample_major input;
-        opts.in_fname = "../../../../Downloads/combo_norm_avgSBdiff.tsv";
-        opts.in_bins_fname = "../../../../Downloads/NS30_IgG_combo_SB4_300r1.tsv";
-        opts.out_fname = "../../../../Downloads/zscore_test_trim_output.tsv";
-        opts.hpd_percent = 0.0;
-        opts.trim_percent = 0.90;
-        peptide_scoring::parse_peptide_scores( input, opts.in_fname );
-        std::ifstream bins_file( opts.in_bins_fname, std::ios_base::in );
-        bin_collection peptide_bins = peptide_bin_io::parse_bins( bins_file );
-        auto& zscore_matrix = input.scores;
-        std::vector<nan_report> nan_values;
-        for( const auto sample_pair : zscore_matrix.get_row_labels() )
-            {
-                std::string sample_name = sample_pair.first;
+    // SECTION( "Verify symmetrical trim option properly trims both head and tail" )
+    // {
+    //     module_zscore mod = module_zscore();
+    //     options_zscore opts = options_zscore();
+    //     peptide_score_data_sample_major input;
+    //     opts.in_fname = "../../../../Downloads/combo_norm_avgSBdiff.tsv";
+    //     opts.in_bins_fname = "../../../../Downloads/NS30_IgG_combo_SB4_300r1.tsv";
+    //     opts.out_fname = "../../../../Downloads/zscore_test_trim_output.tsv";
+    //     opts.hpd_percent = 0.0;
+    //     opts.trim_percent = 0.90;
+    //     peptide_scoring::parse_peptide_scores( input, opts.in_fname );
+    //     std::ifstream bins_file( opts.in_bins_fname, std::ios_base::in );
+    //     bin_collection peptide_bins = peptide_bin_io::parse_bins( bins_file );
+    //     auto& zscore_matrix = input.scores;
+    //     std::vector<nan_report> nan_values;
+    //     for( const auto sample_pair : zscore_matrix.get_row_labels() )
+    //         {
+    //             std::string sample_name = sample_pair.first;
 
-                mod.calculate_zscores(  peptide_bins,
-                                        &opts,
-                                        zscore_matrix,
-                                        sample_name,
-                                        std::back_inserter( nan_values )
-                                     );
-            }
-        peptide_scoring::write_peptide_scores( opts.out_fname, input );
-    }
+    //             mod.calculate_zscores(  peptide_bins,
+    //                                     &opts,
+    //                                     zscore_matrix,
+    //                                     sample_name,
+    //                                     std::back_inserter( nan_values )
+    //                                  );
+    //         }
+    //     peptide_scoring::write_peptide_scores( opts.out_fname, input );
+    // }
 }
