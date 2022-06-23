@@ -8,13 +8,21 @@ def main():
     usage = '%prog [options] fasta1  [fasta2 ...]'
     p = optparse.OptionParser()
     p.add_option('-p', '--probes', default="/Volumes/GoogleDrive/Shared drives/LadnerLab/Projects/panviral_pepseq/library_design/oligos/2019-02-27/unrepSW_9_30_70_design_combined_wControls_2019-09-12.fasta_unique", help='Fasta with probe seqs. [/Volumes/GoogleDrive/Shared drives/LadnerLab/Projects/panviral_pepseq/library_design/oligos/2019-02-27/unrepSW_9_30_70_design_combined_wControls_2019-09-12.fasta_unique]')
+    p.add_option('--subsetAlignments', default=False, action="store_true", help='Use this option if the seqs in the alignment are NOT full length target sequences. In this case, the sequence names should end with a string such as " 762-962" indicating the positions of the extracted region in X-coordinates. [False]')
 
     opts, args = p.parse_args()
     
     for alFasta in args:
         #Make dict that links target seq position to alignment positions (1-based)
         alignD = parseAlignment(alFasta)
-
+        
+        #If seqs in alignment are subsets of the original target sequences, then alter alignD and generate a supporting data object
+        if opts.subsetAlignments:
+            name2coords = {" ".join(n.split(" ")[:-1]): [int(x) for x in n.split(" ")[-1].split("-")] for n in alignD}
+            alignD = {" ".join(n.split(" ")[:-1]): s for n,s in alignD.items()}
+            for k, v in alignD.items():
+                alignD[k] = {p+name2coords[k][0]-1:a for p,a in v.items()}
+        
         #Extract appropriate probes locations and write to out file
         outFile = "%s_probesAligned.txt" % (".".join(alFasta.split(".")[:-1]))
         with open(outFile, "w") as fout:
@@ -25,12 +33,13 @@ def main():
             for i, each in enumerate(pNames):
                 tarName, start, stop = parseProbeName(each)
                 if tarName in alignD:
-                    nonIndel = []
-                    for p in range(start, stop+1):
-                        if p in alignD[tarName]:
-                            nonIndel.append(str(alignD[tarName][p]))
-#                            nonIndel.append(str(p))
-                    fout.write("%s\t%d\t%d\t%s\n" % (each,alignD[tarName][start],alignD[tarName][stop], "~".join(nonIndel)))
+                    if start in alignD[tarName] and stop in alignD[tarName]:
+                        nonIndel = []
+                        for p in range(start, stop+1):
+                            if p in alignD[tarName]:
+                                nonIndel.append(str(alignD[tarName][p]))
+    #                            nonIndel.append(str(p))
+                        fout.write("%s\t%d\t%d\t%s\n" % (each, alignD[tarName][start], alignD[tarName][stop], "~".join(nonIndel)))
 #                    fout.write("%s\t%d\t%d\t%s\n" % (each,start,stop, "~".join(nonIndel)))
 
 #----------------------End of main()
