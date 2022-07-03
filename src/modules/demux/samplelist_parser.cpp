@@ -99,7 +99,7 @@ std::vector<sample> samplelist_parser::parse( const options_demux *d_opts, const
                 {
                     if( !duplicate_name )
                         {
-                            std::cout << "WARNING: The following sequence names appear muptiple times" << std::endl;
+                            std::cout << "WARNING: The following sequence names appear multiple times" << std::endl;
                             duplicate_name = true;
                         }
                     std::cout << member.first << " Counts: " << member.second << std::endl;
