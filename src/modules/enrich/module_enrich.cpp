@@ -26,6 +26,7 @@ void module_enrich::run( options *opts )
     std::unordered_map<std::string,std::string> enrichment_failures;
     matrix_thresh_pairs.resize( e_opts->matrix_thresh_fname_pairs.size() );
     bool shorthand_output_filenames = e_opts->truncate_names;
+    bool low_reads = e_opts->low_raw_reads;
     std::size_t curr_matrix;
 
     for( curr_matrix = 0; curr_matrix < e_opts->matrix_thresh_fname_pairs.size(); curr_matrix++ )
@@ -113,12 +114,19 @@ void module_enrich::run( options *opts )
                     get_raw_scores( &raw_score_lists, raw_scores_ptr, samples_list[sample_idx] );
                     col_sums = get_raw_sums( raw_score_lists );
                 }
-
+            //start here
             raw_count_enriched = raw_counts_included
                 ? ( raw_count_enriched && thresholds_met( col_sums, raw_score_params ) )
                 : true;
+            
 
-            if( raw_count_enriched )
+            if( low_reads )
+                {
+                    
+                }
+
+            //end here
+            else if( raw_count_enriched )
             {
                 // Get candidates for each input matrix for the current sample
                 for( curr_matrix = 0; curr_matrix < matrix_thresh_pairs.size(); ++curr_matrix )
@@ -178,11 +186,23 @@ void module_enrich::run( options *opts )
                     {
                         std::string pep_name = candidate.first;
                         std::size_t valid_candidates = 0;
+                        std::vector<std::map<std::string, std::vector<double>>> ret;
                         for( std::size_t curr_map = 0; curr_map < all_enrichment_candidates.size(); ++curr_map )
                             {
-                                if( thresholds_met( all_enrichment_candidates[curr_map].at( pep_name ),
+                                if( !low_reads )
+                                {
+                                    if( thresholds_met( all_enrichment_candidates[curr_map].at( pep_name ),
                                                 matrix_thresh_pairs[curr_map].second ) )
                                     ++valid_candidates;
+                                }
+                                else
+                                {
+                                    if (thresholds_met( all_enrichment_candidates[curr_map].at( pep_name ),
+                                                matrix_thresh_pairs[curr_map].second))
+                                    {
+                                        ++valid_candidates;
+                                    }
+                                }
                             }
                     
                         if( valid_candidates == matrix_thresh_pairs.size() )
