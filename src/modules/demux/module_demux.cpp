@@ -572,12 +572,12 @@ void module_demux::run( options *opts )
                     aggregate_counts( agg_map, reference_counts, samplelist.size() );
                 }
 
-            write_outputs( d_opts,
+            write_outputs( d_opts->aggregate_fname,
                            agg_map,
                            samplelist
                          );
         }
-    write_outputs( d_opts, reference_counts, samplelist);
+    write_outputs( d_opts->aggregate_fname, reference_counts, samplelist);
 }
 
 std::string module_demux::get_name()
@@ -729,12 +729,12 @@ void module_demux::write_diagnostic_output( options_demux* d_opts, phmap::parall
 
 }
 
-void module_demux::write_outputs( options_demux* d_opts,
+void module_demux::write_outputs( std::string outfile_name,
                                   parallel_map<sequence, std::vector<std::size_t>*>& seq_scores,
                                   std::vector<sample>& samples
                                 )
 {
-    std::ofstream outfile( d_opts->output_fname, std::ofstream::out );
+    std::ofstream outfile( outfile_name, std::ofstream::out );
     parallel_map<sequence, std::vector<std::size_t>*>::iterator seq_iter = seq_scores.begin();
 
     const std::string DELIMITER = "\t";
