@@ -93,7 +93,6 @@ class module_demux : public module
      **/
     void write_outputs( options_demux* d_opts,
                         parallel_map<sequence, std::vector<std::size_t>*>& seq_scores,
-                        std::map<std::string, std::size_t> duplicate_map,
                         std::vector<sample>& samples
                       );
 

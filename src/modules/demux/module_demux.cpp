@@ -574,11 +574,10 @@ void module_demux::run( options *opts )
 
             write_outputs( d_opts,
                            agg_map,
-                           duplicate_map,
                            samplelist
                          );
         }
-    write_outputs( d_opts, reference_counts, duplicate_map, samplelist);
+    write_outputs( d_opts, reference_counts, samplelist);
 }
 
 std::string module_demux::get_name()
@@ -732,14 +731,11 @@ void module_demux::write_diagnostic_output( options_demux* d_opts, phmap::parall
 
 void module_demux::write_outputs( options_demux* d_opts,
                                   parallel_map<sequence, std::vector<std::size_t>*>& seq_scores,
-                                  std::map<std::string, std::size_t> duplicate_map,
                                   std::vector<sample>& samples
                                 )
 {
     std::ofstream outfile( d_opts->output_fname, std::ofstream::out );
     parallel_map<sequence, std::vector<std::size_t>*>::iterator seq_iter = seq_scores.begin();
-
-    bool ref_dep = !d_opts->library_fname.empty();
 
     const std::string DELIMITER = "\t";
     const std::string NEWLINE   = "\n";
@@ -767,15 +763,12 @@ void module_demux::write_outputs( options_demux* d_opts,
             const std::vector<std::size_t> *curr_counts = seq_iter->second;
 
             std::size_t index_max = samples.size() > curr_counts->size() ? curr_counts->size() : samples.size();
-            if(!ref_dep || duplicate_map[curr.seq] == 1)
+            outfile << curr.name << DELIMITER;
+            for( second_index = 0; second_index < index_max - 1; ++second_index )
                 {
-                    outfile << curr.name << DELIMITER;
-                    for( second_index = 0; second_index < index_max - 1; ++second_index )
-                        {
-                            outfile << curr_counts->at( second_index ) << DELIMITER;
-                        }
-                    outfile << curr_counts->at( index_max - 1 ) << NEWLINE;
+                    outfile << curr_counts->at( second_index ) << DELIMITER;
                 }
+            outfile << curr_counts->at( index_max - 1 ) << NEWLINE;
             ++seq_iter;
             delete curr_counts;
         }
