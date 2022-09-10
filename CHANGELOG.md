@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.1]
+- #154, altered behavior of enrich to produce blank sample file output for samples that failed enrichment.
+- #168, fixed bug introduced in release 1.5, where amino acid level output is overwritten with peptide level output. This no longer occurs.
+
 ## [1.5.0]
 - #35, added new feature to demux. If samplenames or index name sets have duplicates in samplelist file, then those duplicates will be output to the terminal.
 - #57, demux now has an additional option for providing a tab-delimited file with 5 ordered columns: 1) index name, which should correspond to a header name in the sample sheet, 2) read name, which should be either "r1" or "r2" to specify whether the index is in "--input_r1" or "--input_r2", 3) index start location (0-based, inclusive), 4) index length and 5) number of mismatched to allow. Note: the last three columns correspond to the info currently provided on the command line with "--f_index" and "--r_index" (or "--index1" and "--index2", with recent changes). With this feature, the demux module can now analyze an arbitrary amount of indexes to be found in r1 or r2 input sequences.
