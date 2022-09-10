@@ -3,6 +3,7 @@
 .vscode
 # backup files
 /build
+/debug
 
 *~
 \#*#

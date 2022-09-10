@@ -214,33 +214,31 @@ void module_enrich::run( options *opts )
                     samplenames.append( *(samples_list[sample_idx].end() - 1) );                  
                     enrichment_failures.emplace( samplenames, "peptides" );
                 }
-            else if( !enriched_probes.empty() )
+            
+            std::string outf_name = e_opts->out_dirname + '/';
+            if( shorthand_output_filenames && samples_list[sample_idx].size() > 3 )
                 {
-                    std::string outf_name = e_opts->out_dirname + '/';
-                    if( shorthand_output_filenames && samples_list[sample_idx].size() > 3 )
+                    for( std::size_t name_idx = 0; name_idx < 3; name_idx++ )
                         {
-                            for( std::size_t name_idx = 0; name_idx < 3; name_idx++ )
-                                {
-                                    outf_name += samples_list[sample_idx][name_idx] + e_opts->out_fname_join;
-                                }
-                            outf_name += std::to_string(samples_list[sample_idx].size() - 3) + "more" + e_opts->out_suffix;
+                            outf_name += samples_list[sample_idx][name_idx] + e_opts->out_fname_join;
                         }
-                    else
-                        {
-                            for( std::size_t name_idx = 0; name_idx < samples_list[sample_idx].size() - 1; name_idx++ )
-                                {
-                                    outf_name += samples_list[sample_idx][name_idx] + e_opts->out_fname_join;
-                                }
-                            outf_name += *(samples_list[sample_idx].end() - 1) + e_opts->out_suffix;
-                        }
-                    std::ofstream out_file{ outf_name, std::ios_base::out };
-
-                    pepsirf_io::write_file( out_file,
-                                            enriched_probes.begin(),
-                                            enriched_probes.end(),
-                                            "\n"
-                                        );
+                    outf_name += std::to_string(samples_list[sample_idx].size() - 3) + "more" + e_opts->out_suffix;
                 }
+            else
+                {
+                    for( std::size_t name_idx = 0; name_idx < samples_list[sample_idx].size() - 1; name_idx++ )
+                        {
+                            outf_name += samples_list[sample_idx][name_idx] + e_opts->out_fname_join;
+                        }
+                    outf_name += *(samples_list[sample_idx].end() - 1) + e_opts->out_suffix;
+                }
+            std::ofstream out_file{ outf_name, std::ios_base::out };
+
+            pepsirf_io::write_file( out_file,
+                                    enriched_probes.begin(),
+                                    enriched_probes.end(),
+                                    "\n"
+                                );
 
         }
 
