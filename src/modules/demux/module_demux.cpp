@@ -363,6 +363,7 @@ void module_demux::run( options *opts )
                                             if( flexible_idx_data.size() > 1 )
                                                 {
                                                     std::string concat_idx = "";
+
 #ifndef __clang__
                                                     #pragma omp critical
                                                     {
@@ -388,6 +389,11 @@ void module_demux::run( options *opts )
                                             if( d_id != index_map.end() )
                                                 {
                                                     sample_id = d_id->second.id;
+
+                                                    if( !d_opts->fastq_out.empty() )
+                                                        {
+                                                            write_fastq_output( &reads[ read_index ], &d_id->second.name, &d_opts->fastq_out );
+                                                        }
 #ifndef __clang__
                                                     #pragma omp critical
                                                         {
@@ -444,6 +450,11 @@ void module_demux::run( options *opts )
                                                 {
                                                     // if seq_match found, increase count for given sample
                                                     auto sample_id = idx_match_list[0]->second.id;
+
+                                                    if( !d_opts->fastq_out.empty() )
+                                                        {
+                                                            write_fastq_output( &reads[ read_index ], &idx_match_list[0]->second.name, &d_opts->fastq_out );
+                                                        }
 #ifndef __clang__
                                                     #pragma omp critical
                                                         {
@@ -484,6 +495,7 @@ void module_demux::run( options *opts )
                                                                 {
 #endif
                                                                     seq_match->second->at( sample_id ) += 1;
+                                                                    //ISS169
 #ifndef __clang__
                                                                 }
 #endif
