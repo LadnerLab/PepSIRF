@@ -45,6 +45,16 @@ bool options_parser_info
           "entry in each column will be the name of the sample, and the second "
           "will be the sum of the peptide/probe scores for the sample.\n"
         )
+        ("rep_names,n", po::value(&opts_info->in_replicates_fname),
+            "An input file that the sequence names of replicates can be found. "
+            "This file is required to run -a, --get_avgs. \n"
+            )
+        ( "get_avgs,a", po::value( &opts_info->out_avgs_fname ),
+          "Name of a file to which the average of different replicate values should be written. "
+          "Output will be a tab-delimted file with sample names as the column headers and "
+          "peptide names as row names. Each entry consists of the average of the replicate "
+          "values for the given sample and peptide. \n"
+        )
         ;
 
     po::store( po::command_line_parser( argc, *argv ).options( desc ).run(), vm);
