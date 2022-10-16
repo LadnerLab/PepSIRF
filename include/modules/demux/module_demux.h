@@ -273,7 +273,22 @@ class module_demux : public module
                              const std::string *dir_out
                            )
         {
-            std::cout << "fastq called" << std::endl;
+
+            std::stringstream sstream;
+            sstream << *dir_out << "/" << *sample_name << ".fastq";
+
+            std::cout << sstream.str() << std::endl;
+
+            std::ofstream out;
+            out.open( sstream.str() );
+
+            out << "@" << sequence->name << "\n";
+            out << sequence->seq << "\n";
+            out << "+" << "\n";
+            out << sequence->scores << "\n";
+
+            out.close();
+
         }
 
 

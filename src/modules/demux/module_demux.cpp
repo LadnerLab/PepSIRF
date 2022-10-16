@@ -9,6 +9,7 @@
 #include "nt_aa_translator.h"
 #include <thread>
 #include <mutex>
+#include "fs_tools.h"
 
 module_demux::module_demux()
 {
@@ -202,6 +203,20 @@ void module_demux::run( options *opts )
             create_diagnostic_map( reference_dependent, diagnostic_map, samplelist);
         }
 
+    if( !d_opts->fastq_out.empty() )
+        {
+            auto output_path = fs_tools::path( d_opts->fastq_out );
+            bool dir_exists = !fs_tools::create_directories( output_path );
+
+            if( dir_exists )
+            {
+                std::cout << "WARNING: the directory '" << d_opts->fastq_out
+                          << "' exists, any files with "
+                          << "colliding filenames will be overwritten!\n";
+            }
+        }
+
+
     while( fastq_p.parse( reads_file_ref, reads, d_opts->read_per_loop  ) )
         {
 
@@ -392,6 +407,7 @@ void module_demux::run( options *opts )
 
                                                     if( !d_opts->fastq_out.empty() )
                                                         {
+                                                            std::cout << d_opts->fastq_out << std::endl;
                                                             write_fastq_output( &reads[ read_index ], &d_id->second.name, &d_opts->fastq_out );
                                                         }
 #ifndef __clang__
@@ -453,6 +469,7 @@ void module_demux::run( options *opts )
 
                                                     if( !d_opts->fastq_out.empty() )
                                                         {
+                                                            //std::cout << d_opts->fastq_out << std::endl;
                                                             write_fastq_output( &reads[ read_index ], &idx_match_list[0]->second.name, &d_opts->fastq_out );
                                                         }
 #ifndef __clang__
