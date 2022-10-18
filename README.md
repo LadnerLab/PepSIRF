@@ -4,7 +4,7 @@
 
 ## GPL-3.0-or-later
 
-### Current Version: v1.5.0
+### Current Version: v1.5.1
 
 Visit our [GitHub Pages website](https://ladnerlab.github.io/PepSIRF/)
 
