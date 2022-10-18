@@ -276,10 +276,8 @@ class module_demux : public module
             std::stringstream sstream;
             sstream << *dir_out << "/" << *sample_name << ".fastq";
 
-            std::cout << sstream.str() << std::endl;
-
             std::ofstream out;
-            out.open( sstream.str() );
+            out.open( sstream.str(), std::ios_base::app );
 
             out << sequence->name << "\n";
             out << sequence->seq << "\n";

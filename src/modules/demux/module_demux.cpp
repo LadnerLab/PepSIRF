@@ -407,7 +407,6 @@ void module_demux::run( options *opts )
 
                                                     if( !d_opts->fastq_out.empty() )
                                                         {
-                                                            std::cout << d_opts->fastq_out << std::endl;
                                                             write_fastq_output( &reads[ read_index ], &d_id->second.name, &d_opts->fastq_out );
                                                         }
 #ifndef __clang__
@@ -469,7 +468,6 @@ void module_demux::run( options *opts )
 
                                                     if( !d_opts->fastq_out.empty() )
                                                         {
-                                                            //std::cout << d_opts->fastq_out << std::endl;
                                                             write_fastq_output( &reads[ read_index ], &idx_match_list[0]->second.name, &d_opts->fastq_out );
                                                         }
 #ifndef __clang__
