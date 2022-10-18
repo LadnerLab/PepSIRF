@@ -281,7 +281,7 @@ class module_demux : public module
             std::ofstream out;
             out.open( sstream.str() );
 
-            out << "@" << sequence->name << "\n";
+            out << sequence->name << "\n";
             out << sequence->seq << "\n";
             out << "+" << "\n";
             out << sequence->scores << "\n";
