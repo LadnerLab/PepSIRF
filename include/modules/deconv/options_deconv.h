@@ -123,6 +123,12 @@ class options_deconv : public options
      * write the id name map to.
      **/
     std::string id_name_map_fname;
+    
+    /**
+     * The expected ending of the file name
+     * with enriched peptides
+     **/
+    std::string enriched_file_ending;
 
 };
 
