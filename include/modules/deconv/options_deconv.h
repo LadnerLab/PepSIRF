@@ -124,6 +124,12 @@ class options_deconv : public options
      **/
     std::string id_name_map_fname;
 
+    /**
+     * The expected ending of the file name
+     * with enriched peptides
+     **/
+    std::string enriched_file_ending;
+
 };
 
 #endif // OPTIONS_DECONV_HH_INCLUDED

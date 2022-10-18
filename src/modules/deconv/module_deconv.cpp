@@ -67,6 +67,12 @@ void module_deconv::run( options *opts )
             for( auto& input_f : boost::make_iterator_range( in_dir_iter, {} ) )
                 {
                     std::string file_name = input_f.path().filename().string();
+
+                    if (file_name.find(d_opts->enriched_file_ending) == std::string::npos)
+                    {
+                        continue;
+                    }
+
                     if( d_opts->remove_file_types )
                         {
                             file_name = input_f.path().filename().stem().string();
