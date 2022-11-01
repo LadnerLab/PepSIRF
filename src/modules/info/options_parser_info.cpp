@@ -46,8 +46,10 @@ bool options_parser_info
           "will be the sum of the peptide/probe scores for the sample.\n"
         )
         ("rep_names,n", po::value(&opts_info->in_replicates_fname),
-            "An input file that the sequence names of replicates can be found. "
-            "This file is required to run -a, --get_avgs. \n"
+            "An input file that the sample names of replicates can be found. "
+            "The first element of each row contains the name of a base sample, "
+            "and every other element in a row contains the name of a sample based off the "
+            "base sample. This file is required to run -a, --get_avgs. \n"
             )
         ( "get_avgs,a", po::value( &opts_info->out_avgs_fname ),
           "Name of a file to which the average of different replicate values should be written. "
