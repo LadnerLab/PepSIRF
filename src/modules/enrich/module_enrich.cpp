@@ -241,8 +241,10 @@ void module_enrich::run( options *opts )
                                 );
 
             // check if enriched_probes had data to be written
+            if ( enriched_probes.size() == 0 )
             {
                // write a space character to out_file
+               out_file << ' ';
             }
 
         }
