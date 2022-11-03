@@ -6,6 +6,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/regex.hpp>
 #include <boost/algorithm/string/join.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/iterator_range.hpp>
 #include <algorithm>
@@ -68,7 +69,7 @@ void module_deconv::run( options *opts )
                 {
                     std::string file_name = input_f.path().filename().string();
 
-                    if (file_name.find(d_opts->enriched_file_ending) == std::string::npos)
+                    if ( boost::algorithm::ends_with(file_name, d_opts->enriched_file_ending) == 0 )
                     {
                         continue;
                     }
