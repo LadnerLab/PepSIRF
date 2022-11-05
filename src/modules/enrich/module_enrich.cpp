@@ -96,7 +96,7 @@ void module_enrich::run( options *opts )
     sample_name_set raw_score_sample_names{ raw_scores.sample_names.begin(),
                                             raw_scores.sample_names.end()
                                             };
-    
+
     peptide_score_data_sample_major *curr_matrix_ptr;
     for( std::size_t sample_idx = 0; sample_idx < samples_list.size(); ++sample_idx )
         {
@@ -150,7 +150,7 @@ void module_enrich::run( options *opts )
                                         std::cout << *sample << "\n";
                                     }
                                 throw std::runtime_error( "Verify the correct sample names are provided in (--samples,-s).\n");
-                                
+
                             }
                         else if( sample_diffs.size() == samples_sample_names.size() )
                         // if all of the samples are not found that are provided by samples option, then give a warning that these samples were not in the matrix.
@@ -184,7 +184,7 @@ void module_enrich::run( options *opts )
                                                 matrix_thresh_pairs[curr_map].second ) )
                                     ++valid_candidates;
                             }
-                    
+
                         if( valid_candidates == matrix_thresh_pairs.size() )
                             {
                                 enriched_probes.emplace_back( pep_name );
@@ -200,7 +200,7 @@ void module_enrich::run( options *opts )
                             {
                                 samplenames.append( name + ", " );
                             });
-                    samplenames.append( *(samples_list[sample_idx].end() - 1) );                  
+                    samplenames.append( *(samples_list[sample_idx].end() - 1) );
                     enrichment_failures.emplace( samplenames, "raw" );
                 }
             else if( enriched_probes.empty() && !e_opts->out_enrichment_failure.empty() )
@@ -211,10 +211,10 @@ void module_enrich::run( options *opts )
                             {
                                 samplenames.append( name + ", " );
                             });
-                    samplenames.append( *(samples_list[sample_idx].end() - 1) );                  
+                    samplenames.append( *(samples_list[sample_idx].end() - 1) );
                     enrichment_failures.emplace( samplenames, "peptides" );
                 }
-            
+
             std::string outf_name = e_opts->out_dirname + '/';
             if( shorthand_output_filenames && samples_list[sample_idx].size() > 3 )
                 {
@@ -239,6 +239,13 @@ void module_enrich::run( options *opts )
                                     enriched_probes.end(),
                                     "\n"
                                 );
+
+            // check if enriched_probes had data to be written
+            if ( enriched_probes.size() == 0 )
+            {
+               // write a space character to out_file
+               out_file << ' ';
+            }
 
         }
 
@@ -281,7 +288,7 @@ std::vector<module_enrich::sample_type> module_enrich::parse_samples( std::istre
                           boost::is_any_of( "\t" )
                        );
             return_val.emplace_back(values);
-            
+
         }
 
     return return_val;
