@@ -144,6 +144,7 @@ void module_info::run( options *opts )
             // TODO: implent "duplicate sample" warning
             bool duplicate_samples_found = false;
             std::vector<std::string> duplicate_samples;
+            int scores_found = 0;
             for ( int pep_index = 0; !invalid_sample_found && pep_index < scores.pep_names.size(); pep_index++ )
                 {
                     found_samples = {};
@@ -174,11 +175,18 @@ void module_info::run( options *opts )
                                                 }
                                         
                                             sample_map[sample.first].emplace_back( scores.scores.at(sample_index, pep_index) );
+                                            scores_found++;
                                             break;
                                         }
                                 }
                         }
 
+                    // Check that each sample had a score associated with it; throw error if not
+                    if ( scores_found < scores.sample_names.size() )
+                        {
+                            std::cout << "Error: missing sample score" << std::endl;
+                        }
+                    
                     float rep_total;
                     float rep_avg = 0.0f;
                     for( auto sample: name_file_samples )
