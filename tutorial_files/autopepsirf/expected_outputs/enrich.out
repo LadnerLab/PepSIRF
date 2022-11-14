@@ -9,3 +9,110 @@ Starting module default module with arguments:
  --join_on                    ~
  --output_filename_truncate   --output                     10Z-HDI75_20CS_15000raw
  
+PepSIRF (v1.5.1) 
+Starting module default module with arguments: 
+ --samples                    comboWR_raw_2mm_i1mm_PN.tsv
+ --threshhold_file            comboWR_raw_2mm_i1mm_thresh.tsv
+ --raw_scores                 comboWR_raw_2mm_i1mm.tsv
+ --raw_score_constraint       15000
+ --enrichment_failure_reason  enrichFailReasons.tsv
+--outfile_suffix             _enriched.txt
+ --join_on                    ~
+ --output_filename_truncate   --output                     10Z-HDI75_100CS_15000raw
+ 
+PepSIRF (v1.5.1) 
+Starting module default module with arguments: 
+ --samples                    comboWR_raw_2mm_i1mm_PN.tsv
+ --threshhold_file            comboWR_raw_2mm_i1mm_thresh.tsv
+ --raw_scores                 comboWR_raw_2mm_i1mm.tsv
+ --raw_score_constraint       999999
+ --enrichment_failure_reason  enrichFailReasons.tsv
+--outfile_suffix             _enriched.txt
+ --join_on                    ~
+ --output_filename_truncate   --output                     10Z-HDI75_100CS_15000raw
+ 
+WARNING: the directory '10Z-HDI75_100CS_15000raw' exists, any files with colliding filenames will be overwritten!
+PepSIRF (v1.5.1) 
+Starting module default module with arguments: 
+ --samples                    comboWR_raw_2mm_i1mm_PN.tsv
+ --threshhold_file            comboWR_raw_2mm_i1mm_thresh.tsv
+ --raw_scores                 comboWR_raw_2mm_i1mm.tsv
+ --raw_score_constraint       15000
+ --enrichment_failure_reason  enrichFailReasons.tsv
+--outfile_suffix             _enriched.txt
+ --join_on                    ~
+ --output_filename_truncate   --output                     10Z-HDI75_100CS_15000raw
+ 
+WARNING: the directory '10Z-HDI75_100CS_15000raw' exists, any files with colliding filenames will be overwritten!
+PepSIRF (v1.5.1) 
+Starting module default module with arguments: 
+ --samples                    comboWR_raw_2mm_i1mm_PN.tsv
+ --threshhold_file            comboWR_raw_2mm_i1mm_thresh.tsv
+ --raw_scores                 comboWR_raw_2mm_i1mm.tsv
+ --raw_score_constraint       999999
+ --enrichment_failure_reason  enrichFailReasons.tsv
+--outfile_suffix             _enriched.txt
+ --join_on                    ~
+ --output_filename_truncate   --output                     10Z-HDI75_100CS_15000raw
+ 
+WARNING: the directory '10Z-HDI75_100CS_15000raw' exists, any files with colliding filenames will be overwritten!
+PepSIRF (v1.5.1) 
+Starting module default module with arguments: 
+ --samples                    comboWR_raw_2mm_i1mm_PN.tsv
+ --threshhold_file            comboWR_raw_2mm_i1mm_thresh.tsv
+ --raw_scores                 comboWR_raw_2mm_i1mm.tsv
+ --raw_score_constraint       15000
+ --enrichment_failure_reason  enrichFailReasons.tsv
+--outfile_suffix             _enriched.txt
+ --join_on                    ~
+ --output_filename_truncate   --output                     10Z-HDI75_100CS_15000raw
+ 
+WARNING: the directory '10Z-HDI75_100CS_15000raw' exists, any files with colliding filenames will be overwritten!
+PepSIRF (v1.5.1) 
+Starting module default module with arguments: 
+ --samples                    comboWR_raw_2mm_i1mm_PN.tsv
+ --threshhold_file            comboWR_raw_2mm_i1mm_thresh.tsv
+ --raw_scores                 comboWR_raw_2mm_i1mm.tsv
+ --raw_score_constraint       15000
+ --enrichment_failure_reason  enrichFailReasons.tsv
+--outfile_suffix             _enriched.txt
+ --join_on                    ~
+ --output_filename_truncate   --output                     10Z-HDI75_100CS_15000raw
+ 
+WARNING: the directory '10Z-HDI75_100CS_15000raw' exists, any files with colliding filenames will be overwritten!
+PepSIRF (v1.5.1) 
+Starting module default module with arguments: 
+ --samples                    comboWR_raw_2mm_i1mm_PN.tsv
+ --threshhold_file            comboWR_raw_2mm_i1mm_thresh.tsv
+ --raw_scores                 comboWR_raw_2mm_i1mm.tsv
+ --raw_score_constraint       999999
+ --enrichment_failure_reason  enrichFailReasons.tsv
+--outfile_suffix             _enriched.txt
+ --join_on                    ~
+ --output_filename_truncate   --output                     10Z-HDI75_100CS_15000raw
+ 
+WARNING: the directory '10Z-HDI75_100CS_15000raw' exists, any files with colliding filenames will be overwritten!
+PepSIRF (v1.5.1) 
+Starting module default module with arguments: 
+ --samples                    comboWR_raw_2mm_i1mm_PN.tsv
+ --threshhold_file            comboWR_raw_2mm_i1mm_thresh.tsv
+ --raw_scores                 comboWR_raw_2mm_i1mm.tsv
+ --raw_score_constraint       15000
+ --enrichment_failure_reason  enrichFailReasons.tsv
+--outfile_suffix             _enriched.txt
+ --join_on                    ~
+ --output_filename_truncate   --output                     10Z-HDI75_100CS_15000raw
+ 
+WARNING: the directory '10Z-HDI75_100CS_15000raw' exists, any files with colliding filenames will be overwritten!
+PepSIRF (v1.5.1) 
+Starting module default module with arguments: 
+ --samples                    comboWR_raw_2mm_i1mm_PN.tsv
+ --threshhold_file            comboWR_raw_2mm_i1mm_thresh.tsv
+ --raw_scores                 comboWR_raw_2mm_i1mm.tsv
+ --raw_score_constraint       999999
+ --enrichment_failure_reason  enrichFailReasons.tsv
+--outfile_suffix             _enriched.txt
+ --join_on                    ~
+ --output_filename_truncate   --output                     10Z-HDI75_100CS_15000raw
+ 
+WARNING: the directory '10Z-HDI75_100CS_15000raw' exists, any files with colliding filenames will be overwritten!

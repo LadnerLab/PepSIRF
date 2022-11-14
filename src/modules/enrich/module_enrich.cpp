@@ -254,7 +254,7 @@ void module_enrich::run( options *opts )
             std::string outf_name = e_opts->out_dirname + '/' + e_opts->out_enrichment_failure;
             // write to file
             std::ofstream out_file{ outf_name, std::ios_base::out };
-            out_file << "Replicates\tReason\n";
+            out_file << "Replicates\tReason\tProblem Replicates\n";
             for( auto& line : enrichment_failures )
                 {
                     out_file << line.first;
