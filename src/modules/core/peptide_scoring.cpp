@@ -125,5 +125,3 @@ void peptide_scoring::write_peptide_scores( std::ostream& output,
             output << "\n";
         }
 }
-
-

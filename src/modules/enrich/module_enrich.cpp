@@ -102,6 +102,9 @@ void module_enrich::run( options *opts )
         {
             bool raw_count_enriched = true;
             std::vector<std::string> enriched_probes;
+
+            // raw_score_lists: a list of peptide scores, and their sample
+            // indexed with: x-axis is the peptide, y-axis is the sample name
             std::vector<std::vector<double>> raw_score_lists;
             std::vector<std::map<std::string,std::vector<double>>> all_enrichment_candidates;
             all_enrichment_candidates.resize( matrix_thresh_pairs.size() );
@@ -111,8 +114,7 @@ void module_enrich::run( options *opts )
             if( raw_counts_included )
                 {
                     get_raw_scores( &raw_score_lists, raw_scores_ptr, samples_list[sample_idx] );
-                    col_sums = get_raw_sums( raw_score_lists ); // raw_score_lists is where the matrix of scores is held
-                                                                // these values can be referenced using the sample name and the peptide name
+                    col_sums = get_raw_sums( raw_score_lists );
                 }
 
             raw_count_enriched = raw_counts_included
