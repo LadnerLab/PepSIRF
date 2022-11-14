@@ -94,10 +94,10 @@ public:
      **/
     std::vector<double> get_raw_sums( std::vector<std::vector<double>> raw_scores )
     {
-        
+
         std::vector<double> sums( raw_scores[0].size(), 0.0 );
         std::size_t raw_score_lists_idx;
-        
+
         for( raw_score_lists_idx = 0; raw_score_lists_idx < raw_scores.size(); raw_score_lists_idx++ )
             {
                 std::transform( raw_scores[raw_score_lists_idx].begin(), raw_scores[raw_score_lists_idx].end(), sums.begin(), sums.begin(), std::plus<double>());

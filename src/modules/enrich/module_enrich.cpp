@@ -106,6 +106,7 @@ void module_enrich::run( options *opts )
             // raw_score_lists: a list of peptide scores, and their sample
             // indexed with: x-axis is the peptide, y-axis is the sample name
             std::vector<std::vector<double>> raw_score_lists;
+
             std::vector<std::map<std::string,std::vector<double>>> all_enrichment_candidates;
             all_enrichment_candidates.resize( matrix_thresh_pairs.size() );
             raw_score_lists.resize( raw_scores.scores.ncols() );
@@ -206,7 +207,16 @@ void module_enrich::run( options *opts )
                     samplenames.append( *(samples_list[sample_idx].end() - 1) );
                     enrichment_failures.emplace( samplenames, "raw" );
 
+                    // loop through the column sums
+                    {
+                        // check current sum was below the specified thresholds
+                        {
+                            // examine raw scores lists and determine which sample had the smaller score
 
+                            // emplace index identifier into enrichment_failures, or some an adjacent
+                            // collection for later reporting
+                        }
+                    }
                 }
             else if( enriched_probes.empty() && !e_opts->out_enrichment_failure.empty() )
                 {
