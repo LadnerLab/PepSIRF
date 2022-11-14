@@ -111,7 +111,8 @@ void module_enrich::run( options *opts )
             if( raw_counts_included )
                 {
                     get_raw_scores( &raw_score_lists, raw_scores_ptr, samples_list[sample_idx] );
-                    col_sums = get_raw_sums( raw_score_lists );
+                    col_sums = get_raw_sums( raw_score_lists ); // raw_score_lists is where the matrix of scores is held
+                                                                // these values can be referenced using the sample name and the peptide name
                 }
 
             raw_count_enriched = raw_counts_included
@@ -202,6 +203,8 @@ void module_enrich::run( options *opts )
                             });
                     samplenames.append( *(samples_list[sample_idx].end() - 1) );
                     enrichment_failures.emplace( samplenames, "raw" );
+
+
                 }
             else if( enriched_probes.empty() && !e_opts->out_enrichment_failure.empty() )
                 {
@@ -246,7 +249,6 @@ void module_enrich::run( options *opts )
                // write a space character to out_file
                out_file << ' ';
             }
-
         }
 
     if( !e_opts->out_enrichment_failure.empty() && !enrichment_failures.empty() )
