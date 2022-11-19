@@ -68,19 +68,19 @@ public:
      * @param threshold the threshold value that must be met.
      * @returns true if the threshold is met, false otherwise.
      **/
-    template<typename ValType>
-    bool thresholds_met( const std::vector<ValType> values,
-                             const std::vector<double> thresholds
-                           )
-    {
+     template<typename ValType>
+     bool thresholds_met( const std::vector<ValType> values,
+                              const std::vector<double> thresholds
+                            )
+     {
 
-        if( *std::max_element( values.begin(), values.end() ) >= *std::max_element( thresholds.begin(), thresholds.end() )
-            && *std::min_element( values.begin(), values.end() ) >= *std::min_element( thresholds.begin(), thresholds.end() )
-          )
-            return true;
-        else
-            return false;
-    }
+         if( *std::max_element( values.begin(), values.end() ) >= *std::max_element( thresholds.begin(), thresholds.end() )
+             && *std::min_element( values.begin(), values.end() ) >= *std::min_element( thresholds.begin(), thresholds.end() )
+           )
+             return true;
+         else
+             return false;
+     }
 
     /**
      * Get the sums for raw scores in a sequence of

@@ -97,10 +97,12 @@ void module_enrich::run( options *opts )
                                             raw_scores.sample_names.end()
                                             };
 
+    std::vector<std::string> problem_replicates;
     peptide_score_data_sample_major *curr_matrix_ptr;
     for( std::size_t sample_idx = 0; sample_idx < samples_list.size(); ++sample_idx )
         {
             bool raw_count_enriched = true;
+            //std::size_t name_idx = 0;
             std::vector<std::string> enriched_probes;
 
             // raw_score_lists: a list of peptide scores, and their sample
@@ -118,6 +120,8 @@ void module_enrich::run( options *opts )
                     col_sums = get_raw_sums( raw_score_lists );
                 }
 
+            // TODO:
+            // * change thresholds_met()
             raw_count_enriched = raw_counts_included
                 ? ( raw_count_enriched && thresholds_met( col_sums, raw_score_params ) )
                 : true;
@@ -198,25 +202,45 @@ void module_enrich::run( options *opts )
 
             if( raw_counts_included && !raw_count_enriched && !e_opts->out_enrichment_failure.empty() )
                 {
-                    std::string samplenames = "";
+                    std::size_t current_score = 0;
+                    std::size_t min_score = raw_scores_ptr->scores( samples_list[sample_idx][0],
+                                                    raw_scores_ptr->pep_names[0] );
+                    std::size_t max_score = raw_scores_ptr->scores( samples_list[sample_idx][0],
+                                                    raw_scores_ptr->pep_names[0] );
+
+                    /*
+                    std::vector<double>::iterator max_col_sum = std::max_element( col_sums.begin(), col_sums.end() );
+                    std::vector<double>::iterator min_col_sum = std::min_element( col_sums.begin(), col_sums.end() );
+                    */
+
+                    std::string problem_rep = "";
+                    std::string samplenames;
                     std::for_each( samples_list[sample_idx].begin(), samples_list[sample_idx].end() - 1,
                         [&]( std::string name )
                             {
+                                for( std::size_t pep_idx = 0; pep_idx < raw_scores_ptr->pep_names.size();
+                                        pep_idx += 1 )
+                                    {
+                                        current_score = raw_scores_ptr->scores( name, raw_scores_ptr->pep_names[pep_idx] );
+
+                                        if ( current_score < min_score )
+                                            {
+                                                min_score = current_score;
+                                                problem_rep = name;
+                                            }
+                                        else if ( current_score > max_score )
+                                            {
+                                                max_score = current_score;
+                                                problem_rep = name;
+                                            }
+                                    }
+
                                 samplenames.append( name + ", " );
                             });
                     samplenames.append( *(samples_list[sample_idx].end() - 1) );
                     enrichment_failures.emplace( samplenames, "raw" );
 
-                    // loop through the column sums
-                    {
-                        // check current sum was below the specified thresholds
-                        {
-                            // examine raw scores lists and determine which sample had the smaller score
-
-                            // emplace index identifier into enrichment_failures, or some an adjacent
-                            // collection for later reporting
-                        }
-                    }
+                    problem_replicates.emplace_back( problem_rep );
                 }
             else if( enriched_probes.empty() && !e_opts->out_enrichment_failure.empty() )
                 {
@@ -261,10 +285,13 @@ void module_enrich::run( options *opts )
                // write a space character to out_file
                out_file << ' ';
             }
+
+            //name_idx += 2;
         }
 
     if( !e_opts->out_enrichment_failure.empty() && !enrichment_failures.empty() )
         {
+            std::size_t pr_dex = 0;
             std::string outf_name = e_opts->out_dirname + '/' + e_opts->out_enrichment_failure;
             // write to file
             std::ofstream out_file{ outf_name, std::ios_base::out };
@@ -274,13 +301,17 @@ void module_enrich::run( options *opts )
                     out_file << line.first;
                     if( line.second == "raw" )
                         {
-                            out_file << "\tRaw read count threshold\n";
+                            out_file << "\tRaw read count threshold\t";
+                            out_file << problem_replicates[ pr_dex ] << std::endl;
                         }
                     else
                         {
                             out_file << "\tNo enriched peptides\n";
                         }
+
+                    pr_dex += 1;
                 }
+
             out_file.close();
         }
 }
