@@ -208,11 +208,6 @@ void module_enrich::run( options *opts )
                     std::size_t max_score = raw_scores_ptr->scores( samples_list[sample_idx][0],
                                                     raw_scores_ptr->pep_names[0] );
 
-                    /*
-                    std::vector<double>::iterator max_col_sum = std::max_element( col_sums.begin(), col_sums.end() );
-                    std::vector<double>::iterator min_col_sum = std::min_element( col_sums.begin(), col_sums.end() );
-                    */
-
                     std::string problem_rep = "";
                     std::string samplenames;
                     std::for_each( samples_list[sample_idx].begin(), samples_list[sample_idx].end() - 1,
@@ -291,7 +286,7 @@ void module_enrich::run( options *opts )
 
     if( !e_opts->out_enrichment_failure.empty() && !enrichment_failures.empty() )
         {
-            std::size_t pr_dex = 0;
+            std::size_t pr_dex = enrichment_failures.size() - 1;
             std::string outf_name = e_opts->out_dirname + '/' + e_opts->out_enrichment_failure;
             // write to file
             std::ofstream out_file{ outf_name, std::ios_base::out };
@@ -309,7 +304,7 @@ void module_enrich::run( options *opts )
                             out_file << "\tNo enriched peptides\n";
                         }
 
-                    pr_dex += 1;
+                    pr_dex -= 1;
                 }
 
             out_file.close();
