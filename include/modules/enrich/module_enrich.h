@@ -94,7 +94,6 @@ public:
      **/
     std::vector<double> get_raw_sums( std::vector<std::vector<double>> raw_scores )
     {
-
         std::vector<double> sums( raw_scores[0].size(), 0.0 );
         std::size_t raw_score_lists_idx;
 

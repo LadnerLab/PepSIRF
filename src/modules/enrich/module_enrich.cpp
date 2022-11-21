@@ -102,7 +102,6 @@ void module_enrich::run( options *opts )
     for( std::size_t sample_idx = 0; sample_idx < samples_list.size(); ++sample_idx )
         {
             bool raw_count_enriched = true;
-            //std::size_t name_idx = 0;
             std::vector<std::string> enriched_probes;
 
             // raw_score_lists: a list of peptide scores, and their sample
@@ -120,8 +119,6 @@ void module_enrich::run( options *opts )
                     col_sums = get_raw_sums( raw_score_lists );
                 }
 
-            // TODO:
-            // * change thresholds_met()
             raw_count_enriched = raw_counts_included
                 ? ( raw_count_enriched && thresholds_met( col_sums, raw_score_params ) )
                 : true;
@@ -202,40 +199,49 @@ void module_enrich::run( options *opts )
 
             if( raw_counts_included && !raw_count_enriched && !e_opts->out_enrichment_failure.empty() )
                 {
-                    std::size_t current_score = 0;
-                    std::size_t min_score = raw_scores_ptr->scores( samples_list[sample_idx][0],
-                                                    raw_scores_ptr->pep_names[0] );
-                    std::size_t max_score = raw_scores_ptr->scores( samples_list[sample_idx][0],
-                                                    raw_scores_ptr->pep_names[0] );
+                    double current_score_sum = 0;
+                    std::vector<double>::iterator min_score = std::min_element( col_sums.begin(), col_sums.end() );
+                    std::vector<double>::iterator max_score = std::max_element( col_sums.begin(), col_sums.end() );
 
-                    std::string problem_rep = "";
                     std::string samplenames;
+                    std::vector<std::string> problem_reps;
                     std::for_each( samples_list[sample_idx].begin(), samples_list[sample_idx].end() - 1,
                         [&]( std::string name )
                             {
-                                for( std::size_t pep_idx = 0; pep_idx < raw_scores_ptr->pep_names.size();
-                                        pep_idx += 1 )
-                                    {
-                                        current_score = raw_scores_ptr->scores( name, raw_scores_ptr->pep_names[pep_idx] );
-
-                                        if ( current_score < min_score )
-                                            {
-                                                min_score = current_score;
-                                                problem_rep = name;
-                                            }
-                                        else if ( current_score > max_score )
-                                            {
-                                                max_score = current_score;
-                                                problem_rep = name;
-                                            }
-                                    }
-
+                                problem_reps.emplace_back( name );
                                 samplenames.append( name + ", " );
                             });
                     samplenames.append( *(samples_list[sample_idx].end() - 1) );
                     enrichment_failures.emplace( samplenames, "raw" );
 
-                    problem_replicates.emplace_back( problem_rep );
+                    for ( std::size_t pep_idx = 0; pep_idx < raw_scores_ptr->pep_names.size();
+                            pep_idx += 1 )
+                        {
+                            for ( std::size_t name_idx = 0; name_idx < problem_reps.size(); name_idx += 1 )
+                                {
+                                    current_score_sum += raw_scores_ptr->scores( problem_reps[ name_idx ], raw_scores_ptr->pep_names[ pep_idx ] );
+                                }
+
+                            if ( current_score_sum == *min_score || current_score_sum == *max_score )
+                                {
+                                    double curr_score = 0;
+                                    double smallest_score = raw_scores_ptr->scores( problem_reps[ 0 ], raw_scores_ptr->pep_names[ pep_idx ] );
+                                    std::size_t prob_rep_idx = 0;
+
+                                    for ( std::size_t name_idx = 0; name_idx < problem_reps.size(); name_idx += 1 )
+                                        {
+                                            curr_score = raw_scores_ptr->scores( problem_reps[ name_idx ], raw_scores_ptr->pep_names[ pep_idx ] );
+
+                                            if ( curr_score < smallest_score )
+                                                {
+                                                    prob_rep_idx = name_idx;
+                                                    smallest_score = curr_score;
+                                                }
+                                        }
+
+                                    problem_replicates.emplace_back( problem_reps[ prob_rep_idx ] );
+                                }
+                        }
                 }
             else if( enriched_probes.empty() && !e_opts->out_enrichment_failure.empty() )
                 {
@@ -274,14 +280,10 @@ void module_enrich::run( options *opts )
                                     "\n"
                                 );
 
-            // check if enriched_probes had data to be written
             if ( enriched_probes.size() == 0 )
             {
-               // write a space character to out_file
                out_file << ' ';
             }
-
-            //name_idx += 2;
         }
 
     if( !e_opts->out_enrichment_failure.empty() && !enrichment_failures.empty() )
@@ -305,6 +307,13 @@ void module_enrich::run( options *opts )
                         }
 
                     pr_dex -= 1;
+                }
+
+            out_file << "\nDebugging:\n" << "Number of problem replicates: " << problem_replicates.size() << std::endl;
+
+            for ( std::size_t i = 0; i < problem_replicates.size(); i += 1 )
+                {
+                    out_file << problem_replicates[ i ] << std::endl;
                 }
 
             out_file.close();
