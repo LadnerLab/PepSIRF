@@ -97,6 +97,7 @@ void module_enrich::run( options *opts )
                                             raw_scores.sample_names.end()
                                             };
 
+    std::vector<std::string> *enriched_probes_ptr = NULL;
     std::vector<std::vector<double>> collect_col_sums; // remove
     std::vector<std::string> problem_replicates;
     peptide_score_data_sample_major *curr_matrix_ptr;
@@ -284,6 +285,8 @@ void module_enrich::run( options *opts )
             {
                out_file << ' ';
             }
+
+            enriched_probes_ptr = &enriched_probes;
 
             collect_col_sums.emplace_back( col_sums ); // remove
         }

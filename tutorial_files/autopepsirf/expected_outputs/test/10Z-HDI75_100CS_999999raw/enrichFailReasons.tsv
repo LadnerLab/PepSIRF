@@ -1,0 +1,3 @@
+Replicates	Reason	Problem Replicates
+SAB-K_PV1_Run3_A, SAB-G_PV1_Run3_B	No enriched peptides
+HCV-I_PV1_Run3_B, HCV-H_PV1_Run3_B	Raw read count threshold	HCV-I_PV1_Run3_B (max), HCV-H_PV1_Run3_B (min)
