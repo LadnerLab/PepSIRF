@@ -12,7 +12,6 @@
 #include "file_io.h"
 #include "setops.h"
 
-
 void module_enrich::run( options *opts )
 {
     options_enrich *e_opts = (options_enrich*) opts;
@@ -98,7 +97,6 @@ void module_enrich::run( options *opts )
                                             };
 
     std::vector<std::string> *enriched_probes_ptr = NULL;
-    std::vector<std::vector<double>> collect_col_sums; // remove
     std::vector<std::string> problem_replicates;
     peptide_score_data_sample_major *curr_matrix_ptr;
     for( std::size_t sample_idx = 0; sample_idx < samples_list.size(); ++sample_idx )
@@ -287,8 +285,6 @@ void module_enrich::run( options *opts )
             }
 
             enriched_probes_ptr = &enriched_probes;
-
-            collect_col_sums.emplace_back( col_sums ); // remove
         }
 
     if( !e_opts->out_enrichment_failure.empty() && !enrichment_failures.empty() )

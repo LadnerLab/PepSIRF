@@ -1,6 +1,2 @@
 Replicates	Reason	Problem Replicates
-SB_PV1_Run3_A, SB_PV1_Run3_B	Raw read count threshold	SB_PV1_Run3_A (min), SB_PV1_Run3_B (max)
-JAS_PV1_Run10_A, JAS_PV1_Run10_B	Raw read count threshold	JAS_PV1_Run10_A (min), JAS_PV1_Run10_B (max)
-HCV-J_PV1_Run3_A, HCV-J_PV1_Run3_B	Raw read count threshold	HCV-J_PV1_Run3_A (max), HCV-J_PV1_Run3_B (min)
-HCV-H_PV1_Run3_B, HCV-H_PV1_Run3_A	Raw read count threshold	HCV-H_PV1_Run3_B (min), HCV-H_PV1_Run3_A (max)
-HCV-I_PV1_Run3_B, HCV-I_PV1_Run3_A	Raw read count threshold	HCV-I_PV1_Run3_B (min), HCV-I_PV1_Run3_A (max)
+SB_PV1_Run3_A, SB_PV1_Run3_B	No enriched peptides
