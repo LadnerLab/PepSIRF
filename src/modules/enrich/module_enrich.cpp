@@ -96,7 +96,6 @@ void module_enrich::run( options *opts )
                                             raw_scores.sample_names.end()
                                             };
 
-    std::vector<std::string> *enriched_probes_ptr = NULL;
     std::vector<std::string> problem_replicates;
     peptide_score_data_sample_major *curr_matrix_ptr;
     for( std::size_t sample_idx = 0; sample_idx < samples_list.size(); ++sample_idx )
@@ -283,8 +282,6 @@ void module_enrich::run( options *opts )
             {
                out_file << ' ';
             }
-
-            enriched_probes_ptr = &enriched_probes;
         }
 
     if( !e_opts->out_enrichment_failure.empty() && !enrichment_failures.empty() )
