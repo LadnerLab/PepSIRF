@@ -243,6 +243,8 @@ void module_enrich::run( options *opts )
                 }
             else if( enriched_probes.empty() && !e_opts->out_enrichment_failure.empty() )
                 {
+                    // get the matrix max and min threshold(s)
+
                     std::string samplenames = "";
                     std::for_each( samples_list[sample_idx].begin(), samples_list[sample_idx].end() - 1,
                         [&]( std::string name )
@@ -251,6 +253,24 @@ void module_enrich::run( options *opts )
                             });
                     samplenames.append( *(samples_list[sample_idx].end() - 1) );
                     enrichment_failures.emplace( samplenames, "peptides" );
+
+                    // loop over matrices in enrichment candidates
+                        {
+                            // loop over peptide names
+                                {
+                                    // loop over scores
+                                        {
+                                            // check the current score does not meet min matrix threshold
+                                                {
+                                                    // capture sample name at score index
+                                                }
+                                            // otherwise, check the current score does not meet max matrix threshold
+                                                {
+                                                    // capture sample name at score index
+                                                }
+                                        }
+                                }
+                        }
                 }
 
             std::string outf_name = e_opts->out_dirname + '/';
@@ -303,6 +323,7 @@ void module_enrich::run( options *opts )
                     else
                         {
                             out_file << "\tNo enriched peptides\n";
+                            // print out problem replicate names
                         }
                 }
 
