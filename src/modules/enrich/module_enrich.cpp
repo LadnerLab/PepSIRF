@@ -243,50 +243,14 @@ void module_enrich::run( options *opts )
                 }
             else if( enriched_probes.empty() && !e_opts->out_enrichment_failure.empty() )
                 {
-                    // get the matrix max and min threshold(s)
-                    std::vector<double>::iterator min_thresh;
-                    std::vector<double>::iterator max_thresh;
-
                     std::string samplenames = "";
-                    std::string prob_reps_report = "";
-                    std::vector<std::string> replicate_names;
                     std::for_each( samples_list[sample_idx].begin(), samples_list[sample_idx].end() - 1,
                         [&]( std::string name )
                             {
-                                replicate_names.emplace_back( name );
                                 samplenames.append( name + ", " );
                             });
-                    replicate_names.emplace_back( *( samples_list[ sample_idx ].end() - 1 ) );
                     samplenames.append( *(samples_list[sample_idx].end() - 1) );
                     enrichment_failures.emplace( samplenames, "peptides" );
-
-                    // loop over matrices in enrichment candidates
-                    for ( std::size_t m_idx = 0; m_idx < all_enrichment_candidates.size(); m_idx += 1 )
-                        {
-                            min_thresh = std::min_element( matrix_thresh_pairs[ m_idx ].second );
-                            max_thresh = std::max_element( matrix_thresh_pairs[ m_idx ].second );
-
-                            // loop over peptide names
-                            for ( std::size_t pep_idx = 0; pep_idx < all_enrichment_candidates[ m_idx ].size();
-                                    pep_idx += 1 )
-                                {
-                                    // loop over scores
-                                    for ( std::size_t s_idx = 0;
-                                            s_idx < all_enrichment_candidates[ m_idx ][ pep_idx ].size();
-                                            s_idx += 1 )
-                                        {
-                                            // check the current score does not meet min matrix threshold
-                                            if ( )
-                                                {
-                                                    // capture sample name at score index
-                                                }
-                                            // otherwise, check the current score does not meet max matrix threshold
-                                                {
-                                                    // capture sample name at score index
-                                                }
-                                        }
-                                }
-                        }
                 }
 
             std::string outf_name = e_opts->out_dirname + '/';
@@ -339,7 +303,6 @@ void module_enrich::run( options *opts )
                     else
                         {
                             out_file << "\tNo enriched peptides\n";
-                            // print out problem replicate names
                         }
                 }
 
