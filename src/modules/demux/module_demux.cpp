@@ -214,6 +214,17 @@ void module_demux::run( options *opts )
                           << "' exists, any files with "
                           << "colliding filenames will be overwritten!\n";
             }
+
+            std::stringstream build;
+
+            for( auto sample : samplelist ) 
+                {
+                    std::ofstream clear_file;
+                    build << d_opts->fastq_out << "/" << sample.name << ".fastq";
+                    clear_file.open(build.str(), std::ios_base::out);
+                    clear_file.close();
+                    build.clear();
+                }
         }
 
 
@@ -224,6 +235,7 @@ void module_demux::run( options *opts )
                 {
                     fastq_p.parse( r2_reads_ref, r2_seqs, d_opts->read_per_loop );
                 }
+            std::map<std::string, std::vector<fastq_sequence>> fastq_output;
 
 #ifndef __clang__
 
@@ -407,7 +419,7 @@ void module_demux::run( options *opts )
 
                                                     if( !d_opts->fastq_out.empty() )
                                                         {
-                                                            write_fastq_output( &reads[ read_index ], &d_id->second.name, &d_opts->fastq_out );
+                                                            fastq_output[d_id->second.name].emplace_back(reads[ read_index ]);
                                                         }
 #ifndef __clang__
                                                     #pragma omp critical
@@ -468,7 +480,7 @@ void module_demux::run( options *opts )
 
                                                     if( !d_opts->fastq_out.empty() )
                                                         {
-                                                            write_fastq_output( &reads[ read_index ], &idx_match_list[0]->second.name, &d_opts->fastq_out );
+                                                            fastq_output[d_id->second.name].emplace_back(reads[ read_index ]);
                                                         }
 #ifndef __clang__
                                                     #pragma omp critical
@@ -538,10 +550,12 @@ void module_demux::run( options *opts )
                     ++processed_total;
                     idx_match_list.clear();
                 }
+            write_fastq_output(fastq_output, d_opts->fastq_out);
+
+            fastq_output.clear();
 
             reads.clear();
             r2_seqs.clear();
-            
         }
     total_time.stop();
     // check for duplicates

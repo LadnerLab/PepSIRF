@@ -267,25 +267,27 @@ class module_demux : public module
      * @param sample_name sample file name to append
      */
 
-    void write_fastq_output( const fastq_sequence *sequence,
-                             const std::string *sample_name,
-                             const std::string *dir_out
+    void write_fastq_output( std::map<std::string, std::vector<fastq_sequence>> samp_map,
+                             std::string outfile
                            )
         {
+            for( auto samp : samp_map ) 
+                {
+                    std::string outfile_path = "";
+                    outfile_path = outfile + "/" + samp.first + ".fastq";
+                    std::ofstream output;
+                    output.open(outfile_path, std::ios_base::app);
 
-            std::stringstream sstream;
-            sstream << *dir_out << "/" << *sample_name << ".fastq";
+                    for( auto fastq_seq : samp.second )
+                        {
+                            output << fastq_seq.name << "\n";
+                            output << fastq_seq.seq << "\n";
+                            output << "+" << "\n";
+                            output << fastq_seq.scores << "\n";
+                        }
 
-            std::ofstream out;
-            out.open( sstream.str(), std::ios_base::app );
-
-            out << sequence->name << "\n";
-            out << sequence->seq << "\n";
-            out << "+" << "\n";
-            out << sequence->scores << "\n";
-
-            out.close();
-
+                    output.close();
+                }
         }
 
 
