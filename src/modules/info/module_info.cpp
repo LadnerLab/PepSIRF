@@ -116,7 +116,6 @@ void module_info::run( options *opts )
                                     //std::cout << sample << "\t" << scores.sample_names[i] << "\n";
 
                                     // If samples in input & name files match, write to output file
-                                    // TODO: catch duplicates
                                     if ( std::find( scores.sample_names.begin(),
                                                     scores.sample_names.end(),
                                                     sample ) != scores.sample_names.end()
@@ -124,7 +123,6 @@ void module_info::run( options *opts )
                                         {
                                             invalid_sample_found = false;
                                             found_samples.emplace_back( sample );
-                                            //break; // do we need this?
                                         }
                                     else if ( boost::algorithm::find_backward( invalid_samples.begin(),
                                                                                invalid_samples.end(),
