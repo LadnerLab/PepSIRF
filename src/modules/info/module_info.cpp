@@ -116,7 +116,7 @@ void module_info::run( options *opts )
                                     //std::cout << sample << "\t" << scores.sample_names[i] << "\n";
 
                                     // If samples in input & name files match, write to output file
-                                    // TODO: use boost "find_backward()" to catch duplicates
+                                    // TODO: catch duplicates
                                     if ( std::find( scores.sample_names.begin(),
                                                     scores.sample_names.end(),
                                                     sample ) != scores.sample_names.end()
@@ -124,23 +124,15 @@ void module_info::run( options *opts )
                                         {
                                             invalid_sample_found = false;
                                             found_samples.emplace_back( sample );
-                                            break; // do we need this?
+                                            //break; // do we need this?
                                         }
                                     else if ( boost::algorithm::find_backward( invalid_samples.begin(),
                                                                                invalid_samples.end(),
                                                                                samples.first ) == invalid_samples.end() )
                                         {
                                             invalid_samples.emplace_back( samples.first );
+                                            std::cout << "Warning: invalid sample name found for: " << samples.first << std::endl;
                                         }
-                                }
-                        }
-                    // TODO: change logic so this check and its process happens at the very end of the verification process
-                    if ( invalid_sample_found )
-                        {
-                            std::cout << "Warning: invalid sample name(s) found:" << std::endl;
-                            for ( std::string sample : invalid_samples )
-                                {
-                                    std::cout << sample << std::endl;
                                 }
                         }
                 }
@@ -239,8 +231,5 @@ void module_info::run( options *opts )
                 }
                 std::cout << "\n";
             }
-
         }
-
-
 }
