@@ -127,7 +127,8 @@ void module_info::run( options *opts )
                                             break; // do we need this?
                                         }
                                     else if ( boost::algorithm::find_backward( invalid_samples.begin(),
-                                                                               invalid_samples.end(), samples.first ) == invalid_samples.end() )
+                                                                               invalid_samples.end(),
+                                                                               samples.first ) == invalid_samples.end() )
                                         {
                                             invalid_samples.emplace_back( samples.first );
                                         }
@@ -205,14 +206,19 @@ void module_info::run( options *opts )
                     float rep_avg = 0.0f;
                     for( auto sample: name_file_samples )
                         {
-                            // Add all the replicate values for a given sample, then find its average
-                            rep_total = 0;
-                            for( int rep_val: sample_map[sample.first] )
-                                {
-                                     rep_total += rep_val;
-                                }
-                            rep_avg = rep_total / (float) sample_map[sample.first].size();
-                            averages << "\t" << rep_avg;
+                            if ( std::find( invalid_samples.begin(),
+                                            invalid_samples.end(),
+                                            sample.first ) == invalid_samples.end() )
+                                  {
+                                      // Add all the replicate values for a given sample, then find its average
+                                      rep_total = 0;
+                                      for( int rep_val: sample_map[sample.first] )
+                                          {
+                                               rep_total += rep_val;
+                                          }
+                                      rep_avg = rep_total / (float) sample_map[sample.first].size();
+                                      averages << "\t" << rep_avg;
+                                  }
                         }
                     averages << "\n";
 
