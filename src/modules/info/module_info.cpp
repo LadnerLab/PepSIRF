@@ -133,6 +133,7 @@ void module_info::run( options *opts )
                                         }
                                 }
                         }
+                    // TODO: change logic so this check and its process happens at the very end of the verification process
                     if ( invalid_sample_found )
                         {
                             std::cout << "Warning: invalid sample name(s) found:" << std::endl;
@@ -147,7 +148,10 @@ void module_info::run( options *opts )
             averages << "Sequence name";
             for(auto sample: name_file_samples)
                 {
-                    averages << "\t" << sample.first;
+                    if ( std::find( invalid_samples.begin(), invalid_samples.end(), sample.first ) == invalid_samples.end() )
+                        {
+                            averages << "\t" << sample.first;
+                        }
                 }
             averages << "\n";
 
