@@ -100,33 +100,48 @@ void module_info::run( options *opts )
 
             // Check that sample names in names file match those in the input file
             bool invalid_sample_found;
+            std::vector<std::string> invalid_samples = {};
             std::vector<std::string> found_samples = {};
             for ( int i = 0; i < scores.sample_names.size(); i++ )
-            {
-                invalid_sample_found = true;
-                std::cout << "SAMPLE TO FIND: \t" << scores.sample_names[i] << std::endl;
+                {
+                    invalid_sample_found = true;
+                    //std::cout << "SAMPLE TO FIND: \t" << scores.sample_names[i] << std::endl;
 
-                // Loop through sample names found in name file
-                for ( auto samples : name_file_samples )
-                    {
-                        std::cout << samples.first << std::endl;
-                        for ( std::string sample: samples.second )
-                            {
-                                std::cout << sample << "\t" << scores.sample_names[i] << "\n";
+                    // Loop through sample names found in name file
+                    for ( auto samples : name_file_samples )
+                        {
+                            //std::cout << samples.first << std::endl;
+                            for ( std::string sample : samples.second )
+                                {
+                                    //std::cout << sample << "\t" << scores.sample_names[i] << "\n";
 
-                                // If samples in input & name files match, write to output file
-                                if ( std::find( scores.sample_names.begin(),
-                                                scores.sample_names.end(),
-                                                sample ) != scores.sample_names.end()
-                                   )
-                                    {
-                                        invalid_sample_found = false;
-                                        found_samples.emplace_back( sample );
-                                        break;
-                                    }
-                            }
-                    }
-            }
+                                    // If samples in input & name files match, write to output file
+                                    // TODO: use boost "find_backward()" to catch duplicates
+                                    if ( std::find( scores.sample_names.begin(),
+                                                    scores.sample_names.end(),
+                                                    sample ) != scores.sample_names.end()
+                                       )
+                                        {
+                                            invalid_sample_found = false;
+                                            found_samples.emplace_back( sample );
+                                            break; // do we need this?
+                                        }
+                                    else if ( boost::algorithm::find_backward( invalid_samples.begin(),
+                                                                               invalid_samples.end(), samples.first ) == invalid_samples.end() )
+                                        {
+                                            invalid_samples.emplace_back( samples.first );
+                                        }
+                                }
+                        }
+                    if ( invalid_sample_found )
+                        {
+                            std::cout << "Warning: invalid sample name(s) found:" << std::endl;
+                            for ( std::string sample : invalid_samples )
+                                {
+                                    std::cout << sample << std::endl;
+                                }
+                        }
+                }
 
             // Write base sample names as row headers in output file
             averages << "Sequence name";
