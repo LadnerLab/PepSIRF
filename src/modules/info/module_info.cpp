@@ -118,8 +118,7 @@ void module_info::run( options *opts )
                                     // If samples in input & name files match, write to output file
                                     if ( std::find( scores.sample_names.begin(),
                                                     scores.sample_names.end(),
-                                                    sample ) != scores.sample_names.end()
-                                       )
+                                                    sample ) != scores.sample_names.end() )
                                         {
                                             invalid_sample_found = false;
                                             found_samples.emplace_back( sample );
