@@ -65,7 +65,7 @@ void module_info::run( options *opts )
 
         }
 
-    if (!i_opts.in_replicates_fname.empty() && !i_opts.out_avgs_fname.empty())
+    if ( !i_opts.in_replicates_fname.empty() && !i_opts.out_avgs_fname.empty() )
         {
             std::unordered_map<std::string, std::vector<int>> sample_map = {};
             std::unordered_map<std::string, std::vector<std::string>> name_file_samples = {};
@@ -75,13 +75,13 @@ void module_info::run( options *opts )
 
             // Create map of sample names with the base sample name as the key
             // And a list of its associated sample names as the value
-            for (std::string current_line; std::getline(replicate_names, current_line); )
+            for ( std::string current_line; std::getline(replicate_names, current_line); )
                 {
                     // Get the base sample name and remove it from the current line
                     std::string delimiter = "\t";
-                    size_t pos = current_line.find(delimiter);
-                    std::string base_sample = current_line.substr(0, pos);
-                    current_line.erase(0, pos + delimiter.length());
+                    size_t pos = current_line.find( delimiter );
+                    std::string base_sample = current_line.substr( 0, pos );
+                    current_line.erase( 0, pos + delimiter.length() );
 
                     // Loop through the rest of the sample names on the line
                     // And add them to a vector
@@ -90,7 +90,7 @@ void module_info::run( options *opts )
                         {
                             std::string sample = current_line.substr( 0, pos );
                             sample_list.emplace_back( sample );
-                            current_line.erase(0, pos + delimiter.length());
+                            current_line.erase( 0, pos + delimiter.length() );
                         }
                     // Add the last sample to the vector
                     sample_list.emplace_back( current_line.substr( 0, current_line.find( "\n" ) ) );
@@ -136,7 +136,7 @@ void module_info::run( options *opts )
 
             // Write base sample names as row headers in output file
             averages << "Sequence name";
-            for(auto sample: name_file_samples)
+            for( auto sample: name_file_samples )
                 {
                     if ( std::find( invalid_samples.begin(), invalid_samples.end(), sample.first ) == invalid_samples.end() )
                         {
@@ -145,19 +145,17 @@ void module_info::run( options *opts )
                 }
             averages << "\n";
 
-            // TODO: implent "duplicate sample" warning
             bool duplicate_samples_found = false;
             std::vector<std::string> duplicate_samples;
-            int scores_found = 0;
             for ( int pep_index = 0; !invalid_sample_found && pep_index < scores.pep_names.size(); pep_index++ )
                 {
                     found_samples = {};
                     averages << scores.pep_names[pep_index];
-                    for( int sample_index = 0; sample_index < scores.sample_names.size(); sample_index++)
+                    for( int sample_index = 0; sample_index < scores.sample_names.size(); sample_index++ )
                         {
                             for( auto sample: name_file_samples )
                                 {
-                                    if( scores.sample_names[sample_index].find(sample.first) != std::string::npos)
+                                    if( scores.sample_names[sample_index].find(sample.first) != std::string::npos )
                                         {
                                             // Check that current sample is not a duplicate sample; skip over it if so
                                             if( boost::algorithm::find_backward( found_samples.begin(), found_samples.end(), scores.sample_names[sample_index] )
