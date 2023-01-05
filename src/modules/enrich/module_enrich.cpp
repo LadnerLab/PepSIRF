@@ -115,42 +115,27 @@ void module_enrich::run( options *opts )
                     col_sums = get_raw_sums( raw_score_lists );
                 }
 
-            // REMOVE
-            std::cout << "Original Replicate List:" << std::endl;
-            for ( size_t i = 0; i < samples_list[sample_idx].size(); i += 1 )
-                {
-                    std::cout << samples_list[sample_idx][i] << ": " << col_sums[i] << std::endl;
-                }
-
             if( low_reads )
                 {
-                    std::size_t i = 0;
+                    std::vector<double>::iterator col_sum = col_sums.begin();
                     for ( std::vector<std::string>::iterator rep = samples_list[ sample_idx ].begin();
-                            rep != samples_list[ sample_idx ].end() || i < col_sums.size(); )
+                            rep != samples_list[ sample_idx ].end(); )
                         {
-                            if ( col_sums[ i ] < *std::min_element( raw_score_params.begin(), raw_score_params.end() ) )
+                            if ( *col_sum < *std::min_element( raw_score_params.begin(), raw_score_params.end() ) )
                                 {
                                     rep = samples_list[ sample_idx ].erase( rep );
+                                    col_sum = col_sums.erase( col_sum );
                                 }
                             else
                                 {
                                     rep += 1;
+                                    col_sum += 1;
                                 }
-
-                            i += 1;
                         }
                 }
 
-            // REMOVE
-            std::cout << "\nNew Replicate List:" << std::endl;
-            for ( size_t i = 0; i < samples_list[sample_idx].size(); i += 1 )
-                {
-                    std::cout << samples_list[sample_idx][i] << std::endl;
-                }
-            std::cout << std::endl;
-
             raw_count_enriched = raw_counts_included
-                ? ( raw_count_enriched && thresholds_met( col_sums, raw_score_params ) )
+                ? ( !col_sums.empty() && raw_count_enriched && thresholds_met( col_sums, raw_score_params ) )
                 : true;
 
             if( raw_count_enriched )
