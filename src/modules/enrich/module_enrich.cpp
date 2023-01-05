@@ -97,7 +97,7 @@ void module_enrich::run( options *opts )
     sample_name_set raw_score_sample_names{ raw_scores.sample_names.begin(),
                                             raw_scores.sample_names.end()
                                             };
-    
+
     peptide_score_data_sample_major *curr_matrix_ptr;
     for( std::size_t sample_idx = 0; sample_idx < samples_list.size(); ++sample_idx )
         {
@@ -114,19 +114,46 @@ void module_enrich::run( options *opts )
                     get_raw_scores( &raw_score_lists, raw_scores_ptr, samples_list[sample_idx] );
                     col_sums = get_raw_sums( raw_score_lists );
                 }
-            //start here
-            raw_count_enriched = raw_counts_included
-                ? ( raw_count_enriched && thresholds_met( col_sums, raw_score_params ) )
-                : true;
-            
+
+            // REMOVE
+            std::cout << "Original Replicate List:" << std::endl;
+            for ( size_t i = 0; i < samples_list[sample_idx].size(); i += 1 )
+                {
+                    std::cout << samples_list[sample_idx][i] << ": " << col_sums[i] << std::endl;
+                }
 
             if( low_reads )
                 {
-                    
+                    std::size_t i = 0;
+                    for ( std::vector<std::string>::iterator rep = samples_list[ sample_idx ].begin();
+                            rep != samples_list[ sample_idx ].end() || i < col_sums.size(); )
+                        {
+                            if ( col_sums[ i ] < *std::min_element( raw_score_params.begin(), raw_score_params.end() ) )
+                                {
+                                    rep = samples_list[ sample_idx ].erase( rep );
+                                }
+                            else
+                                {
+                                    rep += 1;
+                                }
+
+                            i += 1;
+                        }
                 }
 
-            //end here
-            else if( raw_count_enriched )
+            // REMOVE
+            std::cout << "\nNew Replicate List:" << std::endl;
+            for ( size_t i = 0; i < samples_list[sample_idx].size(); i += 1 )
+                {
+                    std::cout << samples_list[sample_idx][i] << std::endl;
+                }
+            std::cout << std::endl;
+
+            raw_count_enriched = raw_counts_included
+                ? ( raw_count_enriched && thresholds_met( col_sums, raw_score_params ) )
+                : true;
+
+            if( raw_count_enriched )
             {
                 // Get candidates for each input matrix for the current sample
                 for( curr_matrix = 0; curr_matrix < matrix_thresh_pairs.size(); ++curr_matrix )
@@ -158,7 +185,7 @@ void module_enrich::run( options *opts )
                                         std::cout << *sample << "\n";
                                     }
                                 throw std::runtime_error( "Verify the correct sample names are provided in (--samples,-s).\n");
-                                
+
                             }
                         else if( sample_diffs.size() == samples_sample_names.size() )
                         // if all of the samples are not found that are provided by samples option, then give a warning that these samples were not in the matrix.
@@ -189,22 +216,11 @@ void module_enrich::run( options *opts )
                         std::vector<std::map<std::string, std::vector<double>>> ret;
                         for( std::size_t curr_map = 0; curr_map < all_enrichment_candidates.size(); ++curr_map )
                             {
-                                if( !low_reads )
-                                {
-                                    if( thresholds_met( all_enrichment_candidates[curr_map].at( pep_name ),
-                                                matrix_thresh_pairs[curr_map].second ) )
-                                    ++valid_candidates;
-                                }
-                                else
-                                {
-                                    if (thresholds_met( all_enrichment_candidates[curr_map].at( pep_name ),
-                                                matrix_thresh_pairs[curr_map].second))
-                                    {
-                                        ++valid_candidates;
-                                    }
-                                }
+                                if( thresholds_met( all_enrichment_candidates[curr_map].at( pep_name ),
+                                            matrix_thresh_pairs[curr_map].second ) )
+                                ++valid_candidates;
                             }
-                    
+
                         if( valid_candidates == matrix_thresh_pairs.size() )
                             {
                                 enriched_probes.emplace_back( pep_name );
@@ -212,7 +228,10 @@ void module_enrich::run( options *opts )
                     }
             }
 
-            if( raw_counts_included && !raw_count_enriched && !e_opts->out_enrichment_failure.empty() )
+            if( !samples_list[sample_idx].empty()
+                && raw_counts_included
+                && !raw_count_enriched
+                && !e_opts->out_enrichment_failure.empty() )
                 {
                     std::string samplenames = "";
                     std::for_each( samples_list[sample_idx].begin(), samples_list[sample_idx].end() - 1,
@@ -220,10 +239,12 @@ void module_enrich::run( options *opts )
                             {
                                 samplenames.append( name + ", " );
                             });
-                    samplenames.append( *(samples_list[sample_idx].end() - 1) );                  
+                    samplenames.append( *(samples_list[sample_idx].end() - 1) );
                     enrichment_failures.emplace( samplenames, "raw" );
                 }
-            else if( enriched_probes.empty() && !e_opts->out_enrichment_failure.empty() )
+            else if( !samples_list[sample_idx].empty()
+                        && enriched_probes.empty()
+                        && !e_opts->out_enrichment_failure.empty() )
                 {
                     std::string samplenames = "";
                     std::for_each( samples_list[sample_idx].begin(), samples_list[sample_idx].end() - 1,
@@ -231,7 +252,7 @@ void module_enrich::run( options *opts )
                             {
                                 samplenames.append( name + ", " );
                             });
-                    samplenames.append( *(samples_list[sample_idx].end() - 1) );                  
+                    samplenames.append( *(samples_list[sample_idx].end() - 1) );
                     enrichment_failures.emplace( samplenames, "peptides" );
                 }
             else if( !enriched_probes.empty() )
@@ -303,7 +324,7 @@ std::vector<module_enrich::sample_type> module_enrich::parse_samples( std::istre
                           boost::is_any_of( "\t" )
                        );
             return_val.emplace_back(values);
-            
+
         }
 
     return return_val;
