@@ -98,6 +98,7 @@ void module_enrich::run( options *opts )
                                             raw_scores.sample_names.end()
                                             };
 
+    std::vector<std::vector<std::string>> removed_reps;
     peptide_score_data_sample_major *curr_matrix_ptr;
     for( std::size_t sample_idx = 0; sample_idx < samples_list.size(); ++sample_idx )
         {
@@ -117,12 +118,15 @@ void module_enrich::run( options *opts )
 
             if( low_reads )
                 {
+                    std::vector<std::string> saved_reps;
+
                     std::vector<double>::iterator col_sum = col_sums.begin();
                     for ( std::vector<std::string>::iterator rep = samples_list[ sample_idx ].begin();
                             rep != samples_list[ sample_idx ].end(); )
                         {
                             if ( *col_sum < *std::min_element( raw_score_params.begin(), raw_score_params.end() ) )
                                 {
+                                    saved_reps.emplace_back( *rep );
                                     rep = samples_list[ sample_idx ].erase( rep );
                                     col_sum = col_sums.erase( col_sum );
                                 }
@@ -131,6 +135,11 @@ void module_enrich::run( options *opts )
                                     rep += 1;
                                     col_sum += 1;
                                 }
+                        }
+
+                    if ( !saved_reps.empty() ) // keeps from having to account when outputing to enrich failure file
+                        {
+                            removed_reps.emplace_back( saved_reps );
                         }
                 }
 
@@ -270,25 +279,48 @@ void module_enrich::run( options *opts )
 
         }
 
-    if( !e_opts->out_enrichment_failure.empty() && !enrichment_failures.empty() )
+    if( !e_opts->out_enrichment_failure.empty() )
         {
-            std::string outf_name = e_opts->out_dirname + '/' + e_opts->out_enrichment_failure;
-            // write to file
-            std::ofstream out_file{ outf_name, std::ios_base::out };
-            out_file << "Replicates\tReason\n";
-            for( auto& line : enrichment_failures )
+            if ( !enrichment_failures.empty() )
                 {
-                    out_file << line.first;
-                    if( line.second == "raw" )
+                    std::string outf_name = e_opts->out_dirname + '/' + e_opts->out_enrichment_failure;
+                    // write to file
+                    std::ofstream out_file{ outf_name, std::ios_base::out };
+                    out_file << "Replicates\tReason\n";
+                    for( auto& line : enrichment_failures )
                         {
-                            out_file << "\tRaw read count threshold\n";
+                            out_file << line.first;
+                            if( line.second == "raw" )
+                                {
+                                    out_file << "\tRaw read count threshold\n";
+                                }
+                            else
+                                {
+                                    out_file << "\tNo enriched peptides\n";
+                                }
                         }
-                    else
-                        {
-                            out_file << "\tNo enriched peptides\n";
-                        }
+                    out_file.close();
                 }
-            out_file.close();
+            else if ( !removed_reps.empty() )
+                {
+                    std::string outf_name = e_opts->out_dirname + '/' + e_opts->out_enrichment_failure;
+                    // write to file
+                    std::ofstream out_file{ outf_name, std::ios_base::out };
+
+                    out_file << "Removed Replicates\n";
+
+                    for ( std::size_t s = 0; s < removed_reps.size(); s += 1 )
+                        {
+                            for ( std::size_t r = 0; r < removed_reps[ s ].size() - 1; r += 1 )
+                                {
+                                    out_file << removed_reps[ s ][ r ] << ", ";
+                                }
+
+                            out_file << removed_reps[ s ][ removed_reps[ s ].size() - 1 ] << std::endl;
+                        }
+
+                    out_file.close();
+                }
         }
 }
 std::vector<module_enrich::sample_type> module_enrich::parse_samples( std::istream& file )
