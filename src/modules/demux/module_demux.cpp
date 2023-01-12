@@ -419,7 +419,14 @@ void module_demux::run( options *opts )
 
                                                     if( !d_opts->fastq_out.empty() )
                                                         {
-                                                            fastq_output[d_id->second.name].emplace_back(reads[ read_index ]);
+#ifndef __clang__
+                                                            #pragma omp critical
+                                                            {
+#endif
+                                                                fastq_output[d_id->second.name].emplace_back(reads[ read_index ]);
+#ifndef __clang__
+                                                            }
+#endif
                                                         }
 #ifndef __clang__
                                                     #pragma omp critical
@@ -478,10 +485,14 @@ void module_demux::run( options *opts )
                                                     // if seq_match found, increase count for given sample
                                                     auto sample_id = idx_match_list[0]->second.id;
 
-                                                    if( !d_opts->fastq_out.empty() )
-                                                        {
-                                                            fastq_output[d_id->second.name].emplace_back(reads[ read_index ]);
-                                                        }
+#ifndef __clang__
+                                                    #pragma omp critical
+                                                    {
+#endif
+                                                        fastq_output[d_id->second.name].emplace_back(reads[ read_index ]);
+#ifndef __clang__
+                                                    }
+#endif
 #ifndef __clang__
                                                     #pragma omp critical
                                                         {
@@ -550,6 +561,15 @@ void module_demux::run( options *opts )
                     ++processed_total;
                     idx_match_list.clear();
                 }
+
+#ifndef __clang__
+            #pragma omp critical
+                {
+#endif
+                    write_fastq_output(fastq_output, d_opts->fastq_out);
+#ifndef __clang__
+                }
+#endif
             write_fastq_output(fastq_output, d_opts->fastq_out);
 
             fastq_output.clear();
