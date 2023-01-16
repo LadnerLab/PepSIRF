@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - #137, added an option for enrich to drop replicates with low raw read counts. This is done with the flag "-l" or "--low_raw_reads". If this functionality is invoked, dropped replicates will not be considered in the enrichment process, and the dropped replicates will be reported in the enrichment failure reasons file under "Removed Replicates": each line will contain the replicates removed from a sample.
 - #131, enrich now reports which replicates caused a raw read count threshold failure; and identifies if a replicate failed the maximum or minimum threshold.
 - #161, added a flag to deconv that allows the user to specify what string is expected at the end of each file containing enriched peptides (set to "_enriched.txt" by default). If a file without does not end in the string that was specified, deconv skips over that file.
+- #149, added feature to info that generates a matrix of average counts given replicates. Two new flags must be included in order to use this feature: --rep_names and --get_avgs. --rep_names requires an input file with the names of the replicates that the user wants to generate a matrix of average counts for. --get_avgs requires and output file name where the matrix will be stored.
 
 ## [1.5.1]
 - #154, altered behavior of enrich to produce blank sample file output for samples that failed enrichment.
