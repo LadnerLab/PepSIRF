@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - #178, in the case of a sample not having enriched peptides, enrich will now add a space to the empty file. This allows for better compatability with deconv through Qiime2.
 - #137, added an option for enrich to drop replicates with low raw read counts. This is done with the flag "-l" or "--low_raw_reads". If this functionality is invoked, dropped replicates will not be considered in the enrichment process, and the dropped replicates will be reported in the enrichment failure reasons file under "Removed Replicates": each line will contain the replicates removed from a sample.
 - #131, enrich now reports which replicates caused a raw read count threshold failure; and identifies if a replicate failed the maximum or minimum threshold.
+- #161, added a flag to deconv that allows the user to specify what string is expected at the end of each file containing enriched peptides (set to "_enriched.txt" by default). If a file without does not end in the string that was specified, deconv skips over that file.
 
 ## [1.5.1]
 - #154, altered behavior of enrich to produce blank sample file output for samples that failed enrichment.
