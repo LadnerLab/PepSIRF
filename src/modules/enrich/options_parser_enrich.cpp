@@ -129,6 +129,11 @@ bool options_parser_enrich::parse( int argc, char ***argv, options *opts )
           "more than 3 samplenames in the output. When this flag is used, the output names will "
           "be of the form 'A~B~C~1more', for example.\n"
         )
+        ( "low_raw_reads,l", po::bool_switch( &opts_enrich->low_raw_reads )
+          ->default_value( false ),
+          "By default samples with any replicates below the raw read threshold will be dropped "
+          "when this flag is included, replicates with reads above the threshold will be kept \n"
+        )
         ( "output,o", po::value( &opts_enrich->out_dirname )
           ->default_value( "enriched" ),
           "Directory name to which output files will be written. An output file will be "
