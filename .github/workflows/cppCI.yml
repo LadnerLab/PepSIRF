@@ -1,0 +1,43 @@
+name: C++ CI
+
+on:
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: 'log level'
+      environment:
+      tags:
+  push:
+    branches: [ develop ]
+  pull_request:
+    branches: [ develop ]
+
+jobs:
+  build:
+    runs-on: [ ubuntu-latest ]
+    env:
+      BOOST_URL: https://boostorg.jfrog.io/artifactory/main/release/1.78.0/source/boost_1_78_0.tar.gz
+    steps:
+    - uses: actions/checkout@v2
+    - name: install zlib
+      run:
+        sudo apt install zlib1g
+    - name: install boost package
+      run: |
+        sudo apt update
+        sudo apt install -y libboost-all-dev
+    - name: setup cmake
+      uses: jwlawson/actions-setup-cmake@v1.12
+      with:
+        cmake-version: '3.16.3'
+    - name: build pepsirf_test
+      run: |
+        mkdir build
+        cd build
+        cmake --version
+        cmake -DCMAKE_BUILD_TYPE=Release ..
+        make pepsirf_test
+    - name: run pepsirf_test
+      run: |
+        cd build
+        ./pepsirf_test
