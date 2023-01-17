@@ -73,13 +73,22 @@ public:
                              const std::vector<double> thresholds
                            )
     {
-
         if( *std::max_element( values.begin(), values.end() ) >= *std::max_element( thresholds.begin(), thresholds.end() )
             && *std::min_element( values.begin(), values.end() ) >= *std::min_element( thresholds.begin(), thresholds.end() )
           )
             return true;
         else
             return false;
+    }
+
+    //thresholds met for low raw reads
+    template<typename ValType>
+    bool thresholds_met( const std::vector<ValType> values,
+                         const std::vector<ValType> ret_values,
+                            const std::vector<double> thresholds
+                            )
+    {
+        
     }
 
     /**
