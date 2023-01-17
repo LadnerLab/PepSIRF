@@ -570,7 +570,6 @@ void module_demux::run( options *opts )
 #ifndef __clang__
                 }
 #endif
-            write_fastq_output(fastq_output, d_opts->fastq_out);
 
             fastq_output.clear();
 
