@@ -146,7 +146,6 @@ void module_info::run( options *opts )
             for ( int pep_index = 0; !invalid_sample_found && pep_index < scores.pep_names.size(); pep_index++ )
                 {
                     found_samples = {};
-                    size_t scores_found = 0;
                     averages << scores.pep_names[pep_index];
                     for( int sample_index = 0; sample_index < scores.sample_names.size(); sample_index++ )
                         {
@@ -174,16 +173,9 @@ void module_info::run( options *opts )
                                                 }
 
                                             sample_map[sample.first].emplace_back( scores.scores.at(sample_index, pep_index) );
-                                            scores_found++;
                                             break;
                                         }
                                 }
-                        }
-
-                    // Check that each sample had a score associated with it; throw error if not
-                    if ( scores_found < scores.sample_names.size() )
-                        {
-                            std::cout << "Error: missing sample score" << std::endl;
                         }
 
                     float rep_total;
