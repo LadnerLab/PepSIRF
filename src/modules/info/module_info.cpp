@@ -2,6 +2,7 @@
 #include <fstream>
 #include <numeric>
 #include <iomanip>
+#include <boost/format.hpp>
 #include <boost/algorithm/find_backward.hpp> //TODO: include in header file
 
 #include "module_info.h"
@@ -200,7 +201,7 @@ void module_info::run( options *opts )
                                                rep_total += rep_val;
                                           }
                                       rep_avg = rep_total / (float) sample_map[sample.first].size();
-                                      averages << "\t" << rep_avg;
+                                      averages << boost::format( "\t%0.5f" ) % rep_avg;
                                   }
                         }
                     averages << "\n";
