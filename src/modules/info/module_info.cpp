@@ -93,8 +93,7 @@ void module_info::run( options *opts )
                             current_line.erase( 0, pos + delimiter.length() );
                         }
                     // Add the last sample to the vector
-                    sample_list.emplace_back( current_line.substr( 0, current_line.find( "\n" ) ) );
-
+                    sample_list.emplace_back( current_line.substr( 0, current_line.find( "\r" ) ) );
                     name_file_samples.emplace( std::make_pair( base_sample, sample_list ) );
                 }
 
@@ -105,16 +104,12 @@ void module_info::run( options *opts )
             for ( int i = 0; i < scores.sample_names.size(); i++ )
                 {
                     invalid_sample_found = true;
-                    //std::cout << "SAMPLE TO FIND: \t" << scores.sample_names[i] << std::endl;
 
                     // Loop through sample names found in name file
                     for ( auto samples : name_file_samples )
                         {
-                            //std::cout << samples.first << std::endl;
                             for ( std::string sample : samples.second )
                                 {
-                                    //std::cout << sample << "\t" << scores.sample_names[i] << "\n";
-
                                     // If samples in input & name files match, write to output file
                                     if ( std::find( scores.sample_names.begin(),
                                                     scores.sample_names.end(),
@@ -150,6 +145,7 @@ void module_info::run( options *opts )
             for ( int pep_index = 0; !invalid_sample_found && pep_index < scores.pep_names.size(); pep_index++ )
                 {
                     found_samples = {};
+                    size_t scores_found = 0;
                     averages << scores.pep_names[pep_index];
                     for( int sample_index = 0; sample_index < scores.sample_names.size(); sample_index++ )
                         {
