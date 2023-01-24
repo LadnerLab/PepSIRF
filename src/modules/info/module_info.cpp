@@ -2,7 +2,6 @@
 #include <fstream>
 #include <numeric>
 #include <iomanip>
-#include <boost/format.hpp>
 #include <boost/algorithm/find_backward.hpp> //TODO: include in header file
 
 #include "module_info.h"
@@ -68,7 +67,7 @@ void module_info::run( options *opts )
 
     if ( !i_opts.in_replicates_fname.empty() && !i_opts.out_avgs_fname.empty() )
         {
-            std::unordered_map<std::string, std::vector<int>> sample_map = {};
+            std::unordered_map<std::string, std::vector<double>> sample_map = {};
             std::unordered_map<std::string, std::vector<std::string>> name_file_samples = {};
 
             std::ifstream replicate_names{ i_opts.in_replicates_fname };
@@ -178,8 +177,8 @@ void module_info::run( options *opts )
                                 }
                         }
 
-                    float rep_total;
-                    float rep_avg = 0.0f;
+                    double rep_total = 0.0;
+                    double rep_avg = 0.0;
                     for( auto sample: name_file_samples )
                         {
                             if ( std::find( invalid_samples.begin(),
@@ -187,13 +186,15 @@ void module_info::run( options *opts )
                                             sample.first ) == invalid_samples.end() )
                                   {
                                       // Add all the replicate values for a given sample, then find its average
-                                      rep_total = 0;
-                                      for( int rep_val: sample_map[sample.first] )
+                                      rep_total = 0.0;
+                                      for( double rep_val: sample_map[sample.first] )
                                           {
                                                rep_total += rep_val;
                                           }
-                                      rep_avg = rep_total / (float) sample_map[sample.first].size();
-                                      averages << boost::format( "\t%0.5f" ) % rep_avg;
+                                      rep_avg = rep_total / (double) sample_map[sample.first].size();
+                                      averages << "\t"
+                                               << std::fixed << std::setprecision( 5 )
+                                               << rep_avg;
                                   }
                         }
                     averages << "\n";
