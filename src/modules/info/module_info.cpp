@@ -153,12 +153,15 @@ void module_info::run( options *opts )
                                     if( scores.sample_names[sample_index].find(sample.first) != std::string::npos )
                                         {
                                             // Check that current sample is not a duplicate sample; skip over it if so
-                                            if( boost::algorithm::find_backward( found_samples.begin(), found_samples.end(), scores.sample_names[sample_index] )
+                                            if( boost::algorithm::find_backward( found_samples.begin(),
+                                                                                 found_samples.end(),
+                                                                                 scores.sample_names[sample_index] )
                                                 != found_samples.end() )
                                                 {
                                                     // Add sample to list of duplicate samples to be printed in warning;
                                                     // Ensure that it is only added once
-                                                    if( boost::algorithm::find_backward( duplicate_samples.begin(), duplicate_samples.end(), scores.sample_names[sample_index])
+                                                    if( boost::algorithm::find_backward( duplicate_samples.begin(),
+                                                                                         duplicate_samples.end(), scores.sample_names[sample_index] )
                                                         == duplicate_samples.end() )
                                                         {
                                                             duplicate_samples_found = true;
@@ -171,8 +174,14 @@ void module_info::run( options *opts )
                                                     found_samples.emplace_back( scores.sample_names[sample_index] );
                                                 }
 
-                                            sample_map[sample.first].emplace_back( scores.scores.at(sample_index, pep_index) );
-                                            break;
+                                            if ( boost::algorithm::find_backward( sample.second.begin(),
+                                                                                  sample.second.end(),
+                                                                                  scores.sample_names[sample_index] )
+                                                 != sample.second.end() )
+                                                 {
+                                                     sample_map[sample.first].emplace_back( scores.scores.at(sample_index, pep_index) );
+                                                     break;
+                                                 }
                                         }
                                 }
                         }
