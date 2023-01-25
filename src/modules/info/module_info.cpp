@@ -217,13 +217,12 @@ void module_info::run( options *opts )
 
             // Print warning with all duplicate samples found
             if ( duplicate_samples_found )
-            {
-                std::cout << "Warning: duplicate samples in input file: ";
-                for (std::string sample : duplicate_samples)
                 {
-                    std::cout << sample;
+                    std::cout << "Warning: duplicate samples in input file:\n";
+                    for (std::string sample : duplicate_samples)
+                        {
+                            std::cout << sample << std::endl;
+                        }
                 }
-                std::cout << "\n";
-            }
         }
 }
