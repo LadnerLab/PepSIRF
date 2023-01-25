@@ -35,6 +35,7 @@ public:
     int num_indexes;
 
     bool translation_aggregation;
+    std::string fastq_out;
 
     /**
      * The number of fastq records to read per loop. A higher value here will result in higher memory usage by the program.

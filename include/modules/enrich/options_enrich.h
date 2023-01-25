@@ -39,6 +39,8 @@ class options_enrich : public options
 
     bool truncate_names;
 
+    bool low_raw_reads;
+
     const std::string DEFAULT_OUTPUT_DIRNAME;
     const std::string DEFAULT_OUT_FNAME_JOIN;
 

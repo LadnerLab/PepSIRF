@@ -29,7 +29,8 @@ std::string options_demux::get_arguments()
                   " --phred_base            " << phred_base << "\n" <<
                   " --phred_min_score       " << min_phred_score << "\n" <<
                   " --concatemer            " << concatemer << "\n" <<
-                  " --diagnostic_info       " << diagnostic_fname << "\n"
+                  " --diagnostic_info       " << diagnostic_fname << "\n" <<
+                  " --fastq_output          " << fastq_out << "\n" 
                   "\n";
 
     return str_stream.str();

@@ -184,6 +184,10 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "2 only shares a tenth (0.1) of its peptides with species 1. These two will only be reported together if "
           "score_overlap_threshold' <= 0.1.\n"
         )
+        ( "enriched_file_ending", po::value<std::string>( &opts_deconv->enriched_file_ending )->default_value( "_enriched.txt" ),
+          "Optional flag that specifies what string is expected at the end of each file containing enriched peptides. "
+          "Set to \"_enriched.txt\" by default \n"
+        )
         ;
 
     po::store( po::command_line_parser( argc, *argv ).options( desc ).run(), vm);

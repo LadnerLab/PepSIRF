@@ -261,6 +261,37 @@ class module_demux : public module
                          );
 
     /**
+     * Write FASTQ output, appends fastq data to file
+     * 
+     * @param sequence Reference to fastq sequence for writing
+     * @param sample_name sample file name to append
+     */
+
+    void write_fastq_output( std::map<std::string, std::vector<fastq_sequence>> samp_map,
+                             std::string outfile
+                           )
+        {
+            for( auto samp : samp_map ) 
+                {
+                    std::string outfile_path = "";
+                    outfile_path = outfile + "/" + samp.first + ".fastq";
+                    std::ofstream output;
+                    output.open(outfile_path, std::ios_base::app);
+
+                    for( auto fastq_seq : samp.second )
+                        {
+                            output << fastq_seq.name << "\n";
+                            output << fastq_seq.seq << "\n";
+                            output << "+" << "\n";
+                            output << fastq_seq.scores << "\n";
+                        }
+
+                    output.close();
+                }
+        }
+
+
+    /**
      * Aggregate output counts, creating count data at the aa-level.
      * When multiple encodings are created for each nt sequence, output
      * is reported at the aa-level. By summing the counts for each encoding of
