@@ -323,8 +323,11 @@ class module_demux : public module
 
                     try
                         {
+                            #pragma GCC diagnostic push
+                            #pragma GCC diagnostic ignored "-Wdeprecated-copy"
                             current = translator( iter->first );
                             current.name = current.seq;
+                            #pragma GCC diagnostic pop
                         }
                     catch( std::out_of_range& e )
                         {

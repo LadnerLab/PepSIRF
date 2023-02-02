@@ -50,7 +50,7 @@ void module_info::run( options *opts )
 
             auto& matr = scores.scores;
 
-            for( const auto sample_n : matr.get_row_labels() )
+            for( const auto &sample_n : matr.get_row_labels() )
                 {
                     double sum = std::accumulate( matr.row_begin( sample_n.second ),
                                                   matr.row_end( sample_n.second ),
@@ -101,7 +101,7 @@ void module_info::run( options *opts )
             bool invalid_sample_found;
             std::vector<std::string> invalid_samples = {};
             std::vector<std::string> found_samples = {};
-            for ( int i = 0; i < scores.sample_names.size(); i++ )
+            for ( std::size_t i = 0; i < scores.sample_names.size(); i++ )
                 {
                     invalid_sample_found = true;
 
@@ -142,11 +142,13 @@ void module_info::run( options *opts )
 
             bool duplicate_samples_found = false;
             std::vector<std::string> duplicate_samples;
-            for ( int pep_index = 0; !invalid_sample_found && pep_index < scores.pep_names.size(); pep_index++ )
+            #pragma GCC diagnostic push
+            #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+            for ( std::size_t pep_index = 0; !invalid_sample_found && pep_index < scores.pep_names.size(); pep_index++ )
                 {
                     found_samples = {};
                     averages << scores.pep_names[pep_index];
-                    for( int sample_index = 0; sample_index < scores.sample_names.size(); sample_index++ )
+                    for( std::size_t sample_index = 0; sample_index < scores.sample_names.size(); sample_index++ )
                         {
                             for( auto sample: name_file_samples )
                                 {
@@ -214,6 +216,7 @@ void module_info::run( options *opts )
                             sample_map[sample.first].clear();
                         }
                 }
+            #pragma GCC diagnostic pop
 
             // Print warning with all duplicate samples found
             if ( duplicate_samples_found )

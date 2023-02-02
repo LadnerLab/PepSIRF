@@ -69,12 +69,15 @@ namespace stats
         {
             std::size_t n = 0;
             double log_sum = 0;
-
+            
+            #pragma GCC diagnostic push
+            #pragma GCC diagnostic ignored "-Wdeprecated-copy"
             for( auto index = begin; index != end; ++index )
                 {
                     log_sum += std::log( *index == 0 ? 1 : *index );
                     n += *index != 0;
                 }
+            #pragma GCC diagnostic pop
 
             log_sum /= (double) n;
 
