@@ -56,9 +56,9 @@ Run autopepsirf Qiime2 plugin to automatically run PepSIRF normalization, pair n
 
 ```
 qiime autopepsirf diffEnrich-tsv \
---i-raw-data comboWR_raw_2mm_i1mm.tsv \
+--p-raw-data-filepath comboWR_raw_2mm_i1mm.tsv \
 --p-negative-id SB \
---i-bins comboWR_raw_2mm_i1mm_b300r1_bins.tsv \
+--p-bins-filepath comboWR_raw_2mm_i1mm_b300r1_bins.tsv \
 --p-raw-constraint 15000 \
 --p-exact-z-thresh 10 \
 --p-hdi 0.75 \
