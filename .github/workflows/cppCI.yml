@@ -16,7 +16,7 @@ on:
 
 jobs:
   build:
-    runs-on: [ ubuntu-22.04 ]
+    runs-on: [ ubuntu-latest ]
     env:
       BOOST_URL: https://boostorg.jfrog.io/artifactory/main/release/1.78.0/source/boost_1_78_0.tar.gz
     steps:
