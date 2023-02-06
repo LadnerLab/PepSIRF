@@ -2286,27 +2286,26 @@ TEST_CASE( "Use of predicate logic", "[predicate]" )
 
 }
 
-// TEST_CASE( "Parsing samples file", "[module_enrich]" )
-// {
-//     module_enrich mod;
-//     std::string input_str;
-//     input_str = "sample1\tsample2\nsample3\tsample4\n";
+TEST_CASE( "Parsing samples file", "[module_enrich]" )
+{
+    module_enrich mod;
+    std::string input_str;
+    input_str = "sample1\tsample2\nsample3\tsample4\n";
 
-//     std::istringstream file;
-//     file.str( input_str );
-//     auto samples = mod.parse_samples( file );
+    std::istringstream file;
+    file.str( input_str );
+    auto samples = mod.parse_samples( file );
 
-//     REQUIRE( samples.size() == 2 );
+    REQUIRE( samples.size() == 2 );
 
-//     file.clear();
+    file.clear();
 
     file.str( "sample1\tsample2\tsample3\nsample4\tsample5\nsample6\t\tsample7" );
 
     samples = mod.parse_samples( file );
 
     REQUIRE( samples.size() == 3 );
-
-// }
+}
 
 TEST_CASE( "Meeting the threshold for a pair", "[module_enrich]" )
 {
