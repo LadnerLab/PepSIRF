@@ -8,9 +8,7 @@ on:
       environment:
       tags:
   push:
-    branches:
-      - develop
-      - PepsirfTest-ISS181
+    branches: [ develop ]
   pull_request:
     branches: [ develop ]
 
