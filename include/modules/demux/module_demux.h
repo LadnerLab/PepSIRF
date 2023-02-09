@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <boost/algorithm/string.hpp>
 #include "omp_opt.h"
+#include "omp.h"
 
 #include "options_demux.h"
 #include "maps.h"
