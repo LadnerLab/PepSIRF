@@ -292,7 +292,7 @@ TEST_CASE( "Output files show whether references with matching sequences are rem
     std::ifstream ifactual( actual, std::ios_base::in );
     std::string expected_line;
     std::string actual_line;
-    while (!ifexpected.eof() || !ifactual.eof())
+    while (!ifexpected.eof() && !ifactual.eof())
         {
             std::getline(ifexpected, expected_line);
             std::getline(ifactual, actual_line);
