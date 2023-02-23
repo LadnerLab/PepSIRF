@@ -268,6 +268,22 @@ TEST_CASE( "Diagnostics give a detailed count for the occurring read matches dur
         }
 }
 
+TEST_CASE( "Output files show whether references with matching sequences are removed", "[module_demux]" )
+{
+    std::string expected = "../test/expected/test_expected_demux_NS30.tsv";
+    std::string actual = "../test/test_demux_output.tsv";
+    std::ifstream ifexpected( expected, std::ios_base::in );
+    std::ifstream ifactual( actual, std::ios_base::in );
+    std::string expected_line;
+    std::string actual_line;
+    while (!ifexpected.eof() && !ifactual.eof())
+        {
+            std::getline(ifexpected, expected_line);
+            std::getline(ifactual, actual_line);
+            REQUIRE(expected_line.compare(actual_line) == 0);
+        }
+}
+
 TEST_CASE( "samplelist_parser is able to read files that exist, properly creates errors when file cannot be found/read", "[samplelist_parser]" )
 {
     // SECTION( "samplelist_parser is able to read a well-formed test")
