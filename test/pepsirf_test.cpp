@@ -276,7 +276,7 @@ TEST_CASE("Demux output demostrates demux removes references with matching seque
 	std::ifstream ifactual(actual, std::ios_base::in);
 	std::string expected_line;
 	std::string actual_line;
-	while (!ifexpected.eof() && !ifactual.eof())
+	for (size_t i = 0; i < 7501; i += 1)	// 7501 is the length of test_expected_demux_NS30.tsv
 	{
 		std::getline(ifexpected, expected_line);
 		std::getline(ifactual, actual_line);
