@@ -152,6 +152,8 @@ add_library( modules_info STATIC src/modules/info/module_info.cpp
 			 src/modules/info/options_parser_info.cpp
 		   )
 
+add_definitions(-w)
+
 
 option( BUILD_TESTS "Determines whether to build tests." ON )
 
