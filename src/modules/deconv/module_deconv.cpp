@@ -758,48 +758,68 @@ void module_deconv::write_outputs( std::string out_name,
 
     out_file << "Species ID\tCount\tScore\tOriginal Count\tOriginal Score\tMax Probe Score\n";
 
-    bool tied = false;
-    for( auto it = out_counts.begin();
-         it != out_counts.end();
-         ++it
-       )
+    for(
+        auto out_count = out_counts.begin();
+        out_count != out_counts.end();
+        out_count++
+    )
         {
+            bool tied = false;
             std::vector<std::pair<species_data, bool>> tied_items;
 
-            auto tied_item = it;
-            while( tied_item->second ) // *it and the next species are tied, report together
+            // TODO: I wonder if this for loop can just be a while loop
+            // considering how I have designed it
+            //
+            // having item be a reference allows advancement of the out_count
+            // iterator inside the loop which negated the need for catching
+            // out_count up to the next non-tied item at the end of the main loop's
+            // current iteration
+            for (
+                auto& item = out_count;
+                item != out_counts.end();
+                item++
+            )
                 {
-                    tied_item = std::next( tied_item, 1 );
-                    tied_items.push_back( *tied_item );
+                    tied_items.push_back(*item);
                     tied = true;
+
+                    // check this item is tied with next item
+                    if (!item->second)
+                        {
+                            break;
+                        }
                 }
 
             if( id_name_map != nullptr )
                 {
-                    std::sort(tied_items.begin(), tied_items.end(),
-                        [this, &id_name_map](
-                            const std::pair<species_data, bool> pair1,
-                            const std::pair<species_data, bool> pair2
-                        )
+                    // check tied_items has data
+                    if (tied)
                         {
-                            std::string pair1_name = get_map_value(
-                                id_name_map,
-                                pair1.first.get_id(),
-                                pair1.first.get_id()
-                            );
-                            std::string pair2_name = get_map_value(
-                                id_name_map,
-                                pair2.first.get_id(),
-                                pair2.first.get_id()
-                            );
+                            std::sort(tied_items.begin(), tied_items.end(),
+                                [this, &id_name_map](
+                                    const std::pair<species_data, bool> pair1,
+                                    const std::pair<species_data, bool> pair2
+                                )
+                                {
+                                    std::string pair1_name = get_map_value(
+                                        id_name_map,
+                                        pair1.first.get_id(),
+                                        pair1.first.get_id()
+                                    );
+                                    std::string pair2_name = get_map_value(
+                                        id_name_map,
+                                        pair2.first.get_id(),
+                                        pair2.first.get_id()
+                                    );
 
-                            return pair1_name.compare(pair2_name) < 0;
+                                    return pair1_name.compare(pair2_name) < 0;
+                                }
+                            );
                         }
-                    );
                     
+                    // REMOVE
                     if (tied_items.size() > 1)
                         { 
-                            // REMOVE
                             for (auto tied_item : tied_items)
                             {
                                 auto tied_id = tied_item.first;
@@ -807,6 +827,7 @@ void module_deconv::write_outputs( std::string out_name,
                             }
                             std::cout << "\n\n";
                         }
+                    // end of REMOVE
 
                     for( auto tied_i : tied_items )
                         {
@@ -819,25 +840,29 @@ void module_deconv::write_outputs( std::string out_name,
                                 );
                         }
                     out_file << get_map_value( id_name_map,
-                                               it->first.get_id(),
-                                               it->first.get_id()
+                                               out_count->first.get_id(),
+                                               out_count->first.get_id()
                                              ) << "\t";
                 }
             else
                 {
-                    std::sort(tied_items.begin(), tied_items.end(),
-                        [](
-                            const std::pair<species_data, bool> pair1,
-                            const std::pair<species_data, bool> pair2
-                        )
+                    // check tied_items has data
+                    if (tied)
                         {
-                            return pair1.first.get_id().compare(pair2.first.get_id()) < 0;
+                            std::sort(tied_items.begin(), tied_items.end(),
+                                [](
+                                    const std::pair<species_data, bool> pair1,
+                                    const std::pair<species_data, bool> pair2
+                                )
+                                {
+                                    return pair1.first.get_id().compare(pair2.first.get_id()) < 0;
+                                }
+                            );
                         }
-                    );
 
+                    // REMOVE
                     if (tied_items.size() > 1)
                         { 
-                            // REMOVE
                             for (auto tied_item : tied_items)
                             {
                                 auto tied_id = tied_item.first;
@@ -845,75 +870,57 @@ void module_deconv::write_outputs( std::string out_name,
                             }
                             std::cout << "\n\n";
                         }
+                    // end of REMOVE
                     out_file << "\t";
                 }
 
-            auto orig_id = it->first.get_id();
-            out_file << orig_id << " <- orig ID";
-
-            // species id for both (both are only written if tied is true)
-            for(
-                auto tied_item = tied_items.begin();
-                tied_item != tied_items.end();
-                tied_item++
-            )
+            // check for ties
+            if (tied)
                 {
-                    auto tied_id = tied_item->first;
-                    out_file << "," << tied_id.get_id();
+                    // report IDs
+                    for (
+                        auto tied_item = tied_items.begin();
+                        tied_item != tied_items.end() - 1;
+                        tied_item++
+                    )
+                        {
+                            out_file << tied_item->first.get_id() << ",";
+                        }
+                    out_file << (tied_items.end() - 1)->first.get_id();
+
+                    // report counts
+                    /*
+                    for (
+                        auto tied_item = tied_items.begin();
+                        tied_item != tied_items.end() - 1;
+                        tied_item++
+                    )
+                        {
+                        }
+                    out_file << "\n";
+                    */
+                    // report scores
+                    // report original counts
+                    // report original scores
+                    // report highest scoring peptides
+                    out_file << "\n";   // REMOVE
                 }
-            //out_file << orig_id << "\t";
-
-            /*
-            // count for both
-            for( auto tied_i : tied_items )
+            // otherwise, assume no tied items
+            else
                 {
-                    to_stream_if( out_file, tied, tied_i.first.get_count(), "," );
-                }
-            //out_file << it->first.get_count() << "\t";
-
-            // score for both
-            for( auto tied_i : tied_items )
-                {
-                    to_stream_if( out_file, tied, tied_i.first.get_score(), "," );
-                }
-            //out_file << it->first.get_score() << "\t";
-
-            // original count for both
-            for( auto tied_i : tied_items )
-                {
-                    auto tied_id = std::get<0>( tied_i );
-                    to_stream_if( out_file, tied,
-                                  original_scores
-                                  .find( tied_id.get_id() )->second.first,
-                                  ","
-                                  );
-                }
-            //out_file << original_scores.find( orig_id )->second.first << "\t";
-
-            // original score for both
-            for( auto tied_i : tied_items )
-                {
-                    auto tied_id = std::get<0>( tied_i );
-                    to_stream_if( out_file, tied,
-                                  original_scores
-                                  .find( tied_id.get_id() )->second.second,
-                                  ","
-                                );
-                }
-            //out_file << original_scores.find( orig_id )->second.second << "\t";
-
-            for( auto tied_i : tied_items )
-                {
-                    out_file << tied_i.first.get_highest_scoring_peptide().get_score() << ",";
-                }
-            //out_file << it->first.get_highest_scoring_peptide().get_score() << "\n";
-            */
-            out_file << "\n";   // REMOVE
-
-            if( tied )
-                {
-                    it = tied_item;
-                    tied = false;
+                    auto orig_id = out_count->first.get_id();
+                    // report ID
+                    out_file << orig_id << "\t";
+                    // report count
+                    out_file << out_count->first.get_count() << "\t";
+                    // report score
+                    out_file << out_count->first.get_score() << "\t";
+                    // report original count
+                    out_file << original_scores.find(orig_id)->second.first << "\t";
+                    // report original score
+                    out_file << original_scores.find(orig_id)->second.second << "\t";
+                    // report highest scoring peptide
+                    out_file << out_count->first.get_highest_scoring_peptide().get_score() << "\n";
                 }
         }
     std::cout << "end of write_outputs!\n\n";   // REMOVE
