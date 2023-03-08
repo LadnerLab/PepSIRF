@@ -748,6 +748,7 @@ void module_deconv::write_outputs( std::string out_name,
                                  )
 
 {
+    std::cout << "write_outputs called here\n"; // REMOVE
     std::ofstream out_file( out_name );
 
     if( id_name_map != nullptr )
@@ -755,17 +756,16 @@ void module_deconv::write_outputs( std::string out_name,
             out_file << "Species Name\t";
         }
 
-
     out_file << "Species ID\tCount\tScore\tOriginal Count\tOriginal Score\tMax Probe Score\n";
 
     bool tied = false;
-    std::vector<std::pair<species_data,bool>> tied_items;
-
     for( auto it = out_counts.begin();
          it != out_counts.end();
          ++it
        )
         {
+            std::vector<std::pair<species_data, bool>> tied_items;
+
             auto tied_item = it;
             while( tied_item->second ) // *it and the next species are tied, report together
                 {
@@ -776,6 +776,38 @@ void module_deconv::write_outputs( std::string out_name,
 
             if( id_name_map != nullptr )
                 {
+                    std::sort(tied_items.begin(), tied_items.end(),
+                        [this, &id_name_map](
+                            const std::pair<species_data, bool> pair1,
+                            const std::pair<species_data, bool> pair2
+                        )
+                        {
+                            std::string pair1_name = get_map_value(
+                                id_name_map,
+                                pair1.first.get_id(),
+                                pair1.first.get_id()
+                            );
+                            std::string pair2_name = get_map_value(
+                                id_name_map,
+                                pair2.first.get_id(),
+                                pair2.first.get_id()
+                            );
+
+                            return pair1_name.compare(pair2_name) < 0;
+                        }
+                    );
+                    
+                    if (tied_items.size() > 1)
+                        { 
+                            // REMOVE
+                            for (auto tied_item : tied_items)
+                            {
+                                auto tied_id = tied_item.first;
+                                std::cout << "ID: " << tied_id.get_id() << ", ";
+                            }
+                            std::cout << "\n\n";
+                        }
+
                     for( auto tied_i : tied_items )
                         {
                             to_stream_if( out_file, tied,
@@ -791,38 +823,60 @@ void module_deconv::write_outputs( std::string out_name,
                                                it->first.get_id()
                                              ) << "\t";
                 }
-
             else
                 {
+                    std::sort(tied_items.begin(), tied_items.end(),
+                        [](
+                            const std::pair<species_data, bool> pair1,
+                            const std::pair<species_data, bool> pair2
+                        )
+                        {
+                            return pair1.first.get_id().compare(pair2.first.get_id()) < 0;
+                        }
+                    );
+
+                    if (tied_items.size() > 1)
+                        { 
+                            // REMOVE
+                            for (auto tied_item : tied_items)
+                            {
+                                auto tied_id = tied_item.first;
+                                std::cout << "ID: " << tied_id.get_id() << ", ";
+                            }
+                            std::cout << "\n\n";
+                        }
                     out_file << "\t";
                 }
 
             auto orig_id = it->first.get_id();
+            out_file << orig_id << " <- orig ID";
 
             // species id for both (both are only written if tied is true)
-            for( auto tied_i : tied_items )
+            for(
+                auto tied_item = tied_items.begin();
+                tied_item != tied_items.end();
+                tied_item++
+            )
                 {
-
-                    auto tied_id = tied_i.first;
-                    to_stream_if( out_file, tied, tied_id.get_id(), "," );
+                    auto tied_id = tied_item->first;
+                    out_file << "," << tied_id.get_id();
                 }
-            out_file << orig_id << "\t";
+            //out_file << orig_id << "\t";
 
+            /*
             // count for both
             for( auto tied_i : tied_items )
                 {
                     to_stream_if( out_file, tied, tied_i.first.get_count(), "," );
                 }
-
-            out_file << it->first.get_count() << "\t";
+            //out_file << it->first.get_count() << "\t";
 
             // score for both
             for( auto tied_i : tied_items )
                 {
                     to_stream_if( out_file, tied, tied_i.first.get_score(), "," );
                 }
-
-            out_file << it->first.get_score() << "\t";
+            //out_file << it->first.get_score() << "\t";
 
             // original count for both
             for( auto tied_i : tied_items )
@@ -834,8 +888,7 @@ void module_deconv::write_outputs( std::string out_name,
                                   ","
                                   );
                 }
-
-            out_file << original_scores.find( orig_id )->second.first << "\t";
+            //out_file << original_scores.find( orig_id )->second.first << "\t";
 
             // original score for both
             for( auto tied_i : tied_items )
@@ -847,22 +900,23 @@ void module_deconv::write_outputs( std::string out_name,
                                   ","
                                 );
                 }
-
-            out_file << original_scores.find( orig_id )->second.second << "\t";
+            //out_file << original_scores.find( orig_id )->second.second << "\t";
 
             for( auto tied_i : tied_items )
                 {
                     out_file << tied_i.first.get_highest_scoring_peptide().get_score() << ",";
                 }
-            out_file << it->first.get_highest_scoring_peptide().get_score() << "\n";
+            //out_file << it->first.get_highest_scoring_peptide().get_score() << "\n";
+            */
+            out_file << "\n";   // REMOVE
 
             if( tied )
                 {
                     it = tied_item;
                     tied = false;
-                    tied_items.clear();
                 }
         }
+    std::cout << "end of write_outputs!\n\n";   // REMOVE
 }
 
 sequential_set<std::string>
