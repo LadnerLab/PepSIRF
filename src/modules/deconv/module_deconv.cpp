@@ -767,27 +767,22 @@ void module_deconv::write_outputs( std::string out_name,
             bool tied = false;
             std::vector<std::pair<species_data, bool>> tied_items;
 
-            // TODO: I wonder if this for loop can just be a while loop
-            // considering how I have designed it
-            //
+            // TODO: update this block comment
             // having item be a reference allows advancement of the out_count
             // iterator inside the loop which negated the need for catching
             // out_count up to the next non-tied item at the end of the main loop's
             // current iteration
-            for (
-                auto& item = out_count;
-                item != out_counts.end();
-                item++
-            )
+            while (out_count != (out_counts.end() - 1) && out_count->second)
                 {
-                    tied_items.push_back(*item);
+                    tied_items.push_back(*out_count);
                     tied = true;
-
-                    // check this item is tied with next item
-                    if (!item->second)
-                        {
-                            break;
-                        }
+                    out_count++;
+                }
+            // check not at beginning of out_counts vector and tied with last item
+            if (out_count != out_counts.begin() && (out_count - 1)->second)
+                {
+                    // capture this item
+                    tied_items.push_back(*out_count);
                 }
 
             if( id_name_map != nullptr )
