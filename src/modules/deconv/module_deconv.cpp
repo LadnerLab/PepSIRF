@@ -766,23 +766,21 @@ void module_deconv::write_outputs( std::string out_name,
         {
             bool tied = false;
             std::vector<std::pair<species_data, bool>> tied_items;
-
-            // TODO: update this block comment
-            // having item be a reference allows advancement of the out_count
-            // iterator inside the loop which negated the need for catching
-            // out_count up to the next non-tied item at the end of the main loop's
-            // current iteration
-            while (out_count != (out_counts.end() - 1) && out_count->second)
+            
+            // using out_count allows traversal of out_counts without having
+            // to update main loop to next non-tied sample
+            while (out_count != out_counts.end() && out_count->second)
+                {
+                    tied_items.push_back(*out_count);
+                    out_count++;
+                    tied = true;
+                }
+            // necessary check to capture last tied item into vector
+            if (out_count != out_counts.end() && (out_count - 1)->second)
                 {
                     tied_items.push_back(*out_count);
                     tied = true;
-                    out_count++;
-                }
-            // check not at beginning of out_counts vector and tied with last item
-            if (out_count != out_counts.begin() && (out_count - 1)->second)
-                {
-                    // capture this item
-                    tied_items.push_back(*out_count);
+                    // TODO: make sure that NOT exclude any data from output
                 }
 
             if( id_name_map != nullptr )
@@ -881,24 +879,74 @@ void module_deconv::write_outputs( std::string out_name,
                         {
                             out_file << tied_item->first.get_id() << ",";
                         }
-                    out_file << (tied_items.end() - 1)->first.get_id();
+                    out_file << (tied_items.end() - 1)->first.get_id() << "\t";
 
                     // report counts
-                    /*
                     for (
                         auto tied_item = tied_items.begin();
                         tied_item != tied_items.end() - 1;
                         tied_item++
                     )
                         {
+                            out_file << tied_item->first.get_count() << ",";
                         }
-                    out_file << "\n";
-                    */
+                    out_file << (tied_items.end() - 1)->first.get_count() << "\t";
+
                     // report scores
+                    for (
+                        auto tied_item = tied_items.begin();
+                        tied_item != tied_items.end() - 1;
+                        tied_item++
+                    )
+                        {
+                            out_file << tied_item->first.get_score() << ",";
+                        }
+                    out_file << (tied_items.end() - 1)->first.get_score() << "\t";
+
                     // report original counts
+                    for (
+                        auto tied_item = tied_items.begin();
+                        tied_item != tied_items.end() - 1;
+                        tied_item++
+                    )
+                        {
+                            out_file << original_scores
+                                            .find(tied_item->first.get_id())
+                                            ->second.first << ",";
+                        }
+                    out_file << original_scores
+                                    .find((tied_items.end() - 1)->first.get_id())
+                                    ->second.first << "\t";
+
                     // report original scores
+                    for (
+                        auto tied_item = tied_items.begin();
+                        tied_item != tied_items.end() - 1;
+                        tied_item++
+                    )
+                        {
+                            out_file << original_scores
+                                            .find(tied_item->first.get_id())
+                                            ->second.second << ",";
+                        }
+                    out_file << original_scores
+                                    .find((tied_items.end() - 1)->first.get_id())
+                                    ->second.second << "\t";
+
                     // report highest scoring peptides
-                    out_file << "\n";   // REMOVE
+                    for (
+                        auto tied_item = tied_items.begin();
+                        tied_item != tied_items.end() - 1;
+                        tied_item++
+                    )
+                        {
+                            out_file << tied_item->first
+                                            .get_highest_scoring_peptide()
+                                            .get_score() << ",";
+                        }
+                    out_file << (tied_items.end() - 1)->first
+                                    .get_highest_scoring_peptide()
+                                    .get_score() << "\n";
                 }
             // otherwise, assume no tied items
             else
