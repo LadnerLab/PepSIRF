@@ -32,6 +32,10 @@ add_compile_options( "-Wall" "-std=c++11" "-Wextra" "-fvisibility=hidden"
 					 "$<$<CONFIG:RELEASE>:-O3>"
                    )
 
+add_compile_options( "-w" 
+"$<$<CONFIG:RELEASE>:-O3>"
+)
+
 
 set(PepSIRF_MODULES
     pepsirf_common
@@ -151,6 +155,7 @@ add_library( modules_info STATIC src/modules/info/module_info.cpp
 			 src/modules/info/options_info.cpp
 			 src/modules/info/options_parser_info.cpp
 		   )
+
 
 add_definitions(-w)
 
