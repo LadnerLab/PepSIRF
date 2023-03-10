@@ -30,11 +30,8 @@ add_compile_options( "-Wall" "-std=c++11" "-Wextra" "-fvisibility=hidden"
                      "-fvisibility-inlines-hidden"
                      "$<$<CONFIG:DEBUG>:-O0;-g>"
 					 "$<$<CONFIG:RELEASE>:-O3>"
+           "$<$<CONFIG:RELEASE>:-w>"
                    )
-
-add_compile_options( "-w" 
-"$<$<CONFIG:RELEASE>:-O3>"
-)
 
 
 set(PepSIRF_MODULES
@@ -155,10 +152,6 @@ add_library( modules_info STATIC src/modules/info/module_info.cpp
 			 src/modules/info/options_info.cpp
 			 src/modules/info/options_parser_info.cpp
 		   )
-
-
-add_definitions(-w)
-
 
 option( BUILD_TESTS "Determines whether to build tests." ON )
 

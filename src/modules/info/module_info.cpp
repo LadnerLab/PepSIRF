@@ -142,8 +142,6 @@ void module_info::run( options *opts )
 
             bool duplicate_samples_found = false;
             std::vector<std::string> duplicate_samples;
-            #pragma GCC diagnostic push
-            #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
             for ( std::size_t pep_index = 0; !invalid_sample_found && pep_index < scores.pep_names.size(); pep_index++ )
                 {
                     found_samples = {};
@@ -216,7 +214,6 @@ void module_info::run( options *opts )
                             sample_map[sample.first].clear();
                         }
                 }
-            #pragma GCC diagnostic pop
 
             // Print warning with all duplicate samples found
             if ( duplicate_samples_found )
