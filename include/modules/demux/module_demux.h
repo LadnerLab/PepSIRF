@@ -88,13 +88,20 @@ class module_demux : public module
      *        vector of each seq_score. Note that samples[ i ].id must equal j[ i ] for each
      *        j = 1, 2, ... j.size(), i.e. The id of a sample must correspond with its entry in
      *        the count vector.
-     * @param sample_duplicates map of dna tags. contains the number of each dna tag that 
+     * @param duplicate_map map of dna tags. contains the number of each dna tag that 
      *        appears in a run. used to determine the samples included in the output.
      **/
     void write_outputs( std::string outfile_name,
                         parallel_map<sequence, std::vector<std::size_t>*>& seq_scores,
+                        std::map<std::string, std::size_t> duplicate_map,
+                        bool ref_dependent,
                         std::vector<sample>& samples
                       );
+
+    /**
+     * Writes outputs to the outfile_name
+     * 
+     */
 
 
     /**
@@ -259,6 +266,37 @@ class module_demux : public module
                            parallel_map<sequence, std::vector<std::size_t>*>& count_map,
                            std::size_t num_samples
                          );
+
+    /**
+     * Write FASTQ output, appends fastq data to file
+     * 
+     * @param sequence Reference to fastq sequence for writing
+     * @param sample_name sample file name to append
+     */
+
+    void write_fastq_output( std::map<std::string, std::vector<fastq_sequence>> samp_map,
+                             std::string outfile
+                           )
+        {
+            for( auto samp : samp_map ) 
+                {
+                    std::string outfile_path = "";
+                    outfile_path = outfile + "/" + samp.first + ".fastq";
+                    std::ofstream output;
+                    output.open(outfile_path, std::ios_base::app);
+
+                    for( auto fastq_seq : samp.second )
+                        {
+                            output << fastq_seq.name << "\n";
+                            output << fastq_seq.seq << "\n";
+                            output << "+" << "\n";
+                            output << fastq_seq.scores << "\n";
+                        }
+
+                    output.close();
+                }
+        }
+
 
     /**
      * Aggregate output counts, creating count data at the aa-level.

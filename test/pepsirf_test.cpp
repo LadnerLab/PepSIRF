@@ -268,6 +268,22 @@ TEST_CASE( "Diagnostics give a detailed count for the occurring read matches dur
         }
 }
 
+TEST_CASE( "Output files show whether references with matching sequences are removed", "[module_demux]" )
+{
+    std::string expected = "../test/expected/test_expected_demux_NS30.tsv";
+    std::string actual = "../test/test_demux_output.tsv";
+    std::ifstream ifexpected( expected, std::ios_base::in );
+    std::ifstream ifactual( actual, std::ios_base::in );
+    std::string expected_line;
+    std::string actual_line;
+    while (!ifexpected.eof() && !ifactual.eof())
+        {
+            std::getline(ifexpected, expected_line);
+            std::getline(ifactual, actual_line);
+            REQUIRE(expected_line.compare(actual_line) == 0);
+        }
+}
+
 TEST_CASE( "samplelist_parser is able to read files that exist, properly creates errors when file cannot be found/read", "[samplelist_parser]" )
 {
     // SECTION( "samplelist_parser is able to read a well-formed test")
@@ -2286,27 +2302,26 @@ TEST_CASE( "Use of predicate logic", "[predicate]" )
 
 }
 
-// TEST_CASE( "Parsing samples file", "[module_enrich]" )
-// {
-//     module_enrich mod;
-//     std::string input_str;
-//     input_str = "sample1\tsample2\nsample3\tsample4\n";
+TEST_CASE( "Parsing samples file", "[module_enrich]" )
+{
+    module_enrich mod;
+    std::string input_str;
+    input_str = "sample1\tsample2\nsample3\tsample4\n";
 
-//     std::istringstream file;
-//     file.str( input_str );
-//     auto samples = mod.parse_samples( file );
+    std::istringstream file;
+    file.str( input_str );
+    auto samples = mod.parse_samples( file );
 
-//     REQUIRE( samples.size() == 2 );
+    REQUIRE( samples.size() == 2 );
 
-//     file.clear();
+    file.clear();
 
     file.str( "sample1\tsample2\tsample3\nsample4\tsample5\nsample6\t\tsample7" );
 
     samples = mod.parse_samples( file );
 
     REQUIRE( samples.size() == 3 );
-
-// }
+}
 
 TEST_CASE( "Meeting the threshold for a pair", "[module_enrich]" )
 {

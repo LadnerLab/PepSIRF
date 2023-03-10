@@ -36,6 +36,16 @@ public:
      * output column sums to
      **/
     std::string out_col_sums_fname;
+    
+    /**
+    * The name of the input replicate names file
+    **/
+    std::string in_replicates_fname;
+    
+    /**
+     * The name of the input replicate names file
+     **/
+    std::string out_avgs_fname;
 };
 
 #endif // OPTIONS_INFO_HH_INCLUDED
