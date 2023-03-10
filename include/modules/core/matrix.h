@@ -939,7 +939,7 @@ class labeled_matrix : public matrix<ValType>
                          const std::unordered_map<LabelType,std::uint32_t>& src
                          ) const
         {
-            for( const auto lab : src )
+            for( const auto &lab : src )
                 {
                     dest.insert( dest.end(), lab.first );
                 }
