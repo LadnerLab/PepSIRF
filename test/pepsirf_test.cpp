@@ -268,6 +268,7 @@ TEST_CASE( "Diagnostics give a detailed count for the occurring read matches dur
         }
 }
 
+<<<<<<< HEAD
 TEST_CASE("Demux output demostrates demux removes references with matching sequences", "[module_demux]")
 {
 	std::string expected = "../test/expected/test_expected_demux_NS30.tsv";
@@ -282,6 +283,23 @@ TEST_CASE("Demux output demostrates demux removes references with matching seque
 		std::getline(ifactual, actual_line);
 		REQUIRE(expected_line.compare(actual_line) == 0);
 	}
+=======
+TEST_CASE( "Output files show whether references with matching sequences are removed", "[module_demux]" )
+{
+    std::string expected = "../test/expected/test_expected_demux_NS30.tsv";
+    std::string actual = "../test/test_demux_output.tsv";
+    std::ifstream ifexpected( expected, std::ios_base::in );
+    std::ifstream ifactual( actual, std::ios_base::in );
+    std::string expected_line;
+    std::string actual_line;
+    // TODO: find the actual length of the file(s)
+    for (std::size_t line = 0; line < 77; line += 1)
+        {
+            std::getline(ifexpected, expected_line);
+            std::getline(ifactual, actual_line);
+            REQUIRE(expected_line.compare(actual_line) == 0);
+        }
+>>>>>>> 036cbcc (Implemented a test case in test/pepsirf_test.cpp which will ensure demux is removing references with matching sequences.)
 }
 
 TEST_CASE( "samplelist_parser is able to read files that exist, properly creates errors when file cannot be found/read", "[samplelist_parser]" )
