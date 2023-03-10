@@ -748,7 +748,6 @@ void module_deconv::write_outputs( std::string out_name,
                                  )
 
 {
-    std::cout << "write_outputs called here\n"; // REMOVE
     std::ofstream out_file( out_name );
 
     if( id_name_map != nullptr )
@@ -808,34 +807,30 @@ void module_deconv::write_outputs( std::string out_name,
                                     return pair1_name.compare(pair2_name) < 0;
                                 }
                             );
-                        }
-                    
-                    // REMOVE
-                    if (tied_items.size() > 1)
-                        { 
-                            for (auto tied_item : tied_items)
-                            {
-                                auto tied_id = tied_item.first;
-                                std::cout << "ID: " << tied_id.get_id() << ", ";
-                            }
-                            std::cout << "\n\n";
-                        }
-                    // end of REMOVE
 
-                    for( auto tied_i : tied_items )
+                            for(
+                                auto tied_item = tied_items.begin();
+                                tied_item != tied_items.end() - 1;
+                                tied_item++
+                            )
+                                {
+                                    out_file << get_map_value(
+                                        id_name_map, tied_item->first.get_id(),
+                                        tied_item->first.get_id()
+                                    ) << ",";
+                                }
+                            out_file << get_map_value(
+                                id_name_map, (tied_items.end() - 1)->first.get_id(),
+                                (tied_items.end() - 1)->first.get_id()
+                            ) << "\t";
+                        }    
+                    else    // assume out_count has no ties
                         {
-                            to_stream_if( out_file, tied,
-                                          get_map_value( id_name_map,
-                                                         tied_i.first.get_id(),
-                                                         tied_i.first.get_id()
-                                                       ),
-                                          ","
-                                );
+                            out_file << get_map_value(
+                                id_name_map, out_count->first.get_id(),
+                                out_count->first.get_id()
+                            ) << "\t";
                         }
-                    out_file << get_map_value( id_name_map,
-                                               out_count->first.get_id(),
-                                               out_count->first.get_id()
-                                             ) << "\t";
                 }
             else
                 {
@@ -852,18 +847,6 @@ void module_deconv::write_outputs( std::string out_name,
                                 }
                             );
                         }
-
-                    // REMOVE
-                    if (tied_items.size() > 1)
-                        { 
-                            for (auto tied_item : tied_items)
-                            {
-                                auto tied_id = tied_item.first;
-                                std::cout << "ID: " << tied_id.get_id() << ", ";
-                            }
-                            std::cout << "\n\n";
-                        }
-                    // end of REMOVE
                     out_file << "\t";
                 }
 
@@ -966,7 +949,6 @@ void module_deconv::write_outputs( std::string out_name,
                     out_file << out_count->first.get_highest_scoring_peptide().get_score() << "\n";
                 }
         }
-    std::cout << "end of write_outputs!\n\n";   // REMOVE
 }
 
 sequential_set<std::string>
