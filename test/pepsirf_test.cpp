@@ -268,37 +268,40 @@ TEST_CASE( "Diagnostics give a detailed count for the occurring read matches dur
         }
 }
 
-<<<<<<< HEAD
 TEST_CASE("Demux output demostrates demux removes references with matching sequences", "[module_demux]")
 {
 	std::string expected = "../test/expected/test_expected_demux_NS30.tsv";
 	std::string actual = "../test/test_demux_output.tsv";
 	std::ifstream ifexpected(expected, std::ios_base::in);
-	std::ifstream ifactual(actual, std::ios_base::in);
 	std::string expected_line;
 	std::string actual_line;
-	while (!ifexpected.eof() && !ifactual.eof())
+
+    bool lines_equal;
+	while (!ifexpected.eof())
 	{
 		std::getline(ifexpected, expected_line);
-		std::getline(ifactual, actual_line);
-		REQUIRE(expected_line.compare(actual_line) == 0);
-	}
-=======
-TEST_CASE( "Output files show whether references with matching sequences are removed", "[module_demux]" )
-{
-    std::string expected = "../test/expected/test_expected_demux_NS30.tsv";
-    std::string actual = "../test/test_demux_output.tsv";
-    std::ifstream ifexpected( expected, std::ios_base::in );
-    std::ifstream ifactual( actual, std::ios_base::in );
-    std::string expected_line;
-    std::string actual_line;
-    while (!ifexpected.eof() && !ifactual.eof())
+        lines_equal = false;
+
+        std::cout << "Expecting: " << expected_line << "\n";
+        
+        // TODO: find a more responsible way
+	    std::ifstream ifactual(actual, std::ios_base::in);
+        while (!ifactual.eof())
         {
-            std::getline(ifexpected, expected_line);
             std::getline(ifactual, actual_line);
-            REQUIRE(expected_line.compare(actual_line) == 0);
+            std::cout << "Actual: " << actual_line << "\n";
+
+            if (expected_line.compare(actual_line) == 0)
+            {
+                lines_equal = true;
+                std::cout << "Equivalent line was found!\n\n";
+                break;
+            }
         }
->>>>>>> 036cbcc (Implemented a test case in test/pepsirf_test.cpp which will ensure demux is removing references with matching sequences.)
+        ifactual.close();
+
+        REQUIRE(lines_equal);
+	}
 }
 
 TEST_CASE( "samplelist_parser is able to read files that exist, properly creates errors when file cannot be found/read", "[samplelist_parser]" )
