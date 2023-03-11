@@ -281,20 +281,15 @@ TEST_CASE("Demux output demostrates demux removes references with matching seque
 	{
 		std::getline(ifexpected, expected_line);
         lines_equal = false;
-
-        std::cout << "Expecting: " << expected_line << "\n";
         
         // TODO: find a more responsible way
 	    std::ifstream ifactual(actual, std::ios_base::in);
         while (!ifactual.eof())
         {
             std::getline(ifactual, actual_line);
-            std::cout << "Actual: " << actual_line << "\n";
-
             if (expected_line.compare(actual_line) == 0)
             {
                 lines_equal = true;
-                std::cout << "Equivalent line was found!\n\n";
                 break;
             }
         }
