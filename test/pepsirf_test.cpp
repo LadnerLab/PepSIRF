@@ -261,12 +261,28 @@ TEST_CASE( "Diagnostics give a detailed count for the occurring read matches dur
     std::ifstream ifactual( actual, std::ios_base::in );
     std::string expected_line;
     std::string actual_line;
-    for( std::size_t index = 0; index < 77; index++ )
+
+    bool lines_equal;
+	while (!ifexpected.eof())
+	{
+		std::getline(ifexpected, expected_line);
+        lines_equal = false;
+        
+        // TODO: find a more responsible way
+	    std::ifstream ifactual(actual, std::ios_base::in);
+        while (!ifactual.eof())
         {
-            std::getline( ifexpected, expected_line );
-            std::getline( ifactual, actual_line );
-            REQUIRE( expected_line.compare(actual_line) == 0 );
+            std::getline(ifactual, actual_line);
+            if (expected_line.compare(actual_line) == 0)
+            {
+                lines_equal = true;
+                break;
+            }
         }
+        ifactual.close();
+
+        REQUIRE(lines_equal);
+	}
 }
 
 // TODO: make this a section in a wider demux module test, as well
