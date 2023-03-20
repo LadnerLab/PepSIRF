@@ -248,11 +248,12 @@ TEST_CASE( "Diagnostics give a detailed count for the occurring read matches dur
     d_opts.samplename = "SampleName";
     d_opts.indexes = "Index1,Index2";
     d_opts.sample_indexes = { "Index1", "Index2" };
-    d_opts.set_info( &options_demux::seq_data, "43,90,2" );
-    d_opts.set_info( &options_demux::index1_data, "12,12,1" );
+    d_opts.set_info( &options_demux::seq_data, "41,40,2" );
+    d_opts.set_info( &options_demux::index1_data, "12,10,1" );
     d_opts.set_info( &options_demux::index2_data,"0,8,1" );
 
     d_mod.run(&d_opts);
+    // TODO: make this a section in a wider demux module test
     // check diagnostic output diagnostic file matches expected
     std::string expected = "../test/expected/test_expected_diagnostic_NS30.tsv";
     std::string actual = "../test/test_diagnostic_output.tsv";
@@ -268,6 +269,7 @@ TEST_CASE( "Diagnostics give a detailed count for the occurring read matches dur
         }
 }
 
+// TODO: make this a section in a wider demux module test, as well
 TEST_CASE("Demux output demostrates demux removes references with matching sequences", "[module_demux]")
 {
 	std::string expected = "../test/expected/test_expected_demux_NS30.tsv";
