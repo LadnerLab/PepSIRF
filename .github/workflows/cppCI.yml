@@ -8,9 +8,7 @@ on:
       environment:
       tags:
   push:
-    branches:
-      - develop
-      - pepsirf-test-ISS152
+    branches: [ develop ]
   pull_request:
     branches: [ develop ]
 
