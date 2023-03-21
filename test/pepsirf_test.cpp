@@ -26,7 +26,9 @@
 #include "distance_matrix.h"
 #include "fastq_parser.h"
 #include "module_demux.h"
+#include "fif_parser.h"
 #include "module_deconv.h"
+#include "module_info.h"
 #include "module_subjoin.h"
 #include "module_link.h"
 #include "metadata_map.h"
@@ -188,6 +190,145 @@ TEST_CASE( "Parse Fastq", "[fastq_parser]" )
 
 }
 
+TEST_CASE("Test for proper functionality of FIF Parser and Samplielist Parser", "[fif_parser], [samplelist_parser]")
+{
+	// define flexible index file parser
+	fif_parser fif_p;
+
+	// define flex_idx vector
+	std::vector<flex_idx> flex_idx_vec;
+	SECTION("Flexible Index File Parser reads and creates a flex_idx vector from given file")
+	{
+		// parse fif file, capture result in flex_idx vector
+		flex_idx_vec = fif_p.parse("../test/input_data/test_flex_index_file.tsv");
+
+		// verify flex_idx_vec
+		auto& it = flex_idx_vec[0];
+		REQUIRE(it.idx_name.compare("Nor.27_1X_NS30_1x_ProG_A") == 0);
+		REQUIRE(it.read_name.compare("r1") == 0);
+		REQUIRE(it.idx_start == 0);
+		REQUIRE(it.idx_len == 10);
+		REQUIRE(it.num_mismatch == 4);
+
+		it = flex_idx_vec[1];
+		REQUIRE(it.idx_name.compare("Nor.28_1X_NS30_1x_ProG_A") == 0);
+		REQUIRE(it.read_name.compare("r1") == 0);
+		REQUIRE(it.idx_start == 11);
+		REQUIRE(it.idx_len == 2);
+		REQUIRE(it.num_mismatch == 0);
+
+		it = flex_idx_vec[2];
+		REQUIRE(it.idx_name.compare("BB.10_1X_NS30_1x_ProG_A") == 0);
+		REQUIRE(it.read_name.compare("r1") == 0);
+		REQUIRE(it.idx_start == 14);
+		REQUIRE(it.idx_len == 5);
+		REQUIRE(it.num_mismatch == 0);
+
+		it = flex_idx_vec[3];
+		REQUIRE(it.idx_name.compare("BB.11_1X_NS30_1x_ProG_A") == 0);
+		REQUIRE(it.read_name.compare("r1") == 0);
+		REQUIRE(it.idx_start == 20);
+		REQUIRE(it.idx_len == 10);
+		REQUIRE(it.num_mismatch == 4);
+
+		it = flex_idx_vec[4];
+		REQUIRE(it.idx_name.compare("Nor.43_1X_NS30_1x_ProG_A") == 0);
+		REQUIRE(it.read_name.compare("r2") == 0);
+		REQUIRE(it.idx_start == 0);
+		REQUIRE(it.idx_len == 2);
+		REQUIRE(it.num_mismatch == 0);
+
+		it = flex_idx_vec[5];
+		REQUIRE(it.idx_name.compare("JA.s_1X_NS30_1X_ProG_B") == 0);
+		REQUIRE(it.read_name.compare("r2") == 0);
+		REQUIRE(it.idx_start == 3);
+		REQUIRE(it.idx_len == 10);
+		REQUIRE(it.num_mismatch == 2);
+	}
+	SECTION("Samplelist Parser can use a flex_idx vector and a properly formatted samplelist file to create a sample vector")
+	{
+		// define sample vector
+
+		// initialize demux options
+		
+		// parse using demux options and flex_idx vector, capture result in sample vector
+
+		// verify sample vector
+	}
+}
+
+TEST_CASE("Full test of setops' proper functionality", "[setops]")
+{
+	SECTION("get_key() returns expected key")
+	{
+		// std::pair<std::string, double> kv_pair{"PEP_001", 6.783};
+
+		// REQUIRE(get_key(kv_pair).compare("PEP_001") == 0);
+	}
+	SECTION("get_value() returns expected")
+	{
+		// initialize pair
+
+		// verity get_value() returns the value
+	}
+
+	// testing set_intersection()
+	SECTION("set_intersection() returns expected intersection")
+	{
+		// initialize int vectors
+		// define destination int vector
+
+		// capture result of set_intersection in dest vector
+
+		// verify dest vector is expected
+	}
+	SECTION("set_intersection() with Get")
+	{
+	}
+	SECTION("set_intersection() with vectors of class K")
+	{
+	}
+
+	// testing set_union()
+	SECTION("set_union() returns expected")
+	{
+		// initialize int vectors
+		// define destination int vector
+
+		// capture result of set_union in dest vector
+
+		// verify dest vector is expected
+	}
+	SECTION("set_union() with Get")
+	{
+	}
+	SECTION("set_union() with unordered_set of type K")
+	{
+	}
+
+	// testing set_difference()
+	SECTION("set_difference() returns expecetd")
+	{
+		// initialize int vectors
+		// define destination int vector
+
+		// capture result of set_difference in dest vector
+
+		// verify dest vector is expected
+	}
+
+	// testing set_symmetric_difference()
+	SECTION("set_symmetric_difference() returns expected")
+	{
+		// initialize int vectors
+		// define destination vector
+
+		// capture result of set_symmetric_difference()
+
+		// verify dest vector is expected
+	}
+}
+
 TEST_CASE( "Add seqs to map", "[module_demux]" )
 {
     fasta_parser fp;
@@ -340,6 +481,81 @@ TEST_CASE("Demux output demostrates demux removes references with matching seque
 	expected_ref = expected_set.find("NS30_000000-3");
 	REQUIRE(actual_set.find(*expected_ref) != actual_set.end());
 
+}
+
+TEST_CASE("Full test of info module", "[module_info]")
+{
+	// initialize info module
+    module_info i_mod;
+    options_info i_opts;
+
+    i_opts.in_fname = "../test/input_data/test_info_score_matrix.tsv";
+    i_opts.out_samples_fname = "../test/test_info_sample_names.tsv";
+    i_opts.out_pep_names_fname = "../test/test_info_pep_names.tsv";
+    i_opts.out_col_sums_fname = "../test/test_info_col_sums.tsv";
+    i_opts.in_replicates_fname = "../test/input_data/test_info_rep_names.tsv";
+    i_opts.out_avgs_fname = "../test/test_info_avg_matrix.tsv";
+
+    // run info module
+    i_mod.run(&i_opts);
+	
+    std::string expected_line = "";
+    std::string actual_line = "";
+    // NOTE: C scoping rules
+	SECTION("info module creates a properly formatted sample name file")
+	{
+        std::ifstream ifexpected(
+            "../test/expected/test_expected_info_sample_names.tsv",
+            std::ios_base::in
+        );
+        std::ifstream ifactual(
+            "../test/test_info_sample_names.tsv",
+            std::ios_base::in
+        );
+
+        while (!ifexpected.eof() && !ifactual.eof())
+        {
+            std::getline(ifexpected, expected_line);
+            std::getline(ifactual, actual_line);
+            REQUIRE(expected_line.compare(actual_line) == 0);
+        }
+	}
+	SECTION("info module creates a properly formatted peptide name file")
+	{
+        std::ifstream ifexpected(
+            "../test/expected/test_expected_info_pep_names.tsv",
+            std::ios_base::in
+        );
+        std::ifstream ifactual(
+            "../test/test_info_pep_names.tsv",
+            std::ios_base::in
+        );
+
+        while (!ifexpected.eof() && !ifactual.eof())
+        {
+            std::getline(ifexpected, expected_line);
+            std::getline(ifactual, actual_line);
+            REQUIRE(expected_line.compare(actual_line) == 0);
+        }
+	}
+	SECTION("info module creates and calculates average matrix file")
+	{
+        std::ifstream ifexpected(
+            "../test/expected/test_expected_info_avg_matrix.tsv",
+            std::ios_base::in
+        );
+        std::ifstream ifactual(
+            "../test/test_info_avg_matrix.tsv",
+            std::ios_base::in
+        );
+
+        while (!ifexpected.eof() && !ifactual.eof())
+        {
+            std::getline(ifexpected, expected_line);
+            std::getline(ifactual, actual_line);
+            REQUIRE(expected_line.compare(actual_line) == 0);
+        }
+	}
 }
 
 TEST_CASE( "samplelist_parser is able to read files that exist, properly creates errors when file cannot be found/read", "[samplelist_parser]" )
@@ -1699,6 +1915,15 @@ TEST_CASE( "score_species_peptides/get_highest_score_per_species", "[module_deco
      REQUIRE( highest_scores[ "species 2" ].get_score() == 0.5 );
 }
 
+TEST_CASE("Deconv module sorts ties alphabetically", "[module_deconv]")
+{
+	// initialize deconv components
+	
+	// run deconv module
+	
+	// check created files against expected files -- that a lot of data
+}
+
 TEST_CASE( "geometric means", "[stats]" )
 {
     // TODO: RE-implement this test
@@ -2411,6 +2636,14 @@ TEST_CASE( "Meeting the threshold for a pair", "[module_enrich]" )
 
 }
 
+TEST_CASE("Test enrich drops replicates with low scores if --low_raw_reads flag passed", "[module_enrich]")
+{
+	// initialize enrich components
+
+	// run enrich
+	
+	// check failed enrichment file for properly formatted log of dropped replicates
+}
 
 TEST_CASE( "File IO read_file function", "[file_io]" )
 {
