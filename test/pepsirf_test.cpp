@@ -192,13 +192,13 @@ TEST_CASE( "Parse Fastq", "[fastq_parser]" )
 
 TEST_CASE("Test for proper functionality of FIF Parser and Samplielist Parser", "[fif_parser], [samplelist_parser]")
 {
-	// define flexible index file parser
-	fif_parser fif_p;
-
 	// define flex_idx vector
 	std::vector<flex_idx> flex_idx_vec;
+	// NOTE: C scoping rules
 	SECTION("Flexible Index File Parser reads and creates a flex_idx vector from given file")
 	{
+		// define flexible index file parser
+		fif_parser fif_p;
 		// parse fif file, capture result in flex_idx vector
 		flex_idx_vec = fif_p.parse("../test/input_data/test_flex_index_file.tsv");
 
@@ -247,13 +247,32 @@ TEST_CASE("Test for proper functionality of FIF Parser and Samplielist Parser", 
 	}
 	SECTION("Samplelist Parser can use a flex_idx vector and a properly formatted samplelist file to create a sample vector")
 	{
-		// define sample vector
+        // initialize sample list parser
+        samplelist_parser samplelist_parser;
+        // define sample vector
+        std::vector<sample> sample_vec;
 
-		// initialize demux options
-		
-		// parse using demux options and flex_idx vector, capture result in sample vector
+        // initialize demux options
+        options_demux d_opts;
+        d_opts.samplelist_fname = "../test/input_data/test_samplelist_NS30.tsv";
+        d_opts.samplename = "SampleName";
+        d_opts.indexes = "Index1,Index2";
+        d_opts.sample_indexes = {"Index1", "Index2"};
+        d_opts.set_info(&options_demux::seq_data, "43,90,2");
+        d_opts.set_info(&options_demux::index1_data, "12,12,1");
+        d_opts.set_info(&options_demux::index2_data, "0,8,1");
 
-		// verify sample vector
+        // parse using demux options and flex_idx vector, capture result in sample vector
+        sample_vec = samplelist_parser.parse(&d_opts, flex_idx_vec);
+
+        // verify sample vector
+        auto& it = sample_vec[0];
+        std::cout << "Sample name: " << it.name << "\n"
+                  << "ID: " << it.id << "\n"
+                  << "Sequences:\n"
+                  << "\t" << it.sequences[0] << "\n"
+                  << "Barcodes:\n"
+                  << "\t" << it.string_ids[0] << "\n\n";
 	}
 }
 
@@ -483,6 +502,8 @@ TEST_CASE("Demux output demostrates demux removes references with matching seque
 
 }
 
+// TODO: figure out how to capture stdout so info module logs do not appear
+// while running pepsirf_test
 TEST_CASE("Full test of info module", "[module_info]")
 {
 	// initialize info module
@@ -501,7 +522,6 @@ TEST_CASE("Full test of info module", "[module_info]")
 	
     std::string expected_line = "";
     std::string actual_line = "";
-    // NOTE: C scoping rules
 	SECTION("info module creates a properly formatted sample name file")
 	{
         std::ifstream ifexpected(
@@ -538,6 +558,24 @@ TEST_CASE("Full test of info module", "[module_info]")
             REQUIRE(expected_line.compare(actual_line) == 0);
         }
 	}
+    SECTION("info module properly calculates and formats column sums file")
+    {
+        std::ifstream ifexpected(
+            "../test/expected/test_expected_info_col_sums.tsv",
+            std::ios_base::in
+        );
+        std::ifstream ifactual(
+            "../test/test_info_col_sums.tsv",
+            std::ios_base::in
+        );
+
+        while (!ifexpected.eof() && !ifactual.eof())
+        {
+            std::getline(ifexpected, expected_line);
+            std::getline(ifactual, actual_line);
+            REQUIRE(expected_line.compare(actual_line) == 0);
+        }
+    }
 	SECTION("info module creates and calculates average matrix file")
 	{
         std::ifstream ifexpected(
