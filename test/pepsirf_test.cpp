@@ -254,13 +254,13 @@ TEST_CASE("Test for proper functionality of FIF Parser and Samplielist Parser", 
 
         // initialize demux options
         options_demux d_opts;
-        d_opts.samplelist_fname = "../test/input_data/test_samplelist_NS30.tsv";
-        d_opts.samplename = "SampleName";
-        d_opts.indexes = "Index1,Index2";
-        d_opts.sample_indexes = {"Index1", "Index2"};
-        d_opts.set_info(&options_demux::seq_data, "43,90,2");
-        d_opts.set_info(&options_demux::index1_data, "12,12,1");
-        d_opts.set_info(&options_demux::index2_data, "0,8,1");
+		d_opts.samplelist_fname = "../test/input_data/test_samplelist_NS30.tsv";
+		d_opts.samplename = "SampleName";
+		d_opts.indexes = "Index1,Index2";
+		d_opts.sample_indexes = { "Index1", "Index2" };
+		d_opts.set_info( &options_demux::seq_data, "41,40,2" );
+		d_opts.set_info( &options_demux::index1_data, "12,10,1" );
+		d_opts.set_info( &options_demux::index2_data, "0,8,1" );
 
         // parse using demux options and flex_idx vector, capture result in sample vector
         sample_vec = samplelist_parser.parse(&d_opts, flex_idx_vec);
@@ -1956,6 +1956,8 @@ TEST_CASE( "score_species_peptides/get_highest_score_per_species", "[module_deco
 TEST_CASE("Deconv module sorts ties alphabetically", "[module_deconv]")
 {
 	// initialize deconv components
+    module_deconv d_mod;
+    options_deconv d_opts;
 	
 	// run deconv module
 	
@@ -2677,6 +2679,17 @@ TEST_CASE( "Meeting the threshold for a pair", "[module_enrich]" )
 TEST_CASE("Test enrich drops replicates with low scores if --low_raw_reads flag passed", "[module_enrich]")
 {
 	// initialize enrich components
+	module_enrich e_mod;
+	options_enrich e_opts;
+
+	e_opts.threshold_fname = "../test/input_data/test_enrich_threash.tsv";
+	e_opts.in_samples_fname = "../test/input_data/test_enrich_PN.tsv";
+	e_opts.in_raw_scores_fname = "../test/input_data/test_enrich_raw_scores.tsv";
+	e_opts.raw_scores_params = {15000.00};
+	e_opts.out_suffix = "_enriched_output.txt";
+	e_opts.out_enrichment_failure = "../test/test_enrich_fail_out.txt";
+	e_opts.out_dirname = "../test/test_enrich_out";
+	e_opts.low_raw_reads = true;
 
 	// run enrich
 	
