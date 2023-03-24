@@ -222,10 +222,13 @@ void module_enrich::run( options *opts )
                     }
             }
 
-            if( !samples_list[sample_idx].empty()
+            if(
+                !samples_list[sample_idx].empty()
                 && raw_counts_included
                 && !raw_count_enriched
-                && !e_opts->out_enrichment_failure.empty() )
+                && !low_reads
+                && !e_opts->out_enrichment_failure.empty()
+            )
                 {
                     std::string samplenames = "";
                     std::for_each( samples_list[sample_idx].begin(), samples_list[sample_idx].end() - 1,
@@ -236,9 +239,12 @@ void module_enrich::run( options *opts )
                     samplenames.append( *(samples_list[sample_idx].end() - 1) );
                     enrichment_failures.emplace( samplenames, "raw" );
                 }
-            else if( !samples_list[sample_idx].empty()
-                        && enriched_probes.empty()
-                        && !e_opts->out_enrichment_failure.empty() )
+            else if(
+                !samples_list[sample_idx].empty()
+                && enriched_probes.empty()
+                && !low_reads
+                && !e_opts->out_enrichment_failure.empty()
+            )
                 {
                     std::string samplenames = "";
                     std::for_each( samples_list[sample_idx].begin(), samples_list[sample_idx].end() - 1,
@@ -259,7 +265,9 @@ void module_enrich::run( options *opts )
                         }
                     outf_name += std::to_string(samples_list[sample_idx].size() - 3) + "more" + e_opts->out_suffix;
                 }
-            else
+            // protects against std::bad_alloc when empty due to -l option
+            // passed
+            else if (!samples_list[sample_idx].empty())
                 {
                     for( std::size_t name_idx = 0; name_idx < samples_list[sample_idx].size() - 1; name_idx++ )
                         {
