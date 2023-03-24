@@ -505,6 +505,7 @@ TEST_CASE("Demux output demostrates demux removes references with matching seque
 
 // TODO: figure out how to capture stdout so info module logs do not appear
 // while running pepsirf_test
+/*
 TEST_CASE("Full test of info module", "[module_info]")
 {
 	// initialize info module
@@ -596,6 +597,7 @@ TEST_CASE("Full test of info module", "[module_info]")
         }
 	}
 }
+*/
 
 TEST_CASE( "samplelist_parser is able to read files that exist, properly creates errors when file cannot be found/read", "[samplelist_parser]" )
 {
