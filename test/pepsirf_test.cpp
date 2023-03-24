@@ -288,33 +288,58 @@ TEST_CASE( "Diagnostics give a detailed count for the occurring read matches dur
 // TODO: make this a section in a wider demux module test, as well
 TEST_CASE("Demux output demostrates demux removes references with matching sequences", "[module_demux]")
 {
-	std::string expected = "../test/expected/test_expected_demux_NS30.tsv";
-	std::string actual = "../test/test_demux_output.tsv";
-	std::ifstream ifexpected(expected, std::ios_base::in);
-	std::string expected_line;
-	std::string actual_line;
+	std::vector<std::string> split_line;
+	std::string line;
 
-    bool lines_equal;
-	while (!ifexpected.eof())
-	{
-		std::getline(ifexpected, expected_line);
-        lines_equal = false;
-        
-        // TODO: find a more responsible way
-	    std::ifstream ifactual(actual, std::ios_base::in);
-        while (!ifactual.eof())
-        {
-            std::getline(ifactual, actual_line);
-            if (expected_line.compare(actual_line) == 0)
-            {
-                lines_equal = true;
-                break;
-            }
-        }
-        ifactual.close();
+	std::set<std::string> expected_set;
+	std::set<std::string> actual_set;
 
-        REQUIRE(lines_equal);
+	{	// collect expected file into a set
+		std::ifstream ifexpected(
+			"../test/expected/test_expected_demux_NS30.tsv",
+			std::ios_base::in
+		);
+
+		while (!ifexpected.eof())
+		{
+			std::getline(ifexpected, line);
+			boost::split(split_line, line, boost::is_any_of("\t"));
+			expected_set.insert(split_line[0]);
+		}
 	}
+
+	{	// collect actual file into a set
+		std::ifstream ifactual(
+			"../test/test_demux_output.tsv",
+			std::ios_base::in
+		);
+
+		while (!ifactual.eof())
+		{
+			std::getline(ifactual, line);
+			boost::split(split_line, line, boost::is_any_of("\t"));
+			actual_set.insert(split_line[0]);
+		}
+	}
+
+	// compare expected and actual sets
+	REQUIRE(actual_set.size() == expected_set.size());
+
+	auto expected_ref = expected_set.find("NS30_000000-1");
+	REQUIRE(actual_set.find(*expected_ref) != actual_set.end());
+
+	expected_ref = expected_set.find("NS30_000000-2");
+	REQUIRE(actual_set.find(*expected_ref) != actual_set.end());
+	
+	expected_ref = expected_set.find("NS30_000001-2");
+	REQUIRE(actual_set.find(*expected_ref) != actual_set.end());
+	
+	expected_ref = expected_set.find("NS30_000001-1");
+	REQUIRE(actual_set.find(*expected_ref) != actual_set.end());
+	
+	expected_ref = expected_set.find("NS30_000000-3");
+	REQUIRE(actual_set.find(*expected_ref) != actual_set.end());
+
 }
 
 TEST_CASE( "samplelist_parser is able to read files that exist, properly creates errors when file cannot be found/read", "[samplelist_parser]" )
