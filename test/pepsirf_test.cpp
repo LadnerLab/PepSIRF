@@ -501,7 +501,6 @@ TEST_CASE("Demux output demostrates demux removes references with matching seque
 	
 	expected_ref = expected_set.find("NS30_000000-3");
 	REQUIRE(actual_set.find(*expected_ref) != actual_set.end());
-
 }
 
 // TODO: figure out how to capture stdout so info module logs do not appear
