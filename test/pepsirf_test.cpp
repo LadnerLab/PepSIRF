@@ -2679,20 +2679,22 @@ TEST_CASE( "Meeting the threshold for a pair", "[module_enrich]" )
 
 }
 
-/*
 TEST_CASE("Test enrich drops replicates with low scores if --low_raw_reads flag passed", "[module_enrich]")
 {
 	// initialize enrich components
 	module_enrich e_mod;
 	options_enrich e_opts;
 
-	e_opts.threshold_fname = "../test/input_data/test_enrich_thresh.tsv";
+	std::pair<std::string, std::string> pair1{"../test/input_data/test_enrich_Z-HDI75.tsv", "10"};
+	std::pair<std::string, std::string> pair2{"../test/input_data/test_enrich_CS.tsv", "20"};
+
+	e_opts.matrix_thresh_fname_pairs = {pair1, pair2};
 	e_opts.in_samples_fname = "../test/input_data/test_enrich_PN.tsv";
 	e_opts.in_raw_scores_fname = "../test/input_data/test_enrich_raw_scores.tsv";
-	e_opts.raw_scores_params_str = "70.00";
+	e_opts.raw_scores_params_str = "70";
 	e_opts.out_suffix = "_enriched_output.txt";
-	e_opts.out_enrichment_failure = "../test/test_enrich_Z-HDI75_70raw/test_enrich_fail_output.txt";
-	e_opts.out_dirname = "../test/test_enrich_Z-HDI75_70raw";
+	e_opts.out_enrichment_failure = "test_enrich_fail_output.txt";
+	e_opts.out_dirname = "../test/test_enrich_Z-HDI75_70raw_output";
 	e_opts.low_raw_reads = true;
 
 	// run enrich
@@ -2704,23 +2706,19 @@ TEST_CASE("Test enrich drops replicates with low scores if --low_raw_reads flag 
 		std::ios_base::in
 	);
 	std::ifstream ifactual(
-		"../test/test_enrich_Z-HDI75_70raw/test_enrich_fail_output.txt",
+		"../test/test_enrich_Z-HDI75_70raw_output/test_enrich_fail_output.txt",
 		std::ios_base::in
 	);
 	std::string expected_line = "";
 	std::string actual_line = "";
 
-	std::cout << "Comparing expected and actual enrichment failure file:\n";
 	while (!ifexpected.eof() && !ifactual.eof())
 	{
 		std::getline(ifexpected, expected_line);
 		std::getline(ifactual, actual_line);
-		std::cout << "Expected: " << expected_line << "\n";
-		std::cout << "Actual: " << actual_line << "\n";
 		REQUIRE(expected_line.compare(actual_line) == 0);
 	}
 }
-*/
 
 TEST_CASE( "File IO read_file function", "[file_io]" )
 {
