@@ -8,9 +8,7 @@ on:
       environment:
       tags:
   push:
-    branches:
-      - develop
-      - deconv-ISS36
+    branches: [ develop ]
   pull_request:
     branches: [ develop ]
 
