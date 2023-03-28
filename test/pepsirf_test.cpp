@@ -35,6 +35,7 @@
 #include "module_zscore.h"
 #include "samplelist_parser.h"
 #include "sample.h"
+#include "setops.h"
 #include "fastq_score.h"
 #include "kmer_tools.h"
 #include "fs_tools.h"
@@ -278,19 +279,17 @@ TEST_CASE("Test for proper functionality of FIF Parser and Samplielist Parser", 
 	*/
 }
 
+/*
 TEST_CASE("Full test of setops' proper functionality", "[setops]")
 {
+	std::pair<std::string, double> kv_pair{"PEP_001", 6.783};
 	SECTION("get_key() returns expected key")
 	{
-		// std::pair<std::string, double> kv_pair{"PEP_001", 6.783};
-
-		// REQUIRE(get_key(kv_pair).compare("PEP_001") == 0);
+		REQUIRE(get_key(kv_pair).compare("PEP_001") == 0);
 	}
 	SECTION("get_value() returns expected")
 	{
-		// initialize pair
-
-		// verity get_value() returns the value
+		REQUIRE(get_value(kv_pair) == 6.783;
 	}
 
 	// testing set_intersection()
@@ -349,6 +348,7 @@ TEST_CASE("Full test of setops' proper functionality", "[setops]")
 		// verify dest vector is expected
 	}
 }
+*/
 
 TEST_CASE( "Add seqs to map", "[module_demux]" )
 {
@@ -1527,6 +1527,15 @@ TEST_CASE( "Deconv end_to_end", "[module_deconv]" )
     mod.run( &opts );
 }
 
+TEST_CASE("Deconv module sorts ties alphabetically", "[module_deconv]")
+{
+	// initialize deconv components
+	
+	// run deconv module
+	
+	// check created files against expected files -- that a lot of data
+}
+
 TEST_CASE( "empty", "[util]" )
 {
     std::string iter1{ "Hello world!" };
@@ -1954,17 +1963,6 @@ TEST_CASE( "score_species_peptides/get_highest_score_per_species", "[module_deco
      eval_max_score();
      REQUIRE( highest_scores[ "species 1" ].get_score() == 0.5 );
      REQUIRE( highest_scores[ "species 2" ].get_score() == 0.5 );
-}
-
-TEST_CASE("Deconv module sorts ties alphabetically", "[module_deconv]")
-{
-	// initialize deconv components
-    module_deconv d_mod;
-    options_deconv d_opts;
-	
-	// run deconv module
-	
-	// check created files against expected files -- that a lot of data
 }
 
 TEST_CASE( "geometric means", "[stats]" )
