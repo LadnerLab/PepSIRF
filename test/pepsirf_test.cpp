@@ -1210,6 +1210,27 @@ TEST_CASE( "Deconv end_to_end", "[module_deconv]" )
     opts.score_overlap_threshold = 0.5;
 
     mod.run( &opts );
+
+	SECTION("deconv alphabetically orders tied species")
+	{
+		std::ifstream ifexpected(
+			"../test/expected/test_expected_deconv_output.tsv",
+			std::ios_base::in
+		);
+		std::ifstream ifactual(
+			"../test/test_deconv_output.tsv",
+			std::ios_base::in
+		);
+		std::string expected_line = "";
+		std::string actual_line = "";
+
+		while(!ifexpected.eof() && !ifactual.eof())
+			{
+				std::getline(ifexpected, expected_line);
+				std::getline(ifactual, actual_line);
+				REQUIRE(expected_line.compare(actual_line) == 0);
+			}
+	}
 }
 
 TEST_CASE( "empty", "[util]" )
