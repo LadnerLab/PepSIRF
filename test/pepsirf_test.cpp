@@ -195,7 +195,6 @@ TEST_CASE("Test for proper functionality of FIF Parser and Samplielist Parser", 
 {
 	// define flex_idx vector
 	std::vector<flex_idx> flex_idx_vec;
-	// NOTE: C scoping rules
 	SECTION("Flexible Index File Parser reads and creates a flex_idx vector from given file")
 	{
 		// define flexible index file parser
@@ -256,13 +255,15 @@ TEST_CASE("Test for proper functionality of FIF Parser and Samplielist Parser", 
 
         // initialize demux options
         options_demux d_opts;
+		d_opts.flexible_idx_fname = "../test/input_data/test_flex_index_file.tsv";
 		d_opts.samplelist_fname = "../test/input_data/test_samplelist_NS30.tsv";
 		d_opts.samplename = "SampleName";
 		d_opts.indexes = "Index1,Index2";
-		d_opts.sample_indexes = { "Index1", "Index2" };
-		d_opts.set_info( &options_demux::seq_data, "41,40,2" );
-		d_opts.set_info( &options_demux::index1_data, "12,10,1" );
-		d_opts.set_info( &options_demux::index2_data, "0,8,1" );
+		d_opts.sample_indexes = {"Index1", "Index2"};
+		d_opts.set_info(&options_demux::seq_data, "41,40,2");
+		d_opts.set_info(&options_demux::index1_data, "12,10,1");
+		d_opts.set_info(&options_demux::index2_data,"0,8,1");
+
 
         // parse using demux options and flex_idx vector, capture result in sample vector
         sample_vec = samplelist_parser.parse(&d_opts, flex_idx_vec);
@@ -379,13 +380,6 @@ TEST_CASE( "Add seqs to map", "[module_demux]" )
             ++it;
         }
 
-}
-
-TEST_CASE( "Flexible Index File is used to provide index 1 and index 2 information", "[module_demux]" )
-{
-    // read a test flexible index file
-
-    // check data matches expected values written in flexible index file
 }
 
 TEST_CASE( "Diagnostics give a detailed count for the occurring read matches during a run", "[module_demux]" )
