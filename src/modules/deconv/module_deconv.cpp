@@ -779,7 +779,6 @@ void module_deconv::write_outputs( std::string out_name,
                 {
                     tied_items.push_back(*out_count);
                     tied = true;
-                    // TODO: make sure that NOT exclude any data from output
                 }
 
             if( id_name_map != nullptr )
