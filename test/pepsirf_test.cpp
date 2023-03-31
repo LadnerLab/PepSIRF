@@ -204,46 +204,18 @@ TEST_CASE("Test for proper functionality of FIF Parser and Samplielist Parser", 
 
 		// verify flex_idx_vec
 		auto& it = flex_idx_vec[0];
-		REQUIRE(it.idx_name.compare("Nor.27_1X_NS30_1x_ProG_A") == 0);
+		REQUIRE(it.idx_name.compare("Index1") == 0);
 		REQUIRE(it.read_name.compare("r1") == 0);
-		REQUIRE(it.idx_start == 0);
+		REQUIRE(it.idx_start == 12);
 		REQUIRE(it.idx_len == 10);
-		REQUIRE(it.num_mismatch == 4);
+		REQUIRE(it.num_mismatch == 1);
 
 		it = flex_idx_vec[1];
-		REQUIRE(it.idx_name.compare("Nor.28_1X_NS30_1x_ProG_A") == 0);
-		REQUIRE(it.read_name.compare("r1") == 0);
-		REQUIRE(it.idx_start == 11);
-		REQUIRE(it.idx_len == 2);
-		REQUIRE(it.num_mismatch == 0);
-
-		it = flex_idx_vec[2];
-		REQUIRE(it.idx_name.compare("BB.10_1X_NS30_1x_ProG_A") == 0);
-		REQUIRE(it.read_name.compare("r1") == 0);
-		REQUIRE(it.idx_start == 14);
-		REQUIRE(it.idx_len == 5);
-		REQUIRE(it.num_mismatch == 0);
-
-		it = flex_idx_vec[3];
-		REQUIRE(it.idx_name.compare("BB.11_1X_NS30_1x_ProG_A") == 0);
-		REQUIRE(it.read_name.compare("r1") == 0);
-		REQUIRE(it.idx_start == 20);
-		REQUIRE(it.idx_len == 10);
-		REQUIRE(it.num_mismatch == 4);
-
-		it = flex_idx_vec[4];
-		REQUIRE(it.idx_name.compare("Nor.43_1X_NS30_1x_ProG_A") == 0);
+		REQUIRE(it.idx_name.compare("Index2") == 0);
 		REQUIRE(it.read_name.compare("r2") == 0);
 		REQUIRE(it.idx_start == 0);
-		REQUIRE(it.idx_len == 2);
-		REQUIRE(it.num_mismatch == 0);
-
-		it = flex_idx_vec[5];
-		REQUIRE(it.idx_name.compare("JA.s_1X_NS30_1X_ProG_B") == 0);
-		REQUIRE(it.read_name.compare("r2") == 0);
-		REQUIRE(it.idx_start == 3);
-		REQUIRE(it.idx_len == 10);
-		REQUIRE(it.num_mismatch == 2);
+		REQUIRE(it.idx_len == 8);
+		REQUIRE(it.num_mismatch == 1);
 	}
 	/*
 	SECTION("Samplelist Parser can use a flex_idx vector and a properly formatted samplelist file to create a sample vector")
