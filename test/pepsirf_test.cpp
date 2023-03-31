@@ -195,13 +195,13 @@ TEST_CASE("Test for proper functionality of FIF Parser and Samplielist Parser", 
 {
 	// define flex_idx vector
 	std::vector<flex_idx> flex_idx_vec;
+	// define flexible index file parser
+	fif_parser fif_p;
+	// parse fif file, capture result in flex_idx vector
+	flex_idx_vec = fif_p.parse("../test/input_data/test_flex_index_file.tsv");
+
 	SECTION("Flexible Index File Parser reads and creates a flex_idx vector from given file")
 	{
-		// define flexible index file parser
-		fif_parser fif_p;
-		// parse fif file, capture result in flex_idx vector
-		flex_idx_vec = fif_p.parse("../test/input_data/test_flex_index_file.tsv");
-
 		// verify flex_idx_vec
 		auto& it = flex_idx_vec[0];
 		REQUIRE(it.idx_name.compare("Index1") == 0);
@@ -217,39 +217,60 @@ TEST_CASE("Test for proper functionality of FIF Parser and Samplielist Parser", 
 		REQUIRE(it.idx_len == 8);
 		REQUIRE(it.num_mismatch == 1);
 	}
-	/*
+
+	// initialize sample list parser
+	samplelist_parser slp;
+	// define sample vector
+	std::vector<sample> sample_vec;
+
+	// initialize demux options
+	options_demux d_opts;
+    d_opts.index_fname = "../test/input_data/test_barcodes.fa";
+	d_opts.samplelist_fname = "../test/input_data/test_samplelist_NS30.tsv";
+	d_opts.samplename = "SampleName";	// needed for sampleliest to reference
+
 	SECTION("Samplelist Parser can use a flex_idx vector and a properly formatted samplelist file to create a sample vector")
 	{
-        // initialize sample list parser
-        samplelist_parser samplelist_parser;
-        // define sample vector
-        std::vector<sample> sample_vec;
+		// parse using demux options and flex_idx vector, capture result in sample vector
+		sample_vec = slp.parse(&d_opts, flex_idx_vec);
 
-        // initialize demux options
-        options_demux d_opts;
-		d_opts.flexible_idx_fname = "../test/input_data/test_flex_index_file.tsv";
-		d_opts.samplelist_fname = "../test/input_data/test_samplelist_NS30.tsv";
-		d_opts.samplename = "SampleName";
-		d_opts.indexes = "Index1,Index2";
-		d_opts.sample_indexes = {"Index1", "Index2"};
-		d_opts.set_info(&options_demux::seq_data, "41,40,2");
-		d_opts.set_info(&options_demux::index1_data, "12,10,1");
-		d_opts.set_info(&options_demux::index2_data,"0,8,1");
+		// verify sample vector
+		auto& it = sample_vec[0];
+		REQUIRE(it.name.compare("Nor.27_1X_NS30_1x_ProG_A") == 0);
+		REQUIRE(it.id == 0);
+		REQUIRE(it.string_ids[0].compare("F_3") == 0);
+		REQUIRE(it.string_ids[1].compare("R_13") == 0);
 
+		it = sample_vec[1];
+		REQUIRE(it.name.compare("Nor.28_1X_NS30_1x_ProG_A") == 0);
+		REQUIRE(it.id == 1);
+		REQUIRE(it.string_ids[0].compare("F_3") == 0);
+		REQUIRE(it.string_ids[1].compare("R_14") == 0);
 
-        // parse using demux options and flex_idx vector, capture result in sample vector
-        sample_vec = samplelist_parser.parse(&d_opts, flex_idx_vec);
+		it = sample_vec[2];
+		REQUIRE(it.name.compare("BB.10_1X_NS30_1x_ProG_A") == 0);
+		REQUIRE(it.id == 2);
+		REQUIRE(it.string_ids[0].compare("F_11") == 0);
+		REQUIRE(it.string_ids[1].compare("R_15") == 0);
 
-        // verify sample vector
-        auto& it = sample_vec[0];
-        std::cout << "Sample name: " << it.name << "\n"
-                  << "ID: " << it.id << "\n"
-                  << "Sequences:\n"
-                  << "\t" << it.sequences[0] << "\n"
-                  << "Barcodes:\n"
-                  << "\t" << it.string_ids[0] << "\n\n";
+		it = sample_vec[3];
+		REQUIRE(it.name.compare("BB.11_1X_NS30_1x_ProG_A") == 0);
+		REQUIRE(it.id == 3);
+		REQUIRE(it.string_ids[0].compare("F_11") == 0);
+		REQUIRE(it.string_ids[1].compare("R_16") == 0);
+
+		it = sample_vec[4];
+		REQUIRE(it.name.compare("Nor.43_1X_NS30_1x_ProG_A") == 0);
+		REQUIRE(it.id == 4);
+		REQUIRE(it.string_ids[0].compare("F_19") == 0);
+		REQUIRE(it.string_ids[1].compare("R_13") == 0);
+
+		it = sample_vec[5];
+		REQUIRE(it.name.compare("JA.s_1X_NS30_1X_ProG_B") == 0);
+		REQUIRE(it.id == 5);
+		REQUIRE(it.string_ids[0].compare("F_24") == 0);
+		REQUIRE(it.string_ids[1].compare("R_20") == 0);
 	}
-	*/
 }
 
 TEST_CASE("Full test of setops' proper functionality", "[setops]")
