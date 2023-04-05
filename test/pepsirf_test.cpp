@@ -1475,9 +1475,6 @@ TEST_CASE( "pairwise_dist_string", "[distance_tools]" )
                            );
                 }
         }
-
-
-
 }
 
 TEST_CASE( "overlap_data", "[module_deconv]" )
@@ -2091,12 +2088,10 @@ TEST_CASE( "matrix creation, setting individual members of matrix", "[matrix]" )
 
     a.at( 1, 2 ) = 4;
     REQUIRE( a( 1, 2 ) == 4 );
-
 }
 
 TEST_CASE( "labeled_matrix", "[labeled_matrix]" )
 {
-
     std::vector<std::string> row_labels{ "row_1", "row_2", "row_3", "row_4", "row_5" };
     std::vector<std::string> col_labels{ "col_1", "col_2", "col_3", "col_4", "col_5" };
 
@@ -2152,8 +2147,6 @@ TEST_CASE( "labeled_matrix", "[labeled_matrix]" )
             REQUIRE( new_matr3( 2, col_idx ) == lab_mat( 4, col_idx ) );
             REQUIRE( new_matr3( 3, col_idx ) == lab_mat( 3, col_idx ) );
         }
-
-
 }
 
 TEST_CASE( "labeled_matrix full outer join", "[matrix]" )
@@ -2250,6 +2243,41 @@ TEST_CASE( "labeled_matrix full outer join", "[matrix]" )
         }
 
 
+}
+
+TEST_CASE("Testing in_range(), swap(), and filter_cols() funcitons of a labeled matrix", "labeled_matrix")
+{
+	// initialize row and column labels vec
+	// define a 3x3 labeled matrix with the row and column label vecs
+	
+	// fill matrix with numbers
+	
+	// check element (1, 1) is in matrix
+	// check element (4, 4) is in matrix
+	// check element (0, 2) is in matrix
+	// check element (5, 0) is in matrix
+	
+	// initialize new row and column labels vec
+	// define new 3x3 labeled matrix
+	
+	// fill new matrix with zeros
+	
+	// swap matrices
+	
+	// define empty destination vector of strings
+	// check original matrix row labels are the new row labels
+	// clear dest vec
+
+	// check original matrix column labels are the new column labels
+	// clear dest vec
+
+	// check new matrix row labels are the old row labels
+	// clear dest vec
+
+	// check new matrix column labels are the old column lables
+
+	// check old matrix values are all zero
+	// check new matrix values are original values
 }
 
 TEST_CASE( "median", "[stats]" )
@@ -2420,8 +2448,10 @@ TEST_CASE( "Parsing/Writing Bins from stream", "[peptide_bin]" )
 
     peptide_bin_io::write_bins( bins_out, bin_c );
 
+	// test parse_bins() -> tests add_bin()
     REQUIRE( ( bin_c == peptide_bin_io::parse_bins( bins_out ) ) );
 
+	// test contains() method
     auto first_bin = bin_c.begin();
     REQUIRE( first_bin->contains( "pep_1" ) );
     REQUIRE( first_bin->contains( "pep_2" ) );
@@ -2434,8 +2464,18 @@ TEST_CASE( "Parsing/Writing Bins from stream", "[peptide_bin]" )
     REQUIRE( second_bin->contains( "pep_6" ) );
     REQUIRE( !( second_bin->contains( "pep_9" ) ) );
 
+	// test smallest() and add_bins() method
+	first_bin->add_peptide("pep_10");
+	first_bin->add_peptide("pep_11");
+	first_bin->add_peptide("pep_12");
 
+	REQUIRE(first_bin->size() == 6);
+	REQUIRE(second_bin->size() == 3);
+	REQUIRE(bin_c.smallest() == *second_bin);
+}
 
+TEST_CASE("", "[peptide_scoring]")
+{
 }
 
 TEST_CASE( "Verify sums and minimum bin size resizing", "[module_bin]" )
@@ -2501,7 +2541,7 @@ TEST_CASE( "Verify sums and minimum bin size resizing", "[module_bin]" )
 
 TEST_CASE( "Ranking Probes based upon their scores", "[probe_rank]" )
 {
-    std::unordered_map<std::string,double> probe_scores
+    std::unordered_map<std::string, double> probe_scores
     {
         { "p1", 1.445 },
         { "p2", 4.655 },
@@ -2528,11 +2568,13 @@ TEST_CASE( "Ranking Probes based upon their scores", "[probe_rank]" )
                 { 1.0, { "p1", "p3" } },
                 { 5.0, { "p2" } },
                 { 156.0, { "p4" } },
-            }
-                ;
-            REQUIRE( int_probe_rank.get_probe_ranks() == expected_values );
-        }
+            };
 
+            REQUIRE( int_probe_rank.get_probe_ranks() == expected_values );
+			REQUIRE(*int_probe_rank.get_probes_with_rank(1) == *expected_values.find(1.0));
+			REQUIRE(*int_probe_rank.get_probes_with_rank(5.005) == *expected_values.find(5.0));
+			REQUIRE(*int_probe_rank.get_probes_with_rank(156.056) == *expected_values.find(156.0));
+        }
     SECTION( "Rounding to the tenth's place" )
         {
             probe_rank int_probe_rank{ 1 };
@@ -2545,11 +2587,12 @@ TEST_CASE( "Ranking Probes based upon their scores", "[probe_rank]" )
                 { 4.7, { "p2" } },
                 { 156.09999999999999, { "p4" } }, // hard-coded value, found by inspecting
                                                   // values in debugger.
-            }
-                ;
-            REQUIRE( int_probe_rank.get_probe_ranks() == expected_values );
-        }
+            };
 
+            REQUIRE( int_probe_rank.get_probe_ranks() == expected_values );
+			REQUIRE(*int_probe_rank.get_probes_with_rank(4.7445) == *expected_values.find(4.7));
+			REQUIRE(*int_probe_rank.get_probes_with_rank(1.4483) == *expected_values.find(1.4));
+        }
     SECTION( "Rounding to the hundredth's place" )
         {
             probe_rank int_probe_rank{ 2 };
@@ -2562,10 +2605,12 @@ TEST_CASE( "Ranking Probes based upon their scores", "[probe_rank]" )
                 { 4.66, { "p2" } },
                 { 156.10, { "p4" } },
             };
+
             REQUIRE( int_probe_rank.get_probe_ranks() == expected_values );
+			REQUIRE(*int_probe_rank.get_probes_with_rank(156.10) == *expected_values.find(156.10));
+			REQUIRE(*int_probe_rank.get_probes_with_rank(1.05) == *expected_values.find(1.05));
+			REQUIRE(*int_probe_rank.get_probes_with_rank(1.4522) == *expected_values.find(1.45));
         }
-
-
 }
 
 TEST_CASE( "Unary Predicate Reduction", "[module_enrich]" )
@@ -2913,6 +2958,19 @@ TEST_CASE( "Subjoin name list filter is optional", "[module_subjoin]" )
     mod.run( &opts );
 }
 
+TEST_CASE("Full test of link module's individual funcitons", "module_link")
+{
+	SECTION("Testing prot map creation")
+	{
+	}
+	SECTION("Testing pep map creation")
+	{
+	}
+	SECTION("Testing pep map creation with kmer penalty")
+	{
+	}
+}
+
 TEST_CASE( "Metadata file can be given in place of taxonomic id index", "[module_link]" )
 {
     SECTION( "Verifying map creation and target sequence retrieval individually from link module" )
@@ -2929,78 +2987,75 @@ TEST_CASE( "Metadata file can be given in place of taxonomic id index", "[module
         std::string metadata_spec_id = metadata_map::get_id( ">ID=A0A2Z4GZU5_HHV1 AC=A0A2Z4GZU5 OXX=10298,10298,10294,10292", &meta_map );
         REQUIRE( id_index_spec_id.compare( metadata_spec_id ) == 0 );
     }
-
-    // SECTION( "Verifying metadata file usage feature successfully performs and integrates with link module." )
-    // {
-    //     module_link mod;
-    //     options_link opts;
-    //     opts.metadata_fname =  "../test/input_data/full_design_clean_min30_taxtweak_100perc_jingmens_2019-09-12_segment.metadata,Name,Species";
-    //     opts.prot_file_fname = "../test/input_data/full_design_clean_min30_taxtweak_100perc_jingmens_2019-09-12_segment.fasta";
-    //     opts.peptide_file_fname = "../test/input_data/PV1_10K3000_53_encoded_segment.faa";
-    //     opts.kmer_size = 7;
-    //     opts.output_fname = "../test/test_metadata_output.txt";
-    //     mod.run( &opts );
-    //     REQUIRE( !opts.output_fname.empty() );
-    // }
-
+    SECTION( "Verifying metadata file usage feature successfully performs and integrates with link module." )
+    {
+        module_link mod;
+        options_link opts;
+        opts.metadata_fname =  "../test/input_data/full_design_clean_min30_taxtweak_100perc_jingmens_2019-09-12_segment.metadata,Name,Species";
+        opts.prot_file_fname = "../test/input_data/full_design_clean_min30_taxtweak_100perc_jingmens_2019-09-12_segment.fasta";
+        opts.peptide_file_fname = "../test/input_data/PV1_10K3000_53_encoded_segment.faa";
+        opts.kmer_size = 7;
+        opts.output_fname = "../test/test_metadata_output.txt";
+        mod.run( &opts );
+        REQUIRE( !opts.output_fname.empty() );
+    }
 }
 
-// TEST_CASE( "Discard outliers of bin distribution by trimming for further calculation", "[module_zscore]" )
-// {
-//     SECTION( "Verify highest density interval option properly trims distribution" )
-//     {
-//         module_zscore mod = module_zscore();
-//         options_zscore opts = options_zscore();
-//         peptide_score_data_sample_major input;
-//         opts.in_fname = "../../../../Downloads/combo_norm_avgSBdiff.tsv";
-//         opts.in_bins_fname = "../../../../Downloads/NS30_IgG_combo_SB4_300r1.tsv";
-//         opts.out_fname = "../../../../Downloads/zscore_test_hdi_output.tsv";
-//         opts.hpd_percent = 0.75;
-//         peptide_scoring::parse_peptide_scores( input, opts.in_fname );
-//         std::ifstream bins_file( opts.in_bins_fname, std::ios_base::in );
-//         bin_collection peptide_bins = peptide_bin_io::parse_bins( bins_file );
-//         auto& zscore_matrix = input.scores;
-//         std::vector<nan_report> nan_values;
-//         for( const auto sample_pair : zscore_matrix.get_row_labels() )
-//             {
-//                 std::string sample_name = sample_pair.first;
+TEST_CASE( "Discard outliers of bin distribution by trimming for further calculation", "[module_zscore]" )
+{
+    SECTION( "Verify highest density interval option properly trims distribution" )
+    {
+        module_zscore mod = module_zscore();
+        options_zscore opts = options_zscore();
+        peptide_score_data_sample_major input;
+        opts.in_fname = "../../../../Downloads/combo_norm_avgSBdiff.tsv";
+        opts.in_bins_fname = "../../../../Downloads/NS30_IgG_combo_SB4_300r1.tsv";
+        opts.out_fname = "../../../../Downloads/zscore_test_hdi_output.tsv";
+        opts.hpd_percent = 0.75;
+        peptide_scoring::parse_peptide_scores( input, opts.in_fname );
+        std::ifstream bins_file( opts.in_bins_fname, std::ios_base::in );
+        bin_collection peptide_bins = peptide_bin_io::parse_bins( bins_file );
+        auto& zscore_matrix = input.scores;
+        std::vector<nan_report> nan_values;
+        for( const auto sample_pair : zscore_matrix.get_row_labels() )
+            {
+                std::string sample_name = sample_pair.first;
 
-//                 mod.calculate_zscores(  peptide_bins,
-//                                         &opts,
-//                                         zscore_matrix,
-//                                         sample_name,
-//                                         std::back_inserter( nan_values )
-//                                      );
-//             }
-//         peptide_scoring::write_peptide_scores( opts.out_fname, input );
-//     }
+                mod.calculate_zscores(  peptide_bins,
+                                        &opts,
+                                        zscore_matrix,
+                                        sample_name,
+                                        std::back_inserter( nan_values )
+                                     );
+            }
+        peptide_scoring::write_peptide_scores( opts.out_fname, input );
+    }
+    SECTION( "Verify symmetrical trim option properly trims both head and tail" )
+    {
+        module_zscore mod = module_zscore();
+        options_zscore opts = options_zscore();
+        peptide_score_data_sample_major input;
+        opts.in_fname = "../../../../Downloads/combo_norm_avgSBdiff.tsv";
+        opts.in_bins_fname = "../../../../Downloads/NS30_IgG_combo_SB4_300r1.tsv";
+        opts.out_fname = "../../../../Downloads/zscore_test_trim_output.tsv";
+        opts.hpd_percent = 0.0;
+        opts.trim_percent = 0.90;
+        peptide_scoring::parse_peptide_scores( input, opts.in_fname );
+        std::ifstream bins_file( opts.in_bins_fname, std::ios_base::in );
+        bin_collection peptide_bins = peptide_bin_io::parse_bins( bins_file );
+        auto& zscore_matrix = input.scores;
+        std::vector<nan_report> nan_values;
+        for( const auto sample_pair : zscore_matrix.get_row_labels() )
+            {
+                std::string sample_name = sample_pair.first;
 
-//     SECTION( "Verify symmetrical trim option properly trims both head and tail" )
-//     {
-//         module_zscore mod = module_zscore();
-//         options_zscore opts = options_zscore();
-//         peptide_score_data_sample_major input;
-//         opts.in_fname = "../../../../Downloads/combo_norm_avgSBdiff.tsv";
-//         opts.in_bins_fname = "../../../../Downloads/NS30_IgG_combo_SB4_300r1.tsv";
-//         opts.out_fname = "../../../../Downloads/zscore_test_trim_output.tsv";
-//         opts.hpd_percent = 0.0;
-//         opts.trim_percent = 0.90;
-//         peptide_scoring::parse_peptide_scores( input, opts.in_fname );
-//         std::ifstream bins_file( opts.in_bins_fname, std::ios_base::in );
-//         bin_collection peptide_bins = peptide_bin_io::parse_bins( bins_file );
-//         auto& zscore_matrix = input.scores;
-//         std::vector<nan_report> nan_values;
-//         for( const auto sample_pair : zscore_matrix.get_row_labels() )
-//             {
-//                 std::string sample_name = sample_pair.first;
-
-//                 mod.calculate_zscores(  peptide_bins,
-//                                         &opts,
-//                                         zscore_matrix,
-//                                         sample_name,
-//                                         std::back_inserter( nan_values )
-//                                      );
-//             }
-//         peptide_scoring::write_peptide_scores( opts.out_fname, input );
-//     }
-// }
+                mod.calculate_zscores(  peptide_bins,
+                                        &opts,
+                                        zscore_matrix,
+                                        sample_name,
+                                        std::back_inserter( nan_values )
+                                     );
+            }
+        peptide_scoring::write_peptide_scores( opts.out_fname, input );
+    }
+}
