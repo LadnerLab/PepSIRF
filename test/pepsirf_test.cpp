@@ -1763,11 +1763,11 @@ TEST_CASE( "scored peptide", "[peptide]" )
 
 TEST_CASE( "scored_entity", "[scored_entity.h]" )
 {
-    scored_entity<std::string,double> sc( std::string( "pep1" ),
+    scored_entity<std::string, double> sc( std::string( "pep1" ),
                                           100.0
                                         );
 
-    scored_entity<std::string,double> sc2( std::string( "pep1" ),
+    scored_entity<std::string, double> sc2( std::string( "pep1" ),
                                           155.0
                                         );
 
@@ -1786,7 +1786,7 @@ TEST_CASE( "scored_entity", "[scored_entity.h]" )
     REQUIRE( sc == sc2 );
     REQUIRE( !( sc != sc2 ) );
 
-    std::unordered_set<scored_entity<std::string,double>> se_set;
+    std::unordered_set<scored_entity<std::string, double>> se_set;
 
     se_set.insert( sc );
 
@@ -1796,6 +1796,11 @@ TEST_CASE( "scored_entity", "[scored_entity.h]" )
 
     REQUIRE( se_set.size() == 1 );
 
+	sc.set_score(226.0);
+	sc2.set_score(77.0);
+
+	REQUIRE(sc.get_score() == 226.0);
+	REQUIRE(sc2.get_score() == 77.0);
 }
 
 TEST_CASE( "get_kmer_frequency", "[kmer_tools]" )
@@ -2021,6 +2026,107 @@ TEST_CASE( "score_species_peptides/get_highest_score_per_species", "[module_deco
      eval_max_score();
      REQUIRE( highest_scores[ "species 1" ].get_score() == 0.5 );
      REQUIRE( highest_scores[ "species 2" ].get_score() == 0.5 );
+}
+
+TEST_CASE("Full test of normalize module", "[module_normalize]")
+{
+	module_normalize norm_mod;
+
+	SECTION("Test get_sum() works as expected")
+	{
+		// define vec of doubles
+		// initialize matrix of doubles
+
+		// get sums from matrix
+
+		// check destination vector for expected values
+	}
+	SECTION("Test get_neg_average() works as expected")
+	{
+		// initialize peptide data sample major
+		// initialize negative filter
+		// define destination map for averages
+
+		// get negative averages
+
+		// check destination map contains expected averages
+	}
+	SECTION("Test constant_factor_normalization() works as expected")
+	{
+		SECTION("Normalize column sums by 2")
+		{
+			// initialize column sums vector
+
+			// normalize column vec by 2
+
+			// check column vec sums have been normalized as expected
+		}
+		SECTION("Normalize column sums by 4")
+		{
+			// initialize column sums vector
+
+			// normalize column vec by 4
+
+			// check column vec sums have been normalized as expected
+		}
+		SECTION("Normalize column sums by 100")
+		{
+			// initialize column sums vector
+
+			// normalize column vec by 100
+
+			// check column vec sums have been normalized as expected
+		}
+	}
+	SECTION("Test filter_neg_control_start() works as expected")
+	{
+		// TODO: filter_neg_control_start() needs a description block
+	}
+	SECTION("Test normalize_counts() works as expected")
+	{	// TODO: should we have more of this test?
+		// initialize matrix of origianl scores
+		// initialize normalize factors vector (double)
+
+		// normalize original scores
+
+		// check original scores have been normalized as expected
+	}
+	SECTION("Test compute_size_factors() works as expected")
+	{
+		// define destination vector for size factors
+		// initialize matrix of counts
+
+		// compute size factors of data
+
+		// check destination vec for expected size factors
+	}
+	SECTION("Test compute_diff() works as expected")
+	{
+		// define destination vector for norm score differences
+		// initialize map for means of negative controls
+
+		// compute differences
+
+		// check destination vec for expected differences
+	}
+	SECTION("Test compute_diff_ratio() works as expected")
+	{
+		// define destination peptide data sample major
+		// initialize map for means of provided controls
+
+		// compute difference ratio
+
+		// check destination for expected difference ratios
+	}
+	SECTION("Test compute_ratio() works as expected")
+	{
+		// define destination peptide data sample major
+		// initialize map for means of provided controls
+
+		// compute ratio
+
+		// check destination for expected ratios
+	}
 }
 
 TEST_CASE( "geometric means", "[stats]" )
