@@ -1488,7 +1488,6 @@ TEST_CASE( "pairwise_distances_int", "[distance_tools]" )
                            );
                 }
         }
-
 }
 
 TEST_CASE( "pairwise_dist_string", "[distance_tools]" )
@@ -1785,6 +1784,9 @@ TEST_CASE( "peptide", "[peptide]" )
     peptide pep( "pep1", "ATGC" );
     peptide pep2( "p11", "ATGC" );
 
+	REQUIRE(pep.get_name() == "pep1");
+	REQUIRE(pep2.get_name() == "p11");
+
     REQUIRE( pep == pep2 );
 
     pep2.set_sequence( "AGGG" );
@@ -1792,6 +1794,9 @@ TEST_CASE( "peptide", "[peptide]" )
     REQUIRE( pep != pep2 );
     REQUIRE( !pep2.get_sequence().compare( "AGGG" ) );
 
+	pep.set_name("p11");
+
+	REQUIRE(pep.get_name() == pep2.get_name());
 }
 
 TEST_CASE( "scored peptide", "[peptide]" )
@@ -3096,7 +3101,6 @@ TEST_CASE( "File IO read_file function", "[file_io]" )
 
 TEST_CASE( "Testing Codon -> AA maps", "[nt_aa_map]" )
 {
-
     auto mapped = codon_aa_mappings::default_codon_aa_map( "TCC" );
     REQUIRE( mapped == 'S' );
 
