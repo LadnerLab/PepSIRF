@@ -1383,6 +1383,67 @@ TEST_CASE( "get_map_value", "[module_deconv]" )
     REQUIRE( mod.get_map_value( map, 5, 9 ) == 9 );
 }
 
+// TODO: integrate all other util tests
+TEST_CASE("Full test of util's individual methods", "[util]")
+{
+	SECTION("Test adding two things")
+	{
+	}
+	SECTION("Test subtrating a thing from another")
+	{
+	}
+	SECTION("Test multiplying two things")
+	{
+	}
+	SECTION("Test dividing a thing by another")
+	{
+	}
+	SECTION("Test is_integer()")
+	{
+		SECTION("Is 9 an integer")
+		{
+			REQUIRE(is_integer(9));
+		}
+		SECTION("Is 6.83 an integer")
+		{
+			REQUIRE(!is_integer(6.38));
+		}
+	}
+	SECTION("Test difference()")
+	{
+		SECTION("Difference between 22 and 11")
+		{
+			REQUIRE(difference<int>()(22, 11) == 11);
+		}
+		SECTION("Difference between 2546.581 and 64.32648")
+		{
+			REQUIRE(difference<double>()(2546.581, 64.32648) == 2482.25452);
+		}
+		SECTION("Difference between 100.00 and 1000.00")
+		{
+			REQUIRE(difference<double>()(100.00, 1000.00) == -900.00);
+		}
+	}
+	SECTION("Test conversion of pairs to map")
+	{
+		std::vector<std::pair<std::string, int>> my_pair_vec = {
+			{"pep1", 10}, {"pep2", 22}, {"pep52", 0}, {"pep100", 120}
+		};
+		std::map<std::string, int> my_map_of_pairs;
+
+		pairs_to_map(my_map_of_pairs, my_pair_vec.begin(), my_pair_vec.end());
+
+		auto it = my_map_of_pairs.find(my_pair_vec[0].first);
+		REQUIRE(it->second == 10);
+		it = my_map_of_pairs.find(my_pair_vec[1].first);
+		REQUIRE(it->second == 22);
+		it = my_map_of_pairs.find(my_pair_vec[2].first);
+		REQUIRE(it->second == 0);
+		it = my_map_of_pairs.find(my_pair_vec[3].first);
+		REQUIRE(it->second == 120);
+	}
+}
+
 TEST_CASE( "all_distances", "[util]" )
 {
     std::vector<int> data{ 1, 2, 3, 4, 5 };
@@ -1578,15 +1639,6 @@ TEST_CASE( "Deconv end_to_end", "[module_deconv]" )
     opts.score_overlap_threshold = 0.5;
 
     mod.run( &opts );
-}
-
-TEST_CASE("Deconv module sorts ties alphabetically", "[module_deconv]")
-{
-	// initialize deconv components
-	
-	// run deconv module
-	
-	// check created files against expected files -- that a lot of data
 }
 
 TEST_CASE( "empty", "[util]" )
@@ -2576,34 +2628,61 @@ TEST_CASE( "Parsing/Writing Bins from stream", "[peptide_bin]" )
     bins_in << "pep_1\tpep_2\tpep_3\npep_4\tpep_5\tpep_6\n";
     bin_collection bin_c = peptide_bin_io::parse_bins( bins_in );
 
-    std::stringstream bins_out;
+	SECTION("Test writing bins and parsing bins")
+	{
+		std::stringstream bins_out;
+		peptide_bin_io::write_bins( bins_out, bin_c );
 
-    peptide_bin_io::write_bins( bins_out, bin_c );
+		// NOTE: test parse_bins() -> tests add_bin()
+		REQUIRE( ( bin_c == peptide_bin_io::parse_bins( bins_out ) ) );
+	}
 
-	// test parse_bins() -> tests add_bin()
-    REQUIRE( ( bin_c == peptide_bin_io::parse_bins( bins_out ) ) );
+	auto first_bin = bin_c.begin();
+	auto second_bin = first_bin + 1;
+	SECTION("Test if a bin contains a specific peptide")
+	{
+		REQUIRE( first_bin->contains( "pep_1" ) );
+		REQUIRE( first_bin->contains( "pep_2" ) );
+		REQUIRE( first_bin->contains( "pep_3" ) );
+		REQUIRE( !( first_bin->contains( "pep_4" ) ) );
 
-	// test contains() method
-    auto first_bin = bin_c.begin();
-    REQUIRE( first_bin->contains( "pep_1" ) );
-    REQUIRE( first_bin->contains( "pep_2" ) );
-    REQUIRE( first_bin->contains( "pep_3" ) );
-    REQUIRE( !( first_bin->contains( "pep_4" ) ) );
+		REQUIRE( second_bin->contains( "pep_4" ) );
+		REQUIRE( second_bin->contains( "pep_5" ) );
+		REQUIRE( second_bin->contains( "pep_6" ) );
+		REQUIRE( !( second_bin->contains( "pep_9" ) ) );
+	}
+	SECTION("Test that peptides can be added to a bin, and which bin is the smallest")
+	{
+		// first bin is smallest because first and second bins have same
+		// number of peptides
+		REQUIRE(bin_c.smallest() == *first_bin);
 
-    auto second_bin = first_bin + 1;
-    REQUIRE( second_bin->contains( "pep_4" ) );
-    REQUIRE( second_bin->contains( "pep_5" ) );
-    REQUIRE( second_bin->contains( "pep_6" ) );
-    REQUIRE( !( second_bin->contains( "pep_9" ) ) );
+		first_bin->add_peptide("pep_10");
+		first_bin->add_peptide("pep_11");
+		first_bin->add_peptide("pep_12");
 
-	// test smallest() and add_bins() method
-	first_bin->add_peptide("pep_10");
-	first_bin->add_peptide("pep_11");
-	first_bin->add_peptide("pep_12");
+		// verify first bin is no longer smallest bin
+		REQUIRE(first_bin->size() == 6);
+		REQUIRE(second_bin->size() == 3);
+		REQUIRE(bin_c.smallest() == *second_bin);
+	}
+	SECTION("Test more bins can be added, and last bin is smallest")
+	{
+		std::vector<peptide_bin> new_bins = {
+			peptide_bin(), peptide_bin()
+		};
+		std::vector<std::string> other_peptides = {
+			"pep24", "pep25", "pep26", "pep27"
+		};
 
-	REQUIRE(first_bin->size() == 6);
-	REQUIRE(second_bin->size() == 3);
-	REQUIRE(bin_c.smallest() == *second_bin);
+		new_bins[0].add_peptides(other_peptides.begin(), other_peptides.end());
+
+		bin_c.add_bins(new_bins.begin(), new_bins.end());
+
+		REQUIRE(bin_c.bins[2].size() == 4);
+		REQUIRE(bin_c.bins[3].size() == 0);
+		REQUIRE(bin_c.smallest() == *(bin_c.end() - 1));
+	}
 }
 
 TEST_CASE("", "[peptide_bin]")
