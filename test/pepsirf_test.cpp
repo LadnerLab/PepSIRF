@@ -743,7 +743,6 @@ TEST_CASE( "Test String Indexing", "[string_indexer]" )
     seqs2.emplace_back( "", "TGC" );
 
     sequence_indexer si2;
-
 }
 
 TEST_CASE( "Reference-independent Demultiplexing" )
@@ -827,14 +826,11 @@ TEST_CASE( "Reference-independent Demultiplexing" )
             REQUIRE( it->size() == 2 );
             REQUIRE( it->at( 0 ) == 0 );
             REQUIRE( it->at( 1 ) == 0 );
-
         }
-
 }
 
 TEST_CASE( "Test Count Generation", "[module_demux]" )
 {
-
     fastq_parser fp;
     module_demux mod;
     sequence_indexer lib_idx;
@@ -917,7 +913,6 @@ TEST_CASE( "Test Count Generation", "[module_demux]" )
                              );
 
     REQUIRE( seq_match != my_map.end() );
-
 }
 
 TEST_CASE( "Fastq_scorer", "[fastq_score]" )
@@ -1751,15 +1746,26 @@ TEST_CASE( "scored peptide", "[peptide]" )
 {
     scored_peptide<double> sc( "pep1", "ATGC", 100.0 );
 
-    REQUIRE( sc.get_score() == 100.0 );
-    REQUIRE( !sc.get_name().compare( "pep1" ) );
-    REQUIRE( !sc.get_sequence().compare( "ATGC" ) );
+	REQUIRE( sc.get_score() == 100.0 );
+	REQUIRE( !sc.get_name().compare( "pep1" ) );
+	REQUIRE( !sc.get_sequence().compare( "ATGC" ) );
 
-    sc.set_score( 5 );
-    REQUIRE( sc.get_score() == 5 );
-
-
+	sc.set_score( 5 );
+	REQUIRE( sc.get_score() == 5 );
 }
+
+/* TODO: Redefine operator overload: causes expansion with "{?} < {?}"
+TEST_CASE("Verify '<' and '>' operators properly compare scored peptides", "[scored_peptide]")
+{
+    scored_peptide<double> scored_pep1("pep1", "ATGC", 100.0);
+	scored_peptide<double> scored_pep2("pep2", "ATGC", 60.0);
+
+	REQUIRE(scored_pep1 < scored_pep2);
+	
+	scored_pep2.set_score(0);
+	REQUIRE(scored_pep1 > scored_pep2);
+}
+*/
 
 TEST_CASE( "scored_entity", "[scored_entity.h]" )
 {
@@ -1861,7 +1867,6 @@ TEST_CASE( "species_data", "[module_deconv]" )
     dat.set_score( 104.0 );
 
     REQUIRE( dat.get_score() == 104.0 );
-
 }
 
 TEST_CASE( "score_peptide_for_species", "[module_deconv]" )
@@ -1963,7 +1968,7 @@ TEST_CASE( "score_species_peptides/get_highest_score_per_species", "[module_deco
      spec_count_map[ "pep1" ] = a_score;
      spec_count_map[ "pep2" ] = b_score;
 
-     std::unordered_map<std::string,scored_peptide<double>> highest_scores;
+     std::unordered_map<std::string, scored_peptide<double>> highest_scores;
 
      auto eval_sc_sp_pep = [&]()
          {
@@ -2544,6 +2549,27 @@ TEST_CASE( "z-scores", "[stats]" )
         }
 }
 
+TEST_CASE("Relative difference", "[stats]")
+{
+	double a = 100;
+	double b = 55;
+	double expected = 0.45;
+	double actual = stats::relative_difference(a, b);
+
+	REQUIRE(actual == expected);
+}
+
+TEST_CASE("Squared difference", "[stats]")
+{
+	std::vector<double> double_vec = {6.0, 60.0, 10.0, 50.0};
+	double subtrahend = 6.0;
+
+	double expected = 4868.0;
+	double actual = stats::squared_diff(double_vec.begin(), double_vec.end(), subtrahend);
+
+	REQUIRE(actual == expected);
+}
+
 TEST_CASE( "Parsing/Writing Bins from stream", "[peptide_bin]" )
 {
     std::stringstream bins_in;
@@ -2578,6 +2604,10 @@ TEST_CASE( "Parsing/Writing Bins from stream", "[peptide_bin]" )
 	REQUIRE(first_bin->size() == 6);
 	REQUIRE(second_bin->size() == 3);
 	REQUIRE(bin_c.smallest() == *second_bin);
+}
+
+TEST_CASE("", "[peptide_bin]")
+{
 }
 
 TEST_CASE("", "[peptide_scoring]")
@@ -2677,6 +2707,7 @@ TEST_CASE( "Ranking Probes based upon their scores", "[probe_rank]" )
             };
 
             REQUIRE( int_probe_rank.get_probe_ranks() == expected_values );
+			// verify getting probe(s) by rank
 			REQUIRE(*int_probe_rank.get_probes_with_rank(1) == *expected_values.find(1.0));
 			REQUIRE(*int_probe_rank.get_probes_with_rank(5.005) == *expected_values.find(5.0));
 			REQUIRE(*int_probe_rank.get_probes_with_rank(156.056) == *expected_values.find(156.0));
@@ -2696,6 +2727,8 @@ TEST_CASE( "Ranking Probes based upon their scores", "[probe_rank]" )
             };
 
             REQUIRE( int_probe_rank.get_probe_ranks() == expected_values );
+			// verify getting probe(s) by rank
+			REQUIRE(*int_probe_rank.get_probes_with_rank(1.0) == *expected_values.find(1.0));
 			REQUIRE(*int_probe_rank.get_probes_with_rank(4.7445) == *expected_values.find(4.7));
 			REQUIRE(*int_probe_rank.get_probes_with_rank(1.4483) == *expected_values.find(1.4));
         }
@@ -2713,8 +2746,9 @@ TEST_CASE( "Ranking Probes based upon their scores", "[probe_rank]" )
             };
 
             REQUIRE( int_probe_rank.get_probe_ranks() == expected_values );
-			REQUIRE(*int_probe_rank.get_probes_with_rank(156.10) == *expected_values.find(156.10));
+			// verify getting probe(s) by rank
 			REQUIRE(*int_probe_rank.get_probes_with_rank(1.05) == *expected_values.find(1.05));
+			REQUIRE(*int_probe_rank.get_probes_with_rank(156.10) == *expected_values.find(156.10));
 			REQUIRE(*int_probe_rank.get_probes_with_rank(1.4522) == *expected_values.find(1.45));
         }
 }
@@ -3054,6 +3088,52 @@ TEST_CASE( "Determining whether a file is gzipped.", "[pepsirf_io]" )
     REQUIRE( !pepsirf_io::is_gzipped( false_expected ) );
 }
 
+TEST_CASE("Full test of subjoin's individual methods", "[module_subjoin]")
+{
+	SECTION("Test of namelist parsing")
+	{
+		// initialize in-file stream with path to namelist
+		// define destination vector of strings
+
+		// parse namelist file
+
+		// check destination vec
+	}
+	SECTION("Test of joining with ignore resolution strategy")
+	{
+		// initialize first peptide score sample major with data
+		// initialize second peptide score sample major with data
+		// initialize evaluation strategy - ignore
+		// define destination labeled matrix associated doubles with strings
+
+		// join peptide scores
+
+		// check destination matrix
+	}
+	SECTION("Test of joining with combine resolution strategy")
+	{
+		// initialize first peptide score sample major with data
+		// initialize second peptide score sample major with data
+		// initialize evaluation strategy - combine
+		// define destination labeled matrix associated doubles with strings
+
+		// join peptide scores
+
+		// check destination matrix
+	}
+	SECTION("Test of joining with include resolution strategy")
+	{
+		// initialize first peptide score sample major with data
+		// initialize second peptide score sample major with data
+		// initialize evaluation strategy - include
+		// define destination labeled matrix associated doubles with strings
+
+		// join peptide scores
+
+		// check destination matrix
+	}
+}
+
 TEST_CASE( "Subjoin name list filter is optional", "[module_subjoin]" )
 {
     module_subjoin mod = module_subjoin();
@@ -3064,16 +3144,40 @@ TEST_CASE( "Subjoin name list filter is optional", "[module_subjoin]" )
     mod.run( &opts );
 }
 
-TEST_CASE("Full test of link module's individual funcitons", "module_link")
+TEST_CASE("Full test of link module's individual methods", "module_link")
 {
+	// define a destination unordered map associating a string to a scored
+	// entity
 	SECTION("Testing prot map creation")
 	{
+		// initialize sequence vector
+		// initialize unordered map of ids
+
+		// create prot map
+
+		// check destination map
 	}
 	SECTION("Testing pep map creation")
 	{
+		// define destination vector of tuples associating strings to scored
+		// entities
+
+		// initialize vector of sequences
+
+		// create pep map
+
+		// check destination vector
 	}
 	SECTION("Testing pep map creation with kmer penalty")
 	{
+		// define destination vector of tuples associating strings to scored
+		// entities
+
+		// initialize vector of sequences
+
+		// create pep map with kmer penalty
+
+		// check destination vector
 	}
 }
 
