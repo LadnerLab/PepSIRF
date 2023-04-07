@@ -78,6 +78,16 @@ TEST_CASE( "Sequence", "[sequence]" )
 
     s2 = "AAA";
     REQUIRE( seq.seq.compare( s2 ) != 0 );
+
+	sequence seq2("sequence2", "ATGCGGGGTC");
+
+	std::string new_seq_name = "sequence1";
+	seq.set_name(new_seq_name);
+	REQUIRE(seq.name.compare("sequence1") == 0);
+	REQUIRE(seq == seq2);
+
+	REQUIRE(seq.length() == 10);
+	REQUIRE(seq2.length() == seq.length());
 }
 
 TEST_CASE( "fasta_parser is able to read files that exist, properly creates error when file cannot be found", "[fasta_parser]" )
@@ -158,7 +168,6 @@ TEST_CASE( "Parse Fastq", "[fastq_parser]" )
             parse.parse( in_file, seq_vec2, step );
         }
     REQUIRE( seq_vec2.size() == 100 );
-
 
     std::vector<fastq_sequence> seq_vec3;
     seq_vec3.reserve( 100 );
