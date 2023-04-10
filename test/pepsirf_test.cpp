@@ -1471,7 +1471,34 @@ TEST_CASE( "all_distances", "[util]" )
                     distances[ index ] == std::abs( data[ index ] - target  )
                    );
         }
+}
 
+TEST_CASE("pairwise distance symmetry optimized", "[distance_tools]")
+{
+    distance_matrix<int> dist(5);
+	std::vector<int> int_vec = {6, 8, 2, 0, 1};
+
+	auto dist_calc = [](const int a, const int b)
+	{
+		return a / std::abs(a - b);
+	};
+
+	REQUIRE(dist_calc(4, 8) == 1);
+
+	distance_tools::pairwise_distances_symmetry_optimized(
+		dist, int_vec.begin(), int_vec.end(), dist_calc
+	);
+	
+	REQUIRE(dist[0][0] == 3);
+	REQUIRE(dist[0][1] == 1);
+	REQUIRE(dist[0][2] == 1);
+	REQUIRE(dist[0][3] == 1);
+	REQUIRE(dist[1][0] == 1);
+	REQUIRE(dist[1][1] == 1);
+	REQUIRE(dist[1][2] == 1);
+	REQUIRE(dist[2][0] == 1);
+	REQUIRE(dist[2][1] == 2);
+	REQUIRE(dist[3][0] == 0);
 }
 
 TEST_CASE( "pairwise_distances_int", "[distance_tools]" )
@@ -2697,10 +2724,6 @@ TEST_CASE( "Parsing/Writing Bins from stream", "[peptide_bin]" )
 		REQUIRE(bin_c.bins[3].size() == 0);
 		REQUIRE(bin_c.smallest() == *(bin_c.end() - 1));
 	}
-}
-
-TEST_CASE("", "[peptide_bin]")
-{
 }
 
 TEST_CASE("", "[peptide_scoring]")
