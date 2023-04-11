@@ -3160,7 +3160,6 @@ TEST_CASE( "Testing nt->aa translation", "[nt_aa_translator]" )
 }
 
 #ifdef ZLIB_ENABLED
-
 TEST_CASE( "Reading/Writing Gzipped information", "[pepsirf_io]" )
 {
     std::string data = "One banana, two banana, three banana, split!";
@@ -3190,7 +3189,6 @@ TEST_CASE( "Reading/Writing Gzipped information", "[pepsirf_io]" )
 
     REQUIRE( comp == data );
 }
-
 #endif // ZLIB_ENABLED
 
 TEST_CASE( "Determining whether a file is gzipped.", "[pepsirf_io]" )
@@ -3328,7 +3326,7 @@ TEST_CASE( "Metadata file can be given in place of taxonomic id index", "[module
 
 TEST_CASE("Test zscore calculation", "[module_zscore]")
 {
-	SECTION("Verify symmetrical trim option properly trims both head and tail")
+	SECTION("Run symmetrical trim option")
 	{
 		module_zscore z_mod;
 		options_zscore z_opts;
@@ -3337,7 +3335,8 @@ TEST_CASE("Test zscore calculation", "[module_zscore]")
 
 		z_opts.in_fname = "../test/input_data/test_zscore_score_matrix.tsv";
 		z_opts.in_bins_fname = "../test/input_data/test_zscore_bins.tsv";
-		z_opts.out_fname = "../test/test_zscore_output.tsv";
+		z_opts.out_fname = "../test/test_zscore_trim_output.tsv";
+		z_opts.hpd_percent = 0.00;
 		z_opts.trim_percent = 0.90;
 		
 		std::ifstream bins_file(z_opts.in_bins_fname, std::ios_base::in);
@@ -3356,10 +3355,74 @@ TEST_CASE("Test zscore calculation", "[module_zscore]")
 		}
 		peptide_scoring::write_peptide_scores(z_opts.out_fname, input_data);
 	}
-	SECTION("Verify highest density interval option properly trims distribution")
+	SECTION("Verify trim option properly trims both head and tail")
+	{
+		std::ifstream ifexpected(
+			"../test/expected/test_expected_zscore_trim_output.tsv",
+			std::ios_base::in
+		);
+		std::ifstream ifactual(
+			"../test/test_zscore_trim_output.tsv",
+			std::ios_base::in
+		);
+		std::string expected_line;
+		std::string actual_line;
+
+		while (!ifexpected.eof() && !ifactual.eof())
+		{
+			std::getline(ifexpected, expected_line);
+			std::getline(ifactual, actual_line);
+			REQUIRE(expected_line.compare(actual_line) == 0);
+		}
+	}
+	SECTION("Run highest density interval (hdi) option")
 	{
 		module_zscore z_mod;
 		options_zscore z_opts;
+		std::vector<nan_report> nan_values;
+		peptide_score_data_sample_major input_data;
+
+		z_opts.in_fname = "../test/input_data/test_zscore_score_matrix.tsv";
+		z_opts.in_bins_fname = "../test/input_data/test_zscore_bins.tsv";
+		z_opts.out_fname = "../test/test_zscore_hdi_output.tsv";
+		z_opts.hpd_percent = 0.75;
+		z_opts.trim_percent = 0.00;
+		
+		std::ifstream bins_file(z_opts.in_bins_fname, std::ios_base::in);
+
+		peptide_scoring::parse_peptide_scores(input_data, z_opts.in_fname);
+		bin_collection peptide_bins = peptide_bin_io::parse_bins(bins_file);
+
+		auto& zscore_matrix = input_data.scores;
+		for (const auto sample_pair : zscore_matrix.get_row_labels())
+		{
+			std::string sample_name = sample_pair.first;
+			z_mod.calculate_zscores(
+				peptide_bins, &z_opts, zscore_matrix,
+				sample_name, std::back_inserter(nan_values)
+			);
+		}
+		peptide_scoring::write_peptide_scores(z_opts.out_fname, input_data);
+	}
+	SECTION("Verify high density interval option properly trimmed distribution")
+	{
+		std::ifstream ifexpected(
+			"../test/expected/test_expected_zscore_hdi_output.tsv",
+			std::ios_base::in
+		);
+		std::ifstream ifactual(
+			"../test/test_zscore_hdi_output.tsv",
+			std::ios_base::in
+		);
+		std::string expected_line;
+		std::string actual_line;
+
+		while (!ifexpected.eof() && !ifactual.eof())
+		{
+			std::getline(ifexpected, expected_line);
+			std::getline(ifactual, actual_line);
+			REQUIRE(expected_line.compare(actual_line) == 0);
+		}
 	}
 }
 
