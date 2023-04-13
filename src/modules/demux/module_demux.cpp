@@ -423,10 +423,7 @@ void module_demux::run( options *opts )
                                                             #pragma omp critical
                                                             {
 #endif                                                          
-                                                                #pragma GCC diagnostic push
-                                                                #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
                                                                 fastq_output[d_id->second.name].emplace_back(reads[ read_index ]);
-                                                                #pragma GCC diagnostic pop
 #ifndef __clang__
                                                             }
 #endif
@@ -492,10 +489,7 @@ void module_demux::run( options *opts )
                                                     #pragma omp critical
                                                     {
 #endif
-                                                        #pragma GCC diagnostic push
-                                                        #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
                                                         fastq_output[d_id->second.name].emplace_back(reads[ read_index ]);
-                                                        #pragma GCC diagnostic pop
 #ifndef __clang__
                                                     }
 #endif
