@@ -15,6 +15,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
 
+#include "bk_tree.h"
 #include "test_utils.h"
 #include "overlap_data.h"
 #include "distance_tools.h"
@@ -669,37 +670,6 @@ TEST_CASE("Full test of info module", "[module_info]")
 }
 */
 
-TEST_CASE( "samplelist_parser is able to read files that exist, properly creates errors when file cannot be found/read", "[samplelist_parser]" )
-{
-    // SECTION( "samplelist_parser is able to read a well-formed test")
-    // {
-    //     samplelist_parser slp;
-    //     std::string filename = "../test/test_samplelist.tsv";
-
-    //     auto vec = slp.parse( filename );
-
-    //     REQUIRE( vec.size() == 96 );
-
-
-    //     unsigned int index = 0;
-    //     std::unordered_map<sample, int> s_map( vec.size() );
-    //     for( index = 0 ; index < vec.size(); ++index )
-    //         {
-    //             s_map[ vec[ index ] ] = vec[ index ].id;
-    //         }
-
-    //     REQUIRE( s_map.size() <= vec.size() );
-    // }
-
-
-    // SECTION( "samplelist_parser throws an error when a file is not found or incorrect format" )
-    // {
-    //     samplelist_parser sl;
-    //     REQUIRE_THROWS( sl.parse( "../test/test.fasta" ) );
-    //     REQUIRE_THROWS( sl.parse( "does_not_exist.tsv" ) );
-    // }
-}
-
 TEST_CASE( "Test String Indexing", "[string_indexer]" )
 {
     std::string origin = "";
@@ -716,9 +686,7 @@ TEST_CASE( "Test String Indexing", "[string_indexer]" )
                        seqs_fastq.emplace_back( seq.name, seq.seq );
                    }
                  );
-
-
-    si.index( seqs_fastq );
+	si.index( seqs_fastq );
     REQUIRE( si.tree.size() > 0 );
     REQUIRE( si.tree.size() == seqs.size() );
 
@@ -750,8 +718,6 @@ TEST_CASE( "Test String Indexing", "[string_indexer]" )
     std::vector<sequence> seqs2;
     seqs2.emplace_back( "", "ATGC" );
     seqs2.emplace_back( "", "TGC" );
-
-    sequence_indexer si2;
 }
 
 TEST_CASE( "Reference-independent Demultiplexing" )
@@ -798,11 +764,7 @@ TEST_CASE( "Reference-independent Demultiplexing" )
             REQUIRE( it.size() == 2 );
             REQUIRE( it[ 0 ] == 0 );
             REQUIRE( it[ 1 ] == 0 );
-
-
-
         }
-
     SECTION( "Pointer-based value-items in the map" )
         {
             using mapped_t = std::vector<std::size_t>*;
@@ -1397,15 +1359,54 @@ TEST_CASE("Full test of util's individual methods", "[util]")
 {
 	SECTION("Test adding two things")
 	{
+		SECTION("9 plus 9 is equal to 18")
+		{
+			REQUIRE(add(9, 9) == 18);
+		}
+		SECTION("10.47 plus 9.53 is equal to 20.00")
+		{
+			REQUIRE(add(10.47, 9.53) == 20.00);
+		}
+		SECTION("-24.34 plus 6.70 is equal to -17.64")
+		{
+			REQUIRE(add(-24.34, 6.70));
+		}
 	}
 	SECTION("Test subtrating a thing from another")
 	{
+		SECTION("9 minus 2 is equal to 7")
+		{
+		}
+		SECTION("10 minus -10 is equal to 20")
+		{
+		}
+		SECTION("5.00 minus 0.53 is equal to 4.47")
+		{
+		}
 	}
 	SECTION("Test multiplying two things")
 	{
+		SECTION("9 multiplied by 2 is equal to 18")
+		{
+		}
+		SECTION("18 multiplied by -3 is equal to -54")
+		{
+		}
+		SECTION("5.48 multiplied by 31.26 is equal to 171.3048")
+		{
+		}
 	}
 	SECTION("Test dividing a thing by another")
 	{
+		SECTION("10 divided by 5 is equal to 2")
+		{
+		}
+		SECTION("30 divided by -4 is equal to -7.5")
+		{
+		}
+		SECTION("-10.48 divided by -6.18 is equal to 1.69579288")
+		{
+		}
 	}
 	SECTION("Test is_integer()")
 	{
@@ -1450,6 +1451,18 @@ TEST_CASE("Full test of util's individual methods", "[util]")
 		REQUIRE(it->second == 0);
 		it = my_map_of_pairs.find(my_pair_vec[3].first);
 		REQUIRE(it->second == 120);
+	}
+	SECTION("Test container printing")
+	{
+		std::ostringstream container_print_out;
+		std::string expected_print_out = "[pep1, 7]\n[pep2, 3]\n[pep3, 10]\n[pep4, 6]\n";
+		std::vector<std::pair<std::string, int>> container = {
+			{"pep1", 7}, {"pep2", 3}, {"pep3", 10}, {"pep4", 6}
+		};
+
+		print_container(container_print_out, container, "\n");
+
+		REQUIRE(expected_print_out.compare(container_print_out.str()) == 0);
 	}
 }
 
@@ -2294,6 +2307,64 @@ TEST_CASE( "matrix creation, setting individual members of matrix", "[matrix]" )
     REQUIRE( a( 1, 2 ) == 4 );
 }
 
+TEST_CASE("Test label operations of labeled_matrix class", "[labeled_matrix]")
+{
+	std::vector<std::string> row_labels = {
+		"Row1", "Row2", "Row3", "Row4"
+	};
+	std::vector<std::string> col_labels = {
+		"Col1", "Col2", "Col3", "Col4"
+	};
+	labeled_matrix<int, std::string> labeled_mat(4, 4, row_labels, col_labels);
+
+	SECTION("Getting row labels")
+	{
+		std::vector<std::string> labels;
+		labeled_mat.get_row_labels(labels);
+
+		REQUIRE(row_labels[0].compare(labels[3]) == 0);
+		REQUIRE(row_labels[1].compare(labels[2]) == 0);
+		REQUIRE(row_labels[2].compare(labels[1]) == 0);
+		REQUIRE(row_labels[3].compare(labels[0]) == 0);
+	}
+	SECTION("Getting column labels")
+	{
+		std::vector<std::string> labels;
+		labeled_mat.get_col_labels(labels);
+
+		REQUIRE(col_labels[0].compare(labels[3]) == 0);
+		REQUIRE(col_labels[1].compare(labels[2]) == 0);
+		REQUIRE(col_labels[2].compare(labels[1]) == 0);
+		REQUIRE(col_labels[3].compare(labels[0]) == 0);
+	}
+	SECTION("Update row labels")
+	{
+		std::vector<std::string> labels = {
+			"New New Row1", "New New Row2", "New New Row3", "New New Row4"
+		};
+
+		labeled_mat.update_col_labels(labels);
+
+		REQUIRE(labels[3].compare("New New Row4") == 0);
+		REQUIRE(labels[2].compare("New New Row3") == 0);
+		REQUIRE(labels[1].compare("New New Row2") == 0);
+		REQUIRE(labels[0].compare("New New Row1") == 0);
+	}
+	SECTION("Update column labels")
+	{
+		std::vector<std::string> labels = {
+			"New New Col1", "New New Col2", "New New Col3", "New New Col4"
+		};
+
+		labeled_mat.update_col_labels(labels);
+
+		REQUIRE(labels[3].compare("New New Col4") == 0);
+		REQUIRE(labels[2].compare("New New Col3") == 0);
+		REQUIRE(labels[1].compare("New New Col2") == 0);
+		REQUIRE(labels[0].compare("New New Col1") == 0);
+	}
+}
+
 TEST_CASE( "labeled_matrix", "[labeled_matrix]" )
 {
     std::vector<std::string> row_labels{ "row_1", "row_2", "row_3", "row_4", "row_5" };
@@ -2726,8 +2797,67 @@ TEST_CASE( "Parsing/Writing Bins from stream", "[peptide_bin]" )
 	}
 }
 
-TEST_CASE("", "[peptide_scoring]")
+TEST_CASE("Full test of peptide scoring's individual pieces", "[peptide_scoring]")
 {
+	std::vector<double> expected_scores = {
+		0.00, 10.00, 8.00, 15.00, 3.00, 1.00, 3.00, 
+		0.00, 10.00, 5.00, 8.00, 2.00, 0.00, 2.00, 
+		21.00, 27.00, 9.00, 24.00, 14.00, 0.00, 14.00, 
+		2.00, 6.00, 7.00, 7.00, 1.00, 0.00, 5.00, 
+		2.00, 10.00, 31.00, 22.00, 1.00, 1.00, 14.00, 
+		12.00, 28.00, 24.00, 19.00, 13.00, 0.00, 23.00, 
+		0.00, 14.00, 11.00, 18.00, 6.00, 1.00, 5.00, 
+		2.00, 17.00, 19.00, 23.00, 4.00, 2.00, 6.00, 
+		2.00, 13.00, 11.00, 25.00, 0.00, 1.00, 5.00, 
+		1.00, 24.00, 15.00, 30.00, 9.00, 1.00, 10.00
+	};
+	peptide_score_data score_data;
+	peptide_scoring::parse_peptide_scores(
+		score_data,
+		"../test/input_data/test_enrich_raw_scores.tsv"
+	);
+
+	SECTION("Verify file name of score data points to test/test_enrich_raw_scores.tsv")
+	{
+		REQUIRE(score_data.file_name.compare("test_enrich_raw_scores.tsv") == 0);
+	}
+	SECTION("Verify peptide names of score data match those found in raw scores file")
+	{
+		std::vector<std::string> expected_pep_names = {
+			"PV1_000000", "PV1_000001", "PV1_000002", "PV1_000003", "PV1_000004", "PV1_000005", "PV1_000006"
+		};
+
+		REQUIRE(expected_pep_names.size() == score_data.pep_names.size());
+		for (std::size_t i = 0; i < expected_pep_names.size(); i += 1)
+		{
+			REQUIRE(expected_pep_names[i].compare(score_data.pep_names[i]) == 0);
+		}
+	}
+	SECTION("Verify sample names of score data match those found in raw scores file")
+	{
+		std::vector<std::string> expected_sample_names = {
+			"HCV-I_PV1_Run3_B", "HCV-H_PV1_Run3_B", "HCV-J_PV1_Run3_A",
+			"JAS_PV1_Run10_A", "HCV-H_PV1_Run3_A", "HCV-I_PV1_Run3_A",
+			"HCV-J_PV1_Run3_B", "SB_PV1_Run3_A", "JAS_PV1_Run10_B",
+			"SB_PV1_Run3_B"
+		};
+
+		REQUIRE(expected_sample_names.size() == score_data.sample_names.size());
+		for (std::size_t i = 0; i < expected_sample_names.size(); i += 1)
+		{
+			REQUIRE(expected_sample_names[i].compare(score_data.sample_names[i]) == 0);
+		}
+	}
+	SECTION("Verify scores match those found in raw scores file")
+	{
+		for (std::size_t i = 0; i < score_data.sample_names.size(); i += 1)
+		{
+			for (std::size_t j = 0; j < score_data.pep_names.size(); j += 1)
+			{
+				REQUIRE(score_data.scores(i, j) == expected_scores[i * score_data.pep_names.size() + j]);
+			}
+		}
+	}
 }
 
 TEST_CASE( "Verify sums and minimum bin size resizing", "[module_bin]" )
@@ -3259,6 +3389,7 @@ TEST_CASE( "Subjoin name list filter is optional", "[module_subjoin]" )
 
 TEST_CASE("Full test of link module's individual methods", "module_link")
 {
+	module_link link_mod;
 	// define a destination unordered map associating a string to a scored
 	// entity
 	SECTION("Testing prot map creation")
@@ -3292,6 +3423,17 @@ TEST_CASE("Full test of link module's individual methods", "module_link")
 
 		// check destination vector
 	}
+	/*
+	SECTION("Testing verification of ID type by ID index")
+	{
+		sequence seq("my_seq", "ATGATCGCGCGATATAGAGATACGATCGCGTCGATCGTATATTTAGATACGCCCGCTCGCGATATCG");
+
+		std::cout << "\n\n\n" << link_mod.verify_id_type(seq.name, 0) << "\n\n\n";
+	}
+	SECTION("Testing verification of ID type with map of species IDs")
+	{
+	}
+	*/
 }
 
 TEST_CASE( "Metadata file can be given in place of taxonomic id index", "[module_link]" )
