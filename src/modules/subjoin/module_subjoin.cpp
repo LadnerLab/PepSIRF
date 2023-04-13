@@ -192,7 +192,10 @@ void module_subjoin::run( options *opts )
 
     if( use_peptide_names )
         {
+            #pragma GCC diagnostic push
+            #pragma GCC diagnostic ignored "-Wrange-loop-construct"
             output << joined_data.scores;
+            #pragma GCC diagnostic pop
         }
     else
         {

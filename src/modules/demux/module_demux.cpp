@@ -119,7 +119,7 @@ void module_demux::run( options *opts )
     dna_tags = fasta_p.parse( d_opts->index_fname );
     create_index_map( index_map, dna_tags, samplelist, seq_lookup);
     std::size_t count = 0;
-    for( const auto index_seq : index_map )
+    for( const auto &index_seq : index_map )
     {
         auto seq = index_seq.first;
         auto sample = index_seq.second;
@@ -422,8 +422,11 @@ void module_demux::run( options *opts )
 #ifndef __clang__
                                                             #pragma omp critical
                                                             {
-#endif
+#endif                                                          
+                                                                #pragma GCC diagnostic push
+                                                                #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
                                                                 fastq_output[d_id->second.name].emplace_back(reads[ read_index ]);
+                                                                #pragma GCC diagnostic pop
 #ifndef __clang__
                                                             }
 #endif
@@ -489,7 +492,10 @@ void module_demux::run( options *opts )
                                                     #pragma omp critical
                                                     {
 #endif
+                                                        #pragma GCC diagnostic push
+                                                        #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
                                                         fastq_output[d_id->second.name].emplace_back(reads[ read_index ]);
+                                                        #pragma GCC diagnostic pop
 #ifndef __clang__
                                                     }
 #endif
@@ -744,7 +750,7 @@ void module_demux::create_diagnostic_map( bool reference_dependent,
                                           std::vector<sample> samplelist )
 {
     std::size_t column_size = reference_dependent ? samplelist[0].string_ids.size() + 1 : samplelist[0].string_ids.size();
-    for( const auto sample : samplelist )
+    for( const auto &sample : samplelist )
         {
             diagnostic_map.emplace( sample, std::vector<std::size_t>(column_size, 0) );
         }

@@ -78,7 +78,10 @@ std::vector<sample> samplelist_parser::parse( const options_demux *d_opts, const
             boost::split( split_line, line, boost::is_any_of( "\t" ) );
             std::vector<std::string> seqs;
             std::vector<std::string> index_col_ids;
+            #pragma GCC diagnostic push
+            #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
             name = split_line[ samplename_idx ];
+            #pragma GCC diagnostic pop
             for( const auto& index : index_cols )
                 {
                     id_set += split_line[index];

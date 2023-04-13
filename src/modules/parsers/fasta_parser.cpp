@@ -33,8 +33,11 @@ std::vector<sequence> fasta_parser::parse( std::string filename )
                                 }
 
                             // create a new sequence, set its name to the line
+                            #pragma GCC diagnostic push
+                            #pragma GCC diagnostic ignored "-Wdeprecated-copy"
                             seq = sequence();
                             seq.name = line.substr( 1 );
+                            #pragma GCC diagnostic pop
                         }
                     else
                         {

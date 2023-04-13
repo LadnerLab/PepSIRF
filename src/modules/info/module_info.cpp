@@ -50,7 +50,7 @@ void module_info::run( options *opts )
 
             auto& matr = scores.scores;
 
-            for( const auto sample_n : matr.get_row_labels() )
+            for( const auto &sample_n : matr.get_row_labels() )
                 {
                     double sum = std::accumulate( matr.row_begin( sample_n.second ),
                                                   matr.row_end( sample_n.second ),
@@ -100,7 +100,7 @@ void module_info::run( options *opts )
             bool invalid_sample_found;
             std::vector<std::string> invalid_samples = {};
             std::vector<std::string> found_samples = {};
-            for ( int i = 0; i < scores.sample_names.size(); i++ )
+            for ( std::size_t i = 0; i < scores.sample_names.size(); i++ )
                 {
                     invalid_sample_found = true;
 
