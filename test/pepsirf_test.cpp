@@ -2146,11 +2146,29 @@ TEST_CASE("Full test of normalize module", "[module_normalize]")
 	SECTION("Test get_sum() works as expected")
 	{
 		// define vec of doubles
+		std::vector<double> dest_vec = {0, 0, 0};
 		// initialize matrix of doubles
+		matrix<double> doubles_mat(3, 3);
+
+		doubles_mat(0, 0) = -9.462;
+		doubles_mat(1, 0) = -10.462;
+		doubles_mat(2, 0) = -0.492;
+		
+		doubles_mat(0, 1) = 5.632;
+		doubles_mat(1, 1) = -0.843;
+		doubles_mat(2, 1) = 0.748;
+		
+		doubles_mat(0, 2) = 2.351;
+		doubles_mat(1, 2) = 3.245;
+		doubles_mat(2, 2) = 0.134;
 
 		// get sums from matrix
+		norm_mod.get_sum(&dest_vec, &doubles_mat);
 
 		// check destination vector for expected values
+		REQUIRE(dest_vec[0] == -20.416);
+		REQUIRE(dest_vec[1] == 5.537);
+		REQUIRE(dest_vec[2] == 5.730);
 	}
 	SECTION("Test get_neg_average() works as expected")
 	{
@@ -2319,49 +2337,53 @@ TEST_CASE("Test label operations of labeled_matrix class", "[labeled_matrix]")
 
 	SECTION("Getting row labels")
 	{
-		std::vector<std::string> labels;
+		std::unordered_set<std::string> labels;
 		labeled_mat.get_row_labels(labels);
 
-		REQUIRE(row_labels[0].compare(labels[3]) == 0);
-		REQUIRE(row_labels[1].compare(labels[2]) == 0);
-		REQUIRE(row_labels[2].compare(labels[1]) == 0);
-		REQUIRE(row_labels[3].compare(labels[0]) == 0);
+		REQUIRE(labels.find(row_labels[0]) != labels.end());
+		REQUIRE(labels.find(row_labels[1]) != labels.end());
+		REQUIRE(labels.find(row_labels[2]) != labels.end());
+		REQUIRE(labels.find(row_labels[3]) != labels.end());
 	}
 	SECTION("Getting column labels")
 	{
-		std::vector<std::string> labels;
+		std::unordered_set<std::string> labels;
 		labeled_mat.get_col_labels(labels);
 
-		REQUIRE(col_labels[0].compare(labels[3]) == 0);
-		REQUIRE(col_labels[1].compare(labels[2]) == 0);
-		REQUIRE(col_labels[2].compare(labels[1]) == 0);
-		REQUIRE(col_labels[3].compare(labels[0]) == 0);
+		REQUIRE(labels.find(col_labels[0]) != labels.end());
+		REQUIRE(labels.find(col_labels[1]) != labels.end());
+		REQUIRE(labels.find(col_labels[2]) != labels.end());
+		REQUIRE(labels.find(col_labels[3]) != labels.end());
 	}
 	SECTION("Update row labels")
 	{
+		std::unordered_map<std::string, std::uint32_t> labels_map;
 		std::vector<std::string> labels = {
-			"New New Row1", "New New Row2", "New New Row3", "New New Row4"
+			"New Row1", "New Row2", "New Row3", "New Row4"
 		};
 
-		labeled_mat.update_col_labels(labels);
+		labeled_mat.update_row_labels(labels);
+		labels_map = labeled_mat.get_row_labels();
 
-		REQUIRE(labels[3].compare("New New Row4") == 0);
-		REQUIRE(labels[2].compare("New New Row3") == 0);
-		REQUIRE(labels[1].compare("New New Row2") == 0);
-		REQUIRE(labels[0].compare("New New Row1") == 0);
+		REQUIRE(labels_map.find(labels[0]) != labels_map.end());
+		REQUIRE(labels_map.find(labels[1]) != labels_map.end());
+		REQUIRE(labels_map.find(labels[2]) != labels_map.end());
+		REQUIRE(labels_map.find(labels[3]) != labels_map.end());
 	}
 	SECTION("Update column labels")
 	{
+		std::unordered_map<std::string, std::uint32_t> labels_map;
 		std::vector<std::string> labels = {
-			"New New Col1", "New New Col2", "New New Col3", "New New Col4"
+			"New Col1", "New Col2", "New Col3", "New Col4"
 		};
 
 		labeled_mat.update_col_labels(labels);
+		labels_map = labeled_mat.get_col_labels();
 
-		REQUIRE(labels[3].compare("New New Col4") == 0);
-		REQUIRE(labels[2].compare("New New Col3") == 0);
-		REQUIRE(labels[1].compare("New New Col2") == 0);
-		REQUIRE(labels[0].compare("New New Col1") == 0);
+		REQUIRE(labels_map.find(labels[0]) != labels_map.end());
+		REQUIRE(labels_map.find(labels[1]) != labels_map.end());
+		REQUIRE(labels_map.find(labels[2]) != labels_map.end());
+		REQUIRE(labels_map.find(labels[3]) != labels_map.end());
 	}
 }
 
@@ -3394,12 +3416,25 @@ TEST_CASE("Full test of link module's individual methods", "module_link")
 	// entity
 	SECTION("Testing prot map creation")
 	{
+		/*
 		// initialize sequence vector
+		std::vector<sequence> seq_vec = {
+			sequence("seq1", "ATGCTAGCGCTAGACTAAAGACTAGCCGCGTT"),
+			sequence("seq2", "CCACTAATATATAGGCGCCTAGCCTAAGAGAA"),
+			sequence("seq3", "GCTAAGATATAGCGCGCTCGCGCTCGTTTTAG"),
+			sequence("seq4", "TTGATCGCCCCTATATTTAGACGGCGGATAGG")
+		};
 		// initialize unordered map of ids
+		std::unordered_map<
+			std::string,
+			std::unordered_set<scored_entity<std::string, double>>
+		> dest_map;
 
 		// create prot map
+		link_mod.create_prot_map(dest_map, seq_vec, 2, 8);
 
 		// check destination map
+		*/
 	}
 	SECTION("Testing pep map creation")
 	{
