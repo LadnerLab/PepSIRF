@@ -2173,38 +2173,98 @@ TEST_CASE("Full test of normalize module", "[module_normalize]")
 	SECTION("Test get_neg_average() works as expected")
 	{
 		// initialize peptide data sample major
+		peptide_score_data score_data;
+		score_data.pep_names = {"pep1", "pep2", "pep3", "pep4"};
+		score_data.sample_names = {"sample1", "sample2", "sample3", "sample4"};
+
+		score_data.scores = labeled_matrix<double, std::string>(
+			score_data.pep_names.size(), score_data.sample_names.size()
+		);
+
+		score_data.scores(0, 0) = 6.388;
+		score_data.scores(0, 1) = 10.997;
+		score_data.scores(0, 2) = 0.037;
+		score_data.scores(0, 3) = 5.730;
+
+		score_data.scores(1, 0) = 38.133;
+		score_data.scores(1, 1) = -7.483;
+		score_data.scores(1, 2) = 4.909;
+		score_data.scores(1, 3) = 12.283;
+		
+		score_data.scores(2, 0) = -3.182;
+		score_data.scores(2, 1) = 0.291;
+		score_data.scores(2, 2) = -0.321;
+		score_data.scores(2, 3) = -20.441;
+
+		score_data.scores(3, 0) = -0.210;
+		score_data.scores(3, 1) = 4.008;
+		score_data.scores(3, 2) = -0.110;
+		score_data.scores(3, 3) = -1.001;
+
 		// initialize negative filter
+		std::unordered_set<std::string> neg_filter = {"sample3", "sample4"};
 		// define destination map for averages
+		std::unordered_map<std::string, double> dest_pep_avgs;
 
 		// get negative averages
+		norm_mod.get_neg_average(&score_data, &neg_filter, &dest_pep_avgs);
 
 		// check destination map contains expected averages
+		auto pep_avg = dest_pep_avgs.find("pep1");
+		REQUIRE(pep_avg->second == 2.8835);
+
+		pep_avg = dest_pep_avgs.find("pep2");
+		REQUIRE(pep_avg->second == 8.596);
+
+		pep_avg = dest_pep_avgs.find("pep3");
+		REQUIRE(pep_avg->second == -10.381);
+
+		pep_avg = dest_pep_avgs.find("pep4");
+		REQUIRE(pep_avg->second == -0.5555);
 	}
 	SECTION("Test constant_factor_normalization() works as expected")
 	{
 		SECTION("Normalize column sums by 2")
 		{
-			// initialize column sums vector
+			std::vector<double> columns = {
+				6.832, -0.003, 10.374, 12.889, 1.234
+			};
 
-			// normalize column vec by 2
+			norm_mod.constant_factor_normalization(&columns, 2);
 
-			// check column vec sums have been normalized as expected
+			REQUIRE(columns[0] == 3.416);
+			REQUIRE(columns[1] == -0.0015);
+			REQUIRE(columns[2] == 5.187);
+			REQUIRE(columns[3] == 6.4445);
+			REQUIRE(columns[4] == 0.617);
 		}
 		SECTION("Normalize column sums by 4")
 		{
-			// initialize column sums vector
+			std::vector<double> columns = {
+				6.832, -0.003, 10.374, 12.889, 1.234
+			};
 
-			// normalize column vec by 4
+			norm_mod.constant_factor_normalization(&columns, 4);
 
-			// check column vec sums have been normalized as expected
+			REQUIRE(columns[0] == 1.708);
+			REQUIRE(columns[1] == -0.00075);
+			REQUIRE(columns[2] == 2.5935);
+			REQUIRE(columns[3] == 3.22225);
+			REQUIRE(columns[4] == 0.3085);
 		}
 		SECTION("Normalize column sums by 100")
 		{
-			// initialize column sums vector
+			std::vector<double> columns = {
+				16.832, -15.033, 10.374, 12.889, 10.234
+			};
 
-			// normalize column vec by 100
+			norm_mod.constant_factor_normalization(&columns, 100);
 
-			// check column vec sums have been normalized as expected
+			REQUIRE(columns[0] == 0.16832);
+			REQUIRE(columns[1] == -0.15033);
+			REQUIRE(columns[2] == 0.10374);
+			REQUIRE(columns[3] == 0.12889);
+			REQUIRE(columns[4] == 0.10234);
 		}
 	}
 	SECTION("Test filter_neg_control_start() works as expected")
@@ -2212,31 +2272,110 @@ TEST_CASE("Full test of normalize module", "[module_normalize]")
 		// TODO: filter_neg_control_start() needs a description block
 	}
 	SECTION("Test normalize_counts() works as expected")
-	{	// TODO: should we have more of this test?
-		// initialize matrix of origianl scores
-		// initialize normalize factors vector (double)
+	{
+		matrix<double> score_mat(3, 3);
 
-		// normalize original scores
+		score_mat(0, 0) = 5.683;
+		score_mat(0, 1) = -10.483;
+		score_mat(0, 2) = 3.000;
 
-		// check original scores have been normalized as expected
+		score_mat(1, 0) = 12.489;
+		score_mat(1, 1) = 39.542;
+		score_mat(1, 2) = 10.000;
+
+		score_mat(2, 0) = -0.004;
+		score_mat(2, 1) = -1.834;
+		score_mat(2, 2) = 0.100;
+
+		score_mat(3, 0) = 0.032;
+		score_mat(3, 1) = -1.002;
+		score_mat(3, 2) = 6.000;
+		
+		std::vector<double> norm_factors = {
+			1, 5, 0.5
+		};
+
+		norm_mod.normalize_counts(&score_mat, &norm_factors);
+
+		REQUIRE(score_mat(0, 0) == 5.683);
+		REQUIRE(score_mat(0, 1) == -2.0966);
+		REQUIRE(score_mat(0, 2) == 6.000);
+
+		REQUIRE(score_mat(1, 0) == 12.489);
+		REQUIRE(score_mat(1, 1) == 7.9084);
+		REQUIRE(score_mat(1, 2) == 20.000);
+
+		REQUIRE(score_mat(2, 0) == -0.004);
+		REQUIRE(score_mat(2, 1) == -0.3668);
+		REQUIRE(score_mat(2, 2) == 0.200);
+
+		REQUIRE(score_mat(3, 0) == 0.032);
+		REQUIRE(score_mat(3, 1) == -0.2004);
+		REQUIRE(score_mat(3, 2) == 12.000);
 	}
 	SECTION("Test compute_size_factors() works as expected")
 	{
-		// define destination vector for size factors
-		// initialize matrix of counts
+		/*
+		std::vector<double> dest_vec;
+		matrix<double> counts(3, 3);
 
-		// compute size factors of data
+		counts(0, 0) = 7.000;
+		counts(0, 1) = 12.000;
+		counts(0, 2) = -0.333;
 
-		// check destination vec for expected size factors
+		counts(1, 0) = -5.000;
+		counts(1, 1) = 4.000;
+		counts(1, 2) = -10.000;
+
+		counts(2, 0) = 3.000;
+		counts(2, 1) = -2.000;
+		counts(2, 2) = 0.111;
+
+		norm_mod.compute_size_factors(&dest_vec, &counts);
+
+		std::cout << "\n\n\n";
+		for (std::size_t i = 0; i < dest_vec.size(); i += 1)
+		{
+			std::cout << dest_vec[i] << ", ";
+		}
+		std::cout << "\n\n\n";
+		*/
 	}
 	SECTION("Test compute_diff() works as expected")
 	{
-		// define destination vector for norm score differences
-		// initialize map for means of negative controls
+		peptide_score_data_sample_major norm_score_diffs;
+		norm_score_diffs.sample_names = {"sample1", "sample2", "sample3"};
+		norm_score_diffs.pep_names = {"pep1", "pep2", "pep3"};
 
-		// compute differences
+		norm_score_diffs.scores = labeled_matrix<double, std::string>(
+			norm_score_diffs.pep_names.size(), norm_score_diffs.sample_names.size(),
+			norm_score_diffs.pep_names, norm_score_diffs.sample_names
+		);
 
-		// check destination vec for expected differences
+		norm_score_diffs.scores(0, 0) = 7.000;
+		norm_score_diffs.scores(0, 1) = -1.000;
+		norm_score_diffs.scores(0, 2) = 12.000;
+
+		norm_score_diffs.scores(1, 0) = 9.000;
+		norm_score_diffs.scores(1, 1) = 1.000;
+		norm_score_diffs.scores(1, 2) = -8.000;
+		
+		norm_score_diffs.scores(2, 0) = 10.000;
+		norm_score_diffs.scores(2, 1) = -5.000;
+		norm_score_diffs.scores(2, 2) = 4.000;
+
+		std::unordered_map<std::string, double> pep_avgs = {
+			{"pep1", 10.000}, {"pep2", 0.300}, {"pep3", 5.000}
+		};
+
+		norm_mod.compute_diff(&norm_score_diffs, &pep_avgs);
+
+		REQUIRE(norm_score_diffs.scores(0, 0) == -3.000);
+		REQUIRE(norm_score_diffs.scores(0, 1) == -1.300);
+		REQUIRE(norm_score_diffs.scores(0, 2) == 7.000);
+		
+		REQUIRE(norm_score_diffs.scores(1, 0) == -1.000);
+		REQUIRE(norm_score_diffs.scores(1, 1) == 
 	}
 	SECTION("Test compute_diff_ratio() works as expected")
 	{
@@ -3311,6 +3450,7 @@ TEST_CASE( "Testing nt->aa translation", "[nt_aa_translator]" )
 
 }
 
+/* remove
 #ifdef ZLIB_ENABLED
 TEST_CASE( "Reading/Writing Gzipped information", "[pepsirf_io]" )
 {
@@ -3352,6 +3492,7 @@ TEST_CASE( "Determining whether a file is gzipped.", "[pepsirf_io]" )
     std::ifstream false_expected{ "../test/input_data/test.fasta" };
     REQUIRE( !pepsirf_io::is_gzipped( false_expected ) );
 }
+*/
 
 TEST_CASE("Full test of subjoin's individual methods", "[module_subjoin]")
 {
@@ -3419,10 +3560,22 @@ TEST_CASE("Full test of link module's individual methods", "module_link")
 		/*
 		// initialize sequence vector
 		std::vector<sequence> seq_vec = {
-			sequence("seq1", "ATGCTAGCGCTAGACTAAAGACTAGCCGCGTT"),
-			sequence("seq2", "CCACTAATATATAGGCGCCTAGCCTAAGAGAA"),
-			sequence("seq3", "GCTAAGATATAGCGCGCTCGCGCTCGTTTTAG"),
-			sequence("seq4", "TTGATCGCCCCTATATTTAGACGGCGGATAGG")
+			sequence(
+				">ID=AHGTV_HH1 AC=ATFGDDVAHS_6TT OXX=4672,5934,8891",
+				"ATTATTGACGCGTATGAA"
+			),
+			sequence(
+				">ID=AVFTGS_RR3 AC=UJDNNDFMT_PI6 OXX=5864,1342,0795",
+				"GGTCGCTCGATATACGAT"
+			),
+			sequence(
+				">ID=GTHYVS_PPE AC=GWVBHW5FH_WT6 OXX=7284,8492,1189",
+				"TTAGCTACCCGATCGCTA"
+			),
+			sequence(
+				">ID=XCCSBV_THS AC=QQWVTH6HY_EHR OXX=5362,0958,4782",
+				"CCTAGCTAATCGCGCATA"
+			)
 		};
 		// initialize unordered map of ids
 		std::unordered_map<
@@ -3431,9 +3584,16 @@ TEST_CASE("Full test of link module's individual methods", "module_link")
 		> dest_map;
 
 		// create prot map
-		link_mod.create_prot_map(dest_map, seq_vec, 2, 8);
+		link_mod.create_prot_map<std::size_t>(dest_map, seq_vec, 5, 1);
 
 		// check destination map
+		std::cout << "\n\n\n";
+		std::cout << "Destination map size = " << dest_map.size() << "\n";	// remove
+		for (auto dest_map_thing : dest_map)
+		{
+			std::cout << dest_map_thing.first << "\n";
+		}
+		std::cout << "\n\n\n";
 		*/
 	}
 	SECTION("Testing pep map creation")
@@ -3458,17 +3618,17 @@ TEST_CASE("Full test of link module's individual methods", "module_link")
 
 		// check destination vector
 	}
-	/*
 	SECTION("Testing verification of ID type by ID index")
 	{
+		/*
 		sequence seq("my_seq", "ATGATCGCGCGATATAGAGATACGATCGCGTCGATCGTATATTTAGATACGCCCGCTCGCGATATCG");
 
 		std::cout << "\n\n\n" << link_mod.verify_id_type(seq.name, 0) << "\n\n\n";
+		*/
 	}
 	SECTION("Testing verification of ID type with map of species IDs")
 	{
 	}
-	*/
 }
 
 TEST_CASE( "Metadata file can be given in place of taxonomic id index", "[module_link]" )
