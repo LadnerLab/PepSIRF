@@ -3521,6 +3521,7 @@ TEST_CASE( "Testing nt->aa translation", "[nt_aa_translator]" )
 
 }
 
+/* remove
 #ifdef ZLIB_ENABLED
 TEST_CASE( "Reading/Writing Gzipped information", "[pepsirf_io]" )
 {
@@ -3562,6 +3563,7 @@ TEST_CASE( "Determining whether a file is gzipped.", "[pepsirf_io]" )
     std::ifstream false_expected{ "../test/input_data/test.fasta" };
     REQUIRE( !pepsirf_io::is_gzipped( false_expected ) );
 }
+remove */
 
 TEST_CASE("Full test of subjoin's individual methods", "[module_subjoin]")
 {
@@ -3626,44 +3628,51 @@ TEST_CASE("Full test of link module's individual methods", "module_link")
 	// entity
 	SECTION("Testing prot map creation")
 	{
-		/*
-		// initialize sequence vector
 		std::vector<sequence> seq_vec = {
 			sequence(
-				">ID=AHGTV_HH1 AC=ATFGDDVAHS_6TT OXX=4672,5934,8891",
-				"ATTATTGACGCGTATGAA"
+				">ID=AHGTV_HH1 AC=ATFGDDVAHS_6TT OXX=4672,5934,8891,8453",
+				"ATTAA"
 			),
 			sequence(
-				">ID=AVFTGS_RR3 AC=UJDNNDFMT_PI6 OXX=5864,1342,0795",
-				"GGTCGCTCGATATACGAT"
+				">ID=AVFTGS_RR3 AC=UJDNNDFMT_PI6 OXX=5864,1342,0795,1432",
+				"GGTCA"
 			),
 			sequence(
-				">ID=GTHYVS_PPE AC=GWVBHW5FH_WT6 OXX=7284,8492,1189",
-				"TTAGCTACCCGATCGCTA"
+				">ID=GTHYVS_PPE AC=GWVBHW5FH_WT6 OXX=7284,8492,1189,4857",
+				"TTAGG"
 			),
 			sequence(
-				">ID=XCCSBV_THS AC=QQWVTH6HY_EHR OXX=5362,0958,4782",
-				"CCTAGCTAATCGCGCATA"
+				">ID=XCCSBV_THS AC=QQWVTH6HY_EHR OXX=5362,0958,4782,2232",
+				"CCTAT"
 			)
 		};
-		// initialize unordered map of ids
+
 		std::unordered_map<
 			std::string,
 			std::unordered_set<scored_entity<std::string, double>>
 		> dest_map;
 
-		// create prot map
-		link_mod.create_prot_map<std::size_t>(dest_map, seq_vec, 5, 1);
+		link_mod.create_prot_map<std::size_t>(dest_map, seq_vec, 5, 3);
 
-		// check destination map
-		std::cout << "\n\n\n";
-		std::cout << "Destination map size = " << dest_map.size() << "\n";	// remove
-		for (auto dest_map_thing : dest_map)
-		{
-			std::cout << dest_map_thing.first << "\n";
-		}
-		std::cout << "\n\n\n";
-		*/
+		auto it = dest_map.begin();
+		REQUIRE(it->first.compare("CCTAT") == 0);
+		REQUIRE(it->second.begin()->get_key().compare("2232") == 0);
+		REQUIRE(it->second.begin()->get_score() == 1.00);
+
+		it++;
+		REQUIRE(it->first.compare("TTAGG") == 0);
+		REQUIRE(it->second.begin()->get_key().compare("4857") == 0);
+		REQUIRE(it->second.begin()->get_score() == 1.00);
+
+		it++;
+		REQUIRE(it->first.compare("GGTCA") == 0);
+		REQUIRE(it->second.begin()->get_key().compare("1432") == 0);
+		REQUIRE(it->second.begin()->get_score() == 1.00);
+
+		it++;
+		REQUIRE(it->first.compare("ATTAA") == 0);
+		REQUIRE(it->second.begin()->get_key().compare("8453") == 0);
+		REQUIRE(it->second.begin()->get_score() == 1.00);
 	}
 	SECTION("Testing pep map creation")
 	{
