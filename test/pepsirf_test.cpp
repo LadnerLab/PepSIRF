@@ -2145,9 +2145,7 @@ TEST_CASE("Full test of normalize module", "[module_normalize]")
 
 	SECTION("Test get_sum() works as expected")
 	{
-		// define vec of doubles
 		std::vector<double> dest_vec = {0, 0, 0};
-		// initialize matrix of doubles
 		matrix<double> doubles_mat(3, 3);
 
 		doubles_mat(0, 0) = -9.462;
@@ -2162,17 +2160,14 @@ TEST_CASE("Full test of normalize module", "[module_normalize]")
 		doubles_mat(1, 2) = 3.245;
 		doubles_mat(2, 2) = 0.134;
 
-		// get sums from matrix
 		norm_mod.get_sum(&dest_vec, &doubles_mat);
 
-		// check destination vector for expected values
 		REQUIRE(dest_vec[0] == -20.416);
 		REQUIRE(dest_vec[1] == 5.537);
 		REQUIRE(dest_vec[2] == 5.730);
 	}
 	SECTION("Test get_neg_average() works as expected")
 	{
-		// initialize peptide data sample major
 		peptide_score_data score_data;
 		score_data.pep_names = {"pep1", "pep2", "pep3", "pep4"};
 		score_data.sample_names = {"sample1", "sample2", "sample3", "sample4"};
@@ -2201,15 +2196,11 @@ TEST_CASE("Full test of normalize module", "[module_normalize]")
 		score_data.scores(3, 2) = -0.110;
 		score_data.scores(3, 3) = -1.001;
 
-		// initialize negative filter
 		std::unordered_set<std::string> neg_filter = {"sample3", "sample4"};
-		// define destination map for averages
 		std::unordered_map<std::string, double> dest_pep_avgs;
 
-		// get negative averages
 		norm_mod.get_neg_average(&score_data, &neg_filter, &dest_pep_avgs);
 
-		// check destination map contains expected averages
 		auto pep_avg = dest_pep_avgs.find("pep1");
 		REQUIRE(pep_avg->second == 2.8835);
 
@@ -2269,11 +2260,19 @@ TEST_CASE("Full test of normalize module", "[module_normalize]")
 	}
 	SECTION("Test filter_neg_control_start() works as expected")
 	{
-		// TODO: filter_neg_control_start() needs a description block
+		peptide_score_data score_data;
+		score_data.sample_names = {"GYT_UU_C22", "NAE_COV_B45", "NAE_COV_A12", "CNB_MO8"};
+
+		std::unordered_set<std::string> neg_filter;
+
+		norm_mod.filter_neg_control_start(&score_data, &neg_filter, "NAE");
+
+		REQUIRE(neg_filter.find("NAE_COV_B45") != neg_filter.end());
+		REQUIRE(neg_filter.find("NAE_COV_A12") != neg_filter.end());
 	}
 	SECTION("Test normalize_counts() works as expected")
 	{
-		matrix<double> score_mat(3, 3);
+		matrix<double> score_mat(4, 4);
 
 		score_mat(0, 0) = 5.683;
 		score_mat(0, 1) = -10.483;
@@ -2315,31 +2314,28 @@ TEST_CASE("Full test of normalize module", "[module_normalize]")
 	}
 	SECTION("Test compute_size_factors() works as expected")
 	{
-		/*
 		std::vector<double> dest_vec;
 		matrix<double> counts(3, 3);
 
-		counts(0, 0) = 7.000;
-		counts(0, 1) = 12.000;
-		counts(0, 2) = -0.333;
+		counts(0, 0) = 700.000;
+		counts(0, 1) = 189.000;
+		counts(0, 2) = 62.000;
 
-		counts(1, 0) = -5.000;
+		counts(1, 0) = 5.000;
 		counts(1, 1) = 4.000;
-		counts(1, 2) = -10.000;
+		counts(1, 2) = 10.000;
 
 		counts(2, 0) = 3.000;
-		counts(2, 1) = -2.000;
+		counts(2, 1) = 2.000;
 		counts(2, 2) = 0.111;
 
 		norm_mod.compute_size_factors(&dest_vec, &counts);
 
-		std::cout << "\n\n\n";
-		for (std::size_t i = 0; i < dest_vec.size(); i += 1)
-		{
-			std::cout << dest_vec[i] << ", ";
-		}
-		std::cout << "\n\n\n";
-		*/
+		// compares out to nine decimal places without having to worry about
+		// rounding errors
+		REQUIRE((int)(dest_vec[0] * 1000000) == 3435288);
+		REQUIRE((int)(dest_vec[1] * 1000000) == 937154);
+		REQUIRE((int)(dest_vec[2] * 1000000) == 307426);
 	}
 	SECTION("Test compute_diff() works as expected")
 	{
@@ -2348,7 +2344,8 @@ TEST_CASE("Full test of normalize module", "[module_normalize]")
 		norm_score_diffs.pep_names = {"pep1", "pep2", "pep3"};
 
 		norm_score_diffs.scores = labeled_matrix<double, std::string>(
-			norm_score_diffs.pep_names.size(), norm_score_diffs.sample_names.size(),
+			norm_score_diffs.pep_names.size(),
+			norm_score_diffs.sample_names.size(),
 			norm_score_diffs.pep_names, norm_score_diffs.sample_names
 		);
 
@@ -2371,29 +2368,103 @@ TEST_CASE("Full test of normalize module", "[module_normalize]")
 		norm_mod.compute_diff(&norm_score_diffs, &pep_avgs);
 
 		REQUIRE(norm_score_diffs.scores(0, 0) == -3.000);
-		REQUIRE(norm_score_diffs.scores(0, 1) == -1.300);
-		REQUIRE(norm_score_diffs.scores(0, 2) == 7.000);
+		REQUIRE(norm_score_diffs.scores(0, 1) == -11.000);
+		REQUIRE(norm_score_diffs.scores(0, 2) == 2.000);
 		
-		REQUIRE(norm_score_diffs.scores(1, 0) == -1.000);
-		REQUIRE(norm_score_diffs.scores(1, 1) == 
+		REQUIRE(norm_score_diffs.scores(1, 0) == 8.700);
+		REQUIRE(norm_score_diffs.scores(1, 1) == 0.700);
+		REQUIRE(norm_score_diffs.scores(1, 2) == -8.300);
+
+		REQUIRE(norm_score_diffs.scores(2, 0) == 5.000);
+		REQUIRE(norm_score_diffs.scores(2, 1) == -10.000);
+		REQUIRE(norm_score_diffs.scores(2, 2) == -1.000);
 	}
 	SECTION("Test compute_diff_ratio() works as expected")
 	{
-		// define destination peptide data sample major
-		// initialize map for means of provided controls
+		peptide_score_data norm_score_diff_ratios;
+		norm_score_diff_ratios.sample_names = {
+			"sample1", "sample2", "sample3"
+		};
+		norm_score_diff_ratios.pep_names = {"pep1", "pep2", "pep3"};
 
-		// compute difference ratio
+		norm_score_diff_ratios.scores = labeled_matrix<double, std::string>(
+			norm_score_diff_ratios.pep_names.size(),
+			norm_score_diff_ratios.sample_names.size(),
+			norm_score_diff_ratios.pep_names,
+			norm_score_diff_ratios.sample_names
+		);
 
-		// check destination for expected difference ratios
+		norm_score_diff_ratios.scores(0, 0) = 4.000;
+		norm_score_diff_ratios.scores(0, 1) = -2.000;
+		norm_score_diff_ratios.scores(0, 2) = 12.000;
+
+		norm_score_diff_ratios.scores(1, 0) = 9.000;
+		norm_score_diff_ratios.scores(1, 1) = 1.000;
+		norm_score_diff_ratios.scores(1, 2) = -8.000;
+		
+		norm_score_diff_ratios.scores(2, 0) = 10.000;
+		norm_score_diff_ratios.scores(2, 1) = -5.000;
+		norm_score_diff_ratios.scores(2, 2) = 4.000;
+
+		std::unordered_map<std::string, double> pep_avgs = {
+			{"pep1", 2.000}, {"pep2", 3.000}, {"pep3", -8.000}
+		};
+
+		norm_mod.compute_diff_ratio(&norm_score_diff_ratios, &pep_avgs);
+
+		REQUIRE(norm_score_diff_ratios.scores("pep1", "sample1") == 1.000);
+		REQUIRE(norm_score_diff_ratios.scores("pep1", "sample2") == -2.000);
+		REQUIRE(norm_score_diff_ratios.scores("pep1", "sample3") == 5.000);
+
+		REQUIRE(norm_score_diff_ratios.scores("pep2", "sample1") == 2.000);
+		REQUIRE(norm_score_diff_ratios.scores("pep2", "sample2") == (-2.000 / 3.000));
+		REQUIRE(norm_score_diff_ratios.scores("pep2", "sample3") == (-11.000 / 3.000));
+
+		REQUIRE(norm_score_diff_ratios.scores("pep3", "sample1") == -2.250);
+		REQUIRE(norm_score_diff_ratios.scores("pep3", "sample2") == -0.375);
+		REQUIRE(norm_score_diff_ratios.scores("pep3", "sample3") == -1.500);
 	}
 	SECTION("Test compute_ratio() works as expected")
 	{
-		// define destination peptide data sample major
-		// initialize map for means of provided controls
+		peptide_score_data norm_score_ratio;
+		norm_score_ratio.sample_names = {"sample1", "sample2", "sample3"};
+		norm_score_ratio.pep_names = {"pep1", "pep2", "pep3"};
 
-		// compute ratio
+		norm_score_ratio.scores = labeled_matrix<double, std::string>(
+			norm_score_ratio.pep_names.size(),
+			norm_score_ratio.sample_names.size(),
+			norm_score_ratio.pep_names, norm_score_ratio.sample_names
+		);
 
-		// check destination for expected ratios
+		norm_score_ratio.scores("pep1", "sample1") = -8.284;
+		norm_score_ratio.scores("pep1", "sample2") = 7.2849;
+		norm_score_ratio.scores("pep1", "sample3") = 10.001;
+
+		norm_score_ratio.scores("pep2", "sample1") = -0.003;
+		norm_score_ratio.scores("pep2", "sample2") = 0.127482;
+		norm_score_ratio.scores("pep2", "sample3") = 5.8392;
+
+		norm_score_ratio.scores("pep3", "sample1") = 12.000;
+		norm_score_ratio.scores("pep3", "sample2") = 8.89994;
+		norm_score_ratio.scores("pep3", "sample3") = -4.388;
+
+		std::unordered_map<std::string, double>pep_avgs = {
+			{"pep1", 10.000}, {"pep2", 5.302}, {"pep3", -0.832}
+		};
+
+		norm_mod.compute_ratio(&norm_score_ratio, &pep_avgs);
+		
+		REQUIRE(norm_score_ratio.scores("pep1", "sample1") == (-8.284 / 10.000));
+		REQUIRE(norm_score_ratio.scores("pep1", "sample2") == (7.2849 / 10.000));
+		REQUIRE(norm_score_ratio.scores("pep1", "sample3") == (10.001 / 10.000));
+
+		REQUIRE(norm_score_ratio.scores("pep2", "sample1") == (-0.003 / 5.302));
+		REQUIRE(norm_score_ratio.scores("pep2", "sample2") == (0.127482 / 5.302));
+		REQUIRE(norm_score_ratio.scores("pep2", "sample3") == (5.8392 / 5.302));
+
+		REQUIRE(norm_score_ratio.scores("pep3", "sample1") == (12.000 / -0.832));
+		REQUIRE(norm_score_ratio.scores("pep3", "sample2") == (8.89994 / -0.832));
+		REQUIRE(norm_score_ratio.scores("pep3", "sample3") == (-4.388 / -0.832));
 	}
 }
 
@@ -3450,7 +3521,6 @@ TEST_CASE( "Testing nt->aa translation", "[nt_aa_translator]" )
 
 }
 
-/* remove
 #ifdef ZLIB_ENABLED
 TEST_CASE( "Reading/Writing Gzipped information", "[pepsirf_io]" )
 {
@@ -3492,7 +3562,6 @@ TEST_CASE( "Determining whether a file is gzipped.", "[pepsirf_io]" )
     std::ifstream false_expected{ "../test/input_data/test.fasta" };
     REQUIRE( !pepsirf_io::is_gzipped( false_expected ) );
 }
-*/
 
 TEST_CASE("Full test of subjoin's individual methods", "[module_subjoin]")
 {
