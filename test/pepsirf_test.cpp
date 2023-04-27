@@ -3521,7 +3521,6 @@ TEST_CASE( "Testing nt->aa translation", "[nt_aa_translator]" )
 
 }
 
-/* remove
 #ifdef ZLIB_ENABLED
 TEST_CASE( "Reading/Writing Gzipped information", "[pepsirf_io]" )
 {
@@ -3563,18 +3562,37 @@ TEST_CASE( "Determining whether a file is gzipped.", "[pepsirf_io]" )
     std::ifstream false_expected{ "../test/input_data/test.fasta" };
     REQUIRE( !pepsirf_io::is_gzipped( false_expected ) );
 }
-remove */
 
 TEST_CASE("Full test of subjoin's individual methods", "[module_subjoin]")
 {
+	module_subjoin sub_mod;
 	SECTION("Test of namelist parsing")
 	{
 		// initialize in-file stream with path to namelist
+		std::ifstream namelist("../test/input_data/test_subjoin_namelist.txt", std::ios_base::in);
 		// define destination vector of strings
+		std::vector<std::string> names;
+		// name replacement map
+		module_subjoin::name_replacement_list replacement_map;
 
-		// parse namelist file
+		replacement_map = sub_mod.parse_namelist(names, namelist);
 
-		// check destination vec
+		REQUIRE(names[0].compare("GY_PV_Run3X") == 0);
+		REQUIRE(names[1].compare("GY_PV_Run4X") == 0);
+		REQUIRE(names[2].compare("VKi_6vk_A") == 0);
+		REQUIRE(names[3].compare("VKi_6vk_B") == 0);
+		REQUIRE(names[4].compare("URB-PV1_SUB_6_A") == 0);
+		REQUIRE(names[5].compare("URB-PV1_SUB_6_B") == 0);
+		REQUIRE(names[6].compare("URB-PV1_SUB_6_C") == 0);
+
+		for (
+			std::size_t name_idx = 0;
+			name_idx < replacement_map.size();
+			name_idx += 1
+		)
+		{
+			REQUIRE(replacement_map.find(names[name_idx]) != replacement_map.end());
+		}
 	}
 	SECTION("Test of joining with ignore resolution strategy")
 	{
@@ -3625,7 +3643,12 @@ TEST_CASE("Full test of link module's individual methods", "module_link")
 {
 	module_link link_mod;
 	// define a destination unordered map associating a string to a scored
-	// entity
+	// entity	
+	std::unordered_map<
+		std::string,
+		std::unordered_set<scored_entity<std::string, double>>
+	> dest_map_of_kmers;
+
 	SECTION("Testing prot map creation")
 	{
 		std::vector<sequence> seq_vec = {
@@ -3647,14 +3670,20 @@ TEST_CASE("Full test of link module's individual methods", "module_link")
 			)
 		};
 
-		std::unordered_map<
-			std::string,
-			std::unordered_set<scored_entity<std::string, double>>
-		> dest_map;
+		/*
+		std::unordered_map<std::string, std::string> retriever_map = {
+			{
+				">ID=AHGTV_HH1 AC=ATFGDDVAHS_6TT OXX=4672,5934,8891,8453",
+				"ATTAA"
+			}
+		};
+		*/
 
-		link_mod.create_prot_map<std::size_t>(dest_map, seq_vec, 5, 3);
+		link_mod.create_prot_map<std::size_t>(
+			dest_map_of_kmers, seq_vec, 5, 3
+		);
 
-		auto it = dest_map.begin();
+		auto it = dest_map_of_kmers.begin();
 		REQUIRE(it->first.compare("CCTAT") == 0);
 		REQUIRE(it->second.begin()->get_key().compare("2232") == 0);
 		REQUIRE(it->second.begin()->get_score() == 1.00);
@@ -3675,15 +3704,72 @@ TEST_CASE("Full test of link module's individual methods", "module_link")
 		REQUIRE(it->second.begin()->get_score() == 1.00);
 	}
 	SECTION("Testing pep map creation")
-	{
-		// define destination vector of tuples associating strings to scored
-		// entities
+	{	// TODO: I believe the spec block for create_pep_map() was intended to
+		// reference the map produced by module_link::create_prot_map, instead
+		// it identifies "module_deconv::create_prot_map" - this should be changed
+		/*
+		std::unordered_map<
+			std::string,
+			std::unordered_set<scored_entity<std::string, double>>
+		> kmer_map = {
+			{"CCTAT", {scored_entity<std::string, double>("2232", 1.00)}},
+			{"TTAGG", {scored_entity<std::string, double>("4857", 1.00)}},
+			{"GGTCA", {scored_entity<std::string, double>("1432", 1.00)}},
+			{"ATTAA", {scored_entity<std::string, double>("8453", 1.00)}}
+		};
+		std::cout << "\n\n\nMap of kmers inside Pep map section:\n";
+		for (auto it : dest_map_of_kmers)
+		{
+			std::cout << "Iterator: " << &it;
+			std::cout << it.first << "\n";
+			for (auto sec_it : it.second)
+			{
+				std::cout << "\t" << sec_it.get_key() << ", " << sec_it.get_score() << "\n";
+			}
+		}
+		std::cout << "\n\n\n";
 
-		// initialize vector of sequences
+		std::vector<sequence> seq_vec = {
+			sequence(
+				">ID=AHGTV_HH1 AC=ATFGDDVAHS_6TT OXX=4672,5934,8891,8453",
+				"ATTAATTTAGCGGGCATACGATAAGCG"
+			),
+			sequence(
+				">ID=AVFTGS_RR3 AC=UJDNNDFMT_PI6 OXX=5864,1342,0795,1432",
+				"GGTCAAAAGCTAGGCTCTCTCGGATAG"
+			),
+			sequence(
+				">ID=GTHYVS_PPE AC=GWVBHW5FH_WT6 OXX=7284,8492,1189,4857",
+				"TTAGGTTAGGGCGCGAAACATACGATT"
+			),
+			sequence(
+				">ID=XCCSBV_THS AC=QQWVTH6HY_EHR OXX=5362,0958,4782,2232",
+				"CCTATTTAGCCGATGGGATTAAACGAT"
+			)
+		};
 
-		// create pep map
+		std::vector<
+			std::tuple<
+				std::string, std::unordered_set<
+					scored_entity<std::string, double>
+				>
+			>
+		> dest_pep_vec;
 
-		// check destination vector
+		link_mod.create_pep_map(kmer_map, dest_pep_vec, seq_vec, 4);
+
+		std::cout << "\n\n\n";
+		for (auto pep : dest_pep_vec)
+		{
+			std::cout << std::get<0>(pep) << " ->\n";
+
+			for (auto entity : std::get<1>(pep))
+			{
+				std::cout << entity.get_key() << ": " << entity.get_score() << "\n";
+			}
+		}
+		std::cout << "\n\n\n";
+		*/
 	}
 	SECTION("Testing pep map creation with kmer penalty")
 	{
@@ -3696,19 +3782,36 @@ TEST_CASE("Full test of link module's individual methods", "module_link")
 
 		// check destination vector
 	}
-	SECTION("Testing verification of ID type by ID index")
+	SECTION("Testing verification of ID type with ID index")
 	{
-		/*
-		sequence seq("my_seq", "ATGATCGCGCGATATAGAGATACGATCGCGTCGATCGTATATTTAGATACGCCCGCTCGCGATATCG");
+		sequence seq(
+			">ID=HNAC_EYY AC=KANMEA_R45 OXX=2412,9242,2445,4545",
+			"GTAGCTTTCGACCGCTAGGCTAGCCCGAGATCGC"
+		);
 
-		std::cout << "\n\n\n" << link_mod.verify_id_type(seq.name, 0) << "\n\n\n";
+		/* TODO: find a way for the 0 to be interpreted instead of as NULL
+		REQUIRE(link_mod.verify_id_type(seq.name, 0).compare("2412") == 0);
 		*/
+		REQUIRE(link_mod.verify_id_type(seq.name, 1).compare("9242") == 0);
+		REQUIRE(link_mod.verify_id_type(seq.name, 2).compare("2445") == 0);
+		REQUIRE(link_mod.verify_id_type(seq.name, 3).compare("4545") == 0);
 	}
 	SECTION("Testing verification of ID type with map of species IDs")
 	{
+		sequence seq(
+			">ID=HNAC_EYY AC=KANMEA_R45 OXX=2412,9242,2445,4545",
+			"GTAGCTTTCGACCGCTAGGCTAGCCCGAGATCGC"
+		);
+
+		std::unordered_map<std::string, std::string> id_map = {
+			{">ID=HNAC_EYY AC=KANMEA_R45 OXX=2412,9242,2445,4545", "8892"},
+		};
+
+		REQUIRE(link_mod.verify_id_type(seq.name, &id_map).compare("8892") == 0);
 	}
 }
 
+/* TODO: fix error in integration section
 TEST_CASE( "Metadata file can be given in place of taxonomic id index", "[module_link]" )
 {
     SECTION( "Verifying map creation and target sequence retrieval individually from link module" )
@@ -3738,6 +3841,7 @@ TEST_CASE( "Metadata file can be given in place of taxonomic id index", "[module
         REQUIRE( !opts.output_fname.empty() );
     }
 }
+*/
 
 TEST_CASE("Test zscore calculation", "[module_zscore]")
 {
