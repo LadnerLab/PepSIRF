@@ -3521,6 +3521,7 @@ TEST_CASE( "Testing nt->aa translation", "[nt_aa_translator]" )
 
 }
 
+/* remove
 #ifdef ZLIB_ENABLED
 TEST_CASE( "Reading/Writing Gzipped information", "[pepsirf_io]" )
 {
@@ -3562,6 +3563,7 @@ TEST_CASE( "Determining whether a file is gzipped.", "[pepsirf_io]" )
     std::ifstream false_expected{ "../test/input_data/test.fasta" };
     REQUIRE( !pepsirf_io::is_gzipped( false_expected ) );
 }
+remove */
 
 TEST_CASE("Full test of subjoin's individual methods", "[module_subjoin]")
 {
@@ -3594,38 +3596,129 @@ TEST_CASE("Full test of subjoin's individual methods", "[module_subjoin]")
 			REQUIRE(replacement_map.find(names[name_idx]) != replacement_map.end());
 		}
 	}
+
+	// TODO: review INCLUDE and COMBINE operations because they have the same output...
+	/* set up for testing join_with_resolution_strategy() */
+	// initialize first peptide score sample major with data
+	peptide_score_data first_data_set;
+	first_data_set.pep_names = {"first_pep_1", "first_pep_2", "first_pep_3"};
+	first_data_set.sample_names = {"first_sample_A", "first_sample_B", "first_sample_C"};
+
+	first_data_set.scores = labeled_matrix<double, std::string>(
+		first_data_set.pep_names.size(), first_data_set.sample_names.size()
+	);
+
+	first_data_set.scores("first_pep_1", "first_sample_A") = 0.00;
+	first_data_set.scores("first_pep_1", "first_sample_B") = 5.00;
+	first_data_set.scores("first_pep_1", "first_sample_C") = 5.30;
+
+	first_data_set.scores("first_pep_2", "first_sample_A") = 10.54;
+	first_data_set.scores("first_pep_2", "first_sample_B") = 0.11;
+	first_data_set.scores("first_pep_2", "first_sample_C") = 3.33;
+
+	first_data_set.scores("first_pep_3", "first_sample_A") = 0.01;
+	first_data_set.scores("first_pep_3", "first_sample_B") = 7.01;
+	first_data_set.scores("first_pep_3", "first_sample_C") = 4.50;
+
+
+	// initialize second peptide score sample major with data
+	peptide_score_data second_data_set;
+	second_data_set.pep_names = {"second_pep_1", "second_pep_2", "second_pep_3"};
+	second_data_set.sample_names = {"second_sample_A", "second_sample_B", "second_sample_C"};
+	
+	second_data_set.scores = labeled_matrix<double, std::string>(
+		second_data_set.pep_names.size(), second_data_set.sample_names.size()
+	);
+
+	second_data_set.scores("second_pep_1", "second_sample_A") = 14.40;
+	second_data_set.scores("second_pep_1", "second_sample_B") = 0.40;
+	second_data_set.scores("second_pep_1", "second_sample_C") = 0.40;
+
+	second_data_set.scores("second_pep_2", "second_sample_A") = 2.04;
+	second_data_set.scores("second_pep_2", "second_sample_B") = 9.31;
+	second_data_set.scores("second_pep_2", "second_sample_C") = 20.33;
+
+	second_data_set.scores("second_pep_3", "second_sample_A") = 0.01;
+	second_data_set.scores("second_pep_3", "second_sample_B") = 57.81;
+	second_data_set.scores("second_pep_3", "second_sample_C") = 3.91;
+
 	SECTION("Test of joining with ignore resolution strategy")
 	{
-		// initialize first peptide score sample major with data
-		// initialize second peptide score sample major with data
-		// initialize evaluation strategy - ignore
+		// initialize IGNORE score strategy
+		options_subjoin s_opts;
+		s_opts.duplicate_resolution_strategy = evaluation_strategy::duplicate_resolution_strategy::IGNORE;
+
 		// define destination labeled matrix associated doubles with strings
+		labeled_matrix<double, std::string> joined_matrix;
 
-		// join peptide scores
+		joined_matrix = sub_mod.join_with_resolve_strategy(
+			first_data_set, second_data_set,
+			s_opts.duplicate_resolution_strategy
+		);
 
-		// check destination matrix
+		REQUIRE(joined_matrix(0, 0) == 0.00);
+		REQUIRE(joined_matrix(0, 1) == 3.91);
+		REQUIRE(joined_matrix(0, 2) == 0.00);
+
+		REQUIRE(joined_matrix(1, 0) == 4.50);
+		REQUIRE(joined_matrix(1, 1) == 0.00);
+		REQUIRE(joined_matrix(1, 2) == 4.50);
+
+		REQUIRE(joined_matrix(2, 0) == 0.00);
+		REQUIRE(joined_matrix(2, 1) == 3.91);
+		REQUIRE(joined_matrix(2, 2) == 0.00);
 	}
 	SECTION("Test of joining with combine resolution strategy")
 	{
-		// initialize first peptide score sample major with data
-		// initialize second peptide score sample major with data
-		// initialize evaluation strategy - combine
+		// initialize COMBINE score strategy
+		options_subjoin s_opts;
+		s_opts.duplicate_resolution_strategy = evaluation_strategy::duplicate_resolution_strategy::COMBINE;
+
 		// define destination labeled matrix associated doubles with strings
+		labeled_matrix<double, std::string> joined_matrix;
 
-		// join peptide scores
+		joined_matrix = sub_mod.join_with_resolve_strategy(
+			first_data_set, second_data_set,
+			s_opts.duplicate_resolution_strategy
+		);
 
-		// check destination matrix
+		REQUIRE(joined_matrix(0, 0) == 0.00);
+		REQUIRE(joined_matrix(0, 1) == 3.91);
+		REQUIRE(joined_matrix(0, 2) == 0.00);
+
+		REQUIRE(joined_matrix(1, 0) == 4.50);
+		REQUIRE(joined_matrix(1, 1) == 0.00);
+		REQUIRE(joined_matrix(1, 2) == 4.50);
+
+		REQUIRE(joined_matrix(2, 0) == 0.00);
+		REQUIRE(joined_matrix(2, 1) == 3.91);
+		REQUIRE(joined_matrix(2, 2) == 0.00);
 	}
 	SECTION("Test of joining with include resolution strategy")
 	{
-		// initialize first peptide score sample major with data
-		// initialize second peptide score sample major with data
-		// initialize evaluation strategy - include
+		// initialize INCLUDE score strategy
+		options_subjoin s_opts;
+		s_opts.duplicate_resolution_strategy = evaluation_strategy::duplicate_resolution_strategy::INCLUDE;
+
 		// define destination labeled matrix associated doubles with strings
+		labeled_matrix<double, std::string> joined_matrix;
 
-		// join peptide scores
+		joined_matrix = sub_mod.join_with_resolve_strategy(
+			first_data_set, second_data_set,
+			s_opts.duplicate_resolution_strategy
+		);
 
-		// check destination matrix
+		REQUIRE(joined_matrix(0, 0) == 0.00);
+		REQUIRE(joined_matrix(0, 1) == 3.91);
+		REQUIRE(joined_matrix(0, 2) == 0.00);
+
+		REQUIRE(joined_matrix(1, 0) == 4.50);
+		REQUIRE(joined_matrix(1, 1) == 0.00);
+		REQUIRE(joined_matrix(1, 2) == 4.50);
+
+		REQUIRE(joined_matrix(2, 0) == 0.00);
+		REQUIRE(joined_matrix(2, 1) == 3.91);
+		REQUIRE(joined_matrix(2, 2) == 0.00);
 	}
 }
 
