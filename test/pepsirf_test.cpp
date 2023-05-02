@@ -2752,39 +2752,198 @@ TEST_CASE( "labeled_matrix full outer join", "[matrix]" )
 
 }
 
-TEST_CASE("Testing in_range(), swap(), and filter_cols() funcitons of a labeled matrix", "labeled_matrix")
+TEST_CASE("Testing swap() and filter_cols() funcitons of a labeled matrix", "[matrix], [labeled_matrix]")
 {
-	// initialize row and column labels vec
-	// define a 3x3 labeled matrix with the row and column label vecs
-	
-	// fill matrix with numbers
-	
-	// check element (1, 1) is in matrix
-	// check element (4, 4) is in matrix
-	// check element (0, 2) is in matrix
-	// check element (5, 0) is in matrix
-	
-	// initialize new row and column labels vec
-	// define new 3x3 labeled matrix
-	
-	// fill new matrix with zeros
-	
-	// swap matrices
-	
-	// define empty destination vector of strings
-	// check original matrix row labels are the new row labels
-	// clear dest vec
+	SECTION("Verify swapping of matrices")
+	{
+		matrix<double> mat = matrix<double>(3, 3);
+		mat(0, 0) = 7.82;
+		mat(0, 1) = 9.12;
+		mat(0, 2) = 10.00;
 
-	// check original matrix column labels are the new column labels
-	// clear dest vec
+		mat(1, 0) = -5.32;
+		mat(1, 1) = 0.83;
+		mat(1, 2) = -1.03;
 
-	// check new matrix row labels are the old row labels
-	// clear dest vec
+		mat(2, 0) = 5.23;
+		mat(2, 1) = 20.00;
+		mat(2, 2) = 12.00;
 
-	// check new matrix column labels are the old column lables
+		matrix<double> new_mat = matrix<double>(3, 4);
+		new_mat(0, 0) = 0;
+		new_mat(0, 1) = 0;
+		new_mat(0, 2) = 0;
+		new_mat(0, 3) = 0;
 
-	// check old matrix values are all zero
-	// check new matrix values are original values
+		new_mat(1, 0) = 0;
+		new_mat(1, 1) = 0;
+		new_mat(1, 2) = 0;
+		new_mat(1, 3) = 0;
+
+		new_mat(2, 0) = 0;
+		new_mat(2, 1) = 0;
+		new_mat(2, 2) = 0;
+		new_mat(2, 3) = 0;
+
+		swap(mat, new_mat);
+
+		// verify mat has new_mat's values
+		for (std::size_t i = 0; i < 3; i += 1)
+		{
+			for (std::size_t j = 0; j < 4; j += 1)
+			{
+				REQUIRE(mat(i, j) == 0);
+			}
+		}
+	}
+	SECTION("Verify swapping of labeled matrices")
+	{
+		// initialize row and column labels vectors
+		std::vector<std::string> row_labels = {
+			"Row1", "Row2", "Row3"
+		};
+		std::vector<std::string> column_labels = {
+			"Column1", "Column2", "Column3"
+		};
+		// define a 3x3 labeled matrix with the row and column label vecs
+		labeled_matrix<double, std::string>
+			lab_mat = labeled_matrix<double, std::string>(
+				row_labels.size(), column_labels.size(),
+				row_labels, column_labels
+			);
+		
+		// fill matrix with numbers
+		lab_mat(0, 0) = -0.34;
+		lab_mat(0, 1) = 8.00;
+		lab_mat(0, 2) = 2.44;
+
+		lab_mat(1, 0) = 7.01;
+		lab_mat(1, 1) = 10.33;
+		lab_mat(1, 2) = -3.00;
+		
+		lab_mat(2, 0) = 6.83;
+		lab_mat(2, 1) = 8.31;
+		lab_mat(2, 2) = 9.32;
+		
+		// initialize new row and column vectors
+		std::vector<std::string> new_row_labels = {
+			"New Row1", "New Row2", "New Row3"
+		};
+		std::vector<std::string> new_column_labels = {
+			"New Column1", "New Column2", "New Column3"
+		};
+		// define new 3x3 labeled matrix
+		labeled_matrix<double, std::string>
+			new_lab_mat = labeled_matrix<double, std::string>(
+				new_row_labels.size(), new_column_labels.size(),
+				new_row_labels, new_column_labels
+			);
+		
+		// fill new matrix with zeros
+		new_lab_mat(0, 0) = 0;
+		new_lab_mat(0, 1) = 0;
+		new_lab_mat(0, 2) = 0;
+
+		new_lab_mat(1, 0) = 0;
+		new_lab_mat(1, 1) = 0;
+		new_lab_mat(1, 2) = 0;
+
+		new_lab_mat(2, 0) = 0;
+		new_lab_mat(2, 1) = 0;
+		new_lab_mat(2, 2) = 0;
+
+		swap(lab_mat, new_lab_mat);
+
+		// verify lab_mat's labels are the new labels
+		std::unordered_map<std::string, std::uint32_t>
+			captured_row_labels = lab_mat.get_row_labels();
+		std::unordered_map<std::string, std::uint32_t>
+			captured_column_labels = lab_mat.get_col_labels();
+		REQUIRE(captured_row_labels.find(new_row_labels[0]) != captured_row_labels.end());
+		REQUIRE(captured_row_labels.find(new_row_labels[1]) != captured_row_labels.end());
+		REQUIRE(captured_row_labels.find(new_row_labels[2]) != captured_row_labels.end());
+
+		REQUIRE(captured_column_labels.find(new_column_labels[0]) != captured_column_labels.end());
+		REQUIRE(captured_column_labels.find(new_column_labels[1]) != captured_column_labels.end());
+		REQUIRE(captured_column_labels.find(new_column_labels[2]) != captured_column_labels.end());
+
+		// verify new_lab_mat's labels are the original labels
+		captured_row_labels = new_lab_mat.get_row_labels();
+		captured_column_labels = new_lab_mat.get_col_labels();
+		REQUIRE(captured_row_labels.find(row_labels[0]) != captured_row_labels.end());
+		REQUIRE(captured_row_labels.find(row_labels[1]) != captured_row_labels.end());
+		REQUIRE(captured_row_labels.find(row_labels[2]) != captured_row_labels.end());
+
+		REQUIRE(captured_column_labels.find(column_labels[0]) != captured_column_labels.end());
+		REQUIRE(captured_column_labels.find(column_labels[1]) != captured_column_labels.end());
+		REQUIRE(captured_column_labels.find(column_labels[2]) != captured_column_labels.end());
+
+		// verify lab_mat has new_lab_mat's values
+		for (std::size_t i = 0; i < 3; i += 1)
+		{
+			for (std::size_t j = 0; j < 3; j += 1)
+			{
+				REQUIRE(lab_mat(i, j) == 0);
+			}
+		}
+	}
+	SECTION("Verify filtering of columns")
+	{
+		std::vector<std::string> row_labels = {
+			"Row1", "Row2", "Row3", "Row4"
+		};
+		std::vector<std::string> column_labels = {
+			"Column1", "Column2", "Column3", "Column4"
+		};
+		labeled_matrix<double, std::string>
+			lab_mat = labeled_matrix<double, std::string>(
+				row_labels.size(), column_labels.size(),
+				row_labels, column_labels
+			);
+
+		lab_mat.at(0, 0) = 0.00;
+		lab_mat.at(0, 1) = 5.00;
+		lab_mat.at(0, 2) = 1.00;
+		lab_mat.at(0, 3) = 0.00;
+
+		lab_mat.at(1, 0) = 1.00;
+		lab_mat.at(1, 1) = 10.00;
+		lab_mat.at(1, 2) = 7.00;
+		lab_mat.at(1, 3) = 4.00;
+		
+		lab_mat.at(2, 0) = 0.00;
+		lab_mat.at(2, 1) = 1.00;
+		lab_mat.at(2, 2) = 2.00;
+		lab_mat.at(2, 3) = 0.00;
+
+		lab_mat.at(3, 0) = 8.00;
+		lab_mat.at(3, 1) = 0.00;
+		lab_mat.at(3, 2) = 1.00;
+		lab_mat.at(3, 3) = 0.00;
+
+		std::vector<std::string> filter_cols_vec = {
+			"Column1", "Column4"
+		};
+		labeled_matrix<double, std::string> filtered_mat = lab_mat.filter_cols(filter_cols_vec);
+
+		std::vector<std::string> captured_row_labels;
+		filtered_mat.get_row_labels(captured_row_labels);
+		std::vector<std::string> captured_col_labels;
+		filtered_mat.get_col_labels(captured_col_labels);
+
+		REQUIRE(captured_row_labels.size() == 4);
+		REQUIRE(captured_col_labels.size() == 2);
+
+		REQUIRE(filtered_mat.at("Row1", "Column1") == 0.00);
+		REQUIRE(filtered_mat.at("Row2", "Column1") == 5.00);
+		REQUIRE(filtered_mat.at("Row3", "Column1") == 1.00);
+		REQUIRE(filtered_mat.at("Row4", "Column1") == 0.00);
+
+		REQUIRE(filtered_mat.at("Row1", "Column4") == 0.00);
+		REQUIRE(filtered_mat.at("Row2", "Column4") == 1.00);
+		REQUIRE(filtered_mat.at("Row3", "Column4") == 10.00);
+		REQUIRE(filtered_mat.at("Row4", "Column4") == 7.00);
+	}
 }
 
 TEST_CASE( "median", "[stats]" )
@@ -3521,7 +3680,6 @@ TEST_CASE( "Testing nt->aa translation", "[nt_aa_translator]" )
 
 }
 
-/* remove
 #ifdef ZLIB_ENABLED
 TEST_CASE( "Reading/Writing Gzipped information", "[pepsirf_io]" )
 {
@@ -3563,7 +3721,6 @@ TEST_CASE( "Determining whether a file is gzipped.", "[pepsirf_io]" )
     std::ifstream false_expected{ "../test/input_data/test.fasta" };
     REQUIRE( !pepsirf_io::is_gzipped( false_expected ) );
 }
-remove */
 
 TEST_CASE("Full test of subjoin's individual methods", "[module_subjoin]")
 {
@@ -3800,7 +3957,6 @@ TEST_CASE("Full test of link module's individual methods", "module_link")
 	{	// TODO: I believe the spec block for create_pep_map() was intended to
 		// reference the map produced by module_link::create_prot_map, instead
 		// it identifies "module_deconv::create_prot_map" - this should be changed
-		/*
 		std::unordered_map<
 			std::string,
 			std::unordered_set<scored_entity<std::string, double>>
@@ -3810,6 +3966,7 @@ TEST_CASE("Full test of link module's individual methods", "module_link")
 			{"GGTCA", {scored_entity<std::string, double>("1432", 1.00)}},
 			{"ATTAA", {scored_entity<std::string, double>("8453", 1.00)}}
 		};
+		/*
 		std::cout << "\n\n\nMap of kmers inside Pep map section:\n";
 		for (auto it : dest_map_of_kmers)
 		{
@@ -3821,6 +3978,7 @@ TEST_CASE("Full test of link module's individual methods", "module_link")
 			}
 		}
 		std::cout << "\n\n\n";
+		*/
 
 		std::vector<sequence> seq_vec = {
 			sequence(
@@ -3848,9 +4006,9 @@ TEST_CASE("Full test of link module's individual methods", "module_link")
 				>
 			>
 		> dest_pep_vec;
-
 		link_mod.create_pep_map(kmer_map, dest_pep_vec, seq_vec, 4);
 
+		/*
 		std::cout << "\n\n\n";
 		for (auto pep : dest_pep_vec)
 		{
