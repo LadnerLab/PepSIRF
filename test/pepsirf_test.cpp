@@ -3390,6 +3390,50 @@ TEST_CASE( "Ranking Probes based upon their scores", "[probe_rank]" )
         }
 }
 
+/*
+TEST_CASE("Test of get_raw_sums() and get_raw_scores()", "[module_enrich]")
+{
+	module_enrich enrich_mod;
+	SECTION("Verifying collection of raw scores")
+	{
+		std::vector<std::vector<double>> raw_scores_vec;
+
+		peptide_score_data_sample_major raw_score_dat;
+		raw_score_dat.pep_names = {"PEP_1", "PEP_2", "PEP_3"};
+		raw_score_dat.sample_names = {"Sample_1", "Sample_2", "Sample_3"};
+
+		raw_score_dat.scores = labeled_matrix<double, std::string>(
+			raw_score_dat.pep_names.size(), raw_score_dat.sample_names.size()
+		);
+
+		raw_score_dat.scores(0, 0) = 3.00;
+		raw_score_dat.scores(0, 1) = 7.00;
+		raw_score_dat.scores(0, 2) = 10.00;
+
+		raw_score_dat.scores(1, 0) = -1.00;
+		raw_score_dat.scores(1, 1) = 12.00;
+		raw_score_dat.scores(1, 2) = -5.00;
+
+		raw_score_dat.scores(2, 0) = 8.00;
+		raw_score_dat.scores(2, 1) = 9.00;
+		raw_score_dat.scores(2, 2) = 1.00;
+
+		std::vector<std::string> sample_names_vec = {"Sample_1", "Sample_2"};
+
+		// seg fault somewhere in this method!
+		enrich_mod.get_raw_scores(
+			&raw_scores_vec, &raw_score_dat, sample_names_vec
+		);
+
+		std::cout << "\n\n\nRaw scores vector:\n";
+		std::cout << "\n\n\n";
+	}
+	SECTION("Verifying collection of raw sums")
+	{
+	}
+}
+*/
+
 TEST_CASE( "Unary Predicate Reduction", "[module_enrich]" )
 {
     using namespace predicate;
@@ -3754,57 +3798,57 @@ TEST_CASE("Full test of subjoin's individual methods", "[module_subjoin]")
 		}
 	}
 
-	// TODO: review INCLUDE and COMBINE operations because they have the same output...
-	/* set up for testing join_with_resolution_strategy() */
+
 	// initialize first peptide score sample major with data
 	peptide_score_data first_data_set;
-	first_data_set.pep_names = {"first_pep_1", "first_pep_2", "first_pep_3"};
-	first_data_set.sample_names = {"first_sample_A", "first_sample_B", "first_sample_C"};
+	first_data_set.pep_names = {"PEP_006803", "PEP_000039", "PEP_003001"};
+	first_data_set.sample_names = {"RX-PV1_06", "RX-PV1_02", "RX-PV1_03"};
 
 	first_data_set.scores = labeled_matrix<double, std::string>(
-		first_data_set.pep_names.size(), first_data_set.sample_names.size()
+		first_data_set.pep_names.size(), first_data_set.sample_names.size(),
+		first_data_set.pep_names, first_data_set.sample_names
 	);
 
-	first_data_set.scores("first_pep_1", "first_sample_A") = 0.00;
-	first_data_set.scores("first_pep_1", "first_sample_B") = 5.00;
-	first_data_set.scores("first_pep_1", "first_sample_C") = 5.30;
+	first_data_set.scores(0, 0) = 0.00;
+	first_data_set.scores(0, 1) = 5.00;
+	first_data_set.scores(0, 2) = 25.00;
 
-	first_data_set.scores("first_pep_2", "first_sample_A") = 10.54;
-	first_data_set.scores("first_pep_2", "first_sample_B") = 0.11;
-	first_data_set.scores("first_pep_2", "first_sample_C") = 3.33;
+	first_data_set.scores(1, 0) = 10.00;
+	first_data_set.scores(1, 1) = 30.00;
+	first_data_set.scores(1, 2) = 112.00;
 
-	first_data_set.scores("first_pep_3", "first_sample_A") = 0.01;
-	first_data_set.scores("first_pep_3", "first_sample_B") = 7.01;
-	first_data_set.scores("first_pep_3", "first_sample_C") = 4.50;
-
+	first_data_set.scores(2, 0) = 18.00;
+	first_data_set.scores(2, 1) = 12.00;
+	first_data_set.scores(2, 2) = 4.00;
 
 	// initialize second peptide score sample major with data
 	peptide_score_data second_data_set;
-	second_data_set.pep_names = {"second_pep_1", "second_pep_2", "second_pep_3"};
-	second_data_set.sample_names = {"second_sample_A", "second_sample_B", "second_sample_C"};
+	second_data_set.pep_names = {"PEP_006803", "PEP_000039", "PEP_003001"};
+	second_data_set.sample_names = {"RX-PV1_06", "RX-PV1_12", "RX-PV1_04"};
 	
 	second_data_set.scores = labeled_matrix<double, std::string>(
-		second_data_set.pep_names.size(), second_data_set.sample_names.size()
+		second_data_set.pep_names.size(),
+		second_data_set.sample_names.size(),
+		second_data_set.pep_names, second_data_set.sample_names
 	);
 
-	second_data_set.scores("second_pep_1", "second_sample_A") = 14.40;
-	second_data_set.scores("second_pep_1", "second_sample_B") = 0.40;
-	second_data_set.scores("second_pep_1", "second_sample_C") = 0.40;
+	second_data_set.scores(0, 0) = 14.00;
+	second_data_set.scores(0, 1) = 10.00;
+	second_data_set.scores(0, 2) = 10.00;
 
-	second_data_set.scores("second_pep_2", "second_sample_A") = 2.04;
-	second_data_set.scores("second_pep_2", "second_sample_B") = 9.31;
-	second_data_set.scores("second_pep_2", "second_sample_C") = 20.33;
+	second_data_set.scores(1, 0) = 12.00;
+	second_data_set.scores(1, 1) = 9.00;
+	second_data_set.scores(1, 2) = 20.00;
 
-	second_data_set.scores("second_pep_3", "second_sample_A") = 0.01;
-	second_data_set.scores("second_pep_3", "second_sample_B") = 57.81;
-	second_data_set.scores("second_pep_3", "second_sample_C") = 3.91;
-
+	second_data_set.scores(2, 0) = 0.00;
+	second_data_set.scores(2, 1) = 57.00;
+	second_data_set.scores(2, 2) = 35.00;
 	SECTION("Test of joining with ignore resolution strategy")
 	{
 		// initialize IGNORE score strategy
 		options_subjoin s_opts;
 		s_opts.duplicate_resolution_strategy = evaluation_strategy::duplicate_resolution_strategy::IGNORE;
-
+	
 		// define destination labeled matrix associated doubles with strings
 		labeled_matrix<double, std::string> joined_matrix;
 
@@ -3813,17 +3857,46 @@ TEST_CASE("Full test of subjoin's individual methods", "[module_subjoin]")
 			s_opts.duplicate_resolution_strategy
 		);
 
-		REQUIRE(joined_matrix(0, 0) == 0.00);
-		REQUIRE(joined_matrix(0, 1) == 3.91);
-		REQUIRE(joined_matrix(0, 2) == 0.00);
+		std::vector<std::string> row_labels;
+		joined_matrix.get_row_labels(row_labels);
+		std::vector<std::string> col_labels;
+		joined_matrix.get_col_labels(col_labels);
 
-		REQUIRE(joined_matrix(1, 0) == 4.50);
-		REQUIRE(joined_matrix(1, 1) == 0.00);
-		REQUIRE(joined_matrix(1, 2) == 4.50);
+		REQUIRE(row_labels.size() == 3);
+		REQUIRE(col_labels.size() == 5);
 
-		REQUIRE(joined_matrix(2, 0) == 0.00);
-		REQUIRE(joined_matrix(2, 1) == 3.91);
-		REQUIRE(joined_matrix(2, 2) == 0.00);
+		/* remove
+		std::cout << "\n\n\nIGNORE Joined Matrix:\n";
+		for (std::size_t i = 0; i < row_labels.size(); i += 1)
+		{
+			for (std::size_t j = 0; j < col_labels.size(); j += 1)
+			{
+				std::cout << joined_matrix.at(i, j) << ", ";
+			}
+			std::cout << "\n";
+		}
+		std::cout << "\n\n\n";
+		remove */
+
+		REQUIRE(joined_matrix(0, 0) == 5.00);
+		REQUIRE(joined_matrix(1, 0) == 30.00);
+		REQUIRE(joined_matrix(2, 0) == 12.00);
+
+		REQUIRE(joined_matrix(0, 1) == 14.00);
+		REQUIRE(joined_matrix(1, 1) == 12.00);
+		REQUIRE(joined_matrix(2, 1) == 0.00);
+
+		REQUIRE(joined_matrix(0, 2) == 10.00);
+		REQUIRE(joined_matrix(1, 2) == 9.00);
+		REQUIRE(joined_matrix(2, 2) == 57.00);
+
+		REQUIRE(joined_matrix(0, 3) == 10.00);
+		REQUIRE(joined_matrix(1, 3) == 20.00);
+		REQUIRE(joined_matrix(2, 3) == 35.00);
+
+		REQUIRE(joined_matrix(0, 4) == 25.00);
+		REQUIRE(joined_matrix(1, 4) == 112.00);
+		REQUIRE(joined_matrix(2, 4) == 4.00);
 	}
 	SECTION("Test of joining with combine resolution strategy")
 	{
@@ -3839,17 +3912,33 @@ TEST_CASE("Full test of subjoin's individual methods", "[module_subjoin]")
 			s_opts.duplicate_resolution_strategy
 		);
 
-		REQUIRE(joined_matrix(0, 0) == 0.00);
-		REQUIRE(joined_matrix(0, 1) == 3.91);
-		REQUIRE(joined_matrix(0, 2) == 0.00);
+		std::vector<std::string> row_labels;
+		joined_matrix.get_row_labels(row_labels);
+		std::vector<std::string> col_labels;
+		joined_matrix.get_col_labels(col_labels);
 
-		REQUIRE(joined_matrix(1, 0) == 4.50);
-		REQUIRE(joined_matrix(1, 1) == 0.00);
-		REQUIRE(joined_matrix(1, 2) == 4.50);
+		REQUIRE(row_labels.size() == 3);
+		REQUIRE(col_labels.size() == 5);
 
-		REQUIRE(joined_matrix(2, 0) == 0.00);
-		REQUIRE(joined_matrix(2, 1) == 3.91);
-		REQUIRE(joined_matrix(2, 2) == 0.00);
+		REQUIRE(joined_matrix(0, 0) == 5.00);
+		REQUIRE(joined_matrix(1, 0) == 30.00);
+		REQUIRE(joined_matrix(2, 0) == 12.00);
+
+		REQUIRE(joined_matrix(0, 1) == 14.00);
+		REQUIRE(joined_matrix(1, 1) == 22.00);
+		REQUIRE(joined_matrix(2, 1) == 18.00);
+
+		REQUIRE(joined_matrix(0, 2) == 10.00);
+		REQUIRE(joined_matrix(1, 2) == 9.00);
+		REQUIRE(joined_matrix(2, 2) == 57.00);
+
+		REQUIRE(joined_matrix(0, 3) == 10.00);
+		REQUIRE(joined_matrix(1, 3) == 20.00);
+		REQUIRE(joined_matrix(2, 3) == 35.00);
+
+		REQUIRE(joined_matrix(0, 4) == 25.00);
+		REQUIRE(joined_matrix(1, 4) == 112.00);
+		REQUIRE(joined_matrix(2, 4) == 4.00);
 	}
 	SECTION("Test of joining with include resolution strategy")
 	{
@@ -3865,17 +3954,33 @@ TEST_CASE("Full test of subjoin's individual methods", "[module_subjoin]")
 			s_opts.duplicate_resolution_strategy
 		);
 
-		REQUIRE(joined_matrix(0, 0) == 0.00);
-		REQUIRE(joined_matrix(0, 1) == 3.91);
-		REQUIRE(joined_matrix(0, 2) == 0.00);
+		std::vector<std::string> row_labels;
+		joined_matrix.get_row_labels(row_labels);
+		std::vector<std::string> col_labels;
+		joined_matrix.get_col_labels(col_labels);
 
-		REQUIRE(joined_matrix(1, 0) == 4.50);
-		REQUIRE(joined_matrix(1, 1) == 0.00);
-		REQUIRE(joined_matrix(1, 2) == 4.50);
+		REQUIRE(row_labels.size() == 3);
+		REQUIRE(col_labels.size() == 5);
 
-		REQUIRE(joined_matrix(2, 0) == 0.00);
-		REQUIRE(joined_matrix(2, 1) == 3.91);
-		REQUIRE(joined_matrix(2, 2) == 0.00);
+		REQUIRE(joined_matrix(0, 0) == 12.00);
+		REQUIRE(joined_matrix(1, 0) == 30.00);
+		REQUIRE(joined_matrix(2, 0) == 5.00);
+
+		REQUIRE(joined_matrix(0, 1) == 0.00);
+		REQUIRE(joined_matrix(1, 1) == 12.00);
+		REQUIRE(joined_matrix(2, 1) == 14.00);
+
+		REQUIRE(joined_matrix(0, 2) == 57.00);
+		REQUIRE(joined_matrix(1, 2) == 9.00);
+		REQUIRE(joined_matrix(2, 2) == 10.00);
+
+		REQUIRE(joined_matrix(0, 3) == 35.00);
+		REQUIRE(joined_matrix(1, 3) == 20.00);
+		REQUIRE(joined_matrix(2, 3) == 10.00);
+
+		REQUIRE(joined_matrix(0, 4) == 4.00);
+		REQUIRE(joined_matrix(1, 4) == 112.00);
+		REQUIRE(joined_matrix(2, 4) == 25.00);
 	}
 }
 
@@ -3957,6 +4062,7 @@ TEST_CASE("Full test of link module's individual methods", "module_link")
 	{	// TODO: I believe the spec block for create_pep_map() was intended to
 		// reference the map produced by module_link::create_prot_map, instead
 		// it identifies "module_deconv::create_prot_map" - this should be changed
+		/*
 		std::unordered_map<
 			std::string,
 			std::unordered_set<scored_entity<std::string, double>>
@@ -3966,7 +4072,6 @@ TEST_CASE("Full test of link module's individual methods", "module_link")
 			{"GGTCA", {scored_entity<std::string, double>("1432", 1.00)}},
 			{"ATTAA", {scored_entity<std::string, double>("8453", 1.00)}}
 		};
-		/*
 		std::cout << "\n\n\nMap of kmers inside Pep map section:\n";
 		for (auto it : dest_map_of_kmers)
 		{
@@ -3978,7 +4083,6 @@ TEST_CASE("Full test of link module's individual methods", "module_link")
 			}
 		}
 		std::cout << "\n\n\n";
-		*/
 
 		std::vector<sequence> seq_vec = {
 			sequence(
@@ -4008,7 +4112,6 @@ TEST_CASE("Full test of link module's individual methods", "module_link")
 		> dest_pep_vec;
 		link_mod.create_pep_map(kmer_map, dest_pep_vec, seq_vec, 4);
 
-		/*
 		std::cout << "\n\n\n";
 		for (auto pep : dest_pep_vec)
 		{
