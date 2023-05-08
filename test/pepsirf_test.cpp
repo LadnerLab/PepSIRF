@@ -3801,6 +3801,7 @@ TEST_CASE("Full test of subjoin's individual methods", "[module_subjoin]")
 
 	// initialize first peptide score sample major with data
 	peptide_score_data first_data_set;
+	first_data_set.file_name = "first_test_data_set";
 	first_data_set.pep_names = {"PEP_006803", "PEP_000039", "PEP_003001"};
 	first_data_set.sample_names = {"RX-PV1_06", "RX-PV1_02", "RX-PV1_03"};
 
@@ -3823,6 +3824,7 @@ TEST_CASE("Full test of subjoin's individual methods", "[module_subjoin]")
 
 	// initialize second peptide score sample major with data
 	peptide_score_data second_data_set;
+	second_data_set.file_name = "second_test_data_set";
 	second_data_set.pep_names = {"PEP_006803", "PEP_000039", "PEP_003001"};
 	second_data_set.sample_names = {"RX-PV1_06", "RX-PV1_12", "RX-PV1_04"};
 	
@@ -3844,7 +3846,7 @@ TEST_CASE("Full test of subjoin's individual methods", "[module_subjoin]")
 	second_data_set.scores(2, 1) = 57.00;
 	second_data_set.scores(2, 2) = 35.00;
 
-	SECTION("Test of joining with ignore resolution strategy")
+	SECTION("Test of joining with INGORE resolution strategy")
 	{
 		// initialize IGNORE score strategy
 		options_subjoin s_opts;
@@ -3866,26 +3868,6 @@ TEST_CASE("Full test of subjoin's individual methods", "[module_subjoin]")
 		REQUIRE(row_labels.size() == 3);
 		REQUIRE(col_labels.size() == 5);
 
-		/* remove
-		std::cout << "\n\n\nIGNORE Joined Matrix:\n";
-		std::cout << "Sequence name";
-		for (std::size_t i = 0; i < col_labels.size(); i += 1)
-		{
-			std::cout << "\t" << col_labels[i];
-		}
-		std::cout << "\n";
-		for (std::size_t i = 0; i < row_labels.size(); i += 1)
-		{
-			std::cout << row_labels[i] << "\t";
-			for (std::size_t j = 0; j < col_labels.size(); j += 1)
-			{
-				std::cout << "\t" << joined_matrix.at(i, j);
-			}
-			std::cout << "\n";
-		}
-		std::cout << "\n\n\n";
-		remove */
-
 		REQUIRE(joined_matrix("PEP_003001", "RX-PV1_03") == 4.00);
 		REQUIRE(joined_matrix("PEP_000039", "RX-PV1_03") == 112.00);
 		REQUIRE(joined_matrix("PEP_006803", "RX-PV1_03") == 25.00);
@@ -3906,8 +3888,7 @@ TEST_CASE("Full test of subjoin's individual methods", "[module_subjoin]")
 		REQUIRE(joined_matrix("PEP_000039", "RX-PV1_02") == 30.00);
 		REQUIRE(joined_matrix("PEP_006803", "RX-PV1_02") == 5.00);
 	}
-	/*
-	SECTION("Test of joining with combine resolution strategy")
+	SECTION("Test of joining with COMBINE resolution strategy")
 	{
 		// initialize COMBINE score strategy
 		options_subjoin s_opts;
@@ -3929,27 +3910,27 @@ TEST_CASE("Full test of subjoin's individual methods", "[module_subjoin]")
 		REQUIRE(row_labels.size() == 3);
 		REQUIRE(col_labels.size() == 5);
 
-		REQUIRE(joined_matrix(0, 0) == 5.00);
-		REQUIRE(joined_matrix(1, 0) == 30.00);
-		REQUIRE(joined_matrix(2, 0) == 12.00);
+		REQUIRE(joined_matrix("PEP_003001", "RX-PV1_03") == 4.00);
+		REQUIRE(joined_matrix("PEP_000039", "RX-PV1_03") == 112.00);
+		REQUIRE(joined_matrix("PEP_006803", "RX-PV1_03") == 25.00);
 
-		REQUIRE(joined_matrix(0, 1) == 14.00);
-		REQUIRE(joined_matrix(1, 1) == 22.00);
-		REQUIRE(joined_matrix(2, 1) == 18.00);
+		REQUIRE(joined_matrix("PEP_003001", "RX-PV1_04") == 35.00);
+		REQUIRE(joined_matrix("PEP_000039", "RX-PV1_04") == 20.00);
+		REQUIRE(joined_matrix("PEP_006803", "RX-PV1_04") == 10.00);
 
-		REQUIRE(joined_matrix(0, 2) == 10.00);
-		REQUIRE(joined_matrix(1, 2) == 9.00);
-		REQUIRE(joined_matrix(2, 2) == 57.00);
+		REQUIRE(joined_matrix("PEP_003001", "RX-PV1_12") == 57.00);
+		REQUIRE(joined_matrix("PEP_000039", "RX-PV1_12") == 9.00);
+		REQUIRE(joined_matrix("PEP_006803", "RX-PV1_12") == 10.00);
 
-		REQUIRE(joined_matrix(0, 3) == 10.00);
-		REQUIRE(joined_matrix(1, 3) == 20.00);
-		REQUIRE(joined_matrix(2, 3) == 35.00);
+		REQUIRE(joined_matrix("PEP_003001", "RX-PV1_06") == 18.00);
+		REQUIRE(joined_matrix("PEP_000039", "RX-PV1_06") == 22.00);
+		REQUIRE(joined_matrix("PEP_006803", "RX-PV1_06") == 14.00);
 
-		REQUIRE(joined_matrix(0, 4) == 25.00);
-		REQUIRE(joined_matrix(1, 4) == 112.00);
-		REQUIRE(joined_matrix(2, 4) == 4.00);
+		REQUIRE(joined_matrix("PEP_003001", "RX-PV1_02") == 12.00);
+		REQUIRE(joined_matrix("PEP_000039", "RX-PV1_02") == 30.00);
+		REQUIRE(joined_matrix("PEP_006803", "RX-PV1_02") == 5.00);
 	}
-	SECTION("Test of joining with include resolution strategy")
+	SECTION("Test of joining with INCLUDE resolution strategy")
 	{
 		// initialize INCLUDE score strategy
 		options_subjoin s_opts;
@@ -3968,30 +3949,44 @@ TEST_CASE("Full test of subjoin's individual methods", "[module_subjoin]")
 		std::vector<std::string> col_labels;
 		joined_matrix.get_col_labels(col_labels);
 
-		REQUIRE(row_labels.size() == 3);
+		REQUIRE(row_labels.size() == 6);
 		REQUIRE(col_labels.size() == 5);
 
-		REQUIRE(joined_matrix(0, 0) == 12.00);
-		REQUIRE(joined_matrix(1, 0) == 30.00);
-		REQUIRE(joined_matrix(2, 0) == 5.00);
+		REQUIRE(joined_matrix("PEP_003001_first_test_data_set", "RX-PV1_03") == 4.00);
+		REQUIRE(joined_matrix("PEP_006803_second_test_data_set", "RX-PV1_03") == 0.00);
+		REQUIRE(joined_matrix("PEP_003001_second_test_data_set", "RX-PV1_03") == 0.00);
+		REQUIRE(joined_matrix("PEP_000039_second_test_data_set", "RX-PV1_03") == 0.00);
+		REQUIRE(joined_matrix("PEP_000039_first_test_data_set", "RX-PV1_03") == 112.00);
+		REQUIRE(joined_matrix("PEP_006803_first_test_data_set", "RX-PV1_03") == 25.00);
 
-		REQUIRE(joined_matrix(0, 1) == 0.00);
-		REQUIRE(joined_matrix(1, 1) == 12.00);
-		REQUIRE(joined_matrix(2, 1) == 14.00);
+		REQUIRE(joined_matrix("PEP_003001_first_test_data_set", "RX-PV1_04") == 0.00);
+		REQUIRE(joined_matrix("PEP_006803_second_test_data_set", "RX-PV1_04") == 10.00);
+		REQUIRE(joined_matrix("PEP_003001_second_test_data_set", "RX-PV1_04") == 35.00);
+		REQUIRE(joined_matrix("PEP_000039_second_test_data_set", "RX-PV1_04") == 20.00);
+		REQUIRE(joined_matrix("PEP_000039_first_test_data_set", "RX-PV1_04") == 0.00);
+		REQUIRE(joined_matrix("PEP_006803_first_test_data_set", "RX-PV1_04") == 0.00);
 
-		REQUIRE(joined_matrix(0, 2) == 57.00);
-		REQUIRE(joined_matrix(1, 2) == 9.00);
-		REQUIRE(joined_matrix(2, 2) == 10.00);
+		REQUIRE(joined_matrix("PEP_003001_first_test_data_set", "RX-PV1_12") == 0.00);
+		REQUIRE(joined_matrix("PEP_006803_second_test_data_set", "RX-PV1_12") == 10.00);
+		REQUIRE(joined_matrix("PEP_003001_second_test_data_set", "RX-PV1_12") == 57.00);
+		REQUIRE(joined_matrix("PEP_000039_second_test_data_set", "RX-PV1_12") == 9.00);
+		REQUIRE(joined_matrix("PEP_000039_first_test_data_set", "RX-PV1_12") == 0.00);
+		REQUIRE(joined_matrix("PEP_006803_first_test_data_set", "RX-PV1_12") == 0.00);
 
-		REQUIRE(joined_matrix(0, 3) == 35.00);
-		REQUIRE(joined_matrix(1, 3) == 20.00);
-		REQUIRE(joined_matrix(2, 3) == 10.00);
+		REQUIRE(joined_matrix("PEP_003001_first_test_data_set", "RX-PV1_06") == 18.00);
+		REQUIRE(joined_matrix("PEP_006803_second_test_data_set", "RX-PV1_06") == 14.00);
+		REQUIRE(joined_matrix("PEP_003001_second_test_data_set", "RX-PV1_06") == 0.00);
+		REQUIRE(joined_matrix("PEP_000039_second_test_data_set", "RX-PV1_06") == 12.00);
+		REQUIRE(joined_matrix("PEP_000039_first_test_data_set", "RX-PV1_06") == 10.00);
+		REQUIRE(joined_matrix("PEP_006803_first_test_data_set", "RX-PV1_06") == 0.00);
 
-		REQUIRE(joined_matrix(0, 4) == 4.00);
-		REQUIRE(joined_matrix(1, 4) == 112.00);
-		REQUIRE(joined_matrix(2, 4) == 25.00);
+		REQUIRE(joined_matrix("PEP_003001_first_test_data_set", "RX-PV1_02") == 12.00);
+		REQUIRE(joined_matrix("PEP_006803_second_test_data_set", "RX-PV1_02") == 0.00);
+		REQUIRE(joined_matrix("PEP_003001_second_test_data_set", "RX-PV1_02") == 0.00);
+		REQUIRE(joined_matrix("PEP_000039_second_test_data_set", "RX-PV1_02") == 0.00);
+		REQUIRE(joined_matrix("PEP_000039_first_test_data_set", "RX-PV1_02") == 30.00);
+		REQUIRE(joined_matrix("PEP_006803_first_test_data_set", "RX-PV1_02") == 5.00);
 	}
-	*/
 }
 
 TEST_CASE( "Subjoin name list filter is optional", "[module_subjoin]" )
