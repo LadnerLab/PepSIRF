@@ -3868,36 +3868,43 @@ TEST_CASE("Full test of subjoin's individual methods", "[module_subjoin]")
 
 		/* remove
 		std::cout << "\n\n\nIGNORE Joined Matrix:\n";
+		std::cout << "Sequence name";
+		for (std::size_t i = 0; i < col_labels.size(); i += 1)
+		{
+			std::cout << "\t" << col_labels[i];
+		}
+		std::cout << "\n";
 		for (std::size_t i = 0; i < row_labels.size(); i += 1)
 		{
+			std::cout << row_labels[i] << "\t";
 			for (std::size_t j = 0; j < col_labels.size(); j += 1)
 			{
-				std::cout << joined_matrix.at(i, j) << ", ";
+				std::cout << "\t" << joined_matrix.at(i, j);
 			}
 			std::cout << "\n";
 		}
 		std::cout << "\n\n\n";
 		remove */
 
-		REQUIRE(joined_matrix(row_labels[0], col_labels[0]) == 4.00);
-		REQUIRE(joined_matrix(row_labels[1], col_labels[0]) == 112.00);
-		REQUIRE(joined_matrix(row_labels[2], col_labels[0]) == 25.00);
+		REQUIRE(joined_matrix("PEP_003001", "RX-PV1_03") == 4.00);
+		REQUIRE(joined_matrix("PEP_000039", "RX-PV1_03") == 112.00);
+		REQUIRE(joined_matrix("PEP_006803", "RX-PV1_03") == 25.00);
 
-		REQUIRE(joined_matrix(row_labels[0], col_labels[1]) == 35.00);
-		REQUIRE(joined_matrix(row_labels[1], col_labels[1]) == 20.00);
-		REQUIRE(joined_matrix(row_labels[2], col_labels[1]) == 10.00);
+		REQUIRE(joined_matrix("PEP_003001", "RX-PV1_04") == 35.00);
+		REQUIRE(joined_matrix("PEP_000039", "RX-PV1_04") == 20.00);
+		REQUIRE(joined_matrix("PEP_006803", "RX-PV1_04") == 10.00);
 
-		REQUIRE(joined_matrix(row_labels[0], col_labels[2]) == 57.00);
-		REQUIRE(joined_matrix(row_labels[1], col_labels[2]) == 9.00);
-		REQUIRE(joined_matrix(row_labels[2], col_labels[2]) == 10.00);
+		REQUIRE(joined_matrix("PEP_003001", "RX-PV1_12") == 57.00);
+		REQUIRE(joined_matrix("PEP_000039", "RX-PV1_12") == 9.00);
+		REQUIRE(joined_matrix("PEP_006803", "RX-PV1_12") == 10.00);
+		
+		REQUIRE(joined_matrix("PEP_003001", "RX-PV1_06") == 0.00);
+		REQUIRE(joined_matrix("PEP_000039", "RX-PV1_06") == 12.00);
+		REQUIRE(joined_matrix("PEP_006803", "RX-PV1_06") == 14.00);
 
-		REQUIRE(joined_matrix(row_labels[0], col_labels[3]) == 0.00);
-		REQUIRE(joined_matrix(row_labels[1], col_labels[3]) == 12.00);
-		REQUIRE(joined_matrix(row_labels[2], col_labels[3]) == 14.00);
-
-		REQUIRE(joined_matrix(row_labels[0], col_labels[4]) == 12.00);
-		REQUIRE(joined_matrix(row_labels[1], col_labels[4]) == 30.00);
-		REQUIRE(joined_matrix(row_labels[2], col_labels[4]) == 5.00);
+		REQUIRE(joined_matrix("PEP_003001", "RX-PV1_02") == 12.00);
+		REQUIRE(joined_matrix("PEP_000039", "RX-PV1_02") == 30.00);
+		REQUIRE(joined_matrix("PEP_006803", "RX-PV1_02") == 5.00);
 	}
 	/*
 	SECTION("Test of joining with combine resolution strategy")
