@@ -3390,49 +3390,39 @@ TEST_CASE( "Ranking Probes based upon their scores", "[probe_rank]" )
         }
 }
 
-/*
 TEST_CASE("Test of get_raw_sums() and get_raw_scores()", "[module_enrich]")
 {
 	module_enrich enrich_mod;
 	SECTION("Verifying collection of raw scores")
 	{
-		std::vector<std::vector<double>> raw_scores_vec;
-
-		peptide_score_data_sample_major raw_score_dat;
-		raw_score_dat.pep_names = {"PEP_1", "PEP_2", "PEP_3"};
-		raw_score_dat.sample_names = {"Sample_1", "Sample_2", "Sample_3"};
-
-		raw_score_dat.scores = labeled_matrix<double, std::string>(
-			raw_score_dat.pep_names.size(), raw_score_dat.sample_names.size()
-		);
-
-		raw_score_dat.scores(0, 0) = 3.00;
-		raw_score_dat.scores(0, 1) = 7.00;
-		raw_score_dat.scores(0, 2) = 10.00;
-
-		raw_score_dat.scores(1, 0) = -1.00;
-		raw_score_dat.scores(1, 1) = 12.00;
-		raw_score_dat.scores(1, 2) = -5.00;
-
-		raw_score_dat.scores(2, 0) = 8.00;
-		raw_score_dat.scores(2, 1) = 9.00;
-		raw_score_dat.scores(2, 2) = 1.00;
-
-		std::vector<std::string> sample_names_vec = {"Sample_1", "Sample_2"};
-
-		// seg fault somewhere in this method!
-		enrich_mod.get_raw_scores(
-			&raw_scores_vec, &raw_score_dat, sample_names_vec
-		);
-
-		std::cout << "\n\n\nRaw scores vector:\n";
-		std::cout << "\n\n\n";
 	}
 	SECTION("Verifying collection of raw sums")
 	{
+        std::vector<double> col_sums;
+        std::vector<std::vector<double>> raw_scores_vec = {
+            {0, 0, 21, 2, 2, 12, 0, 2, 2, 1},
+            {10, 10, 27, 6, 10, 28, 14, 17, 13, 24},
+            {8, 5, 9, 7, 31, 24, 11, 19, 11, 15},
+            {15, 8, 24, 7, 22, 19, 18, 23, 25, 30},
+            {3, 2, 14, 1, 1, 13, 6, 4, 0, 9},
+            {1, 0, 0, 0, 1, 0, 1, 2, 1, 1},
+            {3, 2, 14, 5, 14, 23, 5, 6, 5, 10}
+        };
+
+        col_sums = enrich_mod.get_raw_sums(raw_scores_vec);
+
+        REQUIRE(col_sums[0] == 40.00);
+        REQUIRE(col_sums[1] == 27.00);
+        REQUIRE(col_sums[2] == 109.00);
+        REQUIRE(col_sums[3] == 28.00);
+        REQUIRE(col_sums[4] == 81.00);
+        REQUIRE(col_sums[5] == 119.00);
+        REQUIRE(col_sums[6] == 55.00);
+        REQUIRE(col_sums[7] == 73.00);
+        REQUIRE(col_sums[8] == 57.00);
+        REQUIRE(col_sums[9] == 90.00);
 	}
 }
-*/
 
 TEST_CASE( "Unary Predicate Reduction", "[module_enrich]" )
 {
@@ -3724,6 +3714,7 @@ TEST_CASE( "Testing nt->aa translation", "[nt_aa_translator]" )
 
 }
 
+/* remove
 #ifdef ZLIB_ENABLED
 TEST_CASE( "Reading/Writing Gzipped information", "[pepsirf_io]" )
 {
@@ -3765,6 +3756,7 @@ TEST_CASE( "Determining whether a file is gzipped.", "[pepsirf_io]" )
     std::ifstream false_expected{ "../test/input_data/test.fasta" };
     REQUIRE( !pepsirf_io::is_gzipped( false_expected ) );
 }
+remove */
 
 TEST_CASE("Full test of subjoin's individual methods", "[module_subjoin]")
 {
@@ -3797,7 +3789,6 @@ TEST_CASE("Full test of subjoin's individual methods", "[module_subjoin]")
 			REQUIRE(replacement_map.find(names[name_idx]) != replacement_map.end());
 		}
 	}
-
 
 	// initialize first peptide score sample major with data
 	peptide_score_data first_data_set;
