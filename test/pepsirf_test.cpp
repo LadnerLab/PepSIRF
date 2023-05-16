@@ -3395,6 +3395,48 @@ TEST_CASE("Test of get_raw_sums() and get_raw_scores()", "[module_enrich]")
 	module_enrich enrich_mod;
 	SECTION("Verifying collection of raw scores")
 	{
+        std::vector<std::vector<double>> raw_scores_vec;
+        peptide_score_data_sample_major raw_scores_dat;
+        peptide_score_data_sample_major* raw_scores_dat_ptr = nullptr;
+        peptide_scoring::parse_peptide_scores(
+            raw_scores_dat, "../test/input_data/test_enrich_raw_scores.tsv"
+        );
+        raw_scores_dat_ptr = &raw_scores_dat;
+        raw_scores_vec.resize(raw_scores_dat.scores.ncols());
+
+        std::vector<std::string> sample_names = {
+            "HCV-I_PV1_Run3_B", "JAS_PV1_Run10_A", "HCV-J_PV1_Run3_B"
+        };
+
+        enrich_mod.get_raw_scores(&raw_scores_vec, raw_scores_dat_ptr, sample_names);
+
+        REQUIRE(raw_scores_vec[0][0] == 0.00);
+        REQUIRE(raw_scores_vec[0][1] == 2.00);
+        REQUIRE(raw_scores_vec[0][2] == 0.00);
+
+        REQUIRE(raw_scores_vec[1][0] == 10.00);
+        REQUIRE(raw_scores_vec[1][1] == 6.00);
+        REQUIRE(raw_scores_vec[1][2] == 14.00);
+
+        REQUIRE(raw_scores_vec[2][0] == 8.00);
+        REQUIRE(raw_scores_vec[2][1] == 7.00);
+        REQUIRE(raw_scores_vec[2][2] == 11.00);
+
+        REQUIRE(raw_scores_vec[3][0] == 15.00);
+        REQUIRE(raw_scores_vec[3][1] == 7.00);
+        REQUIRE(raw_scores_vec[3][2] == 18.00);
+
+        REQUIRE(raw_scores_vec[4][0] == 3.00);
+        REQUIRE(raw_scores_vec[4][1] == 1.00);
+        REQUIRE(raw_scores_vec[4][2] == 6.00);
+
+        REQUIRE(raw_scores_vec[5][0] == 1.00);
+        REQUIRE(raw_scores_vec[5][1] == 0.00);
+        REQUIRE(raw_scores_vec[5][2] == 1.00);
+
+        REQUIRE(raw_scores_vec[6][0] == 3.00);
+        REQUIRE(raw_scores_vec[6][1] == 5.00);
+        REQUIRE(raw_scores_vec[6][2] == 5.00);
 	}
 	SECTION("Verifying collection of raw sums")
 	{
@@ -3714,7 +3756,6 @@ TEST_CASE( "Testing nt->aa translation", "[nt_aa_translator]" )
 
 }
 
-/* remove
 #ifdef ZLIB_ENABLED
 TEST_CASE( "Reading/Writing Gzipped information", "[pepsirf_io]" )
 {
@@ -3756,7 +3797,6 @@ TEST_CASE( "Determining whether a file is gzipped.", "[pepsirf_io]" )
     std::ifstream false_expected{ "../test/input_data/test.fasta" };
     REQUIRE( !pepsirf_io::is_gzipped( false_expected ) );
 }
-remove */
 
 TEST_CASE("Full test of subjoin's individual methods", "[module_subjoin]")
 {
