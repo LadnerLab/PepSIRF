@@ -4117,20 +4117,6 @@ TEST_CASE("Full test of link module's individual methods", "module_link")
 		link_mod.create_prot_map<std::size_t>(
 			dest_kmer_map, seq_vec, 4, 3
 		);
-        /* remove
-        std::cout << "\n\n\nKmer Map:\n";
-        for (auto it : dest_kmer_map)
-        {
-            std::cout << "{\n";
-            std::cout << "\t" << it.first << ":\n";
-            for (auto entity : it.second)
-            {
-                std::cout << "\t{ " << entity.get_key() << ", " << entity.get_score() << " }\n";
-            }
-            std::cout << "},\n";
-        }
-        std::cout << "\n\n\n";
-        remove */
 
         REQUIRE(dest_kmer_map.size() == 14);
 
@@ -4256,6 +4242,7 @@ TEST_CASE("Full test of link module's individual methods", "module_link")
 				"TGGTCGTGAAAGTTAGATTA"
 			)
 		};
+
         std::vector<std::vector<scored_entity<std::string, double>>> expected_entities = {
             {
                 scored_entity<std::string, double>("2232", 2.00),
@@ -4285,8 +4272,9 @@ TEST_CASE("Full test of link module's individual methods", "module_link")
 
 		std::vector<
 			std::tuple<
-				std::string, std::unordered_set<
-					scored_entity<std::string, double>
+				std::string,
+                std::unordered_set<
+				    scored_entity<std::string, double>
 				>
 			>
 		> dest_pep_vec;
@@ -4328,14 +4316,115 @@ TEST_CASE("Full test of link module's individual methods", "module_link")
 	}
 	SECTION("Testing pep map creation with kmer penalty")
 	{
-		// define destination vector of tuples associating strings to scored
-		// entities
+        std::unordered_map<
+            std::string,
+            std::unordered_set<scored_entity<std::string, double>>
+        > kmer_map = {
+            {
+                "AAAG",
+                {
+                    scored_entity<std::string, double>("8453", 1.00),
+                    scored_entity<std::string, double>("1432", 1.00),
+                    scored_entity<std::string, double>("4857", 1.00),
+                    scored_entity<std::string, double>("2232", 1.00)
+                }
+            },
+            {
+                "TGAA",
+                {
+                    scored_entity<std::string, double>("8453", 1.00),
+                    scored_entity<std::string, double>("4857", 1.00),
+                    scored_entity<std::string, double>("2232", 1.00)
+                }
+            }
+        };
 
-		// initialize vector of sequences
+        std::vector<sequence> seq_vec = {
+            sequence(
+                ">ID=XFYYS_THS AC=YYWHC6_TG OXX=7823,1048,2938",
+                "ATTGACTGAA"
+            ),
+            sequence(
+                ">ID=VVBT03_23 AC=BAUCH77_T OXX=1242,9991,8991",
+                "GAAAGTGAAC"
+            ),
+            sequence(
+                ">ID=BNYSS_06S AC=HISTAA_WQ OXX=8923,1213,0019",
+                "GATGAACGAT"
+            ),
+            sequence(
+                ">ID=HHNIS_01S AC=UUNOUU_12 OXX=9901,1248,2312",
+                "GTACAAAAAG"
+            )
+        };
 
-		// create pep map with kmer penalty
+        std::vector<std::vector<scored_entity<std::string, double>>>
+            expected_entities = {
+                {
+                    scored_entity<std::string, double>("8453", 0.33),
+                    scored_entity<std::string, double>("4857", 0.33),
+                    scored_entity<std::string, double>("2232", 0.33)
+                },
+                {
+                    scored_entity<std::string, double>("8453", 0.83),
+                    scored_entity<std::string, double>("1432", 0.50),
+                    scored_entity<std::string, double>("4857", 0.83),
+                    scored_entity<std::string, double>("2232", 0.83)
+                },
+                {
+                    scored_entity<std::string, double>("8453", 0.33),
+                    scored_entity<std::string, double>("4857", 0.33),
+                    scored_entity<std::string, double>("2232", 0.33)
+                },
+                {
+                    scored_entity<std::string, double>("8453", 0.50),
+                    scored_entity<std::string, double>("1432", 0.50),
+                    scored_entity<std::string, double>("4857", 0.50),
+                    scored_entity<std::string, double>("2232", 0.50)
+                }
+            };
 
-		// check destination vector
+        std::vector<
+            std::tuple<
+                std::string,
+                std::unordered_set<
+                    scored_entity<std::string, double>
+                >
+            >
+        > dest_pep_vec;
+        link_mod.create_pep_map_with_kmer_penalty(kmer_map, dest_pep_vec, seq_vec, 4);
+
+        REQUIRE(dest_pep_vec.size() == 4);
+
+        auto pep = dest_pep_vec.begin();
+        auto entity_set = std::get<1>(*pep);
+        REQUIRE(std::get<0>(*pep).compare(">ID=XFYYS_THS AC=YYWHC6_TG OXX=7823,1048,2938") == 0);
+        REQUIRE(entity_set.find(expected_entities[0][0]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[0][1]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[0][2]) != entity_set.end());
+
+        pep++;
+        entity_set = std::get<1>(*pep);
+        REQUIRE(std::get<0>(*pep).compare(">ID=VVBT03_23 AC=BAUCH77_T OXX=1242,9991,8991") == 0);
+        REQUIRE(entity_set.find(expected_entities[1][0]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[1][1]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[1][2]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[1][3]) != entity_set.end());
+
+        pep++;
+        entity_set = std::get<1>(*pep);
+        REQUIRE(std::get<0>(*pep).compare(">ID=BNYSS_06S AC=HISTAA_WQ OXX=8923,1213,0019") == 0);
+        REQUIRE(entity_set.find(expected_entities[2][0]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[2][1]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[2][2]) != entity_set.end());
+
+        pep++;
+        entity_set = std::get<1>(*pep);
+        REQUIRE(std::get<0>(*pep).compare(">ID=HHNIS_01S AC=UUNOUU_12 OXX=9901,1248,2312") == 0);
+        REQUIRE(entity_set.find(expected_entities[3][0]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[3][1]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[3][2]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[3][3]) != entity_set.end());
 	}
 	SECTION("Testing verification of ID type with ID index")
 	{
