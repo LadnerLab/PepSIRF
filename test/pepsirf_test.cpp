@@ -4033,113 +4033,255 @@ TEST_CASE( "Subjoin name list filter is optional", "[module_subjoin]" )
 TEST_CASE("Full test of link module's individual methods", "module_link")
 {
 	module_link link_mod;
-	// define a destination unordered map associating a string to a scored
-	// entity	
-	std::unordered_map<
-		std::string,
-		std::unordered_set<scored_entity<std::string, double>>
-	> dest_map_of_kmers;
 
 	SECTION("Testing prot map creation")
-	{
+	{ // TODO: ensure solution does not add significant time to automated test
+        std::vector<std::vector<scored_entity<std::string, double>>> expected_entities = {
+            { // GTGA
+                scored_entity<std::string, double>("2232", 1.00)
+            },
+            { // AGGA
+                scored_entity<std::string, double>("4857", 1.00)
+            },
+            { // GTTA
+                scored_entity<std::string, double>("1432", 1.00)
+            },
+            { // AAAG
+                scored_entity<std::string, double>("8453", 1.00),
+                scored_entity<std::string, double>("1432", 1.00),
+                scored_entity<std::string, double>("4857", 1.00),
+                scored_entity<std::string, double>("2232", 1.00)
+            },
+            { // AGTT
+                scored_entity<std::string, double>("1432", 1.00),
+                scored_entity<std::string, double>("2232", 1.00)
+            },
+            { // TTAG
+                scored_entity<std::string, double>("1432", 1.00),
+                scored_entity<std::string, double>("4857", 1.00)
+            },
+            { // AAGT
+                scored_entity<std::string, double>("1432", 1.00),
+                scored_entity<std::string, double>("2232", 1.00)
+            },
+            { // TAGG
+                scored_entity<std::string, double>("4857", 1.00)
+            },
+            { // GGAA
+                scored_entity<std::string, double>("4857", 1.00)
+            },
+            { // GAAG
+                scored_entity<std::string, double>("8453", 1.00)
+            },
+            { // TGAA
+                scored_entity<std::string, double>("8453", 1.00),
+                scored_entity<std::string, double>("2232", 1.00)
+            },
+            { // GAAA
+                scored_entity<std::string, double>("8453", 1.00),
+                scored_entity<std::string, double>("1432", 1.00),
+                scored_entity<std::string, double>("4857", 1.00),
+                scored_entity<std::string, double>("2232", 1.00)
+            },
+            { // AAGA
+                scored_entity<std::string, double>("8453", 1.00)
+            },
+            { // AGAA
+                scored_entity<std::string, double>("8453", 1.00)
+            }
+        };
+        std::unordered_map<
+            std::string,
+            std::unordered_set<scored_entity<std::string, double>>
+        > dest_kmer_map;
+
 		std::vector<sequence> seq_vec = {
 			sequence(
 				">ID=AHGTV_HH1 AC=ATFGDDVAHS_6TT OXX=4672,5934,8891,8453",
-				"ATTAACCTGAAGAAACATG"
+				"TGAAGAAAG"
 			),
 			sequence(
 				">ID=AVFTGS_RR3 AC=UJDNNDFMT_PI6 OXX=5864,1342,0795,1432",
-				"GGTCATTAAGCCTCGGGGT"
+				"GAAAGTTAG"
 			),
 			sequence(
 				">ID=GTHYVS_PPE AC=GWVBHW5FH_WT6 OXX=7284,8492,1189,4857",
-				"TTAGGTTGTAGTGTAGCCA"
+				"TTAGGAAAG"
 			),
 			sequence(
 				">ID=XCCSBV_THS AC=QQWVTH6HY_EHR OXX=5362,0958,4782,2232",
-				"CCTATTTTAGGGATTTACA"
+				"GTGAAAGTT"
 			)
 		};
 
-		/*
-		std::unordered_map<std::string, std::string> retriever_map = {
-			{
-				">ID=AHGTV_HH1 AC=ATFGDDVAHS_6TT OXX=4672,5934,8891,8453",
-				"ATTAA"
-			}
-		};
-		*/
-
 		link_mod.create_prot_map<std::size_t>(
-			dest_map_of_kmers, seq_vec, 5, 3
+			dest_kmer_map, seq_vec, 4, 3
 		);
+        /* remove
+        std::cout << "\n\n\nKmer Map:\n";
+        for (auto it : dest_kmer_map)
+        {
+            std::cout << "{\n";
+            std::cout << "\t" << it.first << ":\n";
+            for (auto entity : it.second)
+            {
+                std::cout << "\t{ " << entity.get_key() << ", " << entity.get_score() << " }\n";
+            }
+            std::cout << "},\n";
+        }
+        std::cout << "\n\n\n";
+        remove */
 
-		/*
-		auto it = dest_map_of_kmers.begin();
-		REQUIRE(it->first.compare("CCTAT") == 0);
-		REQUIRE(it->second.begin()->get_key().compare("2232") == 0);
-		REQUIRE(it->second.begin()->get_score() == 1.00);
+        REQUIRE(dest_kmer_map.size() == 14);
 
-		it++;
-		REQUIRE(it->first.compare("TTAGG") == 0);
-		REQUIRE(it->second.begin()->get_key().compare("4857") == 0);
-		REQUIRE(it->second.begin()->get_score() == 1.00);
+        auto found = dest_kmer_map.find("GTGA");
+        REQUIRE(found != dest_kmer_map.end());
+        auto entity_set = found->second;
+        REQUIRE(entity_set.find(expected_entities[0][0]) != entity_set.end());
 
-		it++;
-		REQUIRE(it->first.compare("GGTCA") == 0);
-		REQUIRE(it->second.begin()->get_key().compare("1432") == 0);
-		REQUIRE(it->second.begin()->get_score() == 1.00);
+        found = dest_kmer_map.find("AGGA");
+        REQUIRE(found != dest_kmer_map.end());
+        entity_set = found->second;
+        REQUIRE(entity_set.find(expected_entities[1][0]) != entity_set.end());
 
-		it++;
-		REQUIRE(it->first.compare("ATTAA") == 0);
-		REQUIRE(it->second.begin()->get_key().compare("8453") == 0);
-		REQUIRE(it->second.begin()->get_score() == 1.00);
-		*/
+        found = dest_kmer_map.find("GTTA");
+        REQUIRE(found != dest_kmer_map.end());
+        entity_set = found->second;
+        REQUIRE(entity_set.find(expected_entities[2][0]) != entity_set.end());
+
+        found = dest_kmer_map.find("AAAG");
+        REQUIRE(found != dest_kmer_map.end());
+        entity_set = found->second;
+        REQUIRE(entity_set.find(expected_entities[3][0]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[3][1]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[3][2]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[3][3]) != entity_set.end());
+
+        found = dest_kmer_map.find("AGTT");
+        REQUIRE(found != dest_kmer_map.end());
+        entity_set = found->second;
+        REQUIRE(entity_set.find(expected_entities[4][0]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[4][1]) != entity_set.end());
+
+        found = dest_kmer_map.find("TTAG");
+        REQUIRE(found != dest_kmer_map.end());
+        entity_set = found->second;
+        REQUIRE(entity_set.find(expected_entities[5][0]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[5][1]) != entity_set.end());
+
+        found = dest_kmer_map.find("AAGT");
+        REQUIRE(found != dest_kmer_map.end());
+        entity_set = found->second;
+        REQUIRE(entity_set.find(expected_entities[6][0]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[6][1]) != entity_set.end());
+
+        found = dest_kmer_map.find("TAGG");
+        REQUIRE(found != dest_kmer_map.end());
+        entity_set = found->second;
+        REQUIRE(entity_set.find(expected_entities[7][0]) != entity_set.end());
+
+        found = dest_kmer_map.find("GGAA");
+        REQUIRE(found != dest_kmer_map.end());
+        entity_set = found->second;
+        REQUIRE(entity_set.find(expected_entities[8][0]) != entity_set.end());
+
+        found = dest_kmer_map.find("GAAG");
+        REQUIRE(found != dest_kmer_map.end());
+        entity_set = found->second;
+        REQUIRE(entity_set.find(expected_entities[9][0]) != entity_set.end());
+
+        found = dest_kmer_map.find("TGAA");
+        REQUIRE(found != dest_kmer_map.end());
+        entity_set = found->second;
+        REQUIRE(entity_set.find(expected_entities[10][0]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[10][1]) != entity_set.end());
+
+        found = dest_kmer_map.find("GAAA");
+        REQUIRE(found != dest_kmer_map.end());
+        entity_set = found->second;
+        REQUIRE(entity_set.find(expected_entities[11][0]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[11][1]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[11][2]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[11][3]) != entity_set.end());
+
+        found = dest_kmer_map.find("AAGA");
+        REQUIRE(found != dest_kmer_map.end());
+        entity_set = found->second;
+        REQUIRE(entity_set.find(expected_entities[12][0]) != entity_set.end());
+
+        found = dest_kmer_map.find("AGAA");
+        REQUIRE(found != dest_kmer_map.end());
+        entity_set = found->second;
+        REQUIRE(entity_set.find(expected_entities[13][0]) != entity_set.end());
 	}
 	SECTION("Testing pep map creation")
 	{	// TODO: I believe the spec block for create_pep_map() was intended to
 		// reference the map produced by module_link::create_prot_map, instead
 		// it identifies "module_deconv::create_prot_map" - this should be changed
-		/*
-		std::unordered_map<
-			std::string,
-			std::unordered_set<scored_entity<std::string, double>>
-		> kmer_map = {
-			{"CCTAT", {scored_entity<std::string, double>("2232", 1.00)}},
-			{"TTAGG", {scored_entity<std::string, double>("4857", 1.00)}},
-			{"GGTCA", {scored_entity<std::string, double>("1432", 1.00)}},
-			{"ATTAA", {scored_entity<std::string, double>("8453", 1.00)}}
-		};
-		std::cout << "\n\n\nMap of kmers inside Pep map section:\n";
-		for (auto it : dest_map_of_kmers)
-		{
-			std::cout << "Iterator: " << &it;
-			std::cout << it.first << "\n";
-			for (auto sec_it : it.second)
-			{
-				std::cout << "\t" << sec_it.get_key() << ", " << sec_it.get_score() << "\n";
-			}
-		}
-		std::cout << "\n\n\n";
+        std::unordered_map<
+            std::string,
+            std::unordered_set<scored_entity<std::string, double>>
+        > kmer_map = {
+            {
+                "AAAG",
+                {
+                    scored_entity<std::string, double>("8453", 1.00), scored_entity<std::string, double>("1432", 1.00),
+                    scored_entity<std::string, double>("4857", 1.00), scored_entity<std::string, double>("2232", 1.00)
+                }
+            },
+            {
+                "TGAA",
+                {
+                    scored_entity<std::string, double>("8453", 1.00), scored_entity<std::string, double>("4857", 1.00),
+                    scored_entity<std::string, double>("2232", 1.00)
+                }
+            }
+        };
 
 		std::vector<sequence> seq_vec = {
 			sequence(
 				">ID=AHGTV_HH1 AC=ATFGDDVAHS_6TT OXX=4672,5934,8891,8453",
-				"ATTAATTTAGCGGGCATACGATAAGCG"
+				"ATTAACCTGGTCGTGAAAG"
 			),
 			sequence(
 				">ID=AVFTGS_RR3 AC=UJDNNDFMT_PI6 OXX=5864,1342,0795,1432",
-				"GGTCAAAAGCTAGGCTCTCTCGGATAG"
+				"GTGAAAGGGTCCCTGGAAAG"
 			),
 			sequence(
 				">ID=GTHYVS_PPE AC=GWVBHW5FH_WT6 OXX=7284,8492,1189,4857",
-				"TTAGGTTAGGGCGCGAAACATACGATT"
+				"TTAGATTGTGTCCCGAAAGT"
 			),
 			sequence(
 				">ID=XCCSBV_THS AC=QQWVTH6HY_EHR OXX=5362,0958,4782,2232",
-				"CCTATTTAGCCGATGGGATTAAACGAT"
+				"TGGTCGTGAAAGTTAGATTA"
 			)
 		};
+        std::vector<std::vector<scored_entity<std::string, double>>> expected_entities = {
+            {
+                scored_entity<std::string, double>("2232", 2.00),
+                scored_entity<std::string, double>("4857", 2.00),
+                scored_entity<std::string, double>("8453", 2.00),
+                scored_entity<std::string, double>("1432", 1.00)
+            },
+            {
+                scored_entity<std::string, double>("2232", 3.00),
+                scored_entity<std::string, double>("4857", 3.00),
+                scored_entity<std::string, double>("8453", 3.00),
+                scored_entity<std::string, double>("1432", 2.00)
+            },
+            {
+                scored_entity<std::string, double>("2232", 1.00),
+                scored_entity<std::string, double>("4857", 1.00),
+                scored_entity<std::string, double>("8453", 1.00),
+                scored_entity<std::string, double>("1432", 1.00)
+            },
+            {
+                scored_entity<std::string, double>("2232", 2.00),
+                scored_entity<std::string, double>("4857", 2.00),
+                scored_entity<std::string, double>("8453", 2.00),
+                scored_entity<std::string, double>("1432", 1.00)
+            }
+        };
 
 		std::vector<
 			std::tuple<
@@ -4150,18 +4292,39 @@ TEST_CASE("Full test of link module's individual methods", "module_link")
 		> dest_pep_vec;
 		link_mod.create_pep_map(kmer_map, dest_pep_vec, seq_vec, 4);
 
-		std::cout << "\n\n\n";
-		for (auto pep : dest_pep_vec)
-		{
-			std::cout << std::get<0>(pep) << " ->\n";
+        REQUIRE(dest_pep_vec.size() == 4);
 
-			for (auto entity : std::get<1>(pep))
-			{
-				std::cout << entity.get_key() << ": " << entity.get_score() << "\n";
-			}
-		}
-		std::cout << "\n\n\n";
-		*/
+        auto pep = dest_pep_vec.begin();
+        auto entity_set = std::get<1>(*pep);
+        REQUIRE(std::get<0>(*pep).compare(">ID=AHGTV_HH1 AC=ATFGDDVAHS_6TT OXX=4672,5934,8891,8453") == 0);
+        REQUIRE(entity_set.find(expected_entities[0][0]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[0][1]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[0][2]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[0][3]) != entity_set.end());
+
+        pep++;
+        entity_set = std::get<1>(*pep);
+        REQUIRE(std::get<0>(*pep).compare(">ID=AVFTGS_RR3 AC=UJDNNDFMT_PI6 OXX=5864,1342,0795,1432") == 0);
+        REQUIRE(entity_set.find(expected_entities[1][0]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[1][1]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[1][2]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[1][3]) != entity_set.end());
+
+        pep++;
+        entity_set = std::get<1>(*pep);
+        REQUIRE(std::get<0>(*pep).compare(">ID=GTHYVS_PPE AC=GWVBHW5FH_WT6 OXX=7284,8492,1189,4857") == 0);
+        REQUIRE(entity_set.find(expected_entities[2][0]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[2][1]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[2][2]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[2][3]) != entity_set.end());
+
+        pep++;
+        entity_set = std::get<1>(*pep);
+        REQUIRE(std::get<0>(*pep).compare(">ID=XCCSBV_THS AC=QQWVTH6HY_EHR OXX=5362,0958,4782,2232") == 0);
+        REQUIRE(entity_set.find(expected_entities[3][0]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[3][1]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[3][2]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[3][3]) != entity_set.end());
 	}
 	SECTION("Testing pep map creation with kmer penalty")
 	{
