@@ -629,6 +629,7 @@ TEST_CASE("Full test of info module", "[module_info]")
 	}
     SECTION("info module properly calculates and formats column sums file")
     {
+        std::cout << "\n\n\nStarted test for proper calculation and format of col sums file...\n"; // remove
         std::ifstream ifexpected(
             "../test/expected/test_expected_info_col_sums.tsv",
             std::ios_base::in
@@ -638,12 +639,16 @@ TEST_CASE("Full test of info module", "[module_info]")
             std::ios_base::in
         );
 
+        std::cout << "\nChecking test_info_col_sums.tsv against test_expected_info_col_sums.tsv...\n"; // remove
         while (!ifexpected.eof() && !ifactual.eof())
         {
             std::getline(ifexpected, expected_line);
             std::getline(ifactual, actual_line);
+            std::cout << "Expected: " << expected_line << "\n";
+            std::cout << "Actual: " << actual_line << "\n";
             REQUIRE(expected_line.compare(actual_line) == 0);
         }
+        std::cout << "End of test for proper calculation and format of col sums file!\n"; // remove
     }
 	SECTION("info module creates and calculates average matrix file")
 	{
