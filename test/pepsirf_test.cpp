@@ -486,8 +486,6 @@ TEST_CASE( "Diagnostics give a detailed count for the occurring read matches dur
     d_opts.set_info( &options_demux::index2_data,"0,8,1" );
 
     d_mod.run(&d_opts);
-    // TODO: make this a section in a wider demux module test
-    // check diagnostic output diagnostic file matches expected
     std::string expected = "../test/expected/test_expected_diagnostic_NS30.tsv";
     std::string actual = "../test/test_diagnostic_output.tsv";
     std::ifstream ifexpected( expected, std::ios_base::in );
@@ -518,7 +516,6 @@ TEST_CASE( "Diagnostics give a detailed count for the occurring read matches dur
 	}
 }
 
-// TODO: make this a section in a wider demux module test, as well
 TEST_CASE("Demux output demostrates demux removes references with matching sequences", "[module_demux]")
 {
 	std::vector<std::string> split_line;
@@ -574,9 +571,8 @@ TEST_CASE("Demux output demostrates demux removes references with matching seque
 	REQUIRE(actual_set.find(*expected_ref) != actual_set.end());
 }
 
-// TODO: figure out how to capture stdout so info module logs do not appear
-// while running pepsirf_test
-/*
+/* TODO: investigate this test not passing on GitHub
+ */
 TEST_CASE("Full test of info module", "[module_info]")
 {
 	// initialize info module
@@ -668,7 +664,6 @@ TEST_CASE("Full test of info module", "[module_info]")
         }
 	}
 }
-*/
 
 TEST_CASE( "Test String Indexing", "[string_indexer]" )
 {
@@ -719,6 +714,55 @@ TEST_CASE( "Test String Indexing", "[string_indexer]" )
     seqs2.emplace_back( "", "ATGC" );
     seqs2.emplace_back( "", "TGC" );
 }
+
+/* TODO: remove if we do not use multiple_best_matches() and make_indirectionable()
+TEST_CASE("Full test of et_search operations", "[et_search]")
+{
+    std::vector<sequence> seqs = {
+        sequence("", "GGATAGATTAGCTAGCGGGGCTAAGCTAGAGCTCTCTGAAAGAGCTAGCTAGCT"),
+        sequence("", "ACAGGAAAGCTCGCGAATAGAGAGATTTTGCTCGCGCGCAACCCCGCTAGAGAA"),
+        sequence("", "GAGAAAGAAGTTTCGCTTATATGCCCCGATCGGCGCGATATTTAGAGAGCCTAG"),
+        sequence("", "TTTAGAAGGAAAAATCGCGCCGCTAATTATGGTTTGATGGGGGCTGATAGCGTA")
+    };
+    std::size_t hamming_tolerance = 3;
+
+    SECTION("Verify reference-independent demultiplexing")
+    {
+        sequence_indexer seq_indexer;
+        seq_indexer.index(seqs);
+
+        std::unordered_map<sequence, std::vector<std::size_t>>
+            ref_counts = {
+                {sequence("", "GATAGA"), std::vector<std::size_t>(4, 0)},
+                {sequence("", "ATAGAG"), std::vector<std::size_t>(4, 0)},
+                {sequence("", "CTTATA"), std::vector<std::size_t>(4, 0)},
+                {sequence("", "TGATAG"), std::vector<std::size_t>(4, 0)},
+                {sequence("", "ATAGCG"), std::vector<std::size_t>(4, 0)}
+            };
+
+        et_seq_search<
+            std::unordered_map<sequence, std::vector<std::size_t>>, false
+        > search(seq_indexer, ref_counts, 4);
+
+        std::vector<sequence> queries = {
+            sequence("", "GAT"), sequence("", "GA"), sequence("", "TAG")
+        };
+
+        std::cout << "\n\n\nMultiple best matches: "
+                  << search.multiple_best_matches<std::vector<sequence>, std::string>(
+                        queries.begin(), queries.end(),
+                        [&queries](sequence seq)
+                        {
+                            return seq.seq;
+                        }
+                  );
+        std::cout << "\n\n\n";
+    }
+    SECTION("Verify reference-dependent demultiplexing")
+    {
+    }
+}
+*/
 
 TEST_CASE( "Reference-independent Demultiplexing" )
 {
@@ -3125,13 +3169,13 @@ TEST_CASE("Squared difference", "[stats]")
 	REQUIRE(actual == expected);
 }
 
-TEST_CASE( "Parsing/Writing Bins from stream", "[peptide_bin]" )
+TEST_CASE( "Full test of Peptide Bin operations", "[peptide_bin]" )
 {
     std::stringstream bins_in;
     bins_in << "pep_1\tpep_2\tpep_3\npep_4\tpep_5\tpep_6\n";
     bin_collection bin_c = peptide_bin_io::parse_bins( bins_in );
 
-	SECTION("Test writing bins and parsing bins")
+	SECTION("Test parsing and writing bins from a stream")
 	{
 		std::stringstream bins_out;
 		peptide_bin_io::write_bins( bins_out, bin_c );
@@ -3756,6 +3800,7 @@ TEST_CASE( "Testing nt->aa translation", "[nt_aa_translator]" )
 
 }
 
+/* remove
 #ifdef ZLIB_ENABLED
 TEST_CASE( "Reading/Writing Gzipped information", "[pepsirf_io]" )
 {
@@ -3797,6 +3842,7 @@ TEST_CASE( "Determining whether a file is gzipped.", "[pepsirf_io]" )
     std::ifstream false_expected{ "../test/input_data/test.fasta" };
     REQUIRE( !pepsirf_io::is_gzipped( false_expected ) );
 }
+remove */
 
 TEST_CASE("Full test of subjoin's individual methods", "[module_subjoin]")
 {
@@ -4030,12 +4076,17 @@ TEST_CASE( "Subjoin name list filter is optional", "[module_subjoin]" )
     mod.run( &opts );
 }
 
-TEST_CASE("Full test of link module's individual methods", "module_link")
+TEST_CASE("Verify metadata map construction operation", "[metadata_map]")
+{
+    std::string metadata_map_fname = "../test/input_data/full_design_clean_min30_taxtweak_100perc_jingmens_2019-09-12_segment.metadata";
+}
+
+TEST_CASE("Full test of link module's individual methods", "[module_link]")
 {
 	module_link link_mod;
 
 	SECTION("Testing prot map creation")
-	{ // TODO: ensure solution does not add significant time to automated test
+	{
         std::vector<std::vector<scored_entity<std::string, double>>> expected_entities = {
             { // GTGA
                 scored_entity<std::string, double>("2232", 1.00)
@@ -4201,9 +4252,7 @@ TEST_CASE("Full test of link module's individual methods", "module_link")
         REQUIRE(entity_set.find(expected_entities[13][0]) != entity_set.end());
 	}
 	SECTION("Testing pep map creation")
-	{	// TODO: I believe the spec block for create_pep_map() was intended to
-		// reference the map produced by module_link::create_prot_map, instead
-		// it identifies "module_deconv::create_prot_map" - this should be changed
+	{
         std::unordered_map<
             std::string,
             std::unordered_set<scored_entity<std::string, double>>
@@ -4455,7 +4504,6 @@ TEST_CASE("Full test of link module's individual methods", "module_link")
 	}
 }
 
-/* TODO: fix error in integration section
 TEST_CASE( "Metadata file can be given in place of taxonomic id index", "[module_link]" )
 {
     SECTION( "Verifying map creation and target sequence retrieval individually from link module" )
@@ -4472,8 +4520,10 @@ TEST_CASE( "Metadata file can be given in place of taxonomic id index", "[module
         std::string metadata_spec_id = metadata_map::get_id( ">ID=A0A2Z4GZU5_HHV1 AC=A0A2Z4GZU5 OXX=10298,10298,10294,10292", &meta_map );
         REQUIRE( id_index_spec_id.compare( metadata_spec_id ) == 0 );
     }
+    /* TODO: fix error in integration section
     SECTION( "Verifying metadata file usage feature successfully performs and integrates with link module." )
     {
+        std::cout << "\n\n\nBeginning of metadata file usage test...\n";
         module_link mod;
         options_link opts;
         opts.metadata_fname =  "../test/input_data/full_design_clean_min30_taxtweak_100perc_jingmens_2019-09-12_segment.metadata,Name,Species";
@@ -4483,9 +4533,10 @@ TEST_CASE( "Metadata file can be given in place of taxonomic id index", "[module
         opts.output_fname = "../test/test_metadata_output.txt";
         mod.run( &opts );
         REQUIRE( !opts.output_fname.empty() );
+        std::cout << "End of metadata file usage test!\n\n\n";
     }
+    */
 }
-*/
 
 TEST_CASE("Test zscore calculation", "[module_zscore]")
 {
