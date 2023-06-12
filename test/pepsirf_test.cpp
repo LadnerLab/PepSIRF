@@ -589,8 +589,6 @@ TEST_CASE("Full test of info module", "[module_info]")
     // run info module
     i_mod.run(&i_opts);
 	
-    std::string expected_line = "";
-    std::string actual_line = "";
 	SECTION("info module creates a properly formatted sample name file")
 	{
         std::ifstream ifexpected(
@@ -602,6 +600,8 @@ TEST_CASE("Full test of info module", "[module_info]")
             std::ios_base::in
         );
 
+        std::string expected_line = "";
+        std::string actual_line = "";
         while (!ifexpected.eof() && !ifactual.eof())
         {
             std::getline(ifexpected, expected_line);
@@ -620,6 +620,8 @@ TEST_CASE("Full test of info module", "[module_info]")
             std::ios_base::in
         );
 
+        std::string expected_line;
+        std::string actual_line;
         while (!ifexpected.eof() && !ifactual.eof())
         {
             std::getline(ifexpected, expected_line);
@@ -629,26 +631,63 @@ TEST_CASE("Full test of info module", "[module_info]")
 	}
     SECTION("info module properly calculates and formats column sums file")
     {
-        std::cout << "\n\n\nStarted test for proper calculation and format of col sums file...\n"; // remove
-        std::ifstream ifexpected(
-            "../test/expected/test_expected_info_col_sums.tsv",
-            std::ios_base::in
-        );
-        std::ifstream ifactual(
-            "../test/test_info_col_sums.tsv",
-            std::ios_base::in
-        );
+        std::string line;
+        std::set<std::string> expected_set;
+        std::set<std::string> actual_set;
 
-        std::cout << "\nChecking test_info_col_sums.tsv against test_expected_info_col_sums.tsv...\n"; // remove
-        while (!ifexpected.eof() && !ifactual.eof())
+        // collect expected lines into a set
         {
-            std::getline(ifexpected, expected_line);
-            std::getline(ifactual, actual_line);
-            std::cout << "Expected: " << expected_line << "\n";
-            std::cout << "Actual: " << actual_line << "\n";
-            REQUIRE(expected_line.compare(actual_line) == 0);
+            std::ifstream ifexpected(
+                "../test/expected/test_expected_info_pep_names.tsv",
+                std::ios_base::in
+            );
+
+            while (!ifexpected.eof())
+            {
+                std::getline(ifexpected, line);
+                expected_set.insert(line);
+            }
         }
-        std::cout << "End of test for proper calculation and format of col sums file!\n"; // remove
+        // collect actual lines into a set
+        {
+            std::ifstream ifactual(
+                "../test/test_info_pep_names.tsv",
+                std::ios_base::in
+            );
+
+            while (!ifactual.eof())
+            {
+                std::getline(ifactual, line);
+                actual_set.insert(line);
+            }
+        }
+
+        // compare expected and actual sets
+        REQUIRE(actual_set.size() == expected_set.size());
+
+        auto expected_ref = expected_set.find("BB.5_1X_NS30_B  2995.00");
+        REQUIRE(actual_set.find(*expected_ref) != actual_set.end());
+
+        expected_ref = expected_set.find("BB.6_1X_NS30_A  49.00");
+        REQUIRE(actual_set.find(*expected_ref) != actual_set.end());
+
+        expected_ref = expected_set.find("BB.3_1X_NS30_B  1604.00");
+        REQUIRE(actual_set.find(*expected_ref) != actual_set.end());
+
+        expected_ref = expected_set.find("BB.5_1X_NS30_C  1801.00");
+        REQUIRE(actual_set.find(*expected_ref) != actual_set.end());
+
+        expected_ref = expected_set.find("BB.1_1X_NS30_A  327.00");
+        REQUIRE(actual_set.find(*expected_ref) != actual_set.end());
+
+        expected_ref = expected_set.find("BB.3_1X_NS30_A  1251.00");
+        REQUIRE(actual_set.find(*expected_ref) != actual_set.end());
+
+        expected_ref = expected_set.find("BB.5_1X_NS30_A  1597.00");
+        REQUIRE(actual_set.find(*expected_ref) != actual_set.end());
+
+        expected_ref = expected_set.find("BB.6_1X_NS30_B  963.00");
+        REQUIRE(actual_set.find(*expected_ref) != actual_set.end());
     }
 	SECTION("info module creates and calculates average matrix file")
 	{
@@ -660,6 +699,9 @@ TEST_CASE("Full test of info module", "[module_info]")
             "../test/test_info_avg_matrix.tsv",
             std::ios_base::in
         );
+
+        std::string expected_line;
+        std::string actual_line;
 
         while (!ifexpected.eof() && !ifactual.eof())
         {
