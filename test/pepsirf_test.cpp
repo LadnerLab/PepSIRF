@@ -571,8 +571,6 @@ TEST_CASE("Demux output demostrates demux removes references with matching seque
 	REQUIRE(actual_set.find(*expected_ref) != actual_set.end());
 }
 
-/* TODO: investigate this test not passing on GitHub
- */
 TEST_CASE("Full test of info module", "[module_info]")
 {
 	// initialize info module
@@ -4524,17 +4522,22 @@ TEST_CASE("Full test of link module's individual methods", "[module_link]")
 	}
 	SECTION("Testing verification of ID type with ID index")
 	{
+        // subverts ambiguity when calling verify_id_type() with 0
+        auto verify_id_wrapper = [&link_mod](std::string name, std::size_t retr)
+        {
+            return link_mod.verify_id_type(name, retr);
+        };
+
 		sequence seq(
 			">ID=HNAC_EYY AC=KANMEA_R45 OXX=2412,9242,2445,4545",
 			"GTAGCTTTCGACCGCTAGGCTAGCCCGAGATCGC"
 		);
 
-		/* TODO: find a way for the 0 to be interpreted instead of as NULL
-		REQUIRE(link_mod.verify_id_type(seq.name, 0).compare("2412") == 0);
-		*/
-		REQUIRE(link_mod.verify_id_type(seq.name, 1).compare("9242") == 0);
-		REQUIRE(link_mod.verify_id_type(seq.name, 2).compare("2445") == 0);
-		REQUIRE(link_mod.verify_id_type(seq.name, 3).compare("4545") == 0);
+        REQUIRE(verify_id_wrapper(seq.name, 0).compare("2412") == 0);
+		REQUIRE(verify_id_wrapper(seq.name, 0).compare("2412") == 0);
+		REQUIRE(verify_id_wrapper(seq.name, 1).compare("9242") == 0);
+		REQUIRE(verify_id_wrapper(seq.name, 2).compare("2445") == 0);
+		REQUIRE(verify_id_wrapper(seq.name, 3).compare("4545") == 0);
 	}
 	SECTION("Testing verification of ID type with map of species IDs")
 	{
@@ -4545,6 +4548,8 @@ TEST_CASE("Full test of link module's individual methods", "[module_link]")
 
 		std::unordered_map<std::string, std::string> id_map = {
 			{">ID=HNAC_EYY AC=KANMEA_R45 OXX=2412,9242,2445,4545", "8892"},
+            {">ID=YACD_EYY AC=NALMEA_R46 OXX=2563,9281,5823,4829", "7183"},
+            {">ID=AHHC_IWO AC=YYYTWA_B25 OXX=0131,0992,8819,1121", "0914"}
 		};
 
 		REQUIRE(link_mod.verify_id_type(seq.name, &id_map).compare("8892") == 0);
