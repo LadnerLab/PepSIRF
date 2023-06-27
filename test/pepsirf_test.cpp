@@ -1443,7 +1443,10 @@ TEST_CASE( "get_map_value", "[module_deconv]" )
     REQUIRE( mod.get_map_value( map, 5, 9 ) == 9 );
 }
 
-// TODO: integrate all other util tests
+// TODO: ask if and test if getting rid of these binary operation
+// implementations is okay considering these are very basic opertions, and if
+// a specific class needs such an operation we can always implement overload
+// an operator for that class.
 TEST_CASE("Full test of util's individual methods", "[util]")
 {
 	SECTION("Test adding two things")
@@ -1948,19 +1951,6 @@ TEST_CASE( "scored peptide", "[peptide]" )
 	sc.set_score( 5 );
 	REQUIRE( sc.get_score() == 5 );
 }
-
-/* TODO: Redefine operator overload: causes expansion with "{?} < {?}"
-TEST_CASE("Verify '<' and '>' operators properly compare scored peptides", "[scored_peptide]")
-{
-    scored_peptide<double> scored_pep1("pep1", "ATGC", 100.0);
-	scored_peptide<double> scored_pep2("pep2", "ATGC", 60.0);
-
-	REQUIRE(scored_pep1 < scored_pep2);
-	
-	scored_pep2.set_score(0);
-	REQUIRE(scored_pep1 > scored_pep2);
-}
-*/
 
 TEST_CASE( "scored_entity", "[scored_entity.h]" )
 {
