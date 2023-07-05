@@ -301,6 +301,30 @@ TEST_CASE("Full test of setops' proper functionality", "[setops]")
 		REQUIRE(dest_set.find(10) != dest_set.end());
 		REQUIRE(dest_set.find(9) != dest_set.end());
 	}
+	SECTION("set_intersection() with Get")
+	{
+		auto only_positives = [](int num)
+		{
+			return num > 0 ? num : 0;
+		};
+
+		std::set<int> int_set1 = {10, -13, 3, -4, -5, 4};
+		std::set<int> int_set2 = {10, -1, 3, 4, 5, 8};
+		std::set<int> dest_set;
+		std::vector<int> expected_set = {
+			3, 4, 10
+		};
+
+		set_intersection(dest_set, int_set1, int_set2, only_positives);
+
+		REQUIRE(dest_set.size() == expected_set.size());
+		std::size_t i = 0;
+		for (auto dest_it : dest_set)
+		{
+			REQUIRE(dest_it == expected_set[i]);
+			i += 1;
+		}
+	}
 	SECTION("set_intersection() with vectors of class K and sequential set")
 	{
 		std::vector<std::string> str_vec1 = {
@@ -316,10 +340,6 @@ TEST_CASE("Full test of setops' proper functionality", "[setops]")
 		REQUIRE(dest_vec[0].compare("pep1") == 0);
 		REQUIRE(dest_vec[1].compare("pep3") == 0);
 		REQUIRE(dest_vec[2].compare("pep5") == 0);
-	}
-	//	TODO: re-write this test
-	SECTION("set_intersection() with Get")
-	{
 	}
 
 	// testing set_union()
@@ -364,9 +384,28 @@ TEST_CASE("Full test of setops' proper functionality", "[setops]")
 			i += 1;
 		}
 	}
-	// TODO: write test
 	SECTION("set_union() with Get")
 	{
+		std::unordered_map<char, int> map1 = {
+			{'c', 8}, {'b', 10}, {'y', 3}, {'w', 1}
+		};
+		std::unordered_map<char, int> map2 = {
+			{'m', 13}, {'q', 12}, {'o', 0}, {'z', 3}
+		};
+		std::set<int> dest_set;
+		std::vector<int> expected_set = {
+			'b', 'c', 'm', 'o', 'q', 'w', 'y', 'z'
+		};
+
+		set_union(dest_set, map1, map2, get_key<char, int>());
+
+		REQUIRE(dest_set.size() == expected_set.size());
+		std::size_t i = 0;
+		for (auto dest_it : dest_set)
+		{
+			REQUIRE(dest_it == expected_set[i]);
+			i += 1;
+		}
 	}
 
 	// testing set_difference()
