@@ -6,7 +6,6 @@
 
 namespace setops
 {
-
     template<typename K,
              typename V>
         struct get_key
@@ -41,7 +40,6 @@ namespace setops
                             dest.insert( dest.end(), elem );
                         }
                 }
-
         }
 
     // A - B
@@ -52,7 +50,6 @@ namespace setops
                                const Get retr
                              )
         {
-
             for( const auto& elem : first )
                 {
                     if( second.find( retr( elem ) ) != second.end() )
@@ -60,10 +57,7 @@ namespace setops
                             dest.insert( dest.end(), retr( elem ) );
                         }
                 }
-
         }
-
-
 
     // A - B
     template<class I, class K>
@@ -86,11 +80,10 @@ namespace setops
                             dest.insert( dest.end(), it );
                         }
                 }
-
-
         }
 
     // A u B
+	/* NOT NECESSARY - GET RID OF
     template<class I, class K>
         void set_union( I& dest,
                         const std::vector<K>& first,
@@ -113,6 +106,7 @@ namespace setops
                 dest.insert( u );
             }
     }
+	*/
 
     // A u B
     template<class I, class K, class Get>
@@ -141,8 +135,6 @@ namespace setops
             }
     }
 
-
-
     // A u B
     template<class I, class K>
         void set_union( I& dest,
@@ -168,6 +160,7 @@ namespace setops
     }
 
     // A - B
+	/* NOT USED - GET RID OF
     template<class I, class K>
         void set_difference( I& dest,
                              const K& first,
@@ -182,8 +175,10 @@ namespace setops
                         }
                 }
         }
+	*/
 
     // ( A - B ) u ( B - A )
+	/* NOT USED - GET RID OF
     template<class I, class K>
         void set_symmetric_difference(
                                       I& dest,
@@ -208,9 +203,9 @@ namespace setops
                         b_minus_a
                       );
     }
-
-
+	*/
 }; // namespace setops
 
 
 #endif // SETOPS_HH_INCLUDED
+

@@ -301,19 +301,6 @@ TEST_CASE("Full test of setops' proper functionality", "[setops]")
 		REQUIRE(dest_set.find(10) != dest_set.end());
 		REQUIRE(dest_set.find(9) != dest_set.end());
 	}
-	/*	TODO: ask about testing this
-	SECTION("set_intersection() with Get")
-	{
-		std::vector<int> int_vec1 = {10, 26, 7, 9, 0};
-		std::vector<int> int_vec2 = {10, 77, 28, 9, 100};
-		std::vector<int> dest_vec;
-
-		set_intersection(dest_vec, int_vec1, int_vec2);
-
-		REQUIRE(dest_vec[0] == 10);
-		REQUIRE(dest_vec[1] == 9);
-	}
-	*/
 	SECTION("set_intersection() with vectors of class K and sequential set")
 	{
 		std::vector<std::string> str_vec1 = {
@@ -329,6 +316,10 @@ TEST_CASE("Full test of setops' proper functionality", "[setops]")
 		REQUIRE(dest_vec[0].compare("pep1") == 0);
 		REQUIRE(dest_vec[1].compare("pep3") == 0);
 		REQUIRE(dest_vec[2].compare("pep5") == 0);
+	}
+	//	TODO: re-write this test
+	SECTION("set_intersection() with Get")
+	{
 	}
 
 	// testing set_union()
@@ -356,11 +347,6 @@ TEST_CASE("Full test of setops' proper functionality", "[setops]")
 			i += 1;
 		}
 	}
-	/* TODO: ask about testing this
-	SECTION("set_union() with Get")
-	{
-	}
-	*/
 	SECTION("set_union() with unordered set of type K")
 	{
 		std::set<int> int_set1 = {55, 6, 12, 10, 89, 100};
@@ -378,9 +364,13 @@ TEST_CASE("Full test of setops' proper functionality", "[setops]")
 			i += 1;
 		}
 	}
+	// TODO: write test
+	SECTION("set_union() with Get")
+	{
+	}
 
 	// testing set_difference()
-	// TODO: review logic of operation
+	/* TODO: review logic of operation -> recommend getting rid of method
 	SECTION("set_difference() returns expecetd")
 	{
 		std::set<int> int_set1 = {66, 12, 1, 0, 8, 16};
@@ -400,9 +390,10 @@ TEST_CASE("Full test of setops' proper functionality", "[setops]")
 			i += 1;
 		}
 	}
+	*/
 
 	// testing set_symmetric_difference()
-	/*	TODO: ask if this function has been used at all
+	/*	TODO: ask if this function has been used at all -> recommend getting rid of method
 	SECTION("set_symmetric_difference() returns expected")
 	{
 		std::set<int> int_set1 = {13, 0, 1, 6, 11, 30, 70};
@@ -1449,6 +1440,7 @@ TEST_CASE( "get_map_value", "[module_deconv]" )
 // an operator for that class.
 TEST_CASE("Full test of util's individual methods", "[util]")
 {
+	/* methods are superfluous, get rid of tests
 	SECTION("Test adding two things")
 	{
 		SECTION("9 plus 9 is equal to 18")
@@ -1500,6 +1492,8 @@ TEST_CASE("Full test of util's individual methods", "[util]")
 		{
 		}
 	}
+	*/
+
 	SECTION("Test is_integer()")
 	{
 		SECTION("Is 9 an integer")
@@ -1511,6 +1505,8 @@ TEST_CASE("Full test of util's individual methods", "[util]")
 			REQUIRE(!is_integer(6.38));
 		}
 	}
+
+	/* TODO: make sure test is working
 	SECTION("Test difference()")
 	{
 		SECTION("Difference between 22 and 11")
@@ -1526,6 +1522,13 @@ TEST_CASE("Full test of util's individual methods", "[util]")
 			REQUIRE(difference<double>()(100.00, 1000.00) == -900.00);
 		}
 	}
+	*/
+	// TODO: test ratio()
+
+	// TODO: test pair_positional_compare()
+	// TODO: test compare_pair_non_increasing()
+	// TODO: test compare_pair_non_decreasing()
+
 	SECTION("Test conversion of pairs to map")
 	{
 		std::vector<std::pair<std::string, int>> my_pair_vec = {
@@ -1544,6 +1547,7 @@ TEST_CASE("Full test of util's individual methods", "[util]")
 		it = my_map_of_pairs.find(my_pair_vec[3].first);
 		REQUIRE(it->second == 120);
 	}
+
 	SECTION("Test container printing")
 	{
 		std::ostringstream container_print_out;
