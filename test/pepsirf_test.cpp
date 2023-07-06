@@ -1545,8 +1545,7 @@ TEST_CASE("Full test of util's individual methods", "[util]")
 		}
 	}
 
-	/* TODO: make sure test is working
-	SECTION("Test difference()")
+	SECTION("Test difference operation")
 	{
 		SECTION("Difference between 22 and 11")
 		{
@@ -1561,12 +1560,114 @@ TEST_CASE("Full test of util's individual methods", "[util]")
 			REQUIRE(difference<double>()(100.00, 1000.00) == -900.00);
 		}
 	}
-	*/
-	// TODO: test ratio()
 
-	// TODO: test pair_positional_compare()
-	// TODO: test compare_pair_non_increasing()
-	// TODO: test compare_pair_non_decreasing()
+	SECTION("Test ratio operation")
+	{
+		SECTION("Ratio of 1 and 3")
+		{
+			REQUIRE(ratio<double>()(1, 3) == 1.0 / 3.0);
+		}
+		SECTION("Ratio of 10 and 20")
+		{
+			REQUIRE(ratio<double>()(20, 10) == 1.0 / 2.0);
+		}
+		SECTION("Ration of 100 and 38")
+		{
+			REQUIRE(ratio<double>()(100, 38) == 38.0 / 100.0);
+		}
+	}
+
+	SECTION("Test pair positional comparison")
+	{
+		auto both_even = [](int num, int other)
+		{
+			return (num % 2 == 0) && (other % 2 == 0);
+		};
+		auto both_odd = [](int num, int other)
+		{
+			return (num % 2 == 1) && (other % 2 == 1);
+		};
+		auto both_positive = [](int num, int other)
+		{
+			return (num > 0) && (other > 0);
+		};
+
+		std::pair<int, int> first = {10, 32};
+		std::pair<int, int> second = {6, 18};
+
+		REQUIRE(pair_positional_compare(
+				first, second,
+				both_even, both_odd
+			) == false
+		);
+
+		first = {8, 13};
+		second = {22, 583};
+
+		REQUIRE(pair_positional_compare(
+				first, second,
+				both_even, both_odd
+			) == true
+		);
+
+		first = {3, 11};
+		second = {21, 5};
+
+		REQUIRE(pair_positional_compare(
+				first, second,
+				both_odd, both_odd
+			) == true
+		);
+
+		first = {-10, 44};
+		second = {12, 0};
+
+		REQUIRE(pair_positional_compare(
+				first, second,
+				both_positive, both_positive
+			) == false
+		);
+	}
+
+	SECTION("Test non-increasing pair comparison")
+	{
+		std::vector<std::pair<char, char>> pair_vec = {
+			{'c', 'a'}, {'z', 's'}, {'n', 'z'}, {'w', 't'}, {'b', 'o'}
+		};
+		std::vector<std::pair<char, char>> expected_pair_vec = {
+			{'n', 'z'}, {'w', 't'}, {'z', 's'}, {'b', 'o'}, {'c', 'a'}
+		};
+
+		std::sort(
+			pair_vec.begin(), pair_vec.end(),
+			compare_pair_non_increasing<char, char>()
+		);
+
+		for (std::size_t i = 0; i < expected_pair_vec.size(); i += 1)
+		{
+			REQUIRE(pair_vec[i].second == expected_pair_vec[i].second);
+		}
+	}
+
+	SECTION("Test non-decreasing pair comparison")
+	{
+		std::vector<std::pair<char, char>> pair_vec = {
+			{'c', 'a'}, {'z', 's'}, {'n', 'z'}, {'w', 't'}, {'b', 'o'}
+		};
+		std::vector<std::pair<char, char>> expected_pair_vec = {
+			{'c', 'a'}, {'b', 'o'}, {'z', 's'}, {'w', 't'}, {'n', 'z'}
+		};
+
+		std::sort(
+			pair_vec.begin(), pair_vec.end(),
+			compare_pair_non_decreasing<char, char>()
+		);
+
+		for (std::size_t i = 0; i < expected_pair_vec.size(); i += 1)
+		{
+			REQUIRE(pair_vec[i].second == expected_pair_vec[i].second);
+		}
+	}
 
 	SECTION("Test conversion of pairs to map")
 	{
