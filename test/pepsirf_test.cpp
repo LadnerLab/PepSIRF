@@ -790,55 +790,6 @@ TEST_CASE( "Test String Indexing", "[string_indexer]" )
     seqs2.emplace_back( "", "TGC" );
 }
 
-/* TODO: remove if we do not use multiple_best_matches() and make_indirectionable()
-TEST_CASE("Full test of et_search operations", "[et_search]")
-{
-    std::vector<sequence> seqs = {
-        sequence("", "GGATAGATTAGCTAGCGGGGCTAAGCTAGAGCTCTCTGAAAGAGCTAGCTAGCT"),
-        sequence("", "ACAGGAAAGCTCGCGAATAGAGAGATTTTGCTCGCGCGCAACCCCGCTAGAGAA"),
-        sequence("", "GAGAAAGAAGTTTCGCTTATATGCCCCGATCGGCGCGATATTTAGAGAGCCTAG"),
-        sequence("", "TTTAGAAGGAAAAATCGCGCCGCTAATTATGGTTTGATGGGGGCTGATAGCGTA")
-    };
-    std::size_t hamming_tolerance = 3;
-
-    SECTION("Verify reference-independent demultiplexing")
-    {
-        sequence_indexer seq_indexer;
-        seq_indexer.index(seqs);
-
-        std::unordered_map<sequence, std::vector<std::size_t>>
-            ref_counts = {
-                {sequence("", "GATAGA"), std::vector<std::size_t>(4, 0)},
-                {sequence("", "ATAGAG"), std::vector<std::size_t>(4, 0)},
-                {sequence("", "CTTATA"), std::vector<std::size_t>(4, 0)},
-                {sequence("", "TGATAG"), std::vector<std::size_t>(4, 0)},
-                {sequence("", "ATAGCG"), std::vector<std::size_t>(4, 0)}
-            };
-
-        et_seq_search<
-            std::unordered_map<sequence, std::vector<std::size_t>>, false
-        > search(seq_indexer, ref_counts, 4);
-
-        std::vector<sequence> queries = {
-            sequence("", "GAT"), sequence("", "GA"), sequence("", "TAG")
-        };
-
-        std::cout << "\n\n\nMultiple best matches: "
-                  << search.multiple_best_matches<std::vector<sequence>, std::string>(
-                        queries.begin(), queries.end(),
-                        [&queries](sequence seq)
-                        {
-                            return seq.seq;
-                        }
-                  );
-        std::cout << "\n\n\n";
-    }
-    SECTION("Verify reference-dependent demultiplexing")
-    {
-    }
-}
-*/
-
 TEST_CASE( "Reference-independent Demultiplexing" )
 {
     std::vector<sequence>
@@ -1473,10 +1424,8 @@ TEST_CASE( "get_map_value", "[module_deconv]" )
     REQUIRE( mod.get_map_value( map, 5, 9 ) == 9 );
 }
 
-// TODO: ask if and test if getting rid of these binary operation
-// implementations is okay considering these are very basic opertions, and if
-// a specific class needs such an operation we can always implement overload
-// an operator for that class.
+// TODO: recommend removing commentted binary operations and other commentted
+// operations
 TEST_CASE("Full test of util's individual methods", "[util]")
 {
 	/* methods are superfluous, get rid of tests
@@ -2693,9 +2642,6 @@ TEST_CASE("Full test of normalize module", "[module_normalize]")
 
 TEST_CASE( "geometric means", "[stats]" )
 {
-    // TODO: RE-implement this test
-    module_normalize mod;
-
     matrix<double> values{ 3, 4 };
 
     for( int outer = 0; outer < 3; ++outer )
