@@ -781,6 +781,7 @@ void module_deconv::write_outputs( std::string out_name,
                     tied = true;
                 }
 
+			// use naming information if provided
             if( id_name_map != nullptr )
                 {
                     // check tied_items has data
@@ -831,6 +832,7 @@ void module_deconv::write_outputs( std::string out_name,
                             ) << "\t";
                         }
                 }
+			// otherwise, sort by species ID
             else
                 {
                     // check tied_items has data
