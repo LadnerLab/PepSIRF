@@ -52,17 +52,20 @@ pepsirf bin -s comboWR_raw_2mm_i1mm_CS_neg_ctrl_only.tsv -b 300 -r 1 -o comboWR_
 ```
 <br>
 
-Run autopepsirf.py wrapper to automatically run PepSIRF normalization, pair names file creation, z score calculation, and peptide enrichment analysis from one command. Here we are using the (\-\-negative_id) flag to show that any sample name starting with “SB” is to be considered a negative control sample. For the calculation of enriched peptides the Z score threshold has been set to 10 and HDI to 75%. The (\-\-inferPairs) flag will look for sample pairs that match except for after the last underscore, so sample1_A and sample1_B would be treated as a replicate pair.
+Run autopepsirf Qiime2 plugin to automatically run PepSIRF normalization, pair names file creation, z score calculation, and peptide enrichment analysis from one command. Click [here](https://ladnerlab.github.io/pepsirf-q2-plugin-docs/Pepsirf_Plugins/q2-autopepsirf/#installation) for instructions on the installation of the autopepsirf Qiime2 plugin. Here we are using the (\-\-p\-negative\-id) flag to show that any sample name starting with “SB” is to be considered a negative control sample. For the calculation of enriched peptides the Z score threshold has been set to 10 and HDI to 75%. The (\-\-p\-infer\-pairs\-source) flag will look for sample pairs that match except for after the last underscore, so sample1_A and sample1_B would be treated as a replicate pair.
 
 ```
-/PepSIRF/extensions/autoPepSIRF.py \
--r comboWR_raw_2mm_i1mm.tsv \
---negative_id SB \
--b comboWR_raw_2mm_i1mm_b300r1_bins.tsv \
---rawThresh 15000 \
---zThresh 10 \
---hdi 0.75 \
---inferPairs \
->>pepsirf.out
+qiime autopepsirf diffEnrich-tsv \
+--p-raw-data-filepath comboWR_raw_2mm_i1mm.tsv \
+--p-negative-id SB \
+--p-bins-filepath comboWR_raw_2mm_i1mm_b300r1_bins.tsv \
+--p-raw-constraint 15000 \
+--p-exact-z-thresh 10 \
+--p-hdi 0.75 \
+--p-infer-pairs-source \
+--p-pepsirf-binary pepsirf \
+--p-pepsirf-tsv-dir ./aps-TSV \
+--p-tsv-base-str comboWR_raw_2mm_i1mm \
+--output-dir autopepsirf-diffEnrich 
 ```
 <br>

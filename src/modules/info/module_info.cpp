@@ -50,7 +50,7 @@ void module_info::run( options *opts )
 
             auto& matr = scores.scores;
 
-            for( const auto sample_n : matr.get_row_labels() )
+            for( const auto &sample_n : matr.get_row_labels() )
                 {
                     double sum = std::accumulate( matr.row_begin( sample_n.second ),
                                                   matr.row_end( sample_n.second ),
@@ -67,11 +67,10 @@ void module_info::run( options *opts )
 
     if ( !i_opts.in_replicates_fname.empty() && !i_opts.out_avgs_fname.empty() )
         {
-            std::unordered_map<std::string, std::vector<int>> sample_map = {};
-            std::unordered_map<std::string, std::vector<std::string>> name_file_samples = {};
-
             std::ifstream replicate_names{ i_opts.in_replicates_fname };
             std::ofstream averages{ i_opts.out_avgs_fname };
+
+            std::unordered_map<std::string, std::vector<std::string>> name_file_samples = {};
 
             // Create map of sample names with the base sample name as the key
             // And a list of its associated sample names as the value
@@ -93,8 +92,7 @@ void module_info::run( options *opts )
                             current_line.erase( 0, pos + delimiter.length() );
                         }
                     // Add the last sample to the vector
-                    sample_list.emplace_back( current_line.substr( 0, current_line.find( "\n" ) ) );
-
+                    sample_list.emplace_back( current_line.substr( 0, current_line.find( "\r" ) ) );
                     name_file_samples.emplace( std::make_pair( base_sample, sample_list ) );
                 }
 
@@ -102,41 +100,88 @@ void module_info::run( options *opts )
             bool invalid_sample_found;
             std::vector<std::string> invalid_samples = {};
             std::vector<std::string> found_samples = {};
-            for ( int i = 0; i < scores.sample_names.size(); i++ )
+            for ( std::size_t i = 0; i < scores.sample_names.size(); i++ )
                 {
                     invalid_sample_found = true;
-                    //std::cout << "SAMPLE TO FIND: \t" << scores.sample_names[i] << std::endl;
 
-                    // Loop through sample names found in name file
+                    // Loop through samples found in name file
                     for ( auto samples : name_file_samples )
                         {
-                            //std::cout << samples.first << std::endl;
+                            // loop through replicate samples provided in sample
                             for ( std::string sample : samples.second )
                                 {
-                                    //std::cout << sample << "\t" << scores.sample_names[i] << "\n";
-
                                     // If samples in input & name files match, write to output file
-                                    if ( std::find( scores.sample_names.begin(),
-                                                    scores.sample_names.end(),
-                                                    sample ) != scores.sample_names.end() )
+                                    if ( std::find(
+                                            scores.sample_names.begin(),
+                                            scores.sample_names.end(),
+                                            sample
+                                            ) != scores.sample_names.end()
+                                        )
                                         {
                                             invalid_sample_found = false;
                                             found_samples.emplace_back( sample );
                                         }
-                                    else if ( boost::algorithm::find_backward( invalid_samples.begin(),
-                                                                               invalid_samples.end(),
-                                                                               samples.first ) == invalid_samples.end() )
+                                    // otherwise, check sample was not added to invalid samples
+                                    else if ( boost::algorithm::find_backward(
+                                                invalid_samples.begin(),
+                                                invalid_samples.end(),
+                                                samples.first
+                                                ) == invalid_samples.end()
+                                            )
                                         {
+                                            // add sample name to invalid samples and write warning
                                             invalid_samples.emplace_back( samples.first );
-                                            std::cout << "Warning: invalid sample name found for: " << samples.first << std::endl;
+                                            std::cout << "Warning: invalid replicate name found in " << samples.first << std::endl;
                                         }
                                 }
                         }
                 }
 
+            // verify no duplicate replicates
+            bool duplicate_samples_found = false;
+            std::vector<std::string> duplicate_samples;
+            found_samples = {};
+            // loop through replicates in input matrix
+            for ( auto sample : scores.sample_names )
+                {
+                    // check replicate already found
+                    if ( std::find(
+                            found_samples.begin(),
+                            found_samples.end(),
+                            sample
+                            ) != found_samples.end()
+                        && boost::algorithm::find_backward(
+                            duplicate_samples.begin(),
+                            duplicate_samples.end(),
+                            sample
+                            ) == duplicate_samples.end()
+                        )
+                        {
+                            duplicate_samples_found = true;
+                            duplicate_samples.emplace_back( sample );
+                        }
+                    // otherwise, assume unique replicate name
+                    else
+                        {
+                            found_samples.emplace_back( sample );
+                        }
+                }
+
+            // Print warning with all duplicate samples found
+            if ( duplicate_samples_found )
+                {
+                    std::cout << "Warning: duplicate samples in input"
+                              << " file:\n";
+
+                    for ( std::string sample : duplicate_samples )
+                        {
+                            std::cout << sample << std::endl;
+                        }
+                }
+
             // Write base sample names as row headers in output file
             averages << "Sequence name";
-            for( auto sample: name_file_samples )
+            for( auto sample : name_file_samples )
                 {
                     if ( std::find( invalid_samples.begin(), invalid_samples.end(), sample.first ) == invalid_samples.end() )
                         {
@@ -145,79 +190,48 @@ void module_info::run( options *opts )
                 }
             averages << "\n";
 
-            bool duplicate_samples_found = false;
-            std::vector<std::string> duplicate_samples;
-            for ( int pep_index = 0; !invalid_sample_found && pep_index < scores.pep_names.size(); pep_index++ )
+            // calculate sample averages and write to output matrix
+            double rep_total = 0.0;
+            // loop over peptides from input matrix
+            for ( size_t pep_idx = 0;
+                  pep_idx < scores.pep_names.size();
+                  pep_idx += 1
+                )
                 {
-                    found_samples = {};
-                    averages << scores.pep_names[pep_index];
-                    for( int sample_index = 0; sample_index < scores.sample_names.size(); sample_index++ )
+                    averages << scores.pep_names[ pep_idx ];
+
+                    // loop over provided replicates
+                    for ( auto sample : name_file_samples )
                         {
-                            for( auto sample: name_file_samples )
+                            rep_total = 0.0;
+
+                            // loop over replicate from input matrix
+                            for ( size_t rep_idx = 0;
+                                  rep_idx < scores.sample_names.size();
+                                  rep_idx += 1
+                                )
                                 {
-                                    if( scores.sample_names[sample_index].find(sample.first) != std::string::npos )
+                                    // check current replicate included in sample
+                                    if ( std::find(
+                                            sample.second.begin(),
+                                            sample.second.end(),
+                                            scores.sample_names[ rep_idx ]
+                                            ) == sample.second.end()
+                                       )
                                         {
-                                            // Check that current sample is not a duplicate sample; skip over it if so
-                                            if( boost::algorithm::find_backward( found_samples.begin(), found_samples.end(), scores.sample_names[sample_index] )
-                                                != found_samples.end() )
-                                                {
-                                                    // Add sample to list of duplicate samples to be printed in warning;
-                                                    // Ensure that it is only added once
-                                                    if( boost::algorithm::find_backward( duplicate_samples.begin(), duplicate_samples.end(), scores.sample_names[sample_index])
-                                                        == duplicate_samples.end() )
-                                                        {
-                                                            duplicate_samples_found = true;
-                                                            duplicate_samples.emplace_back( scores.sample_names[sample_index] );
-                                                        }
-                                                    break;
-                                                }
-                                            else
-                                                {
-                                                    found_samples.emplace_back( scores.sample_names[sample_index] );
-                                                }
-
-                                            sample_map[sample.first].emplace_back( scores.scores.at(sample_index, pep_index) );
-                                            break;
+                                            continue;  // move to next replicate from input matrix
                                         }
+
+                                    // add scores to replicate total
+                                    rep_total += scores.scores.at( rep_idx, pep_idx );
                                 }
+
+                            // average replicate total and print to output matrix
+                            averages << "\t" << std::fixed << std::setprecision( 6 )
+                                     << rep_total / (double)( sample.second.size() );
                         }
 
-                    float rep_total;
-                    float rep_avg = 0.0f;
-                    for( auto sample: name_file_samples )
-                        {
-                            if ( std::find( invalid_samples.begin(),
-                                            invalid_samples.end(),
-                                            sample.first ) == invalid_samples.end() )
-                                  {
-                                      // Add all the replicate values for a given sample, then find its average
-                                      rep_total = 0;
-                                      for( int rep_val: sample_map[sample.first] )
-                                          {
-                                               rep_total += rep_val;
-                                          }
-                                      rep_avg = rep_total / (float) sample_map[sample.first].size();
-                                      averages << "\t" << rep_avg;
-                                  }
-                        }
                     averages << "\n";
-
-                    // Reset the sequence map
-                    for( auto sample: name_file_samples )
-                        {
-                            sample_map[sample.first].clear();
-                        }
                 }
-
-            // Print warning with all duplicate samples found
-            if ( duplicate_samples_found )
-            {
-                std::cout << "Warning: duplicate samples in input file: ";
-                for (std::string sample : duplicate_samples)
-                {
-                    std::cout << sample;
-                }
-                std::cout << "\n";
-            }
         }
 }

@@ -119,7 +119,7 @@ void module_demux::run( options *opts )
     dna_tags = fasta_p.parse( d_opts->index_fname );
     create_index_map( index_map, dna_tags, samplelist, seq_lookup);
     std::size_t count = 0;
-    for( const auto index_seq : index_map )
+    for( const auto &index_seq : index_map )
     {
         auto seq = index_seq.first;
         auto sample = index_seq.second;
@@ -422,7 +422,7 @@ void module_demux::run( options *opts )
 #ifndef __clang__
                                                             #pragma omp critical
                                                             {
-#endif
+#endif                                                          
                                                                 fastq_output[d_id->second.name].emplace_back(reads[ read_index ]);
 #ifndef __clang__
                                                             }
@@ -578,10 +578,18 @@ void module_demux::run( options *opts )
         }
     total_time.stop();
     // check for duplicates
+#ifndef __clang__
+    #pragma omp critical
+    {
+#endif
     for( const auto& library_seq : library_seqs )
     {
         ++duplicate_map[library_seq.seq];
     }
+#ifndef __clang__
+    }
+#endif
+
     std::cout << processed_success << " records were found to be a match out of "
               << processed_total << " (" << ( (long double) processed_success / (long double) processed_total ) * 100
               << "%) successful.\n";
@@ -636,10 +644,12 @@ void module_demux::run( options *opts )
 
             write_outputs( d_opts->aggregate_fname,
                            agg_map,
+                           duplicate_map,
+                           !d_opts->library_fname.empty(),
                            samplelist
                          );
         }
-    write_outputs( d_opts->output_fname, reference_counts, samplelist);
+    write_outputs( d_opts->output_fname, reference_counts, duplicate_map, !d_opts->library_fname.empty(), samplelist);
 }
 
 std::string module_demux::get_name()
@@ -734,7 +744,7 @@ void module_demux::create_diagnostic_map( bool reference_dependent,
                                           std::vector<sample> samplelist )
 {
     std::size_t column_size = reference_dependent ? samplelist[0].string_ids.size() + 1 : samplelist[0].string_ids.size();
-    for( const auto sample : samplelist )
+    for( const auto &sample : samplelist )
         {
             diagnostic_map.emplace( sample, std::vector<std::size_t>(column_size, 0) );
         }
@@ -795,6 +805,8 @@ void module_demux::write_diagnostic_output( options_demux* d_opts, phmap::parall
 
 void module_demux::write_outputs( std::string outfile_name,
                                   parallel_map<sequence, std::vector<std::size_t>*>& seq_scores,
+                                  std::map<std::string, std::size_t> duplicate_map,
+                                  bool ref_dependent,
                                   std::vector<sample>& samples
                                 )
 {
@@ -826,14 +838,16 @@ void module_demux::write_outputs( std::string outfile_name,
             const sequence& curr = seq_iter->first;
             const std::vector<std::size_t> *curr_counts = seq_iter->second;
 
-
-            outfile << curr.name << DELIMITER;
-
-            for( second_index = 0; second_index < samples.size() - 1; ++second_index )
+            if(!ref_dependent || duplicate_map[curr.seq] == 1)
                 {
-                    outfile << curr_counts->at( second_index ) << DELIMITER;
+                     outfile << curr.name << DELIMITER;
+
+                    for( second_index = 0; second_index < samples.size() - 1; ++second_index )
+                        {
+                            outfile << curr_counts->at( second_index ) << DELIMITER;
+                        }
+                    outfile << curr_counts->at( samples.size() - 1 ) << NEWLINE;
                 }
-            outfile << curr_counts->at( samples.size() - 1 ) << NEWLINE;
 
             ++seq_iter;
             delete curr_counts;

@@ -81,16 +81,6 @@ public:
             return false;
     }
 
-    //thresholds met for low raw reads
-    template<typename ValType>
-    bool thresholds_met( const std::vector<ValType> values,
-                         const std::vector<ValType> ret_values,
-                            const std::vector<double> thresholds
-                            )
-    {
-        
-    }
-
     /**
      * Get the sums for raw scores in a sequence of
      * raw_scores.

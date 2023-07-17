@@ -66,7 +66,7 @@ void module_zscore::run( options *opts )
     std::vector<nan_report> nan_values;
 
     // for each sample
-    for( const auto sample_pair : zscore_matrix.get_row_labels() )
+    for( const auto &sample_pair : zscore_matrix.get_row_labels() )
         {
             std::string sample_name = sample_pair.first;
 

@@ -225,8 +225,9 @@ void module_enrich::run( options *opts )
                             }
                     }
             }
-
-            if( !samples_list[sample_idx].empty()
+            
+			if (
+				!samples_list[sample_idx].empty()
                 && raw_counts_included
                 && !raw_count_enriched
                 && !e_opts->out_enrichment_failure.empty() )
@@ -235,7 +236,7 @@ void module_enrich::run( options *opts )
                     std::vector<double>::iterator max_thresh = std::max_element( raw_score_params.begin(), raw_score_params.end() );
                     std::vector<double>::iterator min_sum = std::min_element( col_sums.begin(), col_sums.end() );
                     std::vector<double>::iterator max_sum = std::max_element( col_sums.begin(), col_sums.end() );
-
+        
                     std::string samplenames = "";
                     std::string prob_reps_report = "";
                     std::vector<std::string> replicate_names;
@@ -291,10 +292,13 @@ void module_enrich::run( options *opts )
 
                     problem_replicates.emplace_back( prob_reps_report );
                 }
-            else if( !samples_list[sample_idx].empty()
-                        && enriched_probes.empty()
-                        && !e_opts->out_enrichment_failure.empty() )
-                {
+            else if (
+				!samples_list[sample_idx].empty()
+                && enriched_probes.empty()
+				&& !low_reads
+                && !e_opts->out_enrichment_failure.empty()
+			)
+                {	// collects replicates with no enriched peptides
                     std::string samplenames = "";
                     std::for_each( samples_list[sample_idx].begin(), samples_list[sample_idx].end() - 1,
                         [&]( std::string name )
@@ -306,7 +310,7 @@ void module_enrich::run( options *opts )
                 }
 
             std::string outf_name = e_opts->out_dirname + '/';
-            if( shorthand_output_filenames && samples_list[sample_idx].size() > 3 )
+            if ( shorthand_output_filenames && samples_list[sample_idx].size() > 3 )
                 {
                     for( std::size_t name_idx = 0; name_idx < 3; name_idx++ )
                         {
@@ -336,7 +340,7 @@ void module_enrich::run( options *opts )
             }
         }
 
-    if( !e_opts->out_enrichment_failure.empty() )
+    if ( !e_opts->out_enrichment_failure.empty() )
         {
             if ( !enrichment_failures.empty() )
                 {
