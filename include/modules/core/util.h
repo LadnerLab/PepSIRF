@@ -25,26 +25,6 @@ namespace util
             return a / b;
         }
 
-	/* NOT USED - GET RID OF
-    template<class T>
-        T add( T a, T b )
-        {
-            return a + b;
-        }
-
-    template<class T>
-        T subtract( T a, T b )
-        {
-            return a - b;
-        }
-
-    template<class T>
-        T multiply( T a, T b )
-        {
-            return a * b;
-        }
-	*/
-
     template< class N>
     bool is_integer( N check )
     {

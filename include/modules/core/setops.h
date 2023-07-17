@@ -83,32 +83,6 @@ namespace setops
         }
 
     // A u B
-	/* NOT NECESSARY - GET RID OF
-    template<class I, class K>
-        void set_union( I& dest,
-                        const std::vector<K>& first,
-                        const std::vector<K>& second
-                      )
-    {
-        sequential_set<K> union_set;
-
-        for( const auto& f : first )
-            {
-                union_set.insert( f );
-            }
-        for( const auto& s : second )
-            {
-                union_set.insert( s );
-            }
-
-        for( const auto& u : union_set )
-            {
-                dest.insert( u );
-            }
-    }
-	*/
-
-    // A u B
     template<class I, class K, class Get>
         void set_union( I& dest,
                         const K& first,
@@ -158,52 +132,6 @@ namespace setops
                 dest.insert( u );
             }
     }
-
-    // A - B
-	/* NOT USED - GET RID OF
-    template<class I, class K>
-        void set_difference( I& dest,
-                             const K& first,
-                             const K& second
-                           )
-        {
-            for( const auto& it : first )
-                {
-                    if( second.find( it ) == second.end() )
-                        {
-                            dest.insert( it );
-                        }
-                }
-        }
-	*/
-
-    // ( A - B ) u ( B - A )
-	/* NOT USED - GET RID OF
-    template<class I, class K>
-        void set_symmetric_difference(
-                                      I& dest,
-                                      const K& first,
-                                      const K& second
-                                     )
-    {
-        sequential_set<K> a_minus_b;
-        sequential_set<K> b_minus_a;
-
-        set_difference<I,K>( a_minus_b,
-                             first,
-                             second
-                           );
-        set_difference<I,K>( b_minus_a,
-                             second,
-                             first
-                           );
-
-        set_union<I,K>( dest,
-                        a_minus_b,
-                        b_minus_a
-                      );
-    }
-	*/
 }; // namespace setops
 
 
