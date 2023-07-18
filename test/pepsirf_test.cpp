@@ -1195,7 +1195,7 @@ TEST_CASE( "Deconv end_to_end", "[module_deconv]" )
 
     mod.run( &opts );
 
-	SECTION("deconv alphabetically orders tied species in output file")
+	SECTION("deconv orders tied species by ID in output file")
 	{
 		std::ifstream ifexpected(
 			"../test/expected/test_expected_deconv_output.tsv",
