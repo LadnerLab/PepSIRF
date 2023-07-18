@@ -12,7 +12,6 @@
 #include "file_io.h"
 #include "setops.h"
 
-
 void module_enrich::run( options *opts )
 {
     options_enrich *e_opts = (options_enrich*) opts;
@@ -98,13 +97,18 @@ void module_enrich::run( options *opts )
                                             raw_scores.sample_names.end()
                                             };
 
+    std::vector<std::string> problem_replicates;
     std::vector<std::vector<std::string>> removed_reps;
     peptide_score_data_sample_major *curr_matrix_ptr;
     for( std::size_t sample_idx = 0; sample_idx < samples_list.size(); ++sample_idx )
         {
             bool raw_count_enriched = true;
             std::vector<std::string> enriched_probes;
+
+            // raw_score_lists: a list of peptide scores, and their sample
+            // indexed with: x-axis is the peptide, y-axis is the sample name
             std::vector<std::vector<double>> raw_score_lists;
+
             std::vector<std::map<std::string,std::vector<double>>> all_enrichment_candidates;
             all_enrichment_candidates.resize( matrix_thresh_pairs.size() );
             raw_score_lists.resize( raw_scores.scores.ncols() );
@@ -221,25 +225,80 @@ void module_enrich::run( options *opts )
                             }
                     }
             }
-
-            if( !samples_list[sample_idx].empty()
+            
+			if (
+				!samples_list[sample_idx].empty()
                 && raw_counts_included
                 && !raw_count_enriched
                 && !e_opts->out_enrichment_failure.empty() )
                 {
+                    std::vector<double>::iterator min_thresh = std::min_element( raw_score_params.begin(), raw_score_params.end() );
+                    std::vector<double>::iterator max_thresh = std::max_element( raw_score_params.begin(), raw_score_params.end() );
+                    std::vector<double>::iterator min_sum = std::min_element( col_sums.begin(), col_sums.end() );
+                    std::vector<double>::iterator max_sum = std::max_element( col_sums.begin(), col_sums.end() );
+        
                     std::string samplenames = "";
+                    std::string prob_reps_report = "";
+                    std::vector<std::string> replicate_names;
                     std::for_each( samples_list[sample_idx].begin(), samples_list[sample_idx].end() - 1,
                         [&]( std::string name )
                             {
+                                replicate_names.emplace_back( name );
                                 samplenames.append( name + ", " );
                             });
+                    replicate_names.emplace_back( *( samples_list[ sample_idx ].end() - 1 ) );
                     samplenames.append( *(samples_list[sample_idx].end() - 1) );
                     enrichment_failures.emplace( samplenames, "raw" );
+
+                    std::string separate = "";
+                    for ( std::size_t name_idx = 0; name_idx < replicate_names.size() - 1; name_idx += 1 )
+                        {
+                            if ( col_sums[ name_idx ] == *min_sum && col_sums[ name_idx ] < *min_thresh )
+                                {
+                                    prob_reps_report.append( replicate_names[ name_idx ] + " (min)" + separate );
+                                }
+                            else if ( col_sums[ name_idx ] == *max_sum && col_sums[ name_idx ] < *max_thresh )
+                                {
+                                    prob_reps_report.append( replicate_names[ name_idx ] + " (max)" + separate );
+                                }
+
+                            separate = ", ";
+                        }
+
+                    if ( col_sums[ replicate_names.size() - 1 ] == *min_sum
+                            && col_sums[ replicate_names.size() - 1 ] < *min_thresh )
+                        {
+                            if ( !prob_reps_report.empty() )
+                                {
+                                    prob_reps_report.append( separate + replicate_names[ replicate_names.size() - 1 ] + " (min)" );
+                                }
+                            else
+                                {
+                                    prob_reps_report.append( replicate_names[ replicate_names.size() - 1 ] + " (min)" );
+                                }
+                        }
+                    else if ( col_sums[ replicate_names.size() - 1 ] == *max_sum
+                                && col_sums[ replicate_names.size() - 1 ] < *max_thresh )
+                        {
+                            if ( !prob_reps_report.empty() )
+                                {
+                                    prob_reps_report.append( separate + replicate_names[ replicate_names.size() - 1 ] + " (max)" );
+                                }
+                            else
+                                {
+                                    prob_reps_report.append( replicate_names[ replicate_names.size() - 1 ] + " (max)" );
+                                }
+                        }
+
+                    problem_replicates.emplace_back( prob_reps_report );
                 }
-            else if( !samples_list[sample_idx].empty()
-                        && enriched_probes.empty()
-                        && !e_opts->out_enrichment_failure.empty() )
-                {
+            else if (
+				!samples_list[sample_idx].empty()
+                && enriched_probes.empty()
+				&& !low_reads
+                && !e_opts->out_enrichment_failure.empty()
+			)
+                {	// collects replicates with no enriched peptides
                     std::string samplenames = "";
                     std::for_each( samples_list[sample_idx].begin(), samples_list[sample_idx].end() - 1,
                         [&]( std::string name )
@@ -251,7 +310,7 @@ void module_enrich::run( options *opts )
                 }
 
             std::string outf_name = e_opts->out_dirname + '/';
-            if( shorthand_output_filenames && samples_list[sample_idx].size() > 3 )
+            if ( shorthand_output_filenames && samples_list[sample_idx].size() > 3 )
                 {
                     for( std::size_t name_idx = 0; name_idx < 3; name_idx++ )
                         {
@@ -259,7 +318,7 @@ void module_enrich::run( options *opts )
                         }
                     outf_name += std::to_string(samples_list[sample_idx].size() - 3) + "more" + e_opts->out_suffix;
                 }
-            else
+            else if ( !samples_list[sample_idx].empty() )
                 {
                     for( std::size_t name_idx = 0; name_idx < samples_list[sample_idx].size() - 1; name_idx++ )
                         {
@@ -275,43 +334,46 @@ void module_enrich::run( options *opts )
                                     "\n"
                                 );
 
-            // check if enriched_probes had data to be written
             if ( enriched_probes.size() == 0 )
             {
-               // write a space character to out_file
                out_file << ' ';
             }
-
         }
 
-    if( !e_opts->out_enrichment_failure.empty() )
+    if ( !e_opts->out_enrichment_failure.empty() )
         {
             if ( !enrichment_failures.empty() )
                 {
+                    std::size_t pr_idx = problem_replicates.size() - 1;
                     std::string outf_name = e_opts->out_dirname + '/' + e_opts->out_enrichment_failure;
+
                     // write to file
                     std::ofstream out_file{ outf_name, std::ios_base::out };
-                    out_file << "Replicates\tReason\n";
+                    out_file << "Replicates\tReason\tProblem Replicates\n";
+
                     for( auto& line : enrichment_failures )
                         {
                             out_file << line.first;
                             if( line.second == "raw" )
                                 {
-                                    out_file << "\tRaw read count threshold\n";
+                                    out_file << "\tRaw read count threshold\t";
+                                    out_file << problem_replicates[ pr_idx ] << std::endl;
+                                    pr_idx -= 1;
                                 }
                             else
                                 {
                                     out_file << "\tNo enriched peptides\n";
                                 }
                         }
+
                     out_file.close();
                 }
             else if ( !removed_reps.empty() )
                 {
                     std::string outf_name = e_opts->out_dirname + '/' + e_opts->out_enrichment_failure;
+
                     // write to file
                     std::ofstream out_file{ outf_name, std::ios_base::out };
-
                     out_file << "Removed Replicates\n";
 
                     for ( std::size_t s = 0; s < removed_reps.size(); s += 1 )

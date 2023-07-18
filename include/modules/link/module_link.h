@@ -48,7 +48,7 @@ class module_link : public module
      * Create a map that maps peptides to the
      * number of times that peptide shares a kmer with
      * a certain species.
-     * @param kmer_sp_map Map populated by module_deconv::create_prot_map,
+     * @param kmer_sp_map Map populated by module_link::create_prot_map,
      *        mapping kmers to species identifiers.
      * @param peptide_sp_vec vector to which output will be
      *        written.
@@ -72,7 +72,7 @@ class module_link : public module
      * Create a map that scores peptides based
      * on the scores of its component kmers. Here, the score of a kmer is
      * the 1 / ( the number of times the kmer appears in the 'peptides' vector )
-     * @param kmer_sp_map Map populated by module_deconv::create_prot_map,
+     * @param kmer_sp_map Map populated by module_link::create_prot_map,
      *        mapping kmers to species identifiers.
      * @param peptide_sp_vec vector to which output will be
      *        written.

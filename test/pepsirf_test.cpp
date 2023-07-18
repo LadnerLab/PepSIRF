@@ -15,6 +15,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
 
+#include "bk_tree.h"
 #include "test_utils.h"
 #include "overlap_data.h"
 #include "distance_tools.h"
@@ -26,13 +27,16 @@
 #include "distance_matrix.h"
 #include "fastq_parser.h"
 #include "module_demux.h"
+#include "fif_parser.h"
 #include "module_deconv.h"
+#include "module_info.h"
 #include "module_subjoin.h"
 #include "module_link.h"
 #include "metadata_map.h"
 #include "module_zscore.h"
 #include "samplelist_parser.h"
 #include "sample.h"
+#include "setops.h"
 #include "fastq_score.h"
 #include "kmer_tools.h"
 #include "fs_tools.h"
@@ -75,6 +79,16 @@ TEST_CASE( "Sequence", "[sequence]" )
 
     s2 = "AAA";
     REQUIRE( seq.seq.compare( s2 ) != 0 );
+
+	sequence seq2("sequence2", "ATGCGGGGTC");
+
+	std::string new_seq_name = "sequence1";
+	seq.set_name(new_seq_name);
+	REQUIRE(seq.name.compare("sequence1") == 0);
+	REQUIRE(seq == seq2);
+
+	REQUIRE(seq.length() == 10);
+	REQUIRE(seq2.length() == seq.length());
 }
 
 TEST_CASE( "fasta_parser is able to read files that exist, properly creates error when file cannot be found", "[fasta_parser]" )
@@ -156,7 +170,6 @@ TEST_CASE( "Parse Fastq", "[fastq_parser]" )
         }
     REQUIRE( seq_vec2.size() == 100 );
 
-
     std::vector<fastq_sequence> seq_vec3;
     seq_vec3.reserve( 100 );
     // reset file pointer
@@ -186,6 +199,263 @@ TEST_CASE( "Parse Fastq", "[fastq_parser]" )
             REQUIRE( !seq_vec3[ index ].seq.compare( seq_vec[ index ].seq ) );
         }
 
+}
+
+TEST_CASE("Test for proper functionality of FIF Parser and Samplielist Parser", "[fif_parser], [samplelist_parser]")
+{
+	// define flex_idx vector
+	std::vector<flex_idx> flex_idx_vec;
+	// define flexible index file parser
+	fif_parser fif_p;
+	// parse fif file, capture result in flex_idx vector
+	flex_idx_vec = fif_p.parse("../test/input_data/test_flex_index_file.tsv");
+
+	SECTION("Flexible Index File Parser reads and creates a flex_idx vector from given file")
+	{
+		// verify flex_idx_vec
+		auto& it = flex_idx_vec[0];
+		REQUIRE(it.idx_name.compare("Index1") == 0);
+		REQUIRE(it.read_name.compare("r1") == 0);
+		REQUIRE(it.idx_start == 12);
+		REQUIRE(it.idx_len == 10);
+		REQUIRE(it.num_mismatch == 1);
+
+		it = flex_idx_vec[1];
+		REQUIRE(it.idx_name.compare("Index2") == 0);
+		REQUIRE(it.read_name.compare("r2") == 0);
+		REQUIRE(it.idx_start == 0);
+		REQUIRE(it.idx_len == 8);
+		REQUIRE(it.num_mismatch == 1);
+	}
+
+	// initialize sample list parser
+	samplelist_parser slp;
+	// define sample vector
+	std::vector<sample> sample_vec;
+
+	// initialize demux options
+	options_demux d_opts;
+    d_opts.index_fname = "../test/input_data/test_barcodes.fa";
+	d_opts.samplelist_fname = "../test/input_data/test_samplelist_NS30.tsv";
+	d_opts.samplename = "SampleName";	// needed for sampleliest to reference
+
+	SECTION("Samplelist Parser can use a flex_idx vector and a properly formatted samplelist file to create a sample vector")
+	{
+		// parse using demux options and flex_idx vector, capture result in sample vector
+		sample_vec = slp.parse(&d_opts, flex_idx_vec);
+
+		// verify sample vector
+		auto& it = sample_vec[0];
+		REQUIRE(it.name.compare("Nor.27_1X_NS30_1x_ProG_A") == 0);
+		REQUIRE(it.id == 0);
+		REQUIRE(it.string_ids[0].compare("F_3") == 0);
+		REQUIRE(it.string_ids[1].compare("R_13") == 0);
+
+		it = sample_vec[1];
+		REQUIRE(it.name.compare("Nor.28_1X_NS30_1x_ProG_A") == 0);
+		REQUIRE(it.id == 1);
+		REQUIRE(it.string_ids[0].compare("F_3") == 0);
+		REQUIRE(it.string_ids[1].compare("R_14") == 0);
+
+		it = sample_vec[2];
+		REQUIRE(it.name.compare("BB.10_1X_NS30_1x_ProG_A") == 0);
+		REQUIRE(it.id == 2);
+		REQUIRE(it.string_ids[0].compare("F_11") == 0);
+		REQUIRE(it.string_ids[1].compare("R_15") == 0);
+
+		it = sample_vec[3];
+		REQUIRE(it.name.compare("BB.11_1X_NS30_1x_ProG_A") == 0);
+		REQUIRE(it.id == 3);
+		REQUIRE(it.string_ids[0].compare("F_11") == 0);
+		REQUIRE(it.string_ids[1].compare("R_16") == 0);
+
+		it = sample_vec[4];
+		REQUIRE(it.name.compare("Nor.43_1X_NS30_1x_ProG_A") == 0);
+		REQUIRE(it.id == 4);
+		REQUIRE(it.string_ids[0].compare("F_19") == 0);
+		REQUIRE(it.string_ids[1].compare("R_13") == 0);
+
+		it = sample_vec[5];
+		REQUIRE(it.name.compare("JA.s_1X_NS30_1X_ProG_B") == 0);
+		REQUIRE(it.id == 5);
+		REQUIRE(it.string_ids[0].compare("F_24") == 0);
+		REQUIRE(it.string_ids[1].compare("R_20") == 0);
+	}
+}
+
+TEST_CASE("Full test of setops' proper functionality", "[setops]")
+{
+	using namespace setops;	// initialize namespace
+
+	// testing set_intersection()
+	SECTION("set_intersection() returns expected intersection")
+	{
+		std::set<int> int_set1 = {10, 26, 7, 9, 0};
+		std::set<int> int_set2 = {10, 77, 28, 9, 100};
+		std::set<int> dest_set;
+
+		// capture result of set_intersection in dest vector
+		set_intersection(dest_set, int_set1, int_set2);
+
+		// verify dest vector is expected
+		REQUIRE(dest_set.find(10) != dest_set.end());
+		REQUIRE(dest_set.find(9) != dest_set.end());
+	}
+	SECTION("set_intersection() with Get")
+	{
+		auto only_positives = [](int num)
+		{
+			return num > 0 ? num : 0;
+		};
+
+		std::set<int> int_set1 = {10, -13, 3, -4, -5, 4};
+		std::set<int> int_set2 = {10, -1, 3, 4, 5, 8};
+		std::set<int> dest_set;
+		std::vector<int> expected_set = {
+			3, 4, 10
+		};
+
+		set_intersection(dest_set, int_set1, int_set2, only_positives);
+
+		REQUIRE(dest_set.size() == expected_set.size());
+		std::size_t i = 0;
+		for (auto dest_it : dest_set)
+		{
+			REQUIRE(dest_it == expected_set[i]);
+			i += 1;
+		}
+	}
+	SECTION("set_intersection() with vectors of class K and sequential set")
+	{
+		std::vector<std::string> str_vec1 = {
+			"pep1", "pep2", "pep3", "pep5", "pep13"
+		};
+		std::vector<std::string> str_vec2 = {
+			"pep1", "pep10", "pep14", "pep3", "pep5"
+		};
+		std::vector<std::string> dest_vec;
+
+		set_intersection(dest_vec, str_vec1, str_vec2);
+
+		REQUIRE(dest_vec[0].compare("pep1") == 0);
+		REQUIRE(dest_vec[1].compare("pep3") == 0);
+		REQUIRE(dest_vec[2].compare("pep5") == 0);
+	}
+
+	// testing set_union()
+	SECTION("set_union() with sequential set of type K returns expected")
+	{
+		std::vector<std::string> str_vec1 = {
+			"pep1", "pep22", "pep5", "pep6", "pep10"
+		};
+		std::vector<std::string> str_vec2 = {
+			"pep22", "pep6", "pep100", "pep50"
+		};
+		std::set<std::string> dest_set;
+		std::vector<std::string> expected_set = {
+			"pep1", "pep10", "pep100", "pep22", "pep5", "pep50", "pep6" 
+		};
+
+		// capture result of set_union in dest vector
+		set_union(dest_set, str_vec1, str_vec2);
+
+		// verify dest vector is expected
+		std::size_t i = 0;
+		for (auto dest_it : dest_set)
+		{
+			REQUIRE(dest_it == expected_set[i]);
+			i += 1;
+		}
+	}
+	SECTION("set_union() with unordered set of type K")
+	{
+		std::set<int> int_set1 = {55, 6, 12, 10, 89, 100};
+		std::set<int> int_set2 = {55, 16, 10, 88, 2, 0, 55};
+		std::set<int> dest_set;
+		std::vector<int> expected_set = {0, 2, 6, 10, 12, 16, 55, 88, 89, 100};
+
+		set_union(dest_set, int_set1, int_set2);
+
+		REQUIRE(dest_set.size() == expected_set.size());
+		std::size_t i = 0;
+		for (auto dest_it : dest_set)
+		{
+			REQUIRE(dest_it == expected_set[i]);
+			i += 1;
+		}
+	}
+	SECTION("set_union() with Get")
+	{
+		std::unordered_map<char, int> map1 = {
+			{'c', 8}, {'b', 10}, {'y', 3}, {'w', 1}
+		};
+		std::unordered_map<char, int> map2 = {
+			{'m', 13}, {'q', 12}, {'o', 0}, {'z', 3}
+		};
+		std::set<int> dest_set;
+		std::vector<int> expected_set = {
+			'b', 'c', 'm', 'o', 'q', 'w', 'y', 'z'
+		};
+
+		set_union(dest_set, map1, map2, get_key<char, int>());
+
+		REQUIRE(dest_set.size() == expected_set.size());
+		std::size_t i = 0;
+		for (auto dest_it : dest_set)
+		{
+			REQUIRE(dest_it == expected_set[i]);
+			i += 1;
+		}
+	}
+
+	// testing set_difference()
+	/* TODO: review logic of operation -> recommend getting rid of method
+	SECTION("set_difference() returns expecetd")
+	{
+		std::set<int> int_set1 = {66, 12, 1, 0, 8, 16};
+		std::set<int> int_set2 = {12, 16, 22, 50, 7, 66};
+		std::set<int> dest_set;
+		std::vector<int> expected_set = {0, 1, 8};
+
+		// capture result of set_difference in dest vector
+		set_difference(dest_set, int_set1, int_set2);
+
+		// verify dest vector is expected
+		REQUIRE(dest_set.size() == expected_set.size());
+		std::size_t i = 0;
+		for (auto dest_it : dest_set)
+		{
+			REQUIRE(dest_it == expected_set[i]);
+			i += 1;
+		}
+	}
+	*/
+
+	// testing set_symmetric_difference()
+	/*	TODO: ask if this function has been used at all -> recommend getting rid of method
+	SECTION("set_symmetric_difference() returns expected")
+	{
+		std::set<int> int_set1 = {13, 0, 1, 6, 11, 30, 70};
+		std::set<int> int_set2 = {0, 11, 50, 60, 70, 6, 100};
+		std::set<int> dest_set;
+
+		// A - B = {13, 1, 30}
+		// B - A = {50, 60, 100}
+		std::vector<int> expected_set = {1, 13, 30, 50, 60, 100};
+
+		// capture result of set_symmetric_difference()
+		set_symmetric_difference<int, int>(dest_set, int_set1, int_set2);
+
+		// verify dest vector is expected
+		REQUIRE(dest_set.size() == expected_set.size());
+		std::size_t i = 0;
+		for (auto dest_it : dest_set)
+		{
+			REQUIRE(dest_it == expected_set[i]);
+			i += 1;
+		}
+	}
+	*/
 }
 
 TEST_CASE( "Add seqs to map", "[module_demux]" )
@@ -219,13 +489,6 @@ TEST_CASE( "Add seqs to map", "[module_demux]" )
 
 }
 
-TEST_CASE( "Flexible Index File is used to provide index 1 and index 2 information", "[module_demux]" )
-{
-    // read a test flexible index file
-
-    // check data matches expected values written in flexible index file
-}
-
 TEST_CASE( "Diagnostics give a detailed count for the occurring read matches during a run", "[module_demux]" )
 {
     // run demux using a real-world dataset (31250 records) with diagnostic output
@@ -248,55 +511,233 @@ TEST_CASE( "Diagnostics give a detailed count for the occurring read matches dur
     d_opts.samplename = "SampleName";
     d_opts.indexes = "Index1,Index2";
     d_opts.sample_indexes = { "Index1", "Index2" };
-    d_opts.set_info( &options_demux::seq_data, "43,90,2" );
-    d_opts.set_info( &options_demux::index1_data, "12,12,1" );
+    d_opts.set_info( &options_demux::seq_data, "41,40,2" );
+    d_opts.set_info( &options_demux::index1_data, "12,10,1" );
     d_opts.set_info( &options_demux::index2_data,"0,8,1" );
 
     d_mod.run(&d_opts);
-    // check diagnostic output diagnostic file matches expected
     std::string expected = "../test/expected/test_expected_diagnostic_NS30.tsv";
     std::string actual = "../test/test_diagnostic_output.tsv";
     std::ifstream ifexpected( expected, std::ios_base::in );
     std::ifstream ifactual( actual, std::ios_base::in );
     std::string expected_line;
     std::string actual_line;
-    for( std::size_t index = 0; index < 77; index++ )
+
+    bool lines_equal;
+	while (!ifexpected.eof())
+	{
+		std::getline(ifexpected, expected_line);
+        lines_equal = false;
+        
+        // TODO: find a more responsible way
+	    std::ifstream ifactual(actual, std::ios_base::in);
+        while (!ifactual.eof())
         {
-            std::getline( ifexpected, expected_line );
-            std::getline( ifactual, actual_line );
-            REQUIRE( expected_line.compare(actual_line) == 0 );
+            std::getline(ifactual, actual_line);
+            if (expected_line.compare(actual_line) == 0)
+            {
+                lines_equal = true;
+                break;
+            }
         }
+        ifactual.close();
+
+        REQUIRE(lines_equal);
+	}
 }
 
-TEST_CASE( "samplelist_parser is able to read files that exist, properly creates errors when file cannot be found/read", "[samplelist_parser]" )
+TEST_CASE("Demux output demostrates demux removes references with matching sequences", "[module_demux]")
 {
-    // SECTION( "samplelist_parser is able to read a well-formed test")
-    // {
-    //     samplelist_parser slp;
-    //     std::string filename = "../test/test_samplelist.tsv";
+	std::vector<std::string> split_line;
+	std::string line;
 
-    //     auto vec = slp.parse( filename );
+	std::set<std::string> expected_set;
+	std::set<std::string> actual_set;
 
-    //     REQUIRE( vec.size() == 96 );
+	{	// collect expected file into a set
+		std::ifstream ifexpected(
+			"../test/expected/test_expected_demux_NS30.tsv",
+			std::ios_base::in
+		);
 
+		while (!ifexpected.eof())
+		{
+			std::getline(ifexpected, line);
+			boost::split(split_line, line, boost::is_any_of("\t"));
+			expected_set.insert(split_line[0]);
+		}
+	}
 
-    //     unsigned int index = 0;
-    //     std::unordered_map<sample, int> s_map( vec.size() );
-    //     for( index = 0 ; index < vec.size(); ++index )
-    //         {
-    //             s_map[ vec[ index ] ] = vec[ index ].id;
-    //         }
+	{	// collect actual file into a set
+		std::ifstream ifactual(
+			"../test/test_demux_output.tsv",
+			std::ios_base::in
+		);
 
-    //     REQUIRE( s_map.size() <= vec.size() );
-    // }
+		while (!ifactual.eof())
+		{
+			std::getline(ifactual, line);
+			boost::split(split_line, line, boost::is_any_of("\t"));
+			actual_set.insert(split_line[0]);
+		}
+	}
 
+	// compare expected and actual sets
+	REQUIRE(actual_set.size() == expected_set.size());
 
-    // SECTION( "samplelist_parser throws an error when a file is not found or incorrect format" )
-    // {
-    //     samplelist_parser sl;
-    //     REQUIRE_THROWS( sl.parse( "../test/test.fasta" ) );
-    //     REQUIRE_THROWS( sl.parse( "does_not_exist.tsv" ) );
-    // }
+	auto expected_ref = expected_set.find("NS30_000000-1");
+	REQUIRE(actual_set.find(*expected_ref) != actual_set.end());
+
+	expected_ref = expected_set.find("NS30_000000-2");
+	REQUIRE(actual_set.find(*expected_ref) != actual_set.end());
+	
+	expected_ref = expected_set.find("NS30_000001-2");
+	REQUIRE(actual_set.find(*expected_ref) != actual_set.end());
+	
+	expected_ref = expected_set.find("NS30_000001-1");
+	REQUIRE(actual_set.find(*expected_ref) != actual_set.end());
+	
+	expected_ref = expected_set.find("NS30_000000-3");
+	REQUIRE(actual_set.find(*expected_ref) != actual_set.end());
+}
+
+TEST_CASE("Full test of info module", "[module_info]")
+{
+	// initialize info module
+    module_info i_mod;
+    options_info i_opts;
+
+    i_opts.in_fname = "../test/input_data/test_info_score_matrix.tsv";
+    i_opts.out_samples_fname = "../test/test_info_sample_names.tsv";
+    i_opts.out_pep_names_fname = "../test/test_info_pep_names.tsv";
+    i_opts.out_col_sums_fname = "../test/test_info_col_sums.tsv";
+    i_opts.in_replicates_fname = "../test/input_data/test_info_rep_names.tsv";
+    i_opts.out_avgs_fname = "../test/test_info_avg_matrix.tsv";
+
+    // run info module
+    i_mod.run(&i_opts);
+	
+	SECTION("info module creates a properly formatted sample name file")
+	{
+        std::ifstream ifexpected(
+            "../test/expected/test_expected_info_sample_names.tsv",
+            std::ios_base::in
+        );
+        std::ifstream ifactual(
+            "../test/test_info_sample_names.tsv",
+            std::ios_base::in
+        );
+
+        std::string expected_line = "";
+        std::string actual_line = "";
+        while (!ifexpected.eof() && !ifactual.eof())
+        {
+            std::getline(ifexpected, expected_line);
+            std::getline(ifactual, actual_line);
+            REQUIRE(expected_line.compare(actual_line) == 0);
+        }
+	}
+	SECTION("info module creates a properly formatted peptide name file")
+	{
+        std::ifstream ifexpected(
+            "../test/expected/test_expected_info_pep_names.tsv",
+            std::ios_base::in
+        );
+        std::ifstream ifactual(
+            "../test/test_info_pep_names.tsv",
+            std::ios_base::in
+        );
+
+        std::string expected_line;
+        std::string actual_line;
+        while (!ifexpected.eof() && !ifactual.eof())
+        {
+            std::getline(ifexpected, expected_line);
+            std::getline(ifactual, actual_line);
+            REQUIRE(expected_line.compare(actual_line) == 0);
+        }
+	}
+    SECTION("info module properly calculates and formats column sums file")
+    {
+        std::string line;
+        std::set<std::string> expected_set;
+        std::set<std::string> actual_set;
+
+        // collect expected lines into a set
+        {
+            std::ifstream ifexpected(
+                "../test/expected/test_expected_info_pep_names.tsv",
+                std::ios_base::in
+            );
+
+            while (!ifexpected.eof())
+            {
+                std::getline(ifexpected, line);
+                expected_set.insert(line);
+            }
+        }
+        // collect actual lines into a set
+        {
+            std::ifstream ifactual(
+                "../test/test_info_pep_names.tsv",
+                std::ios_base::in
+            );
+
+            while (!ifactual.eof())
+            {
+                std::getline(ifactual, line);
+                actual_set.insert(line);
+            }
+        }
+
+        // compare expected and actual sets
+        REQUIRE(actual_set.size() == expected_set.size());
+
+        auto expected_ref = expected_set.find("BB.5_1X_NS30_B  2995.00");
+        REQUIRE(actual_set.find(*expected_ref) != actual_set.end());
+
+        expected_ref = expected_set.find("BB.6_1X_NS30_A  49.00");
+        REQUIRE(actual_set.find(*expected_ref) != actual_set.end());
+
+        expected_ref = expected_set.find("BB.3_1X_NS30_B  1604.00");
+        REQUIRE(actual_set.find(*expected_ref) != actual_set.end());
+
+        expected_ref = expected_set.find("BB.5_1X_NS30_C  1801.00");
+        REQUIRE(actual_set.find(*expected_ref) != actual_set.end());
+
+        expected_ref = expected_set.find("BB.1_1X_NS30_A  327.00");
+        REQUIRE(actual_set.find(*expected_ref) != actual_set.end());
+
+        expected_ref = expected_set.find("BB.3_1X_NS30_A  1251.00");
+        REQUIRE(actual_set.find(*expected_ref) != actual_set.end());
+
+        expected_ref = expected_set.find("BB.5_1X_NS30_A  1597.00");
+        REQUIRE(actual_set.find(*expected_ref) != actual_set.end());
+
+        expected_ref = expected_set.find("BB.6_1X_NS30_B  963.00");
+        REQUIRE(actual_set.find(*expected_ref) != actual_set.end());
+    }
+	SECTION("info module creates and calculates average matrix file")
+	{
+        std::ifstream ifexpected(
+            "../test/expected/test_expected_info_avg_matrix.tsv",
+            std::ios_base::in
+        );
+        std::ifstream ifactual(
+            "../test/test_info_avg_matrix.tsv",
+            std::ios_base::in
+        );
+
+        std::string expected_line;
+        std::string actual_line;
+
+        while (!ifexpected.eof() && !ifactual.eof())
+        {
+            std::getline(ifexpected, expected_line);
+            std::getline(ifactual, actual_line);
+            REQUIRE(expected_line.compare(actual_line) == 0);
+        }
+	}
 }
 
 TEST_CASE( "Test String Indexing", "[string_indexer]" )
@@ -315,9 +756,7 @@ TEST_CASE( "Test String Indexing", "[string_indexer]" )
                        seqs_fastq.emplace_back( seq.name, seq.seq );
                    }
                  );
-
-
-    si.index( seqs_fastq );
+	si.index( seqs_fastq );
     REQUIRE( si.tree.size() > 0 );
     REQUIRE( si.tree.size() == seqs.size() );
 
@@ -349,9 +788,6 @@ TEST_CASE( "Test String Indexing", "[string_indexer]" )
     std::vector<sequence> seqs2;
     seqs2.emplace_back( "", "ATGC" );
     seqs2.emplace_back( "", "TGC" );
-
-    sequence_indexer si2;
-
 }
 
 TEST_CASE( "Reference-independent Demultiplexing" )
@@ -398,11 +834,7 @@ TEST_CASE( "Reference-independent Demultiplexing" )
             REQUIRE( it.size() == 2 );
             REQUIRE( it[ 0 ] == 0 );
             REQUIRE( it[ 1 ] == 0 );
-
-
-
         }
-
     SECTION( "Pointer-based value-items in the map" )
         {
             using mapped_t = std::vector<std::size_t>*;
@@ -435,14 +867,11 @@ TEST_CASE( "Reference-independent Demultiplexing" )
             REQUIRE( it->size() == 2 );
             REQUIRE( it->at( 0 ) == 0 );
             REQUIRE( it->at( 1 ) == 0 );
-
         }
-
 }
 
 TEST_CASE( "Test Count Generation", "[module_demux]" )
 {
-
     fastq_parser fp;
     module_demux mod;
     sequence_indexer lib_idx;
@@ -525,7 +954,6 @@ TEST_CASE( "Test Count Generation", "[module_demux]" )
                              );
 
     REQUIRE( seq_match != my_map.end() );
-
 }
 
 TEST_CASE( "Fastq_scorer", "[fastq_score]" )
@@ -996,6 +1424,233 @@ TEST_CASE( "get_map_value", "[module_deconv]" )
     REQUIRE( mod.get_map_value( map, 5, 9 ) == 9 );
 }
 
+// TODO: recommend removing commentted binary operations and other commentted
+// operations
+TEST_CASE("Full test of util's individual methods", "[util]")
+{
+	/* methods are superfluous, get rid of tests
+	SECTION("Test adding two things")
+	{
+		SECTION("9 plus 9 is equal to 18")
+		{
+			REQUIRE(add(9, 9) == 18);
+		}
+		SECTION("10.47 plus 9.53 is equal to 20.00")
+		{
+			REQUIRE(add(10.47, 9.53) == 20.00);
+		}
+		SECTION("-24.34 plus 6.70 is equal to -17.64")
+		{
+			REQUIRE(add(-24.34, 6.70));
+		}
+	}
+	SECTION("Test subtrating a thing from another")
+	{
+		SECTION("9 minus 2 is equal to 7")
+		{
+		}
+		SECTION("10 minus -10 is equal to 20")
+		{
+		}
+		SECTION("5.00 minus 0.53 is equal to 4.47")
+		{
+		}
+	}
+	SECTION("Test multiplying two things")
+	{
+		SECTION("9 multiplied by 2 is equal to 18")
+		{
+		}
+		SECTION("18 multiplied by -3 is equal to -54")
+		{
+		}
+		SECTION("5.48 multiplied by 31.26 is equal to 171.3048")
+		{
+		}
+	}
+	SECTION("Test dividing a thing by another")
+	{
+		SECTION("10 divided by 5 is equal to 2")
+		{
+		}
+		SECTION("30 divided by -4 is equal to -7.5")
+		{
+		}
+		SECTION("-10.48 divided by -6.18 is equal to 1.69579288")
+		{
+		}
+	}
+	*/
+
+	SECTION("Test is_integer()")
+	{
+		SECTION("Is 9 an integer")
+		{
+			REQUIRE(is_integer(9));
+		}
+		SECTION("Is 6.83 an integer")
+		{
+			REQUIRE(!is_integer(6.38));
+		}
+	}
+
+	SECTION("Test difference operation")
+	{
+		SECTION("Difference between 22 and 11")
+		{
+			REQUIRE(difference<int>()(22, 11) == 11);
+		}
+		SECTION("Difference between 2546.581 and 64.32648")
+		{
+			REQUIRE(difference<double>()(2546.581, 64.32648) == 2482.25452);
+		}
+		SECTION("Difference between 100.00 and 1000.00")
+		{
+			REQUIRE(difference<double>()(100.00, 1000.00) == -900.00);
+		}
+	}
+
+	SECTION("Test ratio operation")
+	{
+		SECTION("Ratio of 1 and 3")
+		{
+			REQUIRE(ratio<double>()(1, 3) == 1.0 / 3.0);
+		}
+		SECTION("Ratio of 10 and 20")
+		{
+			REQUIRE(ratio<double>()(20, 10) == 1.0 / 2.0);
+		}
+		SECTION("Ration of 100 and 38")
+		{
+			REQUIRE(ratio<double>()(100, 38) == 38.0 / 100.0);
+		}
+	}
+
+	SECTION("Test pair positional comparison")
+	{
+		auto both_even = [](int num, int other)
+		{
+			return (num % 2 == 0) && (other % 2 == 0);
+		};
+		auto both_odd = [](int num, int other)
+		{
+			return (num % 2 == 1) && (other % 2 == 1);
+		};
+		auto both_positive = [](int num, int other)
+		{
+			return (num > 0) && (other > 0);
+		};
+
+		std::pair<int, int> first = {10, 32};
+		std::pair<int, int> second = {6, 18};
+
+		REQUIRE(pair_positional_compare(
+				first, second,
+				both_even, both_odd
+			) == false
+		);
+
+		first = {8, 13};
+		second = {22, 583};
+
+		REQUIRE(pair_positional_compare(
+				first, second,
+				both_even, both_odd
+			) == true
+		);
+
+		first = {3, 11};
+		second = {21, 5};
+
+		REQUIRE(pair_positional_compare(
+				first, second,
+				both_odd, both_odd
+			) == true
+		);
+
+		first = {-10, 44};
+		second = {12, 0};
+
+		REQUIRE(pair_positional_compare(
+				first, second,
+				both_positive, both_positive
+			) == false
+		);
+	}
+
+	SECTION("Test non-increasing pair comparison")
+	{
+		std::vector<std::pair<char, char>> pair_vec = {
+			{'c', 'a'}, {'z', 's'}, {'n', 'z'}, {'w', 't'}, {'b', 'o'}
+		};
+		std::vector<std::pair<char, char>> expected_pair_vec = {
+			{'n', 'z'}, {'w', 't'}, {'z', 's'}, {'b', 'o'}, {'c', 'a'}
+		};
+
+		std::sort(
+			pair_vec.begin(), pair_vec.end(),
+			compare_pair_non_increasing<char, char>()
+		);
+
+		for (std::size_t i = 0; i < expected_pair_vec.size(); i += 1)
+		{
+			REQUIRE(pair_vec[i].second == expected_pair_vec[i].second);
+		}
+	}
+
+	SECTION("Test non-decreasing pair comparison")
+	{
+		std::vector<std::pair<char, char>> pair_vec = {
+			{'c', 'a'}, {'z', 's'}, {'n', 'z'}, {'w', 't'}, {'b', 'o'}
+		};
+		std::vector<std::pair<char, char>> expected_pair_vec = {
+			{'c', 'a'}, {'b', 'o'}, {'z', 's'}, {'w', 't'}, {'n', 'z'}
+		};
+
+		std::sort(
+			pair_vec.begin(), pair_vec.end(),
+			compare_pair_non_decreasing<char, char>()
+		);
+
+		for (std::size_t i = 0; i < expected_pair_vec.size(); i += 1)
+		{
+			REQUIRE(pair_vec[i].second == expected_pair_vec[i].second);
+		}
+	}
+
+	SECTION("Test conversion of pairs to map")
+	{
+		std::vector<std::pair<std::string, int>> my_pair_vec = {
+			{"pep1", 10}, {"pep2", 22}, {"pep52", 0}, {"pep100", 120}
+		};
+		std::map<std::string, int> my_map_of_pairs;
+
+		pairs_to_map(my_map_of_pairs, my_pair_vec.begin(), my_pair_vec.end());
+
+		auto it = my_map_of_pairs.find(my_pair_vec[0].first);
+		REQUIRE(it->second == 10);
+		it = my_map_of_pairs.find(my_pair_vec[1].first);
+		REQUIRE(it->second == 22);
+		it = my_map_of_pairs.find(my_pair_vec[2].first);
+		REQUIRE(it->second == 0);
+		it = my_map_of_pairs.find(my_pair_vec[3].first);
+		REQUIRE(it->second == 120);
+	}
+
+	SECTION("Test container printing")
+	{
+		std::ostringstream container_print_out;
+		std::string expected_print_out = "[pep1, 7]\n[pep2, 3]\n[pep3, 10]\n[pep4, 6]\n";
+		std::vector<std::pair<std::string, int>> container = {
+			{"pep1", 7}, {"pep2", 3}, {"pep3", 10}, {"pep4", 6}
+		};
+
+		print_container(container_print_out, container, "\n");
+
+		REQUIRE(expected_print_out.compare(container_print_out.str()) == 0);
+	}
+}
+
 TEST_CASE( "all_distances", "[util]" )
 {
     std::vector<int> data{ 1, 2, 3, 4, 5 };
@@ -1014,7 +1669,34 @@ TEST_CASE( "all_distances", "[util]" )
                     distances[ index ] == std::abs( data[ index ] - target  )
                    );
         }
+}
 
+TEST_CASE("pairwise distance symmetry optimized", "[distance_tools]")
+{
+    distance_matrix<int> dist(5);
+	std::vector<int> int_vec = {6, 8, 2, 0, 1};
+
+	auto dist_calc = [](const int a, const int b)
+	{
+		return a / std::abs(a - b);
+	};
+
+	REQUIRE(dist_calc(4, 8) == 1);
+
+	distance_tools::pairwise_distances_symmetry_optimized(
+		dist, int_vec.begin(), int_vec.end(), dist_calc
+	);
+	
+	REQUIRE(dist[0][0] == 3);
+	REQUIRE(dist[0][1] == 1);
+	REQUIRE(dist[0][2] == 1);
+	REQUIRE(dist[0][3] == 1);
+	REQUIRE(dist[1][0] == 1);
+	REQUIRE(dist[1][1] == 1);
+	REQUIRE(dist[1][2] == 1);
+	REQUIRE(dist[2][0] == 1);
+	REQUIRE(dist[2][1] == 2);
+	REQUIRE(dist[3][0] == 0);
 }
 
 TEST_CASE( "pairwise_distances_int", "[distance_tools]" )
@@ -1040,7 +1722,6 @@ TEST_CASE( "pairwise_distances_int", "[distance_tools]" )
                            );
                 }
         }
-
 }
 
 TEST_CASE( "pairwise_dist_string", "[distance_tools]" )
@@ -1083,9 +1764,6 @@ TEST_CASE( "pairwise_dist_string", "[distance_tools]" )
                            );
                 }
         }
-
-
-
 }
 
 TEST_CASE( "overlap_data", "[module_deconv]" )
@@ -1361,6 +2039,9 @@ TEST_CASE( "peptide", "[peptide]" )
     peptide pep( "pep1", "ATGC" );
     peptide pep2( "p11", "ATGC" );
 
+	REQUIRE(pep.get_name() == "pep1");
+	REQUIRE(pep2.get_name() == "p11");
+
     REQUIRE( pep == pep2 );
 
     pep2.set_sequence( "AGGG" );
@@ -1368,29 +2049,30 @@ TEST_CASE( "peptide", "[peptide]" )
     REQUIRE( pep != pep2 );
     REQUIRE( !pep2.get_sequence().compare( "AGGG" ) );
 
+	pep.set_name("p11");
+
+	REQUIRE(pep.get_name() == pep2.get_name());
 }
 
 TEST_CASE( "scored peptide", "[peptide]" )
 {
     scored_peptide<double> sc( "pep1", "ATGC", 100.0 );
 
-    REQUIRE( sc.get_score() == 100.0 );
-    REQUIRE( !sc.get_name().compare( "pep1" ) );
-    REQUIRE( !sc.get_sequence().compare( "ATGC" ) );
+	REQUIRE( sc.get_score() == 100.0 );
+	REQUIRE( !sc.get_name().compare( "pep1" ) );
+	REQUIRE( !sc.get_sequence().compare( "ATGC" ) );
 
-    sc.set_score( 5 );
-    REQUIRE( sc.get_score() == 5 );
-
-
+	sc.set_score( 5 );
+	REQUIRE( sc.get_score() == 5 );
 }
 
 TEST_CASE( "scored_entity", "[scored_entity.h]" )
 {
-    scored_entity<std::string,double> sc( std::string( "pep1" ),
+    scored_entity<std::string, double> sc( std::string( "pep1" ),
                                           100.0
                                         );
 
-    scored_entity<std::string,double> sc2( std::string( "pep1" ),
+    scored_entity<std::string, double> sc2( std::string( "pep1" ),
                                           155.0
                                         );
 
@@ -1409,7 +2091,7 @@ TEST_CASE( "scored_entity", "[scored_entity.h]" )
     REQUIRE( sc == sc2 );
     REQUIRE( !( sc != sc2 ) );
 
-    std::unordered_set<scored_entity<std::string,double>> se_set;
+    std::unordered_set<scored_entity<std::string, double>> se_set;
 
     se_set.insert( sc );
 
@@ -1419,6 +2101,11 @@ TEST_CASE( "scored_entity", "[scored_entity.h]" )
 
     REQUIRE( se_set.size() == 1 );
 
+	sc.set_score(226.0);
+	sc2.set_score(77.0);
+
+	REQUIRE(sc.get_score() == 226.0);
+	REQUIRE(sc2.get_score() == 77.0);
 }
 
 TEST_CASE( "get_kmer_frequency", "[kmer_tools]" )
@@ -1479,7 +2166,6 @@ TEST_CASE( "species_data", "[module_deconv]" )
     dat.set_score( 104.0 );
 
     REQUIRE( dat.get_score() == 104.0 );
-
 }
 
 TEST_CASE( "score_peptide_for_species", "[module_deconv]" )
@@ -1581,7 +2267,7 @@ TEST_CASE( "score_species_peptides/get_highest_score_per_species", "[module_deco
      spec_count_map[ "pep1" ] = a_score;
      spec_count_map[ "pep2" ] = b_score;
 
-     std::unordered_map<std::string,scored_peptide<double>> highest_scores;
+     std::unordered_map<std::string, scored_peptide<double>> highest_scores;
 
      auto eval_sc_sp_pep = [&]()
          {
@@ -1646,11 +2332,337 @@ TEST_CASE( "score_species_peptides/get_highest_score_per_species", "[module_deco
      REQUIRE( highest_scores[ "species 2" ].get_score() == 0.5 );
 }
 
+TEST_CASE("Full test of normalize module", "[module_normalize]")
+{
+	module_normalize norm_mod;
+
+	SECTION("Test get_sum() works as expected")
+	{
+		std::vector<double> dest_vec = {0, 0, 0};
+		matrix<double> doubles_mat(3, 3);
+
+		doubles_mat(0, 0) = -9.462;
+		doubles_mat(1, 0) = -10.462;
+		doubles_mat(2, 0) = -0.492;
+		
+		doubles_mat(0, 1) = 5.632;
+		doubles_mat(1, 1) = -0.843;
+		doubles_mat(2, 1) = 0.748;
+		
+		doubles_mat(0, 2) = 2.351;
+		doubles_mat(1, 2) = 3.245;
+		doubles_mat(2, 2) = 0.134;
+
+		norm_mod.get_sum(&dest_vec, &doubles_mat);
+
+		REQUIRE(dest_vec[0] == -20.416);
+		REQUIRE(dest_vec[1] == 5.537);
+		REQUIRE(dest_vec[2] == 5.730);
+	}
+	SECTION("Test get_neg_average() works as expected")
+	{
+		peptide_score_data score_data;
+		score_data.pep_names = {"pep1", "pep2", "pep3", "pep4"};
+		score_data.sample_names = {"sample1", "sample2", "sample3", "sample4"};
+
+		score_data.scores = labeled_matrix<double, std::string>(
+			score_data.pep_names.size(), score_data.sample_names.size()
+		);
+
+		score_data.scores(0, 0) = 6.388;
+		score_data.scores(0, 1) = 10.997;
+		score_data.scores(0, 2) = 0.037;
+		score_data.scores(0, 3) = 5.730;
+
+		score_data.scores(1, 0) = 38.133;
+		score_data.scores(1, 1) = -7.483;
+		score_data.scores(1, 2) = 4.909;
+		score_data.scores(1, 3) = 12.283;
+		
+		score_data.scores(2, 0) = -3.182;
+		score_data.scores(2, 1) = 0.291;
+		score_data.scores(2, 2) = -0.321;
+		score_data.scores(2, 3) = -20.441;
+
+		score_data.scores(3, 0) = -0.210;
+		score_data.scores(3, 1) = 4.008;
+		score_data.scores(3, 2) = -0.110;
+		score_data.scores(3, 3) = -1.001;
+
+		std::unordered_set<std::string> neg_filter = {"sample3", "sample4"};
+		std::unordered_map<std::string, double> dest_pep_avgs;
+
+		norm_mod.get_neg_average(&score_data, &neg_filter, &dest_pep_avgs);
+
+		auto pep_avg = dest_pep_avgs.find("pep1");
+		REQUIRE(pep_avg->second == 2.8835);
+
+		pep_avg = dest_pep_avgs.find("pep2");
+		REQUIRE(pep_avg->second == 8.596);
+
+		pep_avg = dest_pep_avgs.find("pep3");
+		REQUIRE(pep_avg->second == -10.381);
+
+		pep_avg = dest_pep_avgs.find("pep4");
+		REQUIRE(pep_avg->second == -0.5555);
+	}
+	SECTION("Test constant_factor_normalization() works as expected")
+	{
+		SECTION("Normalize column sums by 2")
+		{
+			std::vector<double> columns = {
+				6.832, -0.003, 10.374, 12.889, 1.234
+			};
+
+			norm_mod.constant_factor_normalization(&columns, 2);
+
+			REQUIRE(columns[0] == 3.416);
+			REQUIRE(columns[1] == -0.0015);
+			REQUIRE(columns[2] == 5.187);
+			REQUIRE(columns[3] == 6.4445);
+			REQUIRE(columns[4] == 0.617);
+		}
+		SECTION("Normalize column sums by 4")
+		{
+			std::vector<double> columns = {
+				6.832, -0.003, 10.374, 12.889, 1.234
+			};
+
+			norm_mod.constant_factor_normalization(&columns, 4);
+
+			REQUIRE(columns[0] == 1.708);
+			REQUIRE(columns[1] == -0.00075);
+			REQUIRE(columns[2] == 2.5935);
+			REQUIRE(columns[3] == 3.22225);
+			REQUIRE(columns[4] == 0.3085);
+		}
+		SECTION("Normalize column sums by 100")
+		{
+			std::vector<double> columns = {
+				16.832, -15.033, 10.374, 12.889, 10.234
+			};
+
+			norm_mod.constant_factor_normalization(&columns, 100);
+
+			REQUIRE(columns[0] == 0.16832);
+			REQUIRE(columns[1] == -0.15033);
+			REQUIRE(columns[2] == 0.10374);
+			REQUIRE(columns[3] == 0.12889);
+			REQUIRE(columns[4] == 0.10234);
+		}
+	}
+	SECTION("Test filter_neg_control_start() works as expected")
+	{
+		peptide_score_data score_data;
+		score_data.sample_names = {"GYT_UU_C22", "NAE_COV_B45", "NAE_COV_A12", "CNB_MO8"};
+
+		std::unordered_set<std::string> neg_filter;
+
+		norm_mod.filter_neg_control_start(&score_data, &neg_filter, "NAE");
+
+		REQUIRE(neg_filter.find("NAE_COV_B45") != neg_filter.end());
+		REQUIRE(neg_filter.find("NAE_COV_A12") != neg_filter.end());
+	}
+	SECTION("Test normalize_counts() works as expected")
+	{
+		matrix<double> score_mat(4, 4);
+
+		score_mat(0, 0) = 5.683;
+		score_mat(0, 1) = -10.483;
+		score_mat(0, 2) = 3.000;
+
+		score_mat(1, 0) = 12.489;
+		score_mat(1, 1) = 39.542;
+		score_mat(1, 2) = 10.000;
+
+		score_mat(2, 0) = -0.004;
+		score_mat(2, 1) = -1.834;
+		score_mat(2, 2) = 0.100;
+
+		score_mat(3, 0) = 0.032;
+		score_mat(3, 1) = -1.002;
+		score_mat(3, 2) = 6.000;
+		
+		std::vector<double> norm_factors = {
+			1, 5, 0.5
+		};
+
+		norm_mod.normalize_counts(&score_mat, &norm_factors);
+
+		REQUIRE(score_mat(0, 0) == 5.683);
+		REQUIRE(score_mat(0, 1) == -2.0966);
+		REQUIRE(score_mat(0, 2) == 6.000);
+
+		REQUIRE(score_mat(1, 0) == 12.489);
+		REQUIRE(score_mat(1, 1) == 7.9084);
+		REQUIRE(score_mat(1, 2) == 20.000);
+
+		REQUIRE(score_mat(2, 0) == -0.004);
+		REQUIRE(score_mat(2, 1) == -0.3668);
+		REQUIRE(score_mat(2, 2) == 0.200);
+
+		REQUIRE(score_mat(3, 0) == 0.032);
+		REQUIRE(score_mat(3, 1) == -0.2004);
+		REQUIRE(score_mat(3, 2) == 12.000);
+	}
+	SECTION("Test compute_size_factors() works as expected")
+	{
+		std::vector<double> dest_vec;
+		matrix<double> counts(3, 3);
+
+		counts(0, 0) = 700.000;
+		counts(0, 1) = 189.000;
+		counts(0, 2) = 62.000;
+
+		counts(1, 0) = 5.000;
+		counts(1, 1) = 4.000;
+		counts(1, 2) = 10.000;
+
+		counts(2, 0) = 3.000;
+		counts(2, 1) = 2.000;
+		counts(2, 2) = 0.111;
+
+		norm_mod.compute_size_factors(&dest_vec, &counts);
+
+		// compares out to nine decimal places without having to worry about
+		// rounding errors
+		REQUIRE((int)(dest_vec[0] * 1000000) == 3435288);
+		REQUIRE((int)(dest_vec[1] * 1000000) == 937154);
+		REQUIRE((int)(dest_vec[2] * 1000000) == 307426);
+	}
+	SECTION("Test compute_diff() works as expected")
+	{
+		peptide_score_data_sample_major norm_score_diffs;
+		norm_score_diffs.sample_names = {"sample1", "sample2", "sample3"};
+		norm_score_diffs.pep_names = {"pep1", "pep2", "pep3"};
+
+		norm_score_diffs.scores = labeled_matrix<double, std::string>(
+			norm_score_diffs.pep_names.size(),
+			norm_score_diffs.sample_names.size(),
+			norm_score_diffs.pep_names, norm_score_diffs.sample_names
+		);
+
+		norm_score_diffs.scores(0, 0) = 7.000;
+		norm_score_diffs.scores(0, 1) = -1.000;
+		norm_score_diffs.scores(0, 2) = 12.000;
+
+		norm_score_diffs.scores(1, 0) = 9.000;
+		norm_score_diffs.scores(1, 1) = 1.000;
+		norm_score_diffs.scores(1, 2) = -8.000;
+		
+		norm_score_diffs.scores(2, 0) = 10.000;
+		norm_score_diffs.scores(2, 1) = -5.000;
+		norm_score_diffs.scores(2, 2) = 4.000;
+
+		std::unordered_map<std::string, double> pep_avgs = {
+			{"pep1", 10.000}, {"pep2", 0.300}, {"pep3", 5.000}
+		};
+
+		norm_mod.compute_diff(&norm_score_diffs, &pep_avgs);
+
+		REQUIRE(norm_score_diffs.scores(0, 0) == -3.000);
+		REQUIRE(norm_score_diffs.scores(0, 1) == -11.000);
+		REQUIRE(norm_score_diffs.scores(0, 2) == 2.000);
+		
+		REQUIRE(norm_score_diffs.scores(1, 0) == 8.700);
+		REQUIRE(norm_score_diffs.scores(1, 1) == 0.700);
+		REQUIRE(norm_score_diffs.scores(1, 2) == -8.300);
+
+		REQUIRE(norm_score_diffs.scores(2, 0) == 5.000);
+		REQUIRE(norm_score_diffs.scores(2, 1) == -10.000);
+		REQUIRE(norm_score_diffs.scores(2, 2) == -1.000);
+	}
+	SECTION("Test compute_diff_ratio() works as expected")
+	{
+		peptide_score_data norm_score_diff_ratios;
+		norm_score_diff_ratios.sample_names = {
+			"sample1", "sample2", "sample3"
+		};
+		norm_score_diff_ratios.pep_names = {"pep1", "pep2", "pep3"};
+
+		norm_score_diff_ratios.scores = labeled_matrix<double, std::string>(
+			norm_score_diff_ratios.pep_names.size(),
+			norm_score_diff_ratios.sample_names.size(),
+			norm_score_diff_ratios.pep_names,
+			norm_score_diff_ratios.sample_names
+		);
+
+		norm_score_diff_ratios.scores(0, 0) = 4.000;
+		norm_score_diff_ratios.scores(0, 1) = -2.000;
+		norm_score_diff_ratios.scores(0, 2) = 12.000;
+
+		norm_score_diff_ratios.scores(1, 0) = 9.000;
+		norm_score_diff_ratios.scores(1, 1) = 1.000;
+		norm_score_diff_ratios.scores(1, 2) = -8.000;
+		
+		norm_score_diff_ratios.scores(2, 0) = 10.000;
+		norm_score_diff_ratios.scores(2, 1) = -5.000;
+		norm_score_diff_ratios.scores(2, 2) = 4.000;
+
+		std::unordered_map<std::string, double> pep_avgs = {
+			{"pep1", 2.000}, {"pep2", 3.000}, {"pep3", -8.000}
+		};
+
+		norm_mod.compute_diff_ratio(&norm_score_diff_ratios, &pep_avgs);
+
+		REQUIRE(norm_score_diff_ratios.scores("pep1", "sample1") == 1.000);
+		REQUIRE(norm_score_diff_ratios.scores("pep1", "sample2") == -2.000);
+		REQUIRE(norm_score_diff_ratios.scores("pep1", "sample3") == 5.000);
+
+		REQUIRE(norm_score_diff_ratios.scores("pep2", "sample1") == 2.000);
+		REQUIRE(norm_score_diff_ratios.scores("pep2", "sample2") == (-2.000 / 3.000));
+		REQUIRE(norm_score_diff_ratios.scores("pep2", "sample3") == (-11.000 / 3.000));
+
+		REQUIRE(norm_score_diff_ratios.scores("pep3", "sample1") == -2.250);
+		REQUIRE(norm_score_diff_ratios.scores("pep3", "sample2") == -0.375);
+		REQUIRE(norm_score_diff_ratios.scores("pep3", "sample3") == -1.500);
+	}
+	SECTION("Test compute_ratio() works as expected")
+	{
+		peptide_score_data norm_score_ratio;
+		norm_score_ratio.sample_names = {"sample1", "sample2", "sample3"};
+		norm_score_ratio.pep_names = {"pep1", "pep2", "pep3"};
+
+		norm_score_ratio.scores = labeled_matrix<double, std::string>(
+			norm_score_ratio.pep_names.size(),
+			norm_score_ratio.sample_names.size(),
+			norm_score_ratio.pep_names, norm_score_ratio.sample_names
+		);
+
+		norm_score_ratio.scores("pep1", "sample1") = -8.284;
+		norm_score_ratio.scores("pep1", "sample2") = 7.2849;
+		norm_score_ratio.scores("pep1", "sample3") = 10.001;
+
+		norm_score_ratio.scores("pep2", "sample1") = -0.003;
+		norm_score_ratio.scores("pep2", "sample2") = 0.127482;
+		norm_score_ratio.scores("pep2", "sample3") = 5.8392;
+
+		norm_score_ratio.scores("pep3", "sample1") = 12.000;
+		norm_score_ratio.scores("pep3", "sample2") = 8.89994;
+		norm_score_ratio.scores("pep3", "sample3") = -4.388;
+
+		std::unordered_map<std::string, double>pep_avgs = {
+			{"pep1", 10.000}, {"pep2", 5.302}, {"pep3", -0.832}
+		};
+
+		norm_mod.compute_ratio(&norm_score_ratio, &pep_avgs);
+		
+		REQUIRE(norm_score_ratio.scores("pep1", "sample1") == (-8.284 / 10.000));
+		REQUIRE(norm_score_ratio.scores("pep1", "sample2") == (7.2849 / 10.000));
+		REQUIRE(norm_score_ratio.scores("pep1", "sample3") == (10.001 / 10.000));
+
+		REQUIRE(norm_score_ratio.scores("pep2", "sample1") == (-0.003 / 5.302));
+		REQUIRE(norm_score_ratio.scores("pep2", "sample2") == (0.127482 / 5.302));
+		REQUIRE(norm_score_ratio.scores("pep2", "sample3") == (5.8392 / 5.302));
+
+		REQUIRE(norm_score_ratio.scores("pep3", "sample1") == (12.000 / -0.832));
+		REQUIRE(norm_score_ratio.scores("pep3", "sample2") == (8.89994 / -0.832));
+		REQUIRE(norm_score_ratio.scores("pep3", "sample3") == (-4.388 / -0.832));
+	}
+}
+
 TEST_CASE( "geometric means", "[stats]" )
 {
-    // TODO: RE-implement this test
-    module_normalize mod;
-
     matrix<double> values{ 3, 4 };
 
     for( int outer = 0; outer < 3; ++outer )
@@ -1711,12 +2723,72 @@ TEST_CASE( "matrix creation, setting individual members of matrix", "[matrix]" )
 
     a.at( 1, 2 ) = 4;
     REQUIRE( a( 1, 2 ) == 4 );
+}
 
+TEST_CASE("Test label operations of labeled_matrix class", "[labeled_matrix]")
+{
+	std::vector<std::string> row_labels = {
+		"Row1", "Row2", "Row3", "Row4"
+	};
+	std::vector<std::string> col_labels = {
+		"Col1", "Col2", "Col3", "Col4"
+	};
+	labeled_matrix<int, std::string> labeled_mat(4, 4, row_labels, col_labels);
+
+	SECTION("Getting row labels")
+	{
+		std::unordered_set<std::string> labels;
+		labeled_mat.get_row_labels(labels);
+
+		REQUIRE(labels.find(row_labels[0]) != labels.end());
+		REQUIRE(labels.find(row_labels[1]) != labels.end());
+		REQUIRE(labels.find(row_labels[2]) != labels.end());
+		REQUIRE(labels.find(row_labels[3]) != labels.end());
+	}
+	SECTION("Getting column labels")
+	{
+		std::unordered_set<std::string> labels;
+		labeled_mat.get_col_labels(labels);
+
+		REQUIRE(labels.find(col_labels[0]) != labels.end());
+		REQUIRE(labels.find(col_labels[1]) != labels.end());
+		REQUIRE(labels.find(col_labels[2]) != labels.end());
+		REQUIRE(labels.find(col_labels[3]) != labels.end());
+	}
+	SECTION("Update row labels")
+	{
+		std::unordered_map<std::string, std::uint32_t> labels_map;
+		std::vector<std::string> labels = {
+			"New Row1", "New Row2", "New Row3", "New Row4"
+		};
+
+		labeled_mat.update_row_labels(labels);
+		labels_map = labeled_mat.get_row_labels();
+
+		REQUIRE(labels_map.find(labels[0]) != labels_map.end());
+		REQUIRE(labels_map.find(labels[1]) != labels_map.end());
+		REQUIRE(labels_map.find(labels[2]) != labels_map.end());
+		REQUIRE(labels_map.find(labels[3]) != labels_map.end());
+	}
+	SECTION("Update column labels")
+	{
+		std::unordered_map<std::string, std::uint32_t> labels_map;
+		std::vector<std::string> labels = {
+			"New Col1", "New Col2", "New Col3", "New Col4"
+		};
+
+		labeled_mat.update_col_labels(labels);
+		labels_map = labeled_mat.get_col_labels();
+
+		REQUIRE(labels_map.find(labels[0]) != labels_map.end());
+		REQUIRE(labels_map.find(labels[1]) != labels_map.end());
+		REQUIRE(labels_map.find(labels[2]) != labels_map.end());
+		REQUIRE(labels_map.find(labels[3]) != labels_map.end());
+	}
 }
 
 TEST_CASE( "labeled_matrix", "[labeled_matrix]" )
 {
-
     std::vector<std::string> row_labels{ "row_1", "row_2", "row_3", "row_4", "row_5" };
     std::vector<std::string> col_labels{ "col_1", "col_2", "col_3", "col_4", "col_5" };
 
@@ -1772,8 +2844,6 @@ TEST_CASE( "labeled_matrix", "[labeled_matrix]" )
             REQUIRE( new_matr3( 2, col_idx ) == lab_mat( 4, col_idx ) );
             REQUIRE( new_matr3( 3, col_idx ) == lab_mat( 3, col_idx ) );
         }
-
-
 }
 
 TEST_CASE( "labeled_matrix full outer join", "[matrix]" )
@@ -1870,6 +2940,200 @@ TEST_CASE( "labeled_matrix full outer join", "[matrix]" )
         }
 
 
+}
+
+TEST_CASE("Testing swap() and filter_cols() funcitons of a labeled matrix", "[matrix], [labeled_matrix]")
+{
+	SECTION("Verify swapping of matrices")
+	{
+		matrix<double> mat = matrix<double>(3, 3);
+		mat(0, 0) = 7.82;
+		mat(0, 1) = 9.12;
+		mat(0, 2) = 10.00;
+
+		mat(1, 0) = -5.32;
+		mat(1, 1) = 0.83;
+		mat(1, 2) = -1.03;
+
+		mat(2, 0) = 5.23;
+		mat(2, 1) = 20.00;
+		mat(2, 2) = 12.00;
+
+		matrix<double> new_mat = matrix<double>(3, 4);
+		new_mat(0, 0) = 0;
+		new_mat(0, 1) = 0;
+		new_mat(0, 2) = 0;
+		new_mat(0, 3) = 0;
+
+		new_mat(1, 0) = 0;
+		new_mat(1, 1) = 0;
+		new_mat(1, 2) = 0;
+		new_mat(1, 3) = 0;
+
+		new_mat(2, 0) = 0;
+		new_mat(2, 1) = 0;
+		new_mat(2, 2) = 0;
+		new_mat(2, 3) = 0;
+
+		swap(mat, new_mat);
+
+		// verify mat has new_mat's values
+		for (std::size_t i = 0; i < 3; i += 1)
+		{
+			for (std::size_t j = 0; j < 4; j += 1)
+			{
+				REQUIRE(mat(i, j) == 0);
+			}
+		}
+	}
+	SECTION("Verify swapping of labeled matrices")
+	{
+		// initialize row and column labels vectors
+		std::vector<std::string> row_labels = {
+			"Row1", "Row2", "Row3"
+		};
+		std::vector<std::string> column_labels = {
+			"Column1", "Column2", "Column3"
+		};
+		// define a 3x3 labeled matrix with the row and column label vecs
+		labeled_matrix<double, std::string>
+			lab_mat = labeled_matrix<double, std::string>(
+				row_labels.size(), column_labels.size(),
+				row_labels, column_labels
+			);
+		
+		// fill matrix with numbers
+		lab_mat(0, 0) = -0.34;
+		lab_mat(0, 1) = 8.00;
+		lab_mat(0, 2) = 2.44;
+
+		lab_mat(1, 0) = 7.01;
+		lab_mat(1, 1) = 10.33;
+		lab_mat(1, 2) = -3.00;
+		
+		lab_mat(2, 0) = 6.83;
+		lab_mat(2, 1) = 8.31;
+		lab_mat(2, 2) = 9.32;
+		
+		// initialize new row and column vectors
+		std::vector<std::string> new_row_labels = {
+			"New Row1", "New Row2", "New Row3"
+		};
+		std::vector<std::string> new_column_labels = {
+			"New Column1", "New Column2", "New Column3"
+		};
+		// define new 3x3 labeled matrix
+		labeled_matrix<double, std::string>
+			new_lab_mat = labeled_matrix<double, std::string>(
+				new_row_labels.size(), new_column_labels.size(),
+				new_row_labels, new_column_labels
+			);
+		
+		// fill new matrix with zeros
+		new_lab_mat(0, 0) = 0;
+		new_lab_mat(0, 1) = 0;
+		new_lab_mat(0, 2) = 0;
+
+		new_lab_mat(1, 0) = 0;
+		new_lab_mat(1, 1) = 0;
+		new_lab_mat(1, 2) = 0;
+
+		new_lab_mat(2, 0) = 0;
+		new_lab_mat(2, 1) = 0;
+		new_lab_mat(2, 2) = 0;
+
+		swap(lab_mat, new_lab_mat);
+
+		// verify lab_mat's labels are the new labels
+		std::unordered_map<std::string, std::uint32_t>
+			captured_row_labels = lab_mat.get_row_labels();
+		std::unordered_map<std::string, std::uint32_t>
+			captured_column_labels = lab_mat.get_col_labels();
+		REQUIRE(captured_row_labels.find(new_row_labels[0]) != captured_row_labels.end());
+		REQUIRE(captured_row_labels.find(new_row_labels[1]) != captured_row_labels.end());
+		REQUIRE(captured_row_labels.find(new_row_labels[2]) != captured_row_labels.end());
+
+		REQUIRE(captured_column_labels.find(new_column_labels[0]) != captured_column_labels.end());
+		REQUIRE(captured_column_labels.find(new_column_labels[1]) != captured_column_labels.end());
+		REQUIRE(captured_column_labels.find(new_column_labels[2]) != captured_column_labels.end());
+
+		// verify new_lab_mat's labels are the original labels
+		captured_row_labels = new_lab_mat.get_row_labels();
+		captured_column_labels = new_lab_mat.get_col_labels();
+		REQUIRE(captured_row_labels.find(row_labels[0]) != captured_row_labels.end());
+		REQUIRE(captured_row_labels.find(row_labels[1]) != captured_row_labels.end());
+		REQUIRE(captured_row_labels.find(row_labels[2]) != captured_row_labels.end());
+
+		REQUIRE(captured_column_labels.find(column_labels[0]) != captured_column_labels.end());
+		REQUIRE(captured_column_labels.find(column_labels[1]) != captured_column_labels.end());
+		REQUIRE(captured_column_labels.find(column_labels[2]) != captured_column_labels.end());
+
+		// verify lab_mat has new_lab_mat's values
+		for (std::size_t i = 0; i < 3; i += 1)
+		{
+			for (std::size_t j = 0; j < 3; j += 1)
+			{
+				REQUIRE(lab_mat(i, j) == 0);
+			}
+		}
+	}
+	SECTION("Verify filtering of columns")
+	{
+		std::vector<std::string> row_labels = {
+			"Row1", "Row2", "Row3", "Row4"
+		};
+		std::vector<std::string> column_labels = {
+			"Column1", "Column2", "Column3", "Column4"
+		};
+		labeled_matrix<double, std::string>
+			lab_mat = labeled_matrix<double, std::string>(
+				row_labels.size(), column_labels.size(),
+				row_labels, column_labels
+			);
+
+		lab_mat.at(0, 0) = 0.00;
+		lab_mat.at(0, 1) = 5.00;
+		lab_mat.at(0, 2) = 1.00;
+		lab_mat.at(0, 3) = 0.00;
+
+		lab_mat.at(1, 0) = 1.00;
+		lab_mat.at(1, 1) = 10.00;
+		lab_mat.at(1, 2) = 7.00;
+		lab_mat.at(1, 3) = 4.00;
+		
+		lab_mat.at(2, 0) = 0.00;
+		lab_mat.at(2, 1) = 1.00;
+		lab_mat.at(2, 2) = 2.00;
+		lab_mat.at(2, 3) = 0.00;
+
+		lab_mat.at(3, 0) = 8.00;
+		lab_mat.at(3, 1) = 0.00;
+		lab_mat.at(3, 2) = 1.00;
+		lab_mat.at(3, 3) = 0.00;
+
+		std::vector<std::string> filter_cols_vec = {
+			"Column1", "Column4"
+		};
+		labeled_matrix<double, std::string> filtered_mat = lab_mat.filter_cols(filter_cols_vec);
+
+		std::vector<std::string> captured_row_labels;
+		filtered_mat.get_row_labels(captured_row_labels);
+		std::vector<std::string> captured_col_labels;
+		filtered_mat.get_col_labels(captured_col_labels);
+
+		REQUIRE(captured_row_labels.size() == 4);
+		REQUIRE(captured_col_labels.size() == 2);
+
+		REQUIRE(filtered_mat.at("Row1", "Column1") == 0.00);
+		REQUIRE(filtered_mat.at("Row2", "Column1") == 5.00);
+		REQUIRE(filtered_mat.at("Row3", "Column1") == 1.00);
+		REQUIRE(filtered_mat.at("Row4", "Column1") == 0.00);
+
+		REQUIRE(filtered_mat.at("Row1", "Column4") == 0.00);
+		REQUIRE(filtered_mat.at("Row2", "Column4") == 1.00);
+		REQUIRE(filtered_mat.at("Row3", "Column4") == 10.00);
+		REQUIRE(filtered_mat.at("Row4", "Column4") == 7.00);
+	}
 }
 
 TEST_CASE( "median", "[stats]" )
@@ -2030,32 +3294,151 @@ TEST_CASE( "z-scores", "[stats]" )
         }
 }
 
-TEST_CASE( "Parsing/Writing Bins from stream", "[peptide_bin]" )
+TEST_CASE("Relative difference", "[stats]")
+{
+	double a = 100;
+	double b = 55;
+	double expected = 0.45;
+	double actual = stats::relative_difference(a, b);
+
+	REQUIRE(actual == expected);
+}
+
+TEST_CASE("Squared difference", "[stats]")
+{
+	std::vector<double> double_vec = {6.0, 60.0, 10.0, 50.0};
+	double subtrahend = 6.0;
+
+	double expected = 4868.0;
+	double actual = stats::squared_diff(double_vec.begin(), double_vec.end(), subtrahend);
+
+	REQUIRE(actual == expected);
+}
+
+TEST_CASE( "Full test of Peptide Bin operations", "[peptide_bin]" )
 {
     std::stringstream bins_in;
     bins_in << "pep_1\tpep_2\tpep_3\npep_4\tpep_5\tpep_6\n";
     bin_collection bin_c = peptide_bin_io::parse_bins( bins_in );
 
-    std::stringstream bins_out;
+	SECTION("Test parsing and writing bins from a stream")
+	{
+		std::stringstream bins_out;
+		peptide_bin_io::write_bins( bins_out, bin_c );
 
-    peptide_bin_io::write_bins( bins_out, bin_c );
+		// NOTE: test parse_bins() -> tests add_bin()
+		REQUIRE( ( bin_c == peptide_bin_io::parse_bins( bins_out ) ) );
+	}
 
-    REQUIRE( ( bin_c == peptide_bin_io::parse_bins( bins_out ) ) );
+	auto first_bin = bin_c.begin();
+	auto second_bin = first_bin + 1;
+	SECTION("Test if a bin contains a specific peptide")
+	{
+		REQUIRE( first_bin->contains( "pep_1" ) );
+		REQUIRE( first_bin->contains( "pep_2" ) );
+		REQUIRE( first_bin->contains( "pep_3" ) );
+		REQUIRE( !( first_bin->contains( "pep_4" ) ) );
 
-    auto first_bin = bin_c.begin();
-    REQUIRE( first_bin->contains( "pep_1" ) );
-    REQUIRE( first_bin->contains( "pep_2" ) );
-    REQUIRE( first_bin->contains( "pep_3" ) );
-    REQUIRE( !( first_bin->contains( "pep_4" ) ) );
+		REQUIRE( second_bin->contains( "pep_4" ) );
+		REQUIRE( second_bin->contains( "pep_5" ) );
+		REQUIRE( second_bin->contains( "pep_6" ) );
+		REQUIRE( !( second_bin->contains( "pep_9" ) ) );
+	}
+	SECTION("Test that peptides can be added to a bin, and which bin is the smallest")
+	{
+		// first bin is smallest because first and second bins have same
+		// number of peptides
+		REQUIRE(bin_c.smallest() == *first_bin);
 
-    auto second_bin = first_bin + 1;
-    REQUIRE( second_bin->contains( "pep_4" ) );
-    REQUIRE( second_bin->contains( "pep_5" ) );
-    REQUIRE( second_bin->contains( "pep_6" ) );
-    REQUIRE( !( second_bin->contains( "pep_9" ) ) );
+		first_bin->add_peptide("pep_10");
+		first_bin->add_peptide("pep_11");
+		first_bin->add_peptide("pep_12");
 
+		// verify first bin is no longer smallest bin
+		REQUIRE(first_bin->size() == 6);
+		REQUIRE(second_bin->size() == 3);
+		REQUIRE(bin_c.smallest() == *second_bin);
+	}
+	SECTION("Test more bins can be added, and last bin is smallest")
+	{
+		std::vector<peptide_bin> new_bins = {
+			peptide_bin(), peptide_bin()
+		};
+		std::vector<std::string> other_peptides = {
+			"pep24", "pep25", "pep26", "pep27"
+		};
 
+		new_bins[0].add_peptides(other_peptides.begin(), other_peptides.end());
 
+		bin_c.add_bins(new_bins.begin(), new_bins.end());
+
+		REQUIRE(bin_c.bins[2].size() == 4);
+		REQUIRE(bin_c.bins[3].size() == 0);
+		REQUIRE(bin_c.smallest() == *(bin_c.end() - 1));
+	}
+}
+
+TEST_CASE("Full test of peptide scoring's individual pieces", "[peptide_scoring]")
+{
+	std::vector<double> expected_scores = {
+		0.00, 10.00, 8.00, 15.00, 3.00, 1.00, 3.00, 
+		0.00, 10.00, 5.00, 8.00, 2.00, 0.00, 2.00, 
+		21.00, 27.00, 9.00, 24.00, 14.00, 0.00, 14.00, 
+		2.00, 6.00, 7.00, 7.00, 1.00, 0.00, 5.00, 
+		2.00, 10.00, 31.00, 22.00, 1.00, 1.00, 14.00, 
+		12.00, 28.00, 24.00, 19.00, 13.00, 0.00, 23.00, 
+		0.00, 14.00, 11.00, 18.00, 6.00, 1.00, 5.00, 
+		2.00, 17.00, 19.00, 23.00, 4.00, 2.00, 6.00, 
+		2.00, 13.00, 11.00, 25.00, 0.00, 1.00, 5.00, 
+		1.00, 24.00, 15.00, 30.00, 9.00, 1.00, 10.00
+	};
+	peptide_score_data score_data;
+	peptide_scoring::parse_peptide_scores(
+		score_data,
+		"../test/input_data/test_enrich_raw_scores.tsv"
+	);
+
+	SECTION("Verify file name of score data points to test/test_enrich_raw_scores.tsv")
+	{
+		REQUIRE(score_data.file_name.compare("test_enrich_raw_scores.tsv") == 0);
+	}
+	SECTION("Verify peptide names of score data match those found in raw scores file")
+	{
+		std::vector<std::string> expected_pep_names = {
+			"PV1_000000", "PV1_000001", "PV1_000002", "PV1_000003", "PV1_000004", "PV1_000005", "PV1_000006"
+		};
+
+		REQUIRE(expected_pep_names.size() == score_data.pep_names.size());
+		for (std::size_t i = 0; i < expected_pep_names.size(); i += 1)
+		{
+			REQUIRE(expected_pep_names[i].compare(score_data.pep_names[i]) == 0);
+		}
+	}
+	SECTION("Verify sample names of score data match those found in raw scores file")
+	{
+		std::vector<std::string> expected_sample_names = {
+			"HCV-I_PV1_Run3_B", "HCV-H_PV1_Run3_B", "HCV-J_PV1_Run3_A",
+			"JAS_PV1_Run10_A", "HCV-H_PV1_Run3_A", "HCV-I_PV1_Run3_A",
+			"HCV-J_PV1_Run3_B", "SB_PV1_Run3_A", "JAS_PV1_Run10_B",
+			"SB_PV1_Run3_B"
+		};
+
+		REQUIRE(expected_sample_names.size() == score_data.sample_names.size());
+		for (std::size_t i = 0; i < expected_sample_names.size(); i += 1)
+		{
+			REQUIRE(expected_sample_names[i].compare(score_data.sample_names[i]) == 0);
+		}
+	}
+	SECTION("Verify scores match those found in raw scores file")
+	{
+		for (std::size_t i = 0; i < score_data.sample_names.size(); i += 1)
+		{
+			for (std::size_t j = 0; j < score_data.pep_names.size(); j += 1)
+			{
+				REQUIRE(score_data.scores(i, j) == expected_scores[i * score_data.pep_names.size() + j]);
+			}
+		}
+	}
 }
 
 TEST_CASE( "Verify sums and minimum bin size resizing", "[module_bin]" )
@@ -2121,7 +3504,7 @@ TEST_CASE( "Verify sums and minimum bin size resizing", "[module_bin]" )
 
 TEST_CASE( "Ranking Probes based upon their scores", "[probe_rank]" )
 {
-    std::unordered_map<std::string,double> probe_scores
+    std::unordered_map<std::string, double> probe_scores
     {
         { "p1", 1.445 },
         { "p2", 4.655 },
@@ -2148,11 +3531,14 @@ TEST_CASE( "Ranking Probes based upon their scores", "[probe_rank]" )
                 { 1.0, { "p1", "p3" } },
                 { 5.0, { "p2" } },
                 { 156.0, { "p4" } },
-            }
-                ;
-            REQUIRE( int_probe_rank.get_probe_ranks() == expected_values );
-        }
+            };
 
+            REQUIRE( int_probe_rank.get_probe_ranks() == expected_values );
+			// verify getting probe(s) by rank
+			REQUIRE(*int_probe_rank.get_probes_with_rank(1) == *expected_values.find(1.0));
+			REQUIRE(*int_probe_rank.get_probes_with_rank(5.005) == *expected_values.find(5.0));
+			REQUIRE(*int_probe_rank.get_probes_with_rank(156.056) == *expected_values.find(156.0));
+        }
     SECTION( "Rounding to the tenth's place" )
         {
             probe_rank int_probe_rank{ 1 };
@@ -2165,11 +3551,14 @@ TEST_CASE( "Ranking Probes based upon their scores", "[probe_rank]" )
                 { 4.7, { "p2" } },
                 { 156.09999999999999, { "p4" } }, // hard-coded value, found by inspecting
                                                   // values in debugger.
-            }
-                ;
-            REQUIRE( int_probe_rank.get_probe_ranks() == expected_values );
-        }
+            };
 
+            REQUIRE( int_probe_rank.get_probe_ranks() == expected_values );
+			// verify getting probe(s) by rank
+			REQUIRE(*int_probe_rank.get_probes_with_rank(1.0) == *expected_values.find(1.0));
+			REQUIRE(*int_probe_rank.get_probes_with_rank(4.7445) == *expected_values.find(4.7));
+			REQUIRE(*int_probe_rank.get_probes_with_rank(1.4483) == *expected_values.find(1.4));
+        }
     SECTION( "Rounding to the hundredth's place" )
         {
             probe_rank int_probe_rank{ 2 };
@@ -2182,10 +3571,89 @@ TEST_CASE( "Ranking Probes based upon their scores", "[probe_rank]" )
                 { 4.66, { "p2" } },
                 { 156.10, { "p4" } },
             };
+
             REQUIRE( int_probe_rank.get_probe_ranks() == expected_values );
+			// verify getting probe(s) by rank
+			REQUIRE(*int_probe_rank.get_probes_with_rank(1.05) == *expected_values.find(1.05));
+			REQUIRE(*int_probe_rank.get_probes_with_rank(156.10) == *expected_values.find(156.10));
+			REQUIRE(*int_probe_rank.get_probes_with_rank(1.4522) == *expected_values.find(1.45));
         }
+}
 
+TEST_CASE("Test of get_raw_sums() and get_raw_scores()", "[module_enrich]")
+{
+	module_enrich enrich_mod;
+	SECTION("Verifying collection of raw scores")
+	{
+        std::vector<std::vector<double>> raw_scores_vec;
+        peptide_score_data_sample_major raw_scores_dat;
+        peptide_score_data_sample_major* raw_scores_dat_ptr = nullptr;
+        peptide_scoring::parse_peptide_scores(
+            raw_scores_dat, "../test/input_data/test_enrich_raw_scores.tsv"
+        );
+        raw_scores_dat_ptr = &raw_scores_dat;
+        raw_scores_vec.resize(raw_scores_dat.scores.ncols());
 
+        std::vector<std::string> sample_names = {
+            "HCV-I_PV1_Run3_B", "JAS_PV1_Run10_A", "HCV-J_PV1_Run3_B"
+        };
+
+        enrich_mod.get_raw_scores(&raw_scores_vec, raw_scores_dat_ptr, sample_names);
+
+        REQUIRE(raw_scores_vec[0][0] == 0.00);
+        REQUIRE(raw_scores_vec[0][1] == 2.00);
+        REQUIRE(raw_scores_vec[0][2] == 0.00);
+
+        REQUIRE(raw_scores_vec[1][0] == 10.00);
+        REQUIRE(raw_scores_vec[1][1] == 6.00);
+        REQUIRE(raw_scores_vec[1][2] == 14.00);
+
+        REQUIRE(raw_scores_vec[2][0] == 8.00);
+        REQUIRE(raw_scores_vec[2][1] == 7.00);
+        REQUIRE(raw_scores_vec[2][2] == 11.00);
+
+        REQUIRE(raw_scores_vec[3][0] == 15.00);
+        REQUIRE(raw_scores_vec[3][1] == 7.00);
+        REQUIRE(raw_scores_vec[3][2] == 18.00);
+
+        REQUIRE(raw_scores_vec[4][0] == 3.00);
+        REQUIRE(raw_scores_vec[4][1] == 1.00);
+        REQUIRE(raw_scores_vec[4][2] == 6.00);
+
+        REQUIRE(raw_scores_vec[5][0] == 1.00);
+        REQUIRE(raw_scores_vec[5][1] == 0.00);
+        REQUIRE(raw_scores_vec[5][2] == 1.00);
+
+        REQUIRE(raw_scores_vec[6][0] == 3.00);
+        REQUIRE(raw_scores_vec[6][1] == 5.00);
+        REQUIRE(raw_scores_vec[6][2] == 5.00);
+	}
+	SECTION("Verifying collection of raw sums")
+	{
+        std::vector<double> col_sums;
+        std::vector<std::vector<double>> raw_scores_vec = {
+            {0, 0, 21, 2, 2, 12, 0, 2, 2, 1},
+            {10, 10, 27, 6, 10, 28, 14, 17, 13, 24},
+            {8, 5, 9, 7, 31, 24, 11, 19, 11, 15},
+            {15, 8, 24, 7, 22, 19, 18, 23, 25, 30},
+            {3, 2, 14, 1, 1, 13, 6, 4, 0, 9},
+            {1, 0, 0, 0, 1, 0, 1, 2, 1, 1},
+            {3, 2, 14, 5, 14, 23, 5, 6, 5, 10}
+        };
+
+        col_sums = enrich_mod.get_raw_sums(raw_scores_vec);
+
+        REQUIRE(col_sums[0] == 40.00);
+        REQUIRE(col_sums[1] == 27.00);
+        REQUIRE(col_sums[2] == 109.00);
+        REQUIRE(col_sums[3] == 28.00);
+        REQUIRE(col_sums[4] == 81.00);
+        REQUIRE(col_sums[5] == 119.00);
+        REQUIRE(col_sums[6] == 55.00);
+        REQUIRE(col_sums[7] == 73.00);
+        REQUIRE(col_sums[8] == 57.00);
+        REQUIRE(col_sums[9] == 90.00);
+	}
 }
 
 TEST_CASE( "Unary Predicate Reduction", "[module_enrich]" )
@@ -2358,6 +3826,46 @@ TEST_CASE( "Meeting the threshold for a pair", "[module_enrich]" )
 
 }
 
+TEST_CASE("Test enrich drops replicates with low scores if --low_raw_reads flag passed", "[module_enrich]")
+{
+	// initialize enrich components
+	module_enrich e_mod;
+	options_enrich e_opts;
+
+	std::pair<std::string, std::string> pair1{"../test/input_data/test_enrich_Z-HDI75.tsv", "10"};
+	std::pair<std::string, std::string> pair2{"../test/input_data/test_enrich_CS.tsv", "20"};
+
+	e_opts.matrix_thresh_fname_pairs = {pair1, pair2};
+	e_opts.in_samples_fname = "../test/input_data/test_enrich_PN.tsv";
+	e_opts.in_raw_scores_fname = "../test/input_data/test_enrich_raw_scores.tsv";
+	e_opts.raw_scores_params_str = "70";
+	e_opts.out_suffix = "_enriched_output.txt";
+	e_opts.out_enrichment_failure = "test_enrich_fail_output.txt";
+	e_opts.out_dirname = "../test/test_enrich_Z-HDI75_70raw_output";
+	e_opts.low_raw_reads = true;
+
+	// run enrich
+	e_mod.run(&e_opts);
+	
+	// check failed enrichment file for properly formatted log of dropped replicates
+	std::ifstream ifexpected(
+		"../test/expected/test_expected_enrich_Z-HDI75_70raw/test_expected_enrich_fail.tsv",
+		std::ios_base::in
+	);
+	std::ifstream ifactual(
+		"../test/test_enrich_Z-HDI75_70raw_output/test_enrich_fail_output.txt",
+		std::ios_base::in
+	);
+	std::string expected_line = "";
+	std::string actual_line = "";
+
+	while (!ifexpected.eof() && !ifactual.eof())
+	{
+		std::getline(ifexpected, expected_line);
+		std::getline(ifactual, actual_line);
+		REQUIRE(expected_line.compare(actual_line) == 0);
+	}
+}
 
 TEST_CASE( "File IO read_file function", "[file_io]" )
 {
@@ -2412,7 +3920,6 @@ TEST_CASE( "File IO read_file function", "[file_io]" )
 
 TEST_CASE( "Testing Codon -> AA maps", "[nt_aa_map]" )
 {
-
     auto mapped = codon_aa_mappings::default_codon_aa_map( "TCC" );
     REQUIRE( mapped == 'S' );
 
@@ -2439,8 +3946,8 @@ TEST_CASE( "Testing nt->aa translation", "[nt_aa_translator]" )
 
 }
 
+/* remove
 #ifdef ZLIB_ENABLED
-
 TEST_CASE( "Reading/Writing Gzipped information", "[pepsirf_io]" )
 {
     std::string data = "One banana, two banana, three banana, split!";
@@ -2470,7 +3977,6 @@ TEST_CASE( "Reading/Writing Gzipped information", "[pepsirf_io]" )
 
     REQUIRE( comp == data );
 }
-
 #endif // ZLIB_ENABLED
 
 TEST_CASE( "Determining whether a file is gzipped.", "[pepsirf_io]" )
@@ -2482,6 +3988,229 @@ TEST_CASE( "Determining whether a file is gzipped.", "[pepsirf_io]" )
     std::ifstream false_expected{ "../test/input_data/test.fasta" };
     REQUIRE( !pepsirf_io::is_gzipped( false_expected ) );
 }
+remove */
+
+TEST_CASE("Full test of subjoin's individual methods", "[module_subjoin]")
+{
+	module_subjoin sub_mod;
+	SECTION("Test of namelist parsing")
+	{
+		// initialize in-file stream with path to namelist
+		std::ifstream namelist("../test/input_data/test_subjoin_namelist.txt", std::ios_base::in);
+		// define destination vector of strings
+		std::vector<std::string> names;
+		// name replacement map
+		module_subjoin::name_replacement_list replacement_map;
+
+		replacement_map = sub_mod.parse_namelist(names, namelist);
+
+		REQUIRE(names[0].compare("GY_PV_Run3X") == 0);
+		REQUIRE(names[1].compare("GY_PV_Run4X") == 0);
+		REQUIRE(names[2].compare("VKi_6vk_A") == 0);
+		REQUIRE(names[3].compare("VKi_6vk_B") == 0);
+		REQUIRE(names[4].compare("URB-PV1_SUB_6_A") == 0);
+		REQUIRE(names[5].compare("URB-PV1_SUB_6_B") == 0);
+		REQUIRE(names[6].compare("URB-PV1_SUB_6_C") == 0);
+
+		for (
+			std::size_t name_idx = 0;
+			name_idx < replacement_map.size();
+			name_idx += 1
+		)
+		{
+			REQUIRE(replacement_map.find(names[name_idx]) != replacement_map.end());
+		}
+	}
+
+	// initialize first peptide score sample major with data
+	peptide_score_data first_data_set;
+	first_data_set.file_name = "first_test_data_set";
+	first_data_set.pep_names = {"PEP_006803", "PEP_000039", "PEP_003001"};
+	first_data_set.sample_names = {"RX-PV1_06", "RX-PV1_02", "RX-PV1_03"};
+
+	first_data_set.scores = labeled_matrix<double, std::string>(
+		first_data_set.pep_names.size(), first_data_set.sample_names.size(),
+		first_data_set.pep_names, first_data_set.sample_names
+	);
+
+	first_data_set.scores(0, 0) = 0.00;
+	first_data_set.scores(0, 1) = 5.00;
+	first_data_set.scores(0, 2) = 25.00;
+
+	first_data_set.scores(1, 0) = 10.00;
+	first_data_set.scores(1, 1) = 30.00;
+	first_data_set.scores(1, 2) = 112.00;
+
+	first_data_set.scores(2, 0) = 18.00;
+	first_data_set.scores(2, 1) = 12.00;
+	first_data_set.scores(2, 2) = 4.00;
+
+	// initialize second peptide score sample major with data
+	peptide_score_data second_data_set;
+	second_data_set.file_name = "second_test_data_set";
+	second_data_set.pep_names = {"PEP_006803", "PEP_000039", "PEP_003001"};
+	second_data_set.sample_names = {"RX-PV1_06", "RX-PV1_12", "RX-PV1_04"};
+	
+	second_data_set.scores = labeled_matrix<double, std::string>(
+		second_data_set.pep_names.size(),
+		second_data_set.sample_names.size(),
+		second_data_set.pep_names, second_data_set.sample_names
+	);
+
+	second_data_set.scores(0, 0) = 14.00;
+	second_data_set.scores(0, 1) = 10.00;
+	second_data_set.scores(0, 2) = 10.00;
+
+	second_data_set.scores(1, 0) = 12.00;
+	second_data_set.scores(1, 1) = 9.00;
+	second_data_set.scores(1, 2) = 20.00;
+
+	second_data_set.scores(2, 0) = 0.00;
+	second_data_set.scores(2, 1) = 57.00;
+	second_data_set.scores(2, 2) = 35.00;
+
+	SECTION("Test of joining with INGORE resolution strategy")
+	{
+		// initialize IGNORE score strategy
+		options_subjoin s_opts;
+		s_opts.duplicate_resolution_strategy = evaluation_strategy::duplicate_resolution_strategy::IGNORE;
+	
+		// define destination labeled matrix associated doubles with strings
+		labeled_matrix<double, std::string> joined_matrix;
+
+		joined_matrix = sub_mod.join_with_resolve_strategy(
+			first_data_set, second_data_set,
+			s_opts.duplicate_resolution_strategy
+		);
+
+		std::vector<std::string> row_labels;
+		joined_matrix.get_row_labels(row_labels);
+		std::vector<std::string> col_labels;
+		joined_matrix.get_col_labels(col_labels);
+
+		REQUIRE(row_labels.size() == 3);
+		REQUIRE(col_labels.size() == 5);
+
+		REQUIRE(joined_matrix("PEP_003001", "RX-PV1_03") == 4.00);
+		REQUIRE(joined_matrix("PEP_000039", "RX-PV1_03") == 112.00);
+		REQUIRE(joined_matrix("PEP_006803", "RX-PV1_03") == 25.00);
+
+		REQUIRE(joined_matrix("PEP_003001", "RX-PV1_04") == 35.00);
+		REQUIRE(joined_matrix("PEP_000039", "RX-PV1_04") == 20.00);
+		REQUIRE(joined_matrix("PEP_006803", "RX-PV1_04") == 10.00);
+
+		REQUIRE(joined_matrix("PEP_003001", "RX-PV1_12") == 57.00);
+		REQUIRE(joined_matrix("PEP_000039", "RX-PV1_12") == 9.00);
+		REQUIRE(joined_matrix("PEP_006803", "RX-PV1_12") == 10.00);
+		
+		REQUIRE(joined_matrix("PEP_003001", "RX-PV1_06") == 0.00);
+		REQUIRE(joined_matrix("PEP_000039", "RX-PV1_06") == 12.00);
+		REQUIRE(joined_matrix("PEP_006803", "RX-PV1_06") == 14.00);
+
+		REQUIRE(joined_matrix("PEP_003001", "RX-PV1_02") == 12.00);
+		REQUIRE(joined_matrix("PEP_000039", "RX-PV1_02") == 30.00);
+		REQUIRE(joined_matrix("PEP_006803", "RX-PV1_02") == 5.00);
+	}
+	SECTION("Test of joining with COMBINE resolution strategy")
+	{
+		// initialize COMBINE score strategy
+		options_subjoin s_opts;
+		s_opts.duplicate_resolution_strategy = evaluation_strategy::duplicate_resolution_strategy::COMBINE;
+
+		// define destination labeled matrix associated doubles with strings
+		labeled_matrix<double, std::string> joined_matrix;
+
+		joined_matrix = sub_mod.join_with_resolve_strategy(
+			first_data_set, second_data_set,
+			s_opts.duplicate_resolution_strategy
+		);
+
+		std::vector<std::string> row_labels;
+		joined_matrix.get_row_labels(row_labels);
+		std::vector<std::string> col_labels;
+		joined_matrix.get_col_labels(col_labels);
+
+		REQUIRE(row_labels.size() == 3);
+		REQUIRE(col_labels.size() == 5);
+
+		REQUIRE(joined_matrix("PEP_003001", "RX-PV1_03") == 4.00);
+		REQUIRE(joined_matrix("PEP_000039", "RX-PV1_03") == 112.00);
+		REQUIRE(joined_matrix("PEP_006803", "RX-PV1_03") == 25.00);
+
+		REQUIRE(joined_matrix("PEP_003001", "RX-PV1_04") == 35.00);
+		REQUIRE(joined_matrix("PEP_000039", "RX-PV1_04") == 20.00);
+		REQUIRE(joined_matrix("PEP_006803", "RX-PV1_04") == 10.00);
+
+		REQUIRE(joined_matrix("PEP_003001", "RX-PV1_12") == 57.00);
+		REQUIRE(joined_matrix("PEP_000039", "RX-PV1_12") == 9.00);
+		REQUIRE(joined_matrix("PEP_006803", "RX-PV1_12") == 10.00);
+
+		REQUIRE(joined_matrix("PEP_003001", "RX-PV1_06") == 18.00);
+		REQUIRE(joined_matrix("PEP_000039", "RX-PV1_06") == 22.00);
+		REQUIRE(joined_matrix("PEP_006803", "RX-PV1_06") == 14.00);
+
+		REQUIRE(joined_matrix("PEP_003001", "RX-PV1_02") == 12.00);
+		REQUIRE(joined_matrix("PEP_000039", "RX-PV1_02") == 30.00);
+		REQUIRE(joined_matrix("PEP_006803", "RX-PV1_02") == 5.00);
+	}
+	SECTION("Test of joining with INCLUDE resolution strategy")
+	{
+		// initialize INCLUDE score strategy
+		options_subjoin s_opts;
+		s_opts.duplicate_resolution_strategy = evaluation_strategy::duplicate_resolution_strategy::INCLUDE;
+
+		// define destination labeled matrix associated doubles with strings
+		labeled_matrix<double, std::string> joined_matrix;
+
+		joined_matrix = sub_mod.join_with_resolve_strategy(
+			first_data_set, second_data_set,
+			s_opts.duplicate_resolution_strategy
+		);
+
+		std::vector<std::string> row_labels;
+		joined_matrix.get_row_labels(row_labels);
+		std::vector<std::string> col_labels;
+		joined_matrix.get_col_labels(col_labels);
+
+		REQUIRE(row_labels.size() == 6);
+		REQUIRE(col_labels.size() == 5);
+
+		REQUIRE(joined_matrix("PEP_003001_first_test_data_set", "RX-PV1_03") == 4.00);
+		REQUIRE(joined_matrix("PEP_006803_second_test_data_set", "RX-PV1_03") == 0.00);
+		REQUIRE(joined_matrix("PEP_003001_second_test_data_set", "RX-PV1_03") == 0.00);
+		REQUIRE(joined_matrix("PEP_000039_second_test_data_set", "RX-PV1_03") == 0.00);
+		REQUIRE(joined_matrix("PEP_000039_first_test_data_set", "RX-PV1_03") == 112.00);
+		REQUIRE(joined_matrix("PEP_006803_first_test_data_set", "RX-PV1_03") == 25.00);
+
+		REQUIRE(joined_matrix("PEP_003001_first_test_data_set", "RX-PV1_04") == 0.00);
+		REQUIRE(joined_matrix("PEP_006803_second_test_data_set", "RX-PV1_04") == 10.00);
+		REQUIRE(joined_matrix("PEP_003001_second_test_data_set", "RX-PV1_04") == 35.00);
+		REQUIRE(joined_matrix("PEP_000039_second_test_data_set", "RX-PV1_04") == 20.00);
+		REQUIRE(joined_matrix("PEP_000039_first_test_data_set", "RX-PV1_04") == 0.00);
+		REQUIRE(joined_matrix("PEP_006803_first_test_data_set", "RX-PV1_04") == 0.00);
+
+		REQUIRE(joined_matrix("PEP_003001_first_test_data_set", "RX-PV1_12") == 0.00);
+		REQUIRE(joined_matrix("PEP_006803_second_test_data_set", "RX-PV1_12") == 10.00);
+		REQUIRE(joined_matrix("PEP_003001_second_test_data_set", "RX-PV1_12") == 57.00);
+		REQUIRE(joined_matrix("PEP_000039_second_test_data_set", "RX-PV1_12") == 9.00);
+		REQUIRE(joined_matrix("PEP_000039_first_test_data_set", "RX-PV1_12") == 0.00);
+		REQUIRE(joined_matrix("PEP_006803_first_test_data_set", "RX-PV1_12") == 0.00);
+
+		REQUIRE(joined_matrix("PEP_003001_first_test_data_set", "RX-PV1_06") == 18.00);
+		REQUIRE(joined_matrix("PEP_006803_second_test_data_set", "RX-PV1_06") == 14.00);
+		REQUIRE(joined_matrix("PEP_003001_second_test_data_set", "RX-PV1_06") == 0.00);
+		REQUIRE(joined_matrix("PEP_000039_second_test_data_set", "RX-PV1_06") == 12.00);
+		REQUIRE(joined_matrix("PEP_000039_first_test_data_set", "RX-PV1_06") == 10.00);
+		REQUIRE(joined_matrix("PEP_006803_first_test_data_set", "RX-PV1_06") == 0.00);
+
+		REQUIRE(joined_matrix("PEP_003001_first_test_data_set", "RX-PV1_02") == 12.00);
+		REQUIRE(joined_matrix("PEP_006803_second_test_data_set", "RX-PV1_02") == 0.00);
+		REQUIRE(joined_matrix("PEP_003001_second_test_data_set", "RX-PV1_02") == 0.00);
+		REQUIRE(joined_matrix("PEP_000039_second_test_data_set", "RX-PV1_02") == 0.00);
+		REQUIRE(joined_matrix("PEP_000039_first_test_data_set", "RX-PV1_02") == 30.00);
+		REQUIRE(joined_matrix("PEP_006803_first_test_data_set", "RX-PV1_02") == 5.00);
+	}
+}
 
 TEST_CASE( "Subjoin name list filter is optional", "[module_subjoin]" )
 {
@@ -2491,6 +4220,441 @@ TEST_CASE( "Subjoin name list filter is optional", "[module_subjoin]" )
     opts.out_matrix_fname = "../test/test_subjoin_output.txt";
     opts.input_matrix_name_pairs.emplace_back( std::make_pair( "../test/input_data/test_score_matrix.tsv", "" ) );
     mod.run( &opts );
+}
+
+TEST_CASE("Verify metadata map construction operation", "[metadata_map]")
+{
+    std::string metadata_map_fname = "../test/input_data/full_design_clean_min30_taxtweak_100perc_jingmens_2019-09-12_segment.metadata";
+}
+
+TEST_CASE("Full test of link module's individual methods", "[module_link]")
+{
+	module_link link_mod;
+
+	SECTION("Testing prot map creation")
+	{
+        std::vector<std::vector<scored_entity<std::string, double>>> expected_entities = {
+            { // GTGA
+                scored_entity<std::string, double>("2232", 1.00)
+            },
+            { // AGGA
+                scored_entity<std::string, double>("4857", 1.00)
+            },
+            { // GTTA
+                scored_entity<std::string, double>("1432", 1.00)
+            },
+            { // AAAG
+                scored_entity<std::string, double>("8453", 1.00),
+                scored_entity<std::string, double>("1432", 1.00),
+                scored_entity<std::string, double>("4857", 1.00),
+                scored_entity<std::string, double>("2232", 1.00)
+            },
+            { // AGTT
+                scored_entity<std::string, double>("1432", 1.00),
+                scored_entity<std::string, double>("2232", 1.00)
+            },
+            { // TTAG
+                scored_entity<std::string, double>("1432", 1.00),
+                scored_entity<std::string, double>("4857", 1.00)
+            },
+            { // AAGT
+                scored_entity<std::string, double>("1432", 1.00),
+                scored_entity<std::string, double>("2232", 1.00)
+            },
+            { // TAGG
+                scored_entity<std::string, double>("4857", 1.00)
+            },
+            { // GGAA
+                scored_entity<std::string, double>("4857", 1.00)
+            },
+            { // GAAG
+                scored_entity<std::string, double>("8453", 1.00)
+            },
+            { // TGAA
+                scored_entity<std::string, double>("8453", 1.00),
+                scored_entity<std::string, double>("2232", 1.00)
+            },
+            { // GAAA
+                scored_entity<std::string, double>("8453", 1.00),
+                scored_entity<std::string, double>("1432", 1.00),
+                scored_entity<std::string, double>("4857", 1.00),
+                scored_entity<std::string, double>("2232", 1.00)
+            },
+            { // AAGA
+                scored_entity<std::string, double>("8453", 1.00)
+            },
+            { // AGAA
+                scored_entity<std::string, double>("8453", 1.00)
+            }
+        };
+        std::unordered_map<
+            std::string,
+            std::unordered_set<scored_entity<std::string, double>>
+        > dest_kmer_map;
+
+		std::vector<sequence> seq_vec = {
+			sequence(
+				">ID=AHGTV_HH1 AC=ATFGDDVAHS_6TT OXX=4672,5934,8891,8453",
+				"TGAAGAAAG"
+			),
+			sequence(
+				">ID=AVFTGS_RR3 AC=UJDNNDFMT_PI6 OXX=5864,1342,0795,1432",
+				"GAAAGTTAG"
+			),
+			sequence(
+				">ID=GTHYVS_PPE AC=GWVBHW5FH_WT6 OXX=7284,8492,1189,4857",
+				"TTAGGAAAG"
+			),
+			sequence(
+				">ID=XCCSBV_THS AC=QQWVTH6HY_EHR OXX=5362,0958,4782,2232",
+				"GTGAAAGTT"
+			)
+		};
+
+		link_mod.create_prot_map<std::size_t>(
+			dest_kmer_map, seq_vec, 4, 3
+		);
+
+        REQUIRE(dest_kmer_map.size() == 14);
+
+        auto found = dest_kmer_map.find("GTGA");
+        REQUIRE(found != dest_kmer_map.end());
+        auto entity_set = found->second;
+        REQUIRE(entity_set.find(expected_entities[0][0]) != entity_set.end());
+
+        found = dest_kmer_map.find("AGGA");
+        REQUIRE(found != dest_kmer_map.end());
+        entity_set = found->second;
+        REQUIRE(entity_set.find(expected_entities[1][0]) != entity_set.end());
+
+        found = dest_kmer_map.find("GTTA");
+        REQUIRE(found != dest_kmer_map.end());
+        entity_set = found->second;
+        REQUIRE(entity_set.find(expected_entities[2][0]) != entity_set.end());
+
+        found = dest_kmer_map.find("AAAG");
+        REQUIRE(found != dest_kmer_map.end());
+        entity_set = found->second;
+        REQUIRE(entity_set.find(expected_entities[3][0]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[3][1]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[3][2]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[3][3]) != entity_set.end());
+
+        found = dest_kmer_map.find("AGTT");
+        REQUIRE(found != dest_kmer_map.end());
+        entity_set = found->second;
+        REQUIRE(entity_set.find(expected_entities[4][0]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[4][1]) != entity_set.end());
+
+        found = dest_kmer_map.find("TTAG");
+        REQUIRE(found != dest_kmer_map.end());
+        entity_set = found->second;
+        REQUIRE(entity_set.find(expected_entities[5][0]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[5][1]) != entity_set.end());
+
+        found = dest_kmer_map.find("AAGT");
+        REQUIRE(found != dest_kmer_map.end());
+        entity_set = found->second;
+        REQUIRE(entity_set.find(expected_entities[6][0]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[6][1]) != entity_set.end());
+
+        found = dest_kmer_map.find("TAGG");
+        REQUIRE(found != dest_kmer_map.end());
+        entity_set = found->second;
+        REQUIRE(entity_set.find(expected_entities[7][0]) != entity_set.end());
+
+        found = dest_kmer_map.find("GGAA");
+        REQUIRE(found != dest_kmer_map.end());
+        entity_set = found->second;
+        REQUIRE(entity_set.find(expected_entities[8][0]) != entity_set.end());
+
+        found = dest_kmer_map.find("GAAG");
+        REQUIRE(found != dest_kmer_map.end());
+        entity_set = found->second;
+        REQUIRE(entity_set.find(expected_entities[9][0]) != entity_set.end());
+
+        found = dest_kmer_map.find("TGAA");
+        REQUIRE(found != dest_kmer_map.end());
+        entity_set = found->second;
+        REQUIRE(entity_set.find(expected_entities[10][0]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[10][1]) != entity_set.end());
+
+        found = dest_kmer_map.find("GAAA");
+        REQUIRE(found != dest_kmer_map.end());
+        entity_set = found->second;
+        REQUIRE(entity_set.find(expected_entities[11][0]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[11][1]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[11][2]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[11][3]) != entity_set.end());
+
+        found = dest_kmer_map.find("AAGA");
+        REQUIRE(found != dest_kmer_map.end());
+        entity_set = found->second;
+        REQUIRE(entity_set.find(expected_entities[12][0]) != entity_set.end());
+
+        found = dest_kmer_map.find("AGAA");
+        REQUIRE(found != dest_kmer_map.end());
+        entity_set = found->second;
+        REQUIRE(entity_set.find(expected_entities[13][0]) != entity_set.end());
+	}
+	SECTION("Testing pep map creation")
+	{
+        std::unordered_map<
+            std::string,
+            std::unordered_set<scored_entity<std::string, double>>
+        > kmer_map = {
+            {
+                "AAAG",
+                {
+                    scored_entity<std::string, double>("8453", 1.00), scored_entity<std::string, double>("1432", 1.00),
+                    scored_entity<std::string, double>("4857", 1.00), scored_entity<std::string, double>("2232", 1.00)
+                }
+            },
+            {
+                "TGAA",
+                {
+                    scored_entity<std::string, double>("8453", 1.00), scored_entity<std::string, double>("4857", 1.00),
+                    scored_entity<std::string, double>("2232", 1.00)
+                }
+            }
+        };
+
+		std::vector<sequence> seq_vec = {
+			sequence(
+				">ID=AHGTV_HH1 AC=ATFGDDVAHS_6TT OXX=4672,5934,8891,8453",
+				"ATTAACCTGGTCGTGAAAG"
+			),
+			sequence(
+				">ID=AVFTGS_RR3 AC=UJDNNDFMT_PI6 OXX=5864,1342,0795,1432",
+				"GTGAAAGGGTCCCTGGAAAG"
+			),
+			sequence(
+				">ID=GTHYVS_PPE AC=GWVBHW5FH_WT6 OXX=7284,8492,1189,4857",
+				"TTAGATTGTGTCCCGAAAGT"
+			),
+			sequence(
+				">ID=XCCSBV_THS AC=QQWVTH6HY_EHR OXX=5362,0958,4782,2232",
+				"TGGTCGTGAAAGTTAGATTA"
+			)
+		};
+
+        std::vector<std::vector<scored_entity<std::string, double>>> expected_entities = {
+            {
+                scored_entity<std::string, double>("2232", 2.00),
+                scored_entity<std::string, double>("4857", 2.00),
+                scored_entity<std::string, double>("8453", 2.00),
+                scored_entity<std::string, double>("1432", 1.00)
+            },
+            {
+                scored_entity<std::string, double>("2232", 3.00),
+                scored_entity<std::string, double>("4857", 3.00),
+                scored_entity<std::string, double>("8453", 3.00),
+                scored_entity<std::string, double>("1432", 2.00)
+            },
+            {
+                scored_entity<std::string, double>("2232", 1.00),
+                scored_entity<std::string, double>("4857", 1.00),
+                scored_entity<std::string, double>("8453", 1.00),
+                scored_entity<std::string, double>("1432", 1.00)
+            },
+            {
+                scored_entity<std::string, double>("2232", 2.00),
+                scored_entity<std::string, double>("4857", 2.00),
+                scored_entity<std::string, double>("8453", 2.00),
+                scored_entity<std::string, double>("1432", 1.00)
+            }
+        };
+
+		std::vector<
+			std::tuple<
+				std::string,
+                std::unordered_set<
+				    scored_entity<std::string, double>
+				>
+			>
+		> dest_pep_vec;
+		link_mod.create_pep_map(kmer_map, dest_pep_vec, seq_vec, 4);
+
+        REQUIRE(dest_pep_vec.size() == 4);
+
+        auto pep = dest_pep_vec.begin();
+        auto entity_set = std::get<1>(*pep);
+        REQUIRE(std::get<0>(*pep).compare(">ID=AHGTV_HH1 AC=ATFGDDVAHS_6TT OXX=4672,5934,8891,8453") == 0);
+        REQUIRE(entity_set.find(expected_entities[0][0]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[0][1]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[0][2]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[0][3]) != entity_set.end());
+
+        pep++;
+        entity_set = std::get<1>(*pep);
+        REQUIRE(std::get<0>(*pep).compare(">ID=AVFTGS_RR3 AC=UJDNNDFMT_PI6 OXX=5864,1342,0795,1432") == 0);
+        REQUIRE(entity_set.find(expected_entities[1][0]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[1][1]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[1][2]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[1][3]) != entity_set.end());
+
+        pep++;
+        entity_set = std::get<1>(*pep);
+        REQUIRE(std::get<0>(*pep).compare(">ID=GTHYVS_PPE AC=GWVBHW5FH_WT6 OXX=7284,8492,1189,4857") == 0);
+        REQUIRE(entity_set.find(expected_entities[2][0]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[2][1]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[2][2]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[2][3]) != entity_set.end());
+
+        pep++;
+        entity_set = std::get<1>(*pep);
+        REQUIRE(std::get<0>(*pep).compare(">ID=XCCSBV_THS AC=QQWVTH6HY_EHR OXX=5362,0958,4782,2232") == 0);
+        REQUIRE(entity_set.find(expected_entities[3][0]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[3][1]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[3][2]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[3][3]) != entity_set.end());
+	}
+	SECTION("Testing pep map creation with kmer penalty")
+	{
+        std::unordered_map<
+            std::string,
+            std::unordered_set<scored_entity<std::string, double>>
+        > kmer_map = {
+            {
+                "AAAG",
+                {
+                    scored_entity<std::string, double>("8453", 1.00),
+                    scored_entity<std::string, double>("1432", 1.00),
+                    scored_entity<std::string, double>("4857", 1.00),
+                    scored_entity<std::string, double>("2232", 1.00)
+                }
+            },
+            {
+                "TGAA",
+                {
+                    scored_entity<std::string, double>("8453", 1.00),
+                    scored_entity<std::string, double>("4857", 1.00),
+                    scored_entity<std::string, double>("2232", 1.00)
+                }
+            }
+        };
+
+        std::vector<sequence> seq_vec = {
+            sequence(
+                ">ID=XFYYS_THS AC=YYWHC6_TG OXX=7823,1048,2938",
+                "ATTGACTGAA"
+            ),
+            sequence(
+                ">ID=VVBT03_23 AC=BAUCH77_T OXX=1242,9991,8991",
+                "GAAAGTGAAC"
+            ),
+            sequence(
+                ">ID=BNYSS_06S AC=HISTAA_WQ OXX=8923,1213,0019",
+                "GATGAACGAT"
+            ),
+            sequence(
+                ">ID=HHNIS_01S AC=UUNOUU_12 OXX=9901,1248,2312",
+                "GTACAAAAAG"
+            )
+        };
+
+        std::vector<std::vector<scored_entity<std::string, double>>>
+            expected_entities = {
+                {
+                    scored_entity<std::string, double>("8453", 0.33),
+                    scored_entity<std::string, double>("4857", 0.33),
+                    scored_entity<std::string, double>("2232", 0.33)
+                },
+                {
+                    scored_entity<std::string, double>("8453", 0.83),
+                    scored_entity<std::string, double>("1432", 0.50),
+                    scored_entity<std::string, double>("4857", 0.83),
+                    scored_entity<std::string, double>("2232", 0.83)
+                },
+                {
+                    scored_entity<std::string, double>("8453", 0.33),
+                    scored_entity<std::string, double>("4857", 0.33),
+                    scored_entity<std::string, double>("2232", 0.33)
+                },
+                {
+                    scored_entity<std::string, double>("8453", 0.50),
+                    scored_entity<std::string, double>("1432", 0.50),
+                    scored_entity<std::string, double>("4857", 0.50),
+                    scored_entity<std::string, double>("2232", 0.50)
+                }
+            };
+
+        std::vector<
+            std::tuple<
+                std::string,
+                std::unordered_set<
+                    scored_entity<std::string, double>
+                >
+            >
+        > dest_pep_vec;
+        link_mod.create_pep_map_with_kmer_penalty(kmer_map, dest_pep_vec, seq_vec, 4);
+
+        REQUIRE(dest_pep_vec.size() == 4);
+
+        auto pep = dest_pep_vec.begin();
+        auto entity_set = std::get<1>(*pep);
+        REQUIRE(std::get<0>(*pep).compare(">ID=XFYYS_THS AC=YYWHC6_TG OXX=7823,1048,2938") == 0);
+        REQUIRE(entity_set.find(expected_entities[0][0]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[0][1]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[0][2]) != entity_set.end());
+
+        pep++;
+        entity_set = std::get<1>(*pep);
+        REQUIRE(std::get<0>(*pep).compare(">ID=VVBT03_23 AC=BAUCH77_T OXX=1242,9991,8991") == 0);
+        REQUIRE(entity_set.find(expected_entities[1][0]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[1][1]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[1][2]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[1][3]) != entity_set.end());
+
+        pep++;
+        entity_set = std::get<1>(*pep);
+        REQUIRE(std::get<0>(*pep).compare(">ID=BNYSS_06S AC=HISTAA_WQ OXX=8923,1213,0019") == 0);
+        REQUIRE(entity_set.find(expected_entities[2][0]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[2][1]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[2][2]) != entity_set.end());
+
+        pep++;
+        entity_set = std::get<1>(*pep);
+        REQUIRE(std::get<0>(*pep).compare(">ID=HHNIS_01S AC=UUNOUU_12 OXX=9901,1248,2312") == 0);
+        REQUIRE(entity_set.find(expected_entities[3][0]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[3][1]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[3][2]) != entity_set.end());
+        REQUIRE(entity_set.find(expected_entities[3][3]) != entity_set.end());
+	}
+	SECTION("Testing verification of ID type with ID index")
+	{
+        // subverts ambiguity when calling verify_id_type() with 0
+        auto verify_id_wrapper = [&link_mod](std::string name, std::size_t retr)
+        {
+            return link_mod.verify_id_type(name, retr);
+        };
+
+		sequence seq(
+			">ID=HNAC_EYY AC=KANMEA_R45 OXX=2412,9242,2445,4545",
+			"GTAGCTTTCGACCGCTAGGCTAGCCCGAGATCGC"
+		);
+
+        REQUIRE(verify_id_wrapper(seq.name, 0).compare("2412") == 0);
+		REQUIRE(verify_id_wrapper(seq.name, 0).compare("2412") == 0);
+		REQUIRE(verify_id_wrapper(seq.name, 1).compare("9242") == 0);
+		REQUIRE(verify_id_wrapper(seq.name, 2).compare("2445") == 0);
+		REQUIRE(verify_id_wrapper(seq.name, 3).compare("4545") == 0);
+	}
+	SECTION("Testing verification of ID type with map of species IDs")
+	{
+		sequence seq(
+			">ID=HNAC_EYY AC=KANMEA_R45 OXX=2412,9242,2445,4545",
+			"GTAGCTTTCGACCGCTAGGCTAGCCCGAGATCGC"
+		);
+
+		std::unordered_map<std::string, std::string> id_map = {
+			{">ID=HNAC_EYY AC=KANMEA_R45 OXX=2412,9242,2445,4545", "8892"},
+            {">ID=YACD_EYY AC=NALMEA_R46 OXX=2563,9281,5823,4829", "7183"},
+            {">ID=AHHC_IWO AC=YYYTWA_B25 OXX=0131,0992,8819,1121", "0914"}
+		};
+
+		REQUIRE(link_mod.verify_id_type(seq.name, &id_map).compare("8892") == 0);
+	}
 }
 
 TEST_CASE( "Metadata file can be given in place of taxonomic id index", "[module_link]" )
@@ -2509,78 +4673,123 @@ TEST_CASE( "Metadata file can be given in place of taxonomic id index", "[module
         std::string metadata_spec_id = metadata_map::get_id( ">ID=A0A2Z4GZU5_HHV1 AC=A0A2Z4GZU5 OXX=10298,10298,10294,10292", &meta_map );
         REQUIRE( id_index_spec_id.compare( metadata_spec_id ) == 0 );
     }
-
-    // SECTION( "Verifying metadata file usage feature successfully performs and integrates with link module." )
-    // {
-    //     module_link mod;
-    //     options_link opts;
-    //     opts.metadata_fname =  "../test/input_data/full_design_clean_min30_taxtweak_100perc_jingmens_2019-09-12_segment.metadata,Name,Species";
-    //     opts.prot_file_fname = "../test/input_data/full_design_clean_min30_taxtweak_100perc_jingmens_2019-09-12_segment.fasta";
-    //     opts.peptide_file_fname = "../test/input_data/PV1_10K3000_53_encoded_segment.faa";
-    //     opts.kmer_size = 7;
-    //     opts.output_fname = "../test/test_metadata_output.txt";
-    //     mod.run( &opts );
-    //     REQUIRE( !opts.output_fname.empty() );
-    // }
-
+    /* TODO: fix error in integration section
+    SECTION( "Verifying metadata file usage feature successfully performs and integrates with link module." )
+    {
+        std::cout << "\n\n\nBeginning of metadata file usage test...\n";
+        module_link mod;
+        options_link opts;
+        opts.metadata_fname =  "../test/input_data/full_design_clean_min30_taxtweak_100perc_jingmens_2019-09-12_segment.metadata,Name,Species";
+        opts.prot_file_fname = "../test/input_data/full_design_clean_min30_taxtweak_100perc_jingmens_2019-09-12_segment.fasta";
+        opts.peptide_file_fname = "../test/input_data/PV1_10K3000_53_encoded_segment.faa";
+        opts.kmer_size = 7;
+        opts.output_fname = "../test/test_metadata_output.txt";
+        mod.run( &opts );
+        REQUIRE( !opts.output_fname.empty() );
+        std::cout << "End of metadata file usage test!\n\n\n";
+    }
+    */
 }
 
-// TEST_CASE( "Discard outliers of bin distribution by trimming for further calculation", "[module_zscore]" )
-// {
-//     SECTION( "Verify highest density interval option properly trims distribution" )
-//     {
-//         module_zscore mod = module_zscore();
-//         options_zscore opts = options_zscore();
-//         peptide_score_data_sample_major input;
-//         opts.in_fname = "../../../../Downloads/combo_norm_avgSBdiff.tsv";
-//         opts.in_bins_fname = "../../../../Downloads/NS30_IgG_combo_SB4_300r1.tsv";
-//         opts.out_fname = "../../../../Downloads/zscore_test_hdi_output.tsv";
-//         opts.hpd_percent = 0.75;
-//         peptide_scoring::parse_peptide_scores( input, opts.in_fname );
-//         std::ifstream bins_file( opts.in_bins_fname, std::ios_base::in );
-//         bin_collection peptide_bins = peptide_bin_io::parse_bins( bins_file );
-//         auto& zscore_matrix = input.scores;
-//         std::vector<nan_report> nan_values;
-//         for( const auto sample_pair : zscore_matrix.get_row_labels() )
-//             {
-//                 std::string sample_name = sample_pair.first;
+TEST_CASE("Test zscore calculation", "[module_zscore]")
+{
+	SECTION("Run symmetrical trim option")
+	{
+		module_zscore z_mod;
+		options_zscore z_opts;
+		std::vector<nan_report> nan_values;
+		peptide_score_data_sample_major input_data;
 
-//                 mod.calculate_zscores(  peptide_bins,
-//                                         &opts,
-//                                         zscore_matrix,
-//                                         sample_name,
-//                                         std::back_inserter( nan_values )
-//                                      );
-//             }
-//         peptide_scoring::write_peptide_scores( opts.out_fname, input );
-//     }
+		z_opts.in_fname = "../test/input_data/test_zscore_score_matrix.tsv";
+		z_opts.in_bins_fname = "../test/input_data/test_zscore_bins.tsv";
+		z_opts.out_fname = "../test/test_zscore_trim_output.tsv";
+		z_opts.hpd_percent = 0.00;
+		z_opts.trim_percent = 0.90;
+		
+		std::ifstream bins_file(z_opts.in_bins_fname, std::ios_base::in);
 
-//     SECTION( "Verify symmetrical trim option properly trims both head and tail" )
-//     {
-//         module_zscore mod = module_zscore();
-//         options_zscore opts = options_zscore();
-//         peptide_score_data_sample_major input;
-//         opts.in_fname = "../../../../Downloads/combo_norm_avgSBdiff.tsv";
-//         opts.in_bins_fname = "../../../../Downloads/NS30_IgG_combo_SB4_300r1.tsv";
-//         opts.out_fname = "../../../../Downloads/zscore_test_trim_output.tsv";
-//         opts.hpd_percent = 0.0;
-//         opts.trim_percent = 0.90;
-//         peptide_scoring::parse_peptide_scores( input, opts.in_fname );
-//         std::ifstream bins_file( opts.in_bins_fname, std::ios_base::in );
-//         bin_collection peptide_bins = peptide_bin_io::parse_bins( bins_file );
-//         auto& zscore_matrix = input.scores;
-//         std::vector<nan_report> nan_values;
-//         for( const auto sample_pair : zscore_matrix.get_row_labels() )
-//             {
-//                 std::string sample_name = sample_pair.first;
+		peptide_scoring::parse_peptide_scores(input_data, z_opts.in_fname);
+		bin_collection peptide_bins = peptide_bin_io::parse_bins(bins_file);
 
-//                 mod.calculate_zscores(  peptide_bins,
-//                                         &opts,
-//                                         zscore_matrix,
-//                                         sample_name,
-//                                         std::back_inserter( nan_values )
-//                                      );
-//             }
-//         peptide_scoring::write_peptide_scores( opts.out_fname, input );
-//     }
-// }
+		auto& zscore_matrix = input_data.scores;
+		for (const auto sample_pair : zscore_matrix.get_row_labels())
+		{
+			std::string sample_name = sample_pair.first;
+			z_mod.calculate_zscores(
+				peptide_bins, &z_opts, zscore_matrix,
+				sample_name, std::back_inserter(nan_values)
+			);
+		}
+		peptide_scoring::write_peptide_scores(z_opts.out_fname, input_data);
+	}
+	SECTION("Verify trim option properly trims both head and tail")
+	{
+		std::ifstream ifexpected(
+			"../test/expected/test_expected_zscore_trim_output.tsv",
+			std::ios_base::in
+		);
+		std::ifstream ifactual(
+			"../test/test_zscore_trim_output.tsv",
+			std::ios_base::in
+		);
+		std::string expected_line;
+		std::string actual_line;
+
+		while (!ifexpected.eof() && !ifactual.eof())
+		{
+			std::getline(ifexpected, expected_line);
+			std::getline(ifactual, actual_line);
+			REQUIRE(expected_line.compare(actual_line) == 0);
+		}
+	}
+	SECTION("Run highest density interval (hdi) option")
+	{
+		module_zscore z_mod;
+		options_zscore z_opts;
+		std::vector<nan_report> nan_values;
+		peptide_score_data_sample_major input_data;
+
+		z_opts.in_fname = "../test/input_data/test_zscore_score_matrix.tsv";
+		z_opts.in_bins_fname = "../test/input_data/test_zscore_bins.tsv";
+		z_opts.out_fname = "../test/test_zscore_hdi_output.tsv";
+		z_opts.hpd_percent = 0.75;
+		z_opts.trim_percent = 0.00;
+		
+		std::ifstream bins_file(z_opts.in_bins_fname, std::ios_base::in);
+
+		peptide_scoring::parse_peptide_scores(input_data, z_opts.in_fname);
+		bin_collection peptide_bins = peptide_bin_io::parse_bins(bins_file);
+
+		auto& zscore_matrix = input_data.scores;
+		for (const auto sample_pair : zscore_matrix.get_row_labels())
+		{
+			std::string sample_name = sample_pair.first;
+			z_mod.calculate_zscores(
+				peptide_bins, &z_opts, zscore_matrix,
+				sample_name, std::back_inserter(nan_values)
+			);
+		}
+		peptide_scoring::write_peptide_scores(z_opts.out_fname, input_data);
+	}
+	SECTION("Verify high density interval option properly trimmed distribution")
+	{
+		std::ifstream ifexpected(
+			"../test/expected/test_expected_zscore_hdi_output.tsv",
+			std::ios_base::in
+		);
+		std::ifstream ifactual(
+			"../test/test_zscore_hdi_output.tsv",
+			std::ios_base::in
+		);
+		std::string expected_line;
+		std::string actual_line;
+
+		while (!ifexpected.eof() && !ifactual.eof())
+		{
+			std::getline(ifexpected, expected_line);
+			std::getline(ifactual, actual_line);
+			REQUIRE(expected_line.compare(actual_line) == 0);
+		}
+	}
+}
+
