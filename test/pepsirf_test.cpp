@@ -407,55 +407,6 @@ TEST_CASE("Full test of setops' proper functionality", "[setops]")
 			i += 1;
 		}
 	}
-
-	// testing set_difference()
-	/* TODO: review logic of operation -> recommend getting rid of method
-	SECTION("set_difference() returns expecetd")
-	{
-		std::set<int> int_set1 = {66, 12, 1, 0, 8, 16};
-		std::set<int> int_set2 = {12, 16, 22, 50, 7, 66};
-		std::set<int> dest_set;
-		std::vector<int> expected_set = {0, 1, 8};
-
-		// capture result of set_difference in dest vector
-		set_difference(dest_set, int_set1, int_set2);
-
-		// verify dest vector is expected
-		REQUIRE(dest_set.size() == expected_set.size());
-		std::size_t i = 0;
-		for (auto dest_it : dest_set)
-		{
-			REQUIRE(dest_it == expected_set[i]);
-			i += 1;
-		}
-	}
-	*/
-
-	// testing set_symmetric_difference()
-	/*	TODO: ask if this function has been used at all -> recommend getting rid of method
-	SECTION("set_symmetric_difference() returns expected")
-	{
-		std::set<int> int_set1 = {13, 0, 1, 6, 11, 30, 70};
-		std::set<int> int_set2 = {0, 11, 50, 60, 70, 6, 100};
-		std::set<int> dest_set;
-
-		// A - B = {13, 1, 30}
-		// B - A = {50, 60, 100}
-		std::vector<int> expected_set = {1, 13, 30, 50, 60, 100};
-
-		// capture result of set_symmetric_difference()
-		set_symmetric_difference<int, int>(dest_set, int_set1, int_set2);
-
-		// verify dest vector is expected
-		REQUIRE(dest_set.size() == expected_set.size());
-		std::size_t i = 0;
-		for (auto dest_it : dest_set)
-		{
-			REQUIRE(dest_it == expected_set[i]);
-			i += 1;
-		}
-	}
-	*/
 }
 
 TEST_CASE( "Add seqs to map", "[module_demux]" )
@@ -1424,64 +1375,8 @@ TEST_CASE( "get_map_value", "[module_deconv]" )
     REQUIRE( mod.get_map_value( map, 5, 9 ) == 9 );
 }
 
-// TODO: recommend removing commentted binary operations and other commentted
-// operations
 TEST_CASE("Full test of util's individual methods", "[util]")
 {
-	/* methods are superfluous, get rid of tests
-	SECTION("Test adding two things")
-	{
-		SECTION("9 plus 9 is equal to 18")
-		{
-			REQUIRE(add(9, 9) == 18);
-		}
-		SECTION("10.47 plus 9.53 is equal to 20.00")
-		{
-			REQUIRE(add(10.47, 9.53) == 20.00);
-		}
-		SECTION("-24.34 plus 6.70 is equal to -17.64")
-		{
-			REQUIRE(add(-24.34, 6.70));
-		}
-	}
-	SECTION("Test subtrating a thing from another")
-	{
-		SECTION("9 minus 2 is equal to 7")
-		{
-		}
-		SECTION("10 minus -10 is equal to 20")
-		{
-		}
-		SECTION("5.00 minus 0.53 is equal to 4.47")
-		{
-		}
-	}
-	SECTION("Test multiplying two things")
-	{
-		SECTION("9 multiplied by 2 is equal to 18")
-		{
-		}
-		SECTION("18 multiplied by -3 is equal to -54")
-		{
-		}
-		SECTION("5.48 multiplied by 31.26 is equal to 171.3048")
-		{
-		}
-	}
-	SECTION("Test dividing a thing by another")
-	{
-		SECTION("10 divided by 5 is equal to 2")
-		{
-		}
-		SECTION("30 divided by -4 is equal to -7.5")
-		{
-		}
-		SECTION("-10.48 divided by -6.18 is equal to 1.69579288")
-		{
-		}
-	}
-	*/
-
 	SECTION("Test is_integer()")
 	{
 		SECTION("Is 9 an integer")
