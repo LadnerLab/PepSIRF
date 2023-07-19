@@ -644,28 +644,28 @@ TEST_CASE("Full test of info module", "[module_info]")
         // compare expected and actual sets
         REQUIRE(actual_set.size() == expected_set.size());
 
-        auto expected_ref = expected_set.find("BB.5_1X_NS30_B  2995.00");
+        auto expected_ref = expected_set.find("BB.5_1X_NS30_B\t2995.00");
         REQUIRE(actual_set.find(*expected_ref) != actual_set.end());
 
-        expected_ref = expected_set.find("BB.6_1X_NS30_A  49.00");
+        expected_ref = expected_set.find("BB.6_1X_NS30_A\t49.00");
         REQUIRE(actual_set.find(*expected_ref) != actual_set.end());
 
-        expected_ref = expected_set.find("BB.3_1X_NS30_B  1604.00");
+        expected_ref = expected_set.find("BB.3_1X_NS30_B\t1604.00");
         REQUIRE(actual_set.find(*expected_ref) != actual_set.end());
 
-        expected_ref = expected_set.find("BB.5_1X_NS30_C  1801.00");
+        expected_ref = expected_set.find("BB.5_1X_NS30_C\t1801.00");
         REQUIRE(actual_set.find(*expected_ref) != actual_set.end());
 
-        expected_ref = expected_set.find("BB.1_1X_NS30_A  327.00");
+        expected_ref = expected_set.find("BB.1_1X_NS30_A\t327.00");
         REQUIRE(actual_set.find(*expected_ref) != actual_set.end());
 
-        expected_ref = expected_set.find("BB.3_1X_NS30_A  1251.00");
+        expected_ref = expected_set.find("BB.3_1X_NS30_A\t1251.00");
         REQUIRE(actual_set.find(*expected_ref) != actual_set.end());
 
-        expected_ref = expected_set.find("BB.5_1X_NS30_A  1597.00");
+        expected_ref = expected_set.find("BB.5_1X_NS30_A\t1597.00");
         REQUIRE(actual_set.find(*expected_ref) != actual_set.end());
 
-        expected_ref = expected_set.find("BB.6_1X_NS30_B  963.00");
+        expected_ref = expected_set.find("BB.6_1X_NS30_B\t963.00");
         REQUIRE(actual_set.find(*expected_ref) != actual_set.end());
     }
 	SECTION("info module creates and calculates average matrix file")
