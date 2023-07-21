@@ -120,7 +120,7 @@ bool options_parser_enrich::parse( int argc, char ***argv, options *opts )
           "output file names. For a pair of samples, 'A' and 'B', the resulting file will "
           "have the name 'A~B' if this flag is not given. Otherwise, the given value will "
           "be used in place of '~'.\n"
-         )
+        )
         ( "output_filename_truncate", po::bool_switch( &opts_enrich->truncate_names )
           ->default_value( false ),
           "By default each filename in the output directory will include every replicate name "
@@ -139,6 +139,12 @@ bool options_parser_enrich::parse( int argc, char ***argv, options *opts )
           "Directory name to which output files will be written. An output file will be "
           "generated for each sample with at least one enriched peptide. This directory "
           "will be created by the module.\n"
+        )
+        ( "logfile", po::value( &opts_enrich->logfile )
+          ->default_value( "" ),
+          "Designated file to which the module's processes are logged. By "
+          "default, the logfile's name will include the module's name and the "
+          "time the module started running.\n"
         )
         ;
 

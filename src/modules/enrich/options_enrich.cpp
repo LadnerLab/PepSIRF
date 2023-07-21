@@ -23,6 +23,7 @@ std::string options_enrich::get_arguments()
            << "--join_on                    " << out_fname_join << "\n "
            << "--output_filename_truncate   "
            << "--output                     " << out_dirname << "\n "
+           << "--log_file                   " << logfile << "\n "
            << "\n"
         ;
 
