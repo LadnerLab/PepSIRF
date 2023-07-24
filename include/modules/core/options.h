@@ -25,6 +25,10 @@ public:
      *          '--arg_name argument' format.
      **/
     virtual std::string get_arguments();
+
+    /**
+     */
+    virtual std::string get_default_log();
 };
 
 #endif /* OPTIONS_HH_INCLUDED */

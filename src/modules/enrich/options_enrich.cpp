@@ -1,11 +1,18 @@
 #include "options_enrich.h"
 #include <sstream>
+#include <chrono>
+#include <ctime>
 #include "stream_tools.h"
 
 std::string options_enrich::get_arguments()
 {
     // enable ADL
     using namespace std;
+
+    if (logfile.empty())
+    {
+        logfile = get_default_log();
+    }
 
     std::ostringstream stream;
     stream << "--samples                    " << in_samples_fname << "\n "
@@ -29,3 +36,4 @@ std::string options_enrich::get_arguments()
 
     return stream.str();
 }
+
