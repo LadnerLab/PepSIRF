@@ -13,7 +13,7 @@ public:
     virtual ~options();
 
     // name of file to which runtime logs will be written
-    std::string logfile;
+    static std::string logfile;
 
     int num_threads; //!< The number of threads to use for computation.
     const int DEFAULT_NUM_THREADS; //!< The default number of threads to use
@@ -29,6 +29,10 @@ public:
     /**
      */
     virtual std::string get_default_log();
+
+    /**
+     */
+    static std::string get_logfile();
 };
 
 #endif /* OPTIONS_HH_INCLUDED */

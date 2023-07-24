@@ -4,6 +4,7 @@
 #include <fstream>
 #include <iostream>
 
+#include "logger.h"
 #include "module_enrich.h"
 #include "time_keep.h"
 #include "omp_opt.h"
@@ -17,6 +18,8 @@ void module_enrich::run( options *opts )
     options_enrich *e_opts = (options_enrich*) opts;
     time_keep::timer timer;
     timer.start();
+
+    info("Enrich module has started!");
 
     peptide_score_data_sample_major raw_scores;
     peptide_score_data_sample_major *raw_scores_ptr = nullptr;
