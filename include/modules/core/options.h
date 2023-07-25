@@ -23,17 +23,22 @@ public:
      * class by the command-line.
      * @returns String containing arguments, one per line. Arguments are formatted in 
      *          '--arg_name argument' format.
-     **/
+     */
     virtual std::string get_arguments();
 
     /**
+     * Sets the logfile name to the default dynamic name
+     * @return dynamic name which includes the module name and time of run
      */
-    virtual std::string get_default_log();
+    virtual std::string set_default_log();
 
     /**
+     * Gets the module's log file
+     * @return module's log file name
      */
     static std::string get_logfile();
 };
+
 
 #endif /* OPTIONS_HH_INCLUDED */
 

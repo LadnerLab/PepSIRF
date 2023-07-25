@@ -5,14 +5,7 @@
 
 class module
 {
-
- public:
-
-    /**
-     * Get the name of a module.
-     **/
-    std::string name;
-
+public:
     /**
      * Default constructor.
      **/
@@ -24,17 +17,24 @@ class module
     virtual ~module();
 
     /**
-     * Run a module.
+     * Name of the module
+     **/
+    static std::string name;
+
+    /**
+     * Retrieves the name of the module. 
+     * @returns string name of the module.
+     **/
+    static std::string get_name();
+
+    /**
+     * Run the module.
      * @param opts Pointer to an options object, each module will have 
      *        its own type of options. 
      **/
     virtual void run( options *opts );
-
-    /**
-     * Class to retrieve the name of a module. 
-     * @returns string name of a module.
-     **/
-    virtual std::string get_name();
-
 };
+
+
 #endif 
+

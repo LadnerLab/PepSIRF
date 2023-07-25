@@ -11,7 +11,7 @@ std::string options_enrich::get_arguments()
 
     if (logfile.empty())
     {
-        logfile = get_default_log();
+        logfile = set_default_log();
     }
 
     std::ostringstream stream;

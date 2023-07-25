@@ -13,12 +13,18 @@
 #include "file_io.h"
 #include "setops.h"
 
+module_enrich::module_enrich()
+{
+    name = "enrich";
+}
+
 void module_enrich::run( options *opts )
 {
     options_enrich *e_opts = (options_enrich*) opts;
     time_keep::timer timer;
     timer.start();
 
+    // for testing purposed -- remove
     info("Enrich module has started!");
 
     peptide_score_data_sample_major raw_scores;

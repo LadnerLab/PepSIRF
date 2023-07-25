@@ -5,7 +5,10 @@ module::module()
 {
     name = "default module";
 }
+
 module::~module() = default;
+
+std::string module::name = "";
 
 void module::run( options *opts )
 {
@@ -19,3 +22,4 @@ std::string module::get_name()
 {
     return name;
 }
+
