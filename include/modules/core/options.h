@@ -1,5 +1,6 @@
 #ifndef OPTIONS_HH_INCLUDED
 #define OPTIONS_HH_INCLUDED
+
 #include <string>
 
 /*! Data class to contain and handle 
@@ -27,16 +28,16 @@ public:
     virtual std::string get_arguments();
 
     /**
-     * Sets the logfile name to the default dynamic name
-     * @return dynamic name which includes the module name and time of run
-     */
-    virtual std::string set_default_log();
-
-    /**
      * Gets the module's log file
      * @return module's log file name
      */
     static std::string get_logfile();
+
+    /**
+     * Sets the logfile name to the default dynamic name
+     * @return dynamic name which includes the module name and time of run
+     */
+    virtual std::string set_default_log();
 };
 
 

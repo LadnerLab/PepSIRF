@@ -8,6 +8,11 @@
 #include "peptide_scoring.h"
 #include "file_io.h"
 
+module_info::module_info()
+{
+    name = "Info";
+}
+
 void module_info::run( options *opts )
 {
 

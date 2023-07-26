@@ -20,11 +20,6 @@ module_normalize::module_normalize()
     name = "Norm";
 }
 
-std::string module_normalize::get_name()
-{
-    return name;
-}
-
 void module_normalize::run( options *opts )
 {
     options_normalize *n_opts = (options_normalize*) opts;

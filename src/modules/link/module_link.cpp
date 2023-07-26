@@ -9,9 +9,10 @@
 #include <boost/algorithm/string/join.hpp>
 #include <boost/range/adaptor/transformed.hpp>
 
-
-
-module_link::module_link() = default;
+module_link::module_link()
+{
+    name = "Link";
+}
 
 void module_link::run( options *opts )
 {

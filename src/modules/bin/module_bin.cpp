@@ -6,7 +6,10 @@
 #include <fstream>
 #include <iomanip>
 
-module_bin::module_bin() = default;
+module_bin::module_bin()
+{
+    name = "Bin";
+}
 
 void module_bin::run( options *opts )
 {
