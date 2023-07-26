@@ -1,5 +1,7 @@
 #ifndef MODULE_ENRICH_HH_INCLUDED
 #define MODULE_ENRICH_HH_INCLUDED
+
+#include <map>
 #include <string>
 #include <type_traits>
 
@@ -7,7 +9,6 @@
 #include "options_enrich.h"
 #include "peptide_scoring.h"
 #include "paired_score.h"
-#include <map>
 
 class module_enrich : public module
 {

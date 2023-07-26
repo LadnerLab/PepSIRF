@@ -11,7 +11,10 @@
 #include <fstream>
 
 
-module_zscore::module_zscore() = default;
+module_zscore::module_zscore()
+{
+    name = "Zscore";
+}
 
 void module_zscore::run( options *opts )
 {

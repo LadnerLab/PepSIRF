@@ -9,7 +9,10 @@
 #include <algorithm>
 #include "time_keep.h"
 
-module_subjoin::module_subjoin() = default;
+module_subjoin::module_subjoin()
+{
+    name = "Subjoin";
+}
 
 module_subjoin::name_replacement_list
 module_subjoin::parse_namelist( std::vector<std::string>& dest,

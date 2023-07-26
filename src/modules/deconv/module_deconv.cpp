@@ -21,11 +21,9 @@
 #include "overlap_data.h"
 #include "distance_matrix.h"
 
-module_deconv::module_deconv() = default;
-
-std::string module_deconv::get_name()
+module_deconv::module_deconv()
 {
-    return "Deconv";
+    name = "Deconv";
 }
 
 void module_deconv::run( options *opts )
