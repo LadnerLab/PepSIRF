@@ -1,6 +1,7 @@
 #ifndef OPTIONS_HH_INCLUDED
 #define OPTIONS_HH_INCLUDED
 
+#include <ctime>
 #include <string>
 
 /*! Data class to contain and handle 
