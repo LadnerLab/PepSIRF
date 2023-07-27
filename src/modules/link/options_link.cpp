@@ -6,6 +6,11 @@ options_link::options_link() = default;
 
 std::string options_link::get_arguments()
 {
+    if (logfile.empty())
+    {
+        logfile = set_default_log();
+    }
+
     std::ostringstream str_stream;
 
     // returns the 'string' representation of a bool
@@ -19,7 +24,8 @@ std::string options_link::get_arguments()
                           " --tax_id_index                   " << id_index << "\n" <<
                           " --kmer_redundancy_control        " << bool_str( penalize_kmers )  << "\n" <<
                           " --output                         " << output_fname <<  "\n" <<
-                          " --kmer_size                      " << k <<  "\n"
+                          " --kmer_size                      " << k <<  "\n" <<
+                          " --logfile                        " << logfile << "\n"
                                                                << "\n"
                               ;
     return str_stream.str();

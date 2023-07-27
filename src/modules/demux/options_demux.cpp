@@ -8,6 +8,11 @@
 
 std::string options_demux::get_arguments()
 {
+    if (logfile.empty())
+    {
+        logfile = set_default_log();
+    }
+
     std::ostringstream str_stream;
 
     str_stream << "--input_r1              " << input_r1_fname << "\n" <<
@@ -31,7 +36,8 @@ std::string options_demux::get_arguments()
                   " --phred_min_score       " << min_phred_score << "\n" <<
                   " --concatemer            " << concatemer << "\n" <<
                   " --diagnostic_info       " << diagnostic_fname << "\n" <<
-                  " --fastq_output          " << fastq_out << "\n" 
+                  " --fastq_output          " << fastq_out << "\n" <<
+                  " --logfile               " << logfile << "\n"
                   "\n";
 
     return str_stream.str();

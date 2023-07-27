@@ -6,6 +6,11 @@ options_info::~options_info() = default;
 
 std::string options_info::get_arguments()
 {
+    if (logfile.empty())
+    {
+        logfile = set_default_log();
+    }
+
     std::ostringstream stream;
 
     stream
@@ -15,6 +20,7 @@ std::string options_info::get_arguments()
         << "--col_sums     " << out_col_sums_fname << "\n "  
         << "--rep_names    " << in_replicates_fname << "\n "
         << "--get_avgs     " << out_avgs_fname << "\n "
+        << "--logfile      " << logfile << "\n "
         << "\n"
         ;
 
