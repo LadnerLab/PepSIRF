@@ -1,5 +1,6 @@
 #include <numeric>
 
+#include "logger.h"
 #include "module_bin.h"
 #include "omp_opt.h"
 #include "time_keep.h"
@@ -17,6 +18,9 @@ void module_bin::run( options *opts )
     time_keep::timer timer;
     int min_bin_size_extension = 1;
     timer.start();
+
+    // testing purposes -- remove
+    info("Bin module has started!");
 
     peptide_score_data_sample_major input_data;
     peptide_scoring::parse_peptide_scores( input_data,

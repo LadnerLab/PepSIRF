@@ -7,15 +7,7 @@
 
 #include "options.h"
 
-void info(std::string info_str)
-{
-    std::ofstream log(options::get_logfile());
-
-    std::cout << info_str << "\n";
-    log << info_str << "\n";
-
-    log.close();
-}
+void info(std::string info_str);
 
 
 #endif /* LOGGER_H */

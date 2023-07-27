@@ -78,6 +78,7 @@ add_executable(pepsirf src/main.cpp)
 
 # Library common to all modules
 add_library(pepsirf_common STATIC src/modules/parsers/options_parser.cpp src/modules/core/options.cpp
+            src/modules/core/logger.cpp
             src/modules/core/sequence.cpp
             src/modules/core/file_io.cpp
 			src/modules/parsers/fastq_parser.cpp src/modules/parsers/fasta_parser.cpp
