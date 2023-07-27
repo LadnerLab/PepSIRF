@@ -2,6 +2,7 @@
 #include <exception>
 #include <stdlib.h>
 
+#include "logger.h"
 #include "options_parser.h"
 #include "options.h"
 #include "module.h"
@@ -43,12 +44,13 @@ int main( int argc, char **argv )
             if( !help_msg_only )
                 {
 				    // run PepSIRF with options parsed from command-line
-                    std::cout << "PepSIRF (v"
-                              << version_no << ") \n"
-                              << "Starting module "
-                              << init.get_module()->get_name()
-                              << " with arguments: \n "
-                              << init.get_opts()->get_arguments();
+                    info(
+                        "PepSIRF (v" + version_no + ")\n"
+                        + "Starting module "
+                        + init.get_module()->get_name()
+                        + " with arguments: \n"
+                        + init.get_opts()->get_arguments()
+                    );
 
                     init.get_module()->run( init.get_opts() );
                 }

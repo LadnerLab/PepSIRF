@@ -1,6 +1,7 @@
 #include <sstream>
 #include <stdexcept>
 
+#include "logger.h"
 #include "file_io.h"
 #include "module_demux.h"
 #include "fastq_sequence.h"
@@ -25,6 +26,8 @@ void module_demux::run( options *opts )
     std::mutex mtx;
 
     std::map<std::string, std::size_t> duplicate_map;
+
+    info("Demux module has started!");
 
     // fif use case
     std::vector<flex_idx> flexible_idx_data;
