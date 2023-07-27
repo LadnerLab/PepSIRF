@@ -38,7 +38,7 @@ public:
      * Sets the logfile name to the default dynamic name
      * @return dynamic name which includes the module name and time of run
      */
-    virtual std::string set_default_log();
+    std::string set_default_log();
 };
 
 
