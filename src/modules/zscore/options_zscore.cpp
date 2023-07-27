@@ -5,6 +5,10 @@ options_zscore::options_zscore() = default;
 
 std::string options_zscore::get_arguments()
 {
+    if (logfile.empty())
+    {
+        logfile = set_default_log();
+    }
 
     std::ostringstream str_stream;
 
@@ -15,6 +19,7 @@ std::string options_zscore::get_arguments()
                << "--output      " << out_fname << "\n "
                << "--nan_report  " << nan_report_fname << "\n "
                << "--num_threads " << num_threads << "\n "
+               << "--logfile     " << logfile << "\n "
                << "\n";
 
 

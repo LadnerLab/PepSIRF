@@ -5,6 +5,11 @@
 
 std::string options_deconv::get_arguments()
 {
+    if (logfile.empty())
+    {
+        logfile = set_default_log();
+    }
+
     std::ostringstream str_stream;
 
     // returns the 'string' representation of a bool
@@ -25,7 +30,8 @@ std::string options_deconv::get_arguments()
         " --scores_per_round        " << orig_scores_dname <<  "\n"
         " --peptide_assignment_map  " << species_peptides_out <<  "\n"
         " --mapfile_suffix          " << map_suffix <<  "\n"
-        " --enriched_file_ending    " << enriched_file_ending << "\n"
+        " --enriched_file_ending    " << enriched_file_ending << "\n" <<
+        " --logfile                 " << logfile << "\n"
         ;
 
     str_stream << "\n";

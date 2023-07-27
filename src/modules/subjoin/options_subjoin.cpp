@@ -62,6 +62,11 @@ options_subjoin::options_subjoin() = default;
 
 std::string options_subjoin::get_arguments()
 {
+    if (logfile.empty())
+    {
+        logfile = set_default_log();
+    }
+
     std::ostringstream str_stream;
 
     std::for_each( multi_matrix_name_pairs.begin(),
@@ -84,11 +89,11 @@ std::string options_subjoin::get_arguments()
                    }
                  );
     str_stream << "--filter_peptide_names " << std::boolalpha << !use_sample_names << "\n ";
-    str_stream << "--duplicate_evaluation " <<
-        evaluation_strategy::string_drs_map[ duplicate_resolution_strategy ]
-               << "\n ";
-    str_stream << "--output               " << out_matrix_fname << "\n " <<
-                  "\n";
+    str_stream << "--duplicate_evaluation "
+        << evaluation_strategy::string_drs_map[ duplicate_resolution_strategy ]
+        << "\n ";
+    str_stream << "--output               " << out_matrix_fname << "\n ";
+    str_stream << "--logfile              " << logfile << "\n " << "\n";
 
     return str_stream.str();
 }
