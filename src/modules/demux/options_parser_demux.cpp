@@ -166,7 +166,14 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
         )
         ( "num_threads,t", po::value<int>( &opts_demux->num_threads )->default_value( opts_demux->DEFAULT_NUM_THREADS ), "Number of threads to use for analyses.\n" )
         ( "fastq_output,q", po::value<std::string>( &opts_demux->fastq_out )->default_value( "" ),
-        "Include this to output sample-level fastq files");
+        "Include this to output sample-level fastq files")
+        (
+         "logfile", po::value( &opts_demux->logfile )
+         ->default_value( "" ),
+          "Designated file to which the module's processes are logged. By "
+          "default, the logfile's name will include the module's name and the "
+          "time the module started running.\n"
+        );
 
 
     po::store( po::command_line_parser( argc, *argv ).options( desc ).allow_unregistered().run(), vm);
