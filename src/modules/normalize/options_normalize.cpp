@@ -24,3 +24,4 @@ std::string options_normalize::get_arguments()
 
     return str_stream.str();
 }
+
