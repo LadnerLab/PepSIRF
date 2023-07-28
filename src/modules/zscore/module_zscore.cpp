@@ -1,3 +1,4 @@
+#include "logger.h"
 #include "module_zscore.h"
 #include "time_keep.h"
 #include "stats.h"

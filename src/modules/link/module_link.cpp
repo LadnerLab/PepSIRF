@@ -1,3 +1,4 @@
+#include "logger.h"
 #include "module_link.h"
 #include "kmer_tools.h"
 #include "fasta_parser.h"
