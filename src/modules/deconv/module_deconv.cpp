@@ -11,6 +11,7 @@
 #include <boost/range/iterator_range.hpp>
 #include <algorithm>
 
+#include "logger.h"
 #include "fs_tools.h"
 #include "module_deconv.h"
 #include "kmer_tools.h"

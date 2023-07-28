@@ -2,6 +2,7 @@
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string.hpp>
+#include "logger.h"
 #include "module_subjoin.h"
 #include "matrix.h"
 #include <iostream>

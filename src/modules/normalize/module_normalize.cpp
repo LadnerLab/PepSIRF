@@ -9,6 +9,7 @@
 #include <iomanip>
 #include <boost/algorithm/string.hpp>
 
+#include "logger.h"
 #include "module_normalize.h"
 #include "options_normalize.h"
 #include "time_keep.h"

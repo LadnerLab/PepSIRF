@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <boost/algorithm/find_backward.hpp> //TODO: include in header file
 
+#include "logger.h"
 #include "module_info.h"
 #include "peptide_scoring.h"
 #include "file_io.h"
