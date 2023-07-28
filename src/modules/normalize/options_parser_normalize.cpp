@@ -68,7 +68,15 @@ bool options_parser_normalize::parse( int argc, char ***argv, options *opts )
           "way the input file provided with 'peptide_scores' (i.e., a score matrix with samples "
           "on the columns and scores for a certain peptide on the rows). The score for each peptide "
           "in the output has been normalized in the manner specified.\n"
-        );
+        )
+        (
+         "logfile", po::value( &opts_normalize->logfile )
+         ->default_value( "" ),
+          "Designated file to which the module's processes are logged. By "
+          "default, the logfile's name will include the module's name and the "
+          "time the module started running.\n"
+        )
+        ;
 
     po::store( po::command_line_parser( argc, *argv ).options( desc ).run(), vm);
 

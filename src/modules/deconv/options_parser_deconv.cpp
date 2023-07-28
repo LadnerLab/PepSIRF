@@ -188,6 +188,13 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "Optional flag that specifies what string is expected at the end of each file containing enriched peptides. "
           "Set to \"_enriched.txt\" by default \n"
         )
+        (
+         "logfile", po::value( &opts_deconv->logfile )
+         ->default_value( "" ),
+          "Designated file to which the module's processes are logged. By "
+          "default, the logfile's name will include the module's name and the "
+          "time the module started running.\n"
+        )
         ;
 
     po::store( po::command_line_parser( argc, *argv ).options( desc ).run(), vm);

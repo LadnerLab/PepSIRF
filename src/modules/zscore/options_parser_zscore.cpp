@@ -131,6 +131,13 @@ bool options_parser_zscore::parse( int argc, char ***argv, options *opts )
           ->default_value( opts_zscore->DEFAULT_NUM_THREADS ),
           "The number of threads to use for analyses.\n"
         )
+        (
+         "logfile", po::value( &opts_zscore->logfile )
+         ->default_value( "" ),
+          "Designated file to which the module's processes are logged. By "
+          "default, the logfile's name will include the module's name and the "
+          "time the module started running.\n"
+        )
         ;
 
 

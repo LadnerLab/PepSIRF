@@ -55,6 +55,13 @@ bool options_parser_bin::parse( int argc, char ***argv, options *opts )
           "Name for the output bins file. This file will contain one bin per line and each bin "
           "will be a tab-delimited list of the names of the peptides in the bin.\n"
         )
+        (
+         "logfile", po::value( &opts_bin->logfile )
+         ->default_value( "" ),
+          "Designated file to which the module's processes are logged. By "
+          "default, the logfile's name will include the module's name and the "
+          "time the module started running.\n"
+        )
         ;
 
     po::store( po::command_line_parser( argc, *argv ).options( desc ).run(), vm);

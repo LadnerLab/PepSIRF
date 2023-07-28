@@ -181,6 +181,16 @@ bool options_parser_demux::parse(int argc, char ***argv, options *opts)
          " turned off and only the exact location specified will be checked"
          " for a match.\n"
          )
+        ("num_threads,t", po::value<int>( &opts_demux->num_threads )
+            ->default_value(opts_demux->DEFAULT_NUM_THREADS),
+         "Number of threads to use for analyses.\n"
+        )
+        ("logfile", po::value( &opts_demux->logfile )
+            ->default_value( "" ),
+         "Designated file to which the module's processes are logged. By "
+         "default, the logfile's name will include the module's name and the "
+         "time the module started running.\n"
+        )
         ;
 
 

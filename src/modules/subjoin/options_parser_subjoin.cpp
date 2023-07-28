@@ -165,6 +165,13 @@ bool options_parser_subjoin::parse( int argc, char ***argv, options *opts )
          "Name for the output score matrix file. The output will be in the form of the input, but with only the "
          "specified values (samplenames or peptides) found in the namelists. \n"
         )
+        (
+         "logfile", po::value( &opts_subjoin->logfile )
+         ->default_value( "" ),
+          "Designated file to which the module's processes are logged. By "
+          "default, the logfile's name will include the module's name and the "
+          "time the module started running.\n"
+        )
         ;
 
 
