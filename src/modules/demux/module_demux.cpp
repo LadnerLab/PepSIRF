@@ -655,11 +655,6 @@ void module_demux::run( options *opts )
     write_outputs( d_opts->output_fname, reference_counts, duplicate_map, !d_opts->library_fname.empty(), samplelist);
 }
 
-std::string module_demux::get_name()
-{
-    return name;
-}
-
 void module_demux::aggregate_counts( parallel_map<sequence, std::vector<std::size_t>*>& agg_map,
                                      parallel_map<sequence, std::vector<std::size_t>*>& count_map,
                                      size_t num_samples

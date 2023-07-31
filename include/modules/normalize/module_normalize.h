@@ -16,11 +16,7 @@ class module_normalize : public module
 {
 
  public:
-    std::string name;
-
     module_normalize();
-
-    std::string get_name();
 
     void run( options *opts );
 
@@ -132,4 +128,5 @@ class module_normalize : public module
                         std::unordered_map<std::string,double> *peptide_avgs );
 };
 
-#endif // MODULE_NORMALIZE_HH_INCLUDED
+#endif /* MODULE_NORMALIZE_HH_INCLUDED */
+
