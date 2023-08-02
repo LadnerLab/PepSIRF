@@ -10,8 +10,6 @@
 
 options_parser_normalize::options_parser_normalize() = default;
 
-
-
 bool options_parser_normalize::parse( int argc, char ***argv, options *opts )
 {
     options_normalize *opts_normalize = (options_normalize*) opts;
@@ -69,9 +67,8 @@ bool options_parser_normalize::parse( int argc, char ***argv, options *opts )
           "on the columns and scores for a certain peptide on the rows). The score for each peptide "
           "in the output has been normalized in the manner specified.\n"
         )
-        (
-         "logfile", po::value( &opts_normalize->logfile )
-         ->default_value( "" ),
+        ( "logfile", po::value( &opts_normalize->logfile )
+          ->default_value( options_normalize::set_default_log() ),
           "Designated file to which the module's processes are logged. By "
           "default, the logfile's name will include the module's name and the "
           "time the module started running.\n"

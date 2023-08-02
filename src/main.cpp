@@ -43,6 +43,7 @@ int main( int argc, char **argv )
 
             if( !help_msg_only )
                 {
+                    Log::open(init.get_opts()->get_logfile());
 				    // run PepSIRF with options parsed from command-line
                     Log::info(
                         "PepSIRF (v" + version_no + ")\n"
@@ -53,6 +54,7 @@ int main( int argc, char **argv )
                     );
 
                     init.get_module()->run( init.get_opts() );
+                    Log::close();
                 }
         }
     catch( std::exception& e )
