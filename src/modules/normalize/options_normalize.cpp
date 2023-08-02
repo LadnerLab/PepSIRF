@@ -6,11 +6,6 @@ options_normalize::options_normalize() = default;
 
 std::string options_normalize::get_arguments()
 {
-    if (logfile.empty())
-    {
-        logfile = set_default_log();
-    }
-
     std::ostringstream str_stream;
     str_stream << "--peptide_scores     " << peptide_scores_fname << "\n " <<
                   "--normalize_approach " << approach << "\n " <<

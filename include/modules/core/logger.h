@@ -10,18 +10,22 @@
 class Log
 {
 private:
-    static std::ofstream* logstream;
+    static std::ofstream logstream;
 
 public:
     Log();
 
     ~Log();
 
-    static void error(std::string err_str);
+    static void close();
 
-    static void info(std::string info_str);
+    static void error(const std::string err_str);
 
-    static void warn(std::string warn_str);
+    static void info(const std::string info_str);
+
+    static void open(const std::string logfile);
+
+    static void warn(const std::string warn_str);
 };
 
 
