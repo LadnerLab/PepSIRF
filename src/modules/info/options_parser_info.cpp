@@ -57,12 +57,11 @@ bool options_parser_info
           "peptide names as row names. Each entry consists of the average of the replicate "
           "values for the given sample and peptide. \n"
         )
-        (
-         "logfile", po::value( &opts_info->logfile )
-         ->default_value( "" ),
-          "Designated file to which the module's processes are logged. By "
-          "default, the logfile's name will include the module's name and the "
-          "time the module started running.\n"
+        ("logfile", po::value( &opts_info->logfile )
+         ->default_value( options_info::set_default_log() ),
+         "Designated file to which the module's processes are logged. By "
+         "default, the logfile's name will include the module's name and the "
+         "time the module started running.\n"
         )
         ;
 

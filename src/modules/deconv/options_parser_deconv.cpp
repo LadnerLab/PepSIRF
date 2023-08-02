@@ -190,7 +190,7 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
         )
         (
          "logfile", po::value( &opts_deconv->logfile )
-         ->default_value( "" ),
+         ->default_value( options_deconv::set_default_log() ),
           "Designated file to which the module's processes are logged. By "
           "default, the logfile's name will include the module's name and the "
           "time the module started running.\n"

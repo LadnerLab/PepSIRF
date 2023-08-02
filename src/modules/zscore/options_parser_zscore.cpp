@@ -21,8 +21,7 @@ bool options_parser_zscore::parse( int argc, char ***argv, options *opts )
                                 );
 
     desc.add_options()
-        (
-         "help,h", "Produce help message\n"
+        ("help,h", "Produce help message\n"
          "The zscore module is used to calculate Z scores for each peptide in each sample. "
          "These Z scores represent the number of standard deviations away from the mean, "
          "with the mean and standard deviation both calculated separately for each bin of peptides.\n"
@@ -131,12 +130,11 @@ bool options_parser_zscore::parse( int argc, char ***argv, options *opts )
           ->default_value( opts_zscore->DEFAULT_NUM_THREADS ),
           "The number of threads to use for analyses.\n"
         )
-        (
-         "logfile", po::value( &opts_zscore->logfile )
-         ->default_value( "" ),
-          "Designated file to which the module's processes are logged. By "
-          "default, the logfile's name will include the module's name and the "
-          "time the module started running.\n"
+        ("logfile", po::value( &opts_zscore->logfile )
+         ->default_value( options_zscore::set_default_log() ),
+         "Designated file to which the module's processes are logged. By "
+         "default, the logfile's name will include the module's name and the "
+         "time the module started running.\n"
         )
         ;
 

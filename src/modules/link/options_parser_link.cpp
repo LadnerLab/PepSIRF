@@ -72,12 +72,11 @@ bool options_parser_link::parse( int argc, char ***argv, options *opts )
         ( "kmer_size,k", po::value<std::size_t>( &opts_link->k ), "Kmer size to use when creating "
           "the linkage map.\n"
         )
-        (
-         "logfile", po::value( &opts_link->logfile )
-         ->default_value( "" ),
-          "Designated file to which the module's processes are logged. By "
-          "default, the logfile's name will include the module's name and the "
-          "time the module started running.\n"
+        ("logfile", po::value( &opts_link->logfile )
+         ->default_value( options_link::set_default_log() ),
+         "Designated file to which the module's processes are logged. By "
+         "default, the logfile's name will include the module's name and the "
+         "time the module started running.\n"
         )
         ;
 
