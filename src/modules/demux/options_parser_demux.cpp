@@ -158,12 +158,14 @@ bool options_parser_demux::parse(int argc, char ***argv, options *opts)
                    ),
           "Phred base to use when parsing fastq quality scores. Valid options include 33 or 64.\n"
           )
-        ("phred_min_score", po::value<int>(&opts_demux->min_phred_score)->default_value(0),
-          "The minimum average phred-scaled quality score for the DNA tag "
-          "portion of a read for it to be considered for matching. This means that if the average "
-          "phred33/64 score for a read at the expected locations of the DNA tag is not at least "
-          "this then the read will be discarded.\n"
-          )
+        ("phred_min_score", po::value<int>(&opts_demux->min_phred_score)
+            ->default_value(0),
+         "The minimum average phred-scaled quality score for the DNA tag"
+         " portion of a read for it to be considered for matching. This means"
+         " that if the average phred33/64 score for a read at the expected"
+         " locations of the DNA tag is not at least this then the read will be"
+         " discarded.\n"
+        )
         ("num_threads,t", po::value<int>(&opts_demux->num_threads)
          ->default_value(opts_demux->DEFAULT_NUM_THREADS),
          "Number of threads to use for analyses.\n"

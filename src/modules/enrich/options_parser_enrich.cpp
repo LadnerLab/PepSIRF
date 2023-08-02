@@ -140,11 +140,11 @@ bool options_parser_enrich::parse( int argc, char ***argv, options *opts )
           "generated for each sample with at least one enriched peptide. This directory "
           "will be created by the module.\n"
         )
-        ( "logfile", po::value( &opts_enrich->logfile )
-          ->default_value( "" ),
-          "Designated file to which the module's processes are logged. By "
-          "default, the logfile's name will include the module's name and the "
-          "time the module started running.\n"
+        ("logfile", po::value( &opts_enrich->logfile )
+         ->default_value( options_enrich::set_default_log() ),
+         "Designated file to which the module's processes are logged. By "
+         "default, the logfile's name will include the module's name and the "
+         "time the module started running.\n"
         )
         ;
 
