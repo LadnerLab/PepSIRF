@@ -20,7 +20,7 @@ void module_bin::run( options *opts )
     timer.start();
 
     // testing purposes -- remove
-    info("Bin module has started!");
+    Log::info("Bin module has started!");
 
     peptide_score_data_sample_major input_data;
     peptide_scoring::parse_peptide_scores( input_data,

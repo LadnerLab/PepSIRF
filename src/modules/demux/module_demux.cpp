@@ -27,7 +27,7 @@ void module_demux::run( options *opts )
 
     std::map<std::string, std::size_t> duplicate_map;
 
-    info("Demux module has started!");
+    Log::info("Demux module has started!");
 
     // fif use case
     std::vector<flex_idx> flexible_idx_data;

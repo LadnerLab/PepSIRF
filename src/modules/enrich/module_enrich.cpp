@@ -25,7 +25,7 @@ void module_enrich::run( options *opts )
     timer.start();
 
     // for testing purposed -- remove
-    info("Enrich module has started!");
+    Log::info("Enrich module has started!");
 
     peptide_score_data_sample_major raw_scores;
     peptide_score_data_sample_major *raw_scores_ptr = nullptr;
