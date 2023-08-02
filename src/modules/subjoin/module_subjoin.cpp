@@ -24,6 +24,8 @@ module_subjoin::parse_namelist( std::vector<std::string>& dest,
     std::vector<std::string> split_line;
     name_replacement_list ret_val;
 
+    Log::info("Subjoin module has started!\n");
+
     while( std::getline( file, line ) )
         {
             boost::trim( line );

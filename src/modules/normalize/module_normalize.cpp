@@ -28,6 +28,8 @@ void module_normalize::run( options *opts )
 
     timer.start();
 
+    Log::info("Norm module has started!\n");
+
     std::string scores_fname = n_opts->peptide_scores_fname;
 
     omp_set_num_threads( n_opts->num_threads );

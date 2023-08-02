@@ -1,33 +1,22 @@
 #include "logger.h"
 
-// TODO: deal with repeated opening and closing log file
-void error(std::string err_str)
-{
-    std::ofstream log(options::get_logfile());
+std::ofstream* Log::logstream;
 
+void Log::error(std::string err_str)
+{
     std::cout << "Error: " << err_str;
-    log << "Error: " << err_str;
-
-    log.close();
+    *logstream << "Error: " << err_str;
 }
 
-void info(std::string info_str)
+void Log::info(std::string info_str)
 {
-    std::ofstream log(options::get_logfile());
-
     std::cout << info_str;
-    log << info_str;
-
-    log.close();
+    *logstream << info_str;
 }
 
-void warn(std::string warn_str)
+void Log::warn(std::string warn_str)
 {
-    std::ofstream log(options::get_logfile());
-
     std::cout << "Warning: " << warn_str;
-    log << "Warning: " << warn_str;
-
-    log.close();
+    *logstream << "Warning: " << warn_str;
 }
 

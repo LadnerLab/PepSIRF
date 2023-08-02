@@ -44,7 +44,7 @@ int main( int argc, char **argv )
             if( !help_msg_only )
                 {
 				    // run PepSIRF with options parsed from command-line
-                    info(
+                    Log::info(
                         "PepSIRF (v" + version_no + ")\n"
                         + "Starting module "
                         + init.get_module()->get_name()
