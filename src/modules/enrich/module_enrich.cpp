@@ -3,6 +3,7 @@
 #include <numeric>
 #include <fstream>
 #include <iostream>
+#include <string>
 
 #include "logger.h"
 #include "module_enrich.h"
@@ -23,9 +24,6 @@ void module_enrich::run( options *opts )
     options_enrich *e_opts = (options_enrich*) opts;
     time_keep::timer timer;
     timer.start();
-
-    // for testing purposed -- remove
-    Log::info("Enrich module has started!");
 
     peptide_score_data_sample_major raw_scores;
     peptide_score_data_sample_major *raw_scores_ptr = nullptr;
@@ -58,7 +56,7 @@ void module_enrich::run( options *opts )
             samples_file.open( e_opts->in_samples_fname );
             if( samples_file.fail() )
                 {
-                    throw std::runtime_error( "Unable to open the provided samples file" );
+                    Log::error("Unable to open the provided samples file!");
                 }
 
             samples_list = parse_samples( samples_file );
@@ -80,9 +78,10 @@ void module_enrich::run( options *opts )
 
     if( dir_exists )
         {
-            std::cout << "WARNING: the directory '" << e_opts->out_dirname
-                      << "' exists, any files with "
-                      << "colliding filenames will be overwritten!\n";
+            Log::warn(
+                "The directory '" + e_opts->out_dirname + "' exists, any files"
+                + " with colliding filenames will be overwritten!\n"
+            );
         }
 
     bool raw_counts_included = !e_opts->in_raw_scores_fname.empty();
@@ -174,9 +173,11 @@ void module_enrich::run( options *opts )
                         if( raw_counts_included &&
                         ( raw_score_sample_names.size() != matrix_sample_names.size() ) )
                             {
-                                throw std::runtime_error( "The samplenames provided in each input file are "
-                                                        "not the same.\n"
-                                                        );
+                                Log::error(
+                                    // y'all still wanna defend C++ as a good lang?
+                                    std::string("The samplenames provided in each input")
+                                    + " file are not the same!\n"
+                                );
                             }
                         std::vector<std::string> sample_diffs;
                         std::set_difference( samples_sample_names.begin(), samples_sample_names.end(),
@@ -184,35 +185,48 @@ void module_enrich::run( options *opts )
                         // if some samples are not found that are provided by samples option, then throw an error
                         if( !sample_diffs.empty() && sample_diffs.size() != samples_sample_names.size() )
                             {
-                                std::cout <<  "The listed samples were not found in matrix '"
-                                          <<  curr_matrix_ptr->file_name
-                                          <<  "'.\n";
+                                Log::info(
+                                    std::string("The listed samples were not found in")
+                                    + " matrix '" + curr_matrix_ptr->file_name
+                                    + "'.\n"
+                                );
+
                                 for( auto sample = sample_diffs.begin(); sample != sample_diffs.end(); sample++ )
                                     {
+                                        // TODO: send through Log::info()
                                         std::cout << *sample << "\n";
                                     }
-                                throw std::runtime_error( "Verify the correct sample names are provided in (--samples,-s).\n");
+
+                                Log::error(
+                                    std::string("Verify the correct sample names are")
+                                    + " provided in (--samples, -s).\n"
+                                );
 
                             }
+                        // otherwise, if all of the samples are not found that are
+                        // provided by samples option, then give a warning
+                        // that these samples were not in the matrix.
                         else if( sample_diffs.size() == samples_sample_names.size() )
-                        // if all of the samples are not found that are provided by samples option, then give a warning that these samples were not in the matrix.
                             {
-                                std::cout <<  "WARNING: The listed samples were not found in matrix '"
-                                          <<  curr_matrix_ptr->file_name
-                                          <<  "' and will be skipped.\n";
+                                Log::warn(
+                                    std::string("The listed samples were not found in")
+                                    + " matrix '" + curr_matrix_ptr->file_name
+                                    + "' and will be skipped.\n"
+                                );
+
                                 for( auto sample = sample_diffs.begin(); sample != sample_diffs.end(); sample++ )
                                     {
+                                        // TODO: send through Log::info()
                                         std::cout << *sample << "\n";
                                     }
                             }
                         else
                             {
-
-                                get_enrichment_candidates( &all_enrichment_candidates[curr_matrix],
-                                                        curr_matrix_ptr,
-                                                        samples_list[ sample_idx ]
-                                                        );
-
+                                get_enrichment_candidates(
+                                    &all_enrichment_candidates[curr_matrix],
+                                    curr_matrix_ptr,
+                                    samples_list[ sample_idx ]
+                                );
                             }
                     }
 
@@ -223,8 +237,10 @@ void module_enrich::run( options *opts )
                         std::vector<std::map<std::string, std::vector<double>>> ret;
                         for( std::size_t curr_map = 0; curr_map < all_enrichment_candidates.size(); ++curr_map )
                             {
-                                if( thresholds_met( all_enrichment_candidates[curr_map].at( pep_name ),
-                                            matrix_thresh_pairs[curr_map].second ) )
+                                if (thresholds_met(
+                                        all_enrichment_candidates[curr_map].at(pep_name),
+                                        matrix_thresh_pairs[curr_map].second
+                                ))
                                 ++valid_candidates;
                             }
 
@@ -239,7 +255,8 @@ void module_enrich::run( options *opts )
 				!samples_list[sample_idx].empty()
                 && raw_counts_included
                 && !raw_count_enriched
-                && !e_opts->out_enrichment_failure.empty() )
+                && !e_opts->out_enrichment_failure.empty()
+            )
                 {
                     std::vector<double>::iterator min_thresh = std::min_element( raw_score_params.begin(), raw_score_params.end() );
                     std::vector<double>::iterator max_thresh = std::max_element( raw_score_params.begin(), raw_score_params.end() );
@@ -337,16 +354,17 @@ void module_enrich::run( options *opts )
                 }
             std::ofstream out_file{ outf_name, std::ios_base::out };
 
-            pepsirf_io::write_file( out_file,
-                                    enriched_probes.begin(),
-                                    enriched_probes.end(),
-                                    "\n"
-                                );
+            pepsirf_io::write_file(
+                out_file,
+                enriched_probes.begin(),
+                enriched_probes.end(),
+                "\n"
+            );
 
             if ( enriched_probes.size() == 0 )
-            {
-               out_file << ' ';
-            }
+                {
+                   out_file << ' ';
+                }
         }
 
     if ( !e_opts->out_enrichment_failure.empty() )
@@ -399,6 +417,7 @@ void module_enrich::run( options *opts )
                 }
         }
 }
+
 std::vector<module_enrich::sample_type> module_enrich::parse_samples( std::istream& file )
 {
     std::vector<sample_type> return_val;
@@ -459,3 +478,4 @@ void module_enrich::get_raw_scores( std::vector<std::vector<double>> *raw_scores
         raw_scores_dest->at( pep_idx ) = raw_scores;
     }
 }
+
