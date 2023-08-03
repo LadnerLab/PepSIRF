@@ -193,8 +193,7 @@ void module_enrich::run( options *opts )
 
                                 for( auto sample = sample_diffs.begin(); sample != sample_diffs.end(); sample++ )
                                     {
-                                        // TODO: send through Log::info()
-                                        std::cout << *sample << "\n";
+                                        Log::info(*sample + "\n");
                                     }
 
                                 Log::error(
@@ -216,8 +215,7 @@ void module_enrich::run( options *opts )
 
                                 for( auto sample = sample_diffs.begin(); sample != sample_diffs.end(); sample++ )
                                     {
-                                        // TODO: send through Log::info()
-                                        std::cout << *sample << "\n";
+                                        Log::info(*sample + "\n");
                                     }
                             }
                         else
