@@ -19,9 +19,6 @@ void module_bin::run( options *opts )
     int min_bin_size_extension = 1;
     timer.start();
 
-    // testing purposes -- remove
-    Log::info("Bin module has started!");
-
     peptide_score_data_sample_major input_data;
     peptide_scoring::parse_peptide_scores( input_data,
                                            b_opts->input_scores_fname
@@ -66,7 +63,7 @@ void module_bin::run( options *opts )
 
     timer.stop();
 
-    std::cout << "Took " << timer.get_elapsed() << " seconds.\n";
+    Log::info("Took " + std::to_string(timer.get_elapsed()) + " seconds.\n");
 }
 
 bin_collection module_bin::bin_ranked_probes( const probe_rank& ranked_probes,
