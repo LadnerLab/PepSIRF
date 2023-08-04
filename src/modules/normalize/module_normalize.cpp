@@ -28,8 +28,6 @@ void module_normalize::run( options *opts )
 
     timer.start();
 
-    Log::info("Norm module has started!\n");
-
     std::string scores_fname = n_opts->peptide_scores_fname;
 
     omp_set_num_threads( n_opts->num_threads );
@@ -48,14 +46,18 @@ void module_normalize::run( options *opts )
             peptide_scoring::parse_peptide_scores( neg_scores, n_opts->neg_control );
             neg_scores.scores = neg_scores.scores.transpose();
         }
-    if(    n_opts->approach == "diff"
+    if( n_opts->approach == "diff"
         || n_opts->approach == "ratio"
         || n_opts->approach == "diff_ratio" )
         {
             if( !n_opts->neg_names.empty() && !n_opts->neg_id.empty() )
                 {
-                    std::cout << "Norm does not currently support usage of both negative id [--negative_id,-s] "
-                                    "and negative names [--negative_names,-n]. Negative names will be used.\n";
+                    Log::info(
+                        "Norm does not currently support usage"
+                        " of both negative id [--negative_id, -s] and"
+                        " negative names [--negative_names, -n]. Negative"
+                        " names will be used.\n"
+                    );
                     boost::split( neg_filter, n_opts->neg_names, boost::is_any_of( "," ) );
                 }
             else if( !n_opts->neg_names.empty() )
@@ -75,8 +77,11 @@ void module_normalize::run( options *opts )
                 }
             else
                 {
-                    throw std::runtime_error( "ERROR: Must use approach for identifying negative controls. "
-                                            "Either a negative id [--negative_id,-s] or negative names [--negative_names,-n].\n" );
+                    Log::error(
+                        "Must use approach for identifying negative controls."
+                        " Either a negative id [--negative_id, -s] or negative"
+                        " names [--negative_names, -n]!\n"
+                    );
                 }
         }
 
@@ -128,9 +133,13 @@ void module_normalize::run( options *opts )
         }
     else
         {
-            throw std::runtime_error( "ERROR: Provided approach '" + n_opts->approach + "'. Valid approach must be specified.\n"
-            "Available approaches:\n(Default) col_sum\nsize_factors\ndiff\nratio\ndiff_ratio\n"
-            "See norm [--help,-h] for further information.\n" );
+            Log::error(
+                "Provided approach '" + n_opts->approach + "'!"
+                " Valid approach must be specified.\n"
+                "Available approaches:\n(Default) col_sum"
+                "\nsize_factors\ndiff\nratio\ndiff_ratio\n"
+                "See norm [--help, -h] for further information.\n"
+            );
         }
 
     original_scores.scores = original_scores.scores.transpose();
@@ -144,8 +153,7 @@ void module_normalize::run( options *opts )
     peptide_scoring::write_peptide_scores( output_file, original_scores );
     timer.stop();
 
-    std::cout << "Took " << timer.get_elapsed() << " seconds.\n";
-
+    Log::info("Took " + std::to_string(timer.get_elapsed()) + " seconds.\n");
 }
 
 void module_normalize::get_neg_average( peptide_score_data_sample_major *control,

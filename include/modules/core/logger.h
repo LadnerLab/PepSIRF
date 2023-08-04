@@ -19,13 +19,13 @@ public:
 
     static void close();
 
-    static void error(const std::string err_str);
+    static void error(const std::string& err_str);
 
-    static void info(const std::string info_str);
+    static void info(const std::string& info_str);
 
-    static void open(const std::string logfile);
+    static void open(const std::string& logfile);
 
-    static void warn(const std::string warn_str);
+    static void warn(const std::string& warn_str);
 };
 
 
