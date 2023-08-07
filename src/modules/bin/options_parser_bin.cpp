@@ -1,3 +1,4 @@
+#include "logger.h"
 #include "options_parser_bin.h"
 #include "options_bin.h"
 #include <boost/program_options.hpp>
@@ -63,7 +64,11 @@ bool options_parser_bin::parse( int argc, char ***argv, options *opts )
         || argc == 2
         )
         {
-            std::cout << desc << std::endl;
+            std::ostringstream info_str;
+            info_str << desc << "\n";
+
+            Log::info(info_str.str());
+
             return false;
         }
     else
