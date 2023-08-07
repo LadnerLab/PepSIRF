@@ -27,8 +27,6 @@ void module_demux::run( options *opts )
 
     std::map<std::string, std::size_t> duplicate_map;
 
-    Log::info("Demux module has started!");
-
     // fif use case
     std::vector<flex_idx> flexible_idx_data;
     std::vector<sequential_map<sequence, sample>::iterator> idx_match_list;
@@ -99,9 +97,12 @@ void module_demux::run( options *opts )
             // Should we give a warning for the case of how many index col names are given?
             if( d_opts->sample_indexes.size() > 1 )
                 {
-                    std::cout << "WARNING: \"--input_r2\" does not include a filepath while more "
-                    "than one samplelist index column name has been given. See the \"--sname\" "
-                    "and \"--samplelist\" options for information on default values and usage.\n";
+                    Log::warn(
+                        "\"--input_r2\" does not include a filepath while more"
+                        " than one samplelist index column name has been"
+                        " given. See the \"--sname\" and \"--samplelist\""
+                        " options for information on default values and usage.\n"
+                    );
                 }
         }
 
@@ -113,9 +114,11 @@ void module_demux::run( options *opts )
         }
     else
         {
-            std::cout << "WARNING: A set of reference sequences was not provided. "
-                      << "Demux will be run in reference-independent mode, where each "
-                      << "read is treated as its own reference.\n";
+            Log::warn(
+                "A set of reference sequences was not provided. Demux will be"
+                " run in reference-independent mode, where each read is"
+                " treated as its own reference.\n"
+            );
         }
     sequential_map<sequence, sample> index_map;
     sequential_map<sequence, sample> seq_lookup;
@@ -169,11 +172,11 @@ void module_demux::run( options *opts )
     #ifdef ZLIB_ENABLED
             reads_ptr = &gzip_r1_reader;
     #else
-            throw std::runtime_error( "A gzipped file was supplied, but "
-                                      "boost zlib is not available. "
-                                      "Please either configure boost with zlib "
-                                      "or unzip the file before attempting to demux."
-                                    );
+            Log::error(
+                "A gzipped file was supplied, but boost zlib is not available."
+                " Please either configure boost with zlib or unzip the file"
+                " before attempting to demux."
+            );
     #endif
         }
 
@@ -185,11 +188,11 @@ void module_demux::run( options *opts )
     #ifdef ZLIB_ENABLED
             r2_reads_ptr = &gzip_r2_reader;
     #else
-            throw std::runtime_error( "A gzipped file was required, but "
-                                      "boost zlib is not available. "
-                                      "Please either configure boost with zlib "
-                                      "or unzip the file before attempting to demux."
-                                    );
+            Log::error(
+                "A gzipped file was required, but boost zlib is not available."
+                " Please either configure boost with zlib or unzip the file
+                " before attempting to demux."
+            );
     #endif
         }
 
@@ -213,9 +216,11 @@ void module_demux::run( options *opts )
 
             if( dir_exists )
             {
-                std::cout << "WARNING: the directory '" << d_opts->fastq_out
-                          << "' exists, any files with "
-                          << "colliding filenames will be overwritten!\n";
+                Log::warn(
+                    "WARNING: the directory '" + d_opts->fastq_out
+                    + "' exists, any files with colliding filenames will be"
+                    " overwritten!\n"
+                );
             }
 
             std::stringstream build;
@@ -593,28 +598,57 @@ void module_demux::run( options *opts )
     }
 #endif
 
-    std::cout << processed_success << " records were found to be a match out of "
-              << processed_total << " (" << ( (long double) processed_success / (long double) processed_total ) * 100
-              << "%) successful.\n";
+    Log::info(
+        std::to_string(processed_success)
+        + " records were found to be a match out of "
+        + std::to_string(processed_total) + " ("
+        + std::to_string(
+            ((long double)processed_success / (long double)processed_total)
+            * 100
+        )
+        + "%) successful.\n"
+    );
     // loop through index match totals
     std::string match_reference = "";
     for( std::size_t fif_index = 0; fif_index < flexible_idx_data.size(); ++fif_index )
         {
+            std::stringstream info_str;
+
             match_reference.append( flexible_idx_data[fif_index].idx_name );
-            std::cout << std::fixed << std::setprecision( 2 )
-                    << ( ( long double ) index_match_totals[fif_index].second / ( long double ) processed_total ) * 100.00 << "% " <<
-                                index_match_totals[fif_index].second << " of total records matched '" << match_reference << "'.\n";
+
+            info_str
+                << std::fixed << std::setprecision(2)
+                << ((long double) index_match_totals[fif_index].second
+                        / (long double) processed_total) * 100.00 << "% "
+                << index_match_totals[fif_index].second
+                << " of total records matched '" << match_reference << "'.\n";
+            Log::info(info_str.str());
+            // exactly, why did we need an entirely new construct for IO when
+            // this was a superset of C, and C did file IO just fine?
+
             match_reference.append( " + " );
         }
     if( reference_dependent )
         {
-            std::cout << std::fixed << std::setprecision( 2 ) << ( ( long double ) processed_success / ( long double ) processed_total ) * 100.00 << "% " <<
-                         processed_success << " of total records matched provided indexes + DNA tag.\n";
+            std::stringstream info_str;
+            info_str
+                << std::fixed << std::setprecision(2)
+                << ((long double) processed_success
+                        / (long double) processed_total) * 100.00 << "% "
+                << processed_success
+                << " of total records matched provided indexes + DNA tag.\n";
+            Log::info(info_str.str());
         }
     if( d_opts->concatemer.length() > 0 )
         {
-            std::cout << "The concatemer sequence was found " << concatemer_found << " times (" <<
-                ( (long double) concatemer_found / (long double) processed_total ) * 100 << "% of total).\n";
+            std::stringstream info_str;
+            info_str
+                << "The concatemer sequence was found " << concatemer_found
+                << " times ("
+                << ((long double) concatemer_found
+                        / (long double) processed_total) * 100
+                << "% of total).\n";
+            Log::info(info_str.str());
         }
 
     if( !d_opts->diagnostic_fname.empty() )
@@ -636,13 +670,10 @@ void module_demux::run( options *opts )
                                                  reference_counts,
                                                  samplelist.size()
                                                );
-
                 }
             else
                 {
                     aggregate_counts( agg_map, reference_counts, samplelist.size() );
-
-                    
                 }
 
             write_outputs( d_opts->aggregate_fname,
@@ -681,18 +712,15 @@ void module_demux::aggregate_counts( parallel_map<sequence, std::vector<std::siz
             current.set_name(copy_name);
             current.set_seq(copy_seq);
 
-            //std::cout << current.name << std::endl;
-
             if( strs.size() != NUM_DELIMITED_ITEMS )
                 {
-
                     std::ostringstream err_msg;
                     err_msg << "The following nucleotide sequence is not "
                             << "formatted correctly in order to retrieve "
                             << "aa-level counts: \n"
                             << iter->first.name
                             << "\n";
-                   throw std::runtime_error( err_msg.str() );
+                    Log::error(err_msg.str());
                 }
 
             // if the trimmed name not in agg_map
@@ -715,11 +743,13 @@ void module_demux::aggregate_counts( parallel_map<sequence, std::vector<std::siz
                     current_vec_agg->at( index ) += current_vec_count->at( index );
                 }
         }
-
 }
-void module_demux::add_seqs_to_map( parallel_map<sequence, std::vector<std::size_t>*>& input_map, std::vector<sequence>& seqs, size_t num_samples )
-{
-    std::size_t index        = 0;
+
+void module_demux::add_seqs_to_map(
+    parallel_map<sequence, std::vector<std::size_t>*>& input_map,
+    std::vector<sequence>& seqs, size_t num_samples
+) {
+    std::size_t index = 0;
 
     input_map.reserve( seqs.size() );
 
@@ -749,8 +779,10 @@ void module_demux::create_diagnostic_map( bool reference_dependent,
 
 }
 
-void module_demux::write_diagnostic_output( options_demux* d_opts, phmap::parallel_flat_hash_map<sample, std::vector<std::size_t>>& diagnostic_map )
-{
+void module_demux::write_diagnostic_output(
+    options_demux* d_opts,
+    phmap::parallel_flat_hash_map<sample, std::vector<std::size_t>>& diagnostic_map
+) {
     std::ofstream outfile( d_opts->diagnostic_fname, std::ios::out );
     outfile << "Sample name\t";
     std::string header_column = "";
@@ -798,7 +830,6 @@ void module_demux::write_diagnostic_output( options_demux* d_opts, phmap::parall
 
     outfile << "\n";
     outfile.close();
-
 }
 
 void module_demux::write_outputs( std::string outfile_name,
@@ -813,7 +844,6 @@ void module_demux::write_outputs( std::string outfile_name,
 
     const std::string DELIMITER = "\t";
     const std::string NEWLINE   = "\n";
-
 
     std::size_t index        = 0;
     std::size_t second_index = 0;
@@ -887,7 +917,6 @@ void module_demux::create_index_map( sequential_map<sequence, sample>& index_map
     }
 }
 
-
 bool module_demux::_multiple_best_matches( std::vector<std::pair<sequence *, int>>& matches )
 {
     return matches.size() >= 2 &&
@@ -898,3 +927,4 @@ sequence *module_demux::_get_min_dist( std::vector<std::pair<sequence *, int>>& 
 {
     return std::get<0>( *matches.begin() );
 }
+
