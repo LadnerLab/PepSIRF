@@ -1,4 +1,5 @@
 #include "options_parser_demux.h"
+#include "logger.h"
 #include <stdexcept>
 #include <boost/algorithm/string.hpp>
 #include "predicate.h"
@@ -83,24 +84,37 @@ bool options_parser_demux::parse(int argc, char ***argv, options *opts)
                               ),
           "Positional information for the DNA tags. This argument must be passed in the same format specified for \"index1\".\n"
        )
-        ("fif,f", po::value<std::string>(&opts_demux->flexible_idx_fname)->default_value("")
-                   ->notifier([&](const std::string &val) {
-                              if(vm["index1"].empty()
-                                 && val.empty())
-                                {
-                                  throw std::runtime_error("The option '--fif' or '--index1' must be provided.\n");
-                                }
-                              else if(!vm["index1"].empty() && !val.empty())
-                                {
-                                  std::cout << "WARNING: Both options '--fif' and '--index1' have been provided. The option '--fif' will be used.\n";
-                                }
-                    }),
-          "The flexible index file can be provided as an alternative to the '--index1' and '--index2' options. The file must use the following format: "
-          "a tab-delimited file with 5 ordered columns: 1) index name, which should correspond to a header name in the sample sheet, 2) read name, which "
-          "should be either 'r1' or 'r2' (not case-sensitive) to specify whether the index is in '--input_r1' or '--input_r2', 3) index start location (0-based, inclusive), 4) "
-          "index length and 5) number of mismatched to allow. '--index1', '--index2', '--sname', '--sindex1', and 'sindex2' will be ignored if this option is provided."
-          "\n"
-       )
+        ("fif,f", po::value<std::string>(&opts_demux->flexible_idx_fname)
+            ->default_value("")->notifier(
+                [&](const std::string &val)
+                {
+                    if(vm["index1"].empty() && val.empty())
+                    {
+                        Log::error(
+                            "The option '--fif' or '--index1' must"
+                            " be provided.\n"
+                        );
+                    }
+                    else if(!vm["index1"].empty() && !val.empty())
+                    {
+                        Log::warn(
+                            "Both options '--fif' and '--index1'"
+                            " have been provided. The option"
+                            " '--fif' will be used.\n"
+                        );
+                    }
+                }),
+         "The flexible index file can be provided as an alternative to the"
+         " '--index1' and '--index2' options. The file must use the following"
+         " format: a tab-delimited file with 5 ordered columns: 1) index name,"
+         " which should correspond to a header name in the sample sheet, 2)"
+         " read name, which should be either 'r1' or 'r2' (not case-sensitive)"
+         " to specify whether the index is in '--input_r1' or '--input_r2', 3)"
+         " index start location (0-based, inclusive), 4) index length and 5)"
+         " number of mismatched to allow. '--index1', '--index2', '--sname',"
+         " '--sindex1', and 'sindex2' will be ignored if this option is"
+         " provided.\n"
+        )
         ("concatemer,c", po::value<std::string>(&opts_demux->concatemer),
         "Concatenated adapter/primer sequences (optional). The presence of this sequence within a read indicates that the "
         "expected DNA tag is not present. If supplied, the number of times this concatemer is recorded in the input file is reported.\n"
@@ -149,15 +163,19 @@ bool options_parser_demux::parse(int argc, char ***argv, options *opts)
         ("diagnostic_info,d", po::value<std::string>(&opts_demux->diagnostic_fname)->default_value(""),
           "Include this flag with an output file name to collect diagnostic information on read pair matches in map. The file will be formatted with tab delimited "
           "lines \"samplename  # index pair matches  # matches to any variable region\"."
-       )
-        ("phred_base", po::value<int>(&opts_demux->phred_base)->default_value(33)
-          ->notifier([](const int value){
-                      if(!(value == 33 || value == 64))
-                          { throw std::runtime_error("Phred values can only be 33 or 64"); }
-                                            }
-                   ),
-          "Phred base to use when parsing fastq quality scores. Valid options include 33 or 64.\n"
-          )
+        )
+        ("phred_base", po::value<int>(&opts_demux->phred_base)
+            ->default_value(33)->notifier(
+                [](const int value)
+                {
+                    if(!(value == 33 || value == 64))
+                    {
+                        Log::error("Phred values can only be 33 or 64");
+                    }
+                }),
+         "Phred base to use when parsing fastq quality scores. Valid options"
+         " include 33 or 64.\n"
+        )
         ("phred_min_score", po::value<int>(&opts_demux->min_phred_score)
             ->default_value(0),
          "The minimum average phred-scaled quality score for the DNA tag"
@@ -198,9 +216,13 @@ bool options_parser_demux::parse(int argc, char ***argv, options *opts)
 
     po::store(po::command_line_parser(argc, *argv).options(desc).allow_unregistered().run(), vm);
 
-    if (vm.count("help") || argc == 2)
+    if (vm.count( "help" ) || argc == 2)
     {
-        std::cout << desc << std::endl;
+        std::ostringstream info_str;
+        info_str << desc << "\n";
+
+        Log::info(info_str.str());
+
         return false;
     }
     else
@@ -209,3 +231,4 @@ bool options_parser_demux::parse(int argc, char ***argv, options *opts)
         return true;
     }
 }
+
