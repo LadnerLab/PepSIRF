@@ -1,4 +1,5 @@
 #include "options_parser_demux.h"
+#include "logger.h"
 #include <stdexcept>
 #include <boost/algorithm/string.hpp>
 #include "predicate.h"
@@ -88,11 +89,18 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
                               if( vm["index1"].empty()
                                  && val.empty() )
                                 {
-                                  throw std::runtime_error( "The option '--fif' or '--index1' must be provided.\n");
+                                    Log::error(
+                                        "The option '--fif' or '--index1' must"
+                                        " be provided.\n"
+                                    );
                                 }
                               else if( !vm["index1"].empty() && !val.empty() )
                                 {
-                                  std::cout << "WARNING: Both options '--fif' and '--index1' have been provided. The option '--fif' will be used.\n";
+                                    Log::warn(
+                                        "Both options '--fif' and '--index1'"
+                                        " have been provided. The option"
+                                        " '--fif' will be used.\n"
+                                    );
                                 }
                     }),
           "The flexible index file can be provided as an alternative to the '--index1' and '--index2' options. The file must use the following format: "
@@ -151,11 +159,14 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
           "lines \"samplename  # index pair matches  # matches to any variable region\"."
         )
         ( "phred_base", po::value<int>( &opts_demux->phred_base )->default_value( 33 )
-          ->notifier( []( const int value ){
-                      if( !( value == 33 || value == 64 ) )
-                          { throw std::runtime_error( "Phred values can only be 33 or 64" ); }
-                                            }
-                    ),
+          ->notifier(
+            []( const int value )
+            {
+                if( !( value == 33 || value == 64 ) )
+                {
+                    Log::error("Phred values can only be 33 or 64");
+                }
+            }),
           "Phred base to use when parsing fastq quality scores. Valid options include 33 or 64.\n"
         )
         ( "phred_min_score", po::value<int>( &opts_demux->min_phred_score )->default_value( 0 ),
@@ -181,7 +192,11 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
 	    || argc == 2
 	  )
         {
-            std::cout << desc << std::endl;
+            std::ostringstream info_str;
+            info_str << desc << "\n";
+
+            Log::info(info_str.str());
+
             return false;
         }
     else
@@ -190,3 +205,4 @@ bool options_parser_demux::parse( int argc, char ***argv, options *opts )
             return true;
         }
 }
+

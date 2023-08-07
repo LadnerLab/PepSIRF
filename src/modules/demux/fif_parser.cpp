@@ -1,4 +1,5 @@
 #include "fif_parser.h"
+#include "logger.h"
 #include <sstream>
 #include <boost/algorithm/string.hpp>
 
@@ -10,7 +11,10 @@ std::vector<flex_idx> fif_parser::parse( const std::string fif_fname )
         std::vector<flex_idx> ret_idx_data;
         if( !in_stream.is_open() )
             {
-                throw std::runtime_error( "File could not be opened. Verify flexible input file (fif) exists.\n" );
+                Log::error(
+                    "File could not be opened."
+                    " Verify flexible input file (fif) exists.\n"
+                );
             }
 
         while( std::getline( in_stream, line ) )
@@ -19,7 +23,10 @@ std::vector<flex_idx> fif_parser::parse( const std::string fif_fname )
 
                 if( split_line.size() < 5 )
                     {
-                        throw std::runtime_error( "Verify flexible input file contains 5 columns in every row.\n" );
+                        Log::error(
+                            "Verify flexible input file contains 5 columns in"
+                            " every row.\n"
+                        );
                     }
                 if( std::isupper( split_line[1][0] ) )
                     {
@@ -33,3 +40,4 @@ std::vector<flex_idx> fif_parser::parse( const std::string fif_fname )
         return ret_idx_data;
         
     }
+

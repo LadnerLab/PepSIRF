@@ -4,17 +4,12 @@
 #include <sstream>
 #include <vector>
 #include "options_demux.h"
+#include "logger.h"
 
 
 std::string options_demux::get_arguments()
 {
-    if (logfile.empty())
-    {
-        logfile = set_default_log();
-    }
-
     std::ostringstream str_stream;
-
     str_stream << "--input_r1              " << input_r1_fname << "\n" <<
                   " --input_r2              " << input_r2_fname << "\n" <<
                   " --output                " << output_fname << "\n" <<
@@ -48,7 +43,6 @@ std::string options_demux::tup_to_string( std::tuple<std::size_t, std::size_t, s
 
     st << std::get<0>( data ) << "," << std::get<1>( data ) << "," << std::get<2>( data );
     return st.str();
-
 }
 
 void options_demux::set_info( std::tuple<std::size_t, std::size_t, std::size_t>
@@ -66,9 +60,10 @@ void options_demux::set_info( std::tuple<std::size_t, std::size_t, std::size_t>
 
     if( matches.size() != NUM_REQUIRED_ITEMS )
         {
-            throw std::runtime_error( "Incorrect number of comma-separated values "
-                                      "provided. Please try ./pepsirf demux -h for help"
-                                    );
+            Log::error(
+                "Incorrect number of comma-separated values provided."
+                " Please try ./pepsirf demux -h for help"
+            );
         }
 
     auto tup = std::make_tuple( cast_fn( matches[ 0 ] ),
@@ -77,3 +72,4 @@ void options_demux::set_info( std::tuple<std::size_t, std::size_t, std::size_t>
                               );
     this->*member = tup;
 }
+
