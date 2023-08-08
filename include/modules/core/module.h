@@ -1,6 +1,7 @@
 #ifndef MODULE_HH_INCLUDED
 #define MODULE_HH_INCLUDED
 
+#include "logger.h"
 #include "options.h"
 
 class module
