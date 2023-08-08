@@ -45,6 +45,9 @@ void metadata_map::build_map(std::unordered_map<std::string, std::string> *meta_
 
     std::size_t missing_spec_id_count = 0;
     std::vector<std::string> metadata_row;
+    std::ofstream ex_seqs_log(
+        "excluded_protein_sequences.txt", std::ios::out
+    );
     while(std::getline(metadata_file, line))
     {
         boost::split(metadata_row, line, boost::is_any_of("\t"));
@@ -57,13 +60,16 @@ void metadata_map::build_map(std::unordered_map<std::string, std::string> *meta_
         // otherwise, assume no species ID
         else
         {
+            ex_seqs_log << metadata_row.at(name_index) << "\n";
             missing_spec_id_count += 1;
         }
     }
 
-    std::cout << "Warning: " << missing_spec_id_count
+    std::cout << "WARNING: " << missing_spec_id_count
         << " sequences in metadata file did not have a value for their"
-        << " \"SpeciesID\" column - they have been excluded from this run.\n";
+        << " \"SpeciesID\" column - they have been excluded from this run.\n"
+        << "Please review the aforementioned sequences in"
+        << " \"excluded_protein_sequences.txt\"\n";
 }
 
 std::string metadata_map::get_id(std::string sequence_data, std::unordered_map<std::string, std::string> *meta_map)
