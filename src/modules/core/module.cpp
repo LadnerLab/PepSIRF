@@ -14,7 +14,7 @@ void module::run( options *opts )
 {
     if( opts->num_threads == 0 )
         {
-            std::cout << "Zero threads!\n";
+            Log::info("Zero threads!");
         }
 }
 
