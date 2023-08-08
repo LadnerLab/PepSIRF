@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <string>
 
+#include "logger.h"
 #include "options_parser_normalize.h"
 #include "options_normalize.h"
 
@@ -81,7 +82,11 @@ bool options_parser_normalize::parse( int argc, char ***argv, options *opts )
         || argc == 2 // argc == 2 when 'pepsirf norm' is called
       )
         {
-            std::cout << desc << std::endl;
+            std::ostringstream info_str;
+            info_str << desc << std::endl;
+
+            Log::info(info_str.str());
+
             return false;
         }
     else

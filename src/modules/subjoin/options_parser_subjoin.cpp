@@ -1,5 +1,6 @@
 #include "options_parser_subjoin.h"
 #include "file_io.h"
+#include "logger.h"
 #include <boost/algorithm/string.hpp>
 options_parser_subjoin::options_parser_subjoin() = default;
 
@@ -32,7 +33,7 @@ bool options_parser_subjoin::parse( int argc, char ***argv, options *opts )
                                     std::ifstream input_f{ provided_string };
                                     if( input_f.fail() )
                                         {
-                                            throw std::runtime_error( "Unable to open multi_file input.\n" );
+                                            Log::error("Unable to open multi_file input.\n");
                                         }
                                     pepsirf_io::read_file(  input_f,
                                                             boost::is_any_of( "\t" ),
@@ -93,10 +94,11 @@ bool options_parser_subjoin::parse( int argc, char ***argv, options *opts )
                                       }
                                   else if( split_output.size() == 1 )
                                       {
-
-                                          std::cout << "\nWARNING: No sample name list has been given for "
-                                                    << split_output[0]
-                                                    << ". All samples from this input matrix will be included.\n";
+                                          Log::warn(
+                                            "No sample name list has been given for "
+                                            + split_output[0]
+                                            + ". All samples from this input matrix will be included.\n"
+                                        );
                                           opts_subjoin->input_matrix_name_pairs.emplace_back( std::make_pair( split_output[0], "" ) );
                                       }
                                   else
@@ -179,7 +181,11 @@ bool options_parser_subjoin::parse( int argc, char ***argv, options *opts )
 	    || argc == 2
 	  )
         {
-            std::cout << desc << std::endl;
+            std::ostringstream info_str;
+            info_str << desc << std::endl;
+
+            Log::info(info_str.str());
+
             return false;
         }
     else

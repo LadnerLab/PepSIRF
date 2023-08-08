@@ -6,11 +6,6 @@ options_info::~options_info() = default;
 
 std::string options_info::get_arguments()
 {
-    if (logfile.empty())
-    {
-        logfile = set_default_log();
-    }
-
     std::ostringstream stream;
 
     stream
