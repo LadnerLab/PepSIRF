@@ -172,19 +172,14 @@ std::string module_link::get_id( std::string name, std::size_t id_index )
     return 0;
 }
 
-std::string module_link::verify_id_type( std::string sequence_data, std::size_t id_index )
+std::string module_link::verify_id_type(std::string sequence_data, std::size_t id_index)
 {
-    return get_id( sequence_data, id_index );
+    return get_id(sequence_data, id_index);
 }
 
-std::string module_link::verify_id_type( std::string sequence_data, std::unordered_map<std::string, std::string> *map )
+std::string module_link::verify_id_type(std::string sequence_data, std::unordered_map<std::string, std::string> *map)
 {
-    std::string found_id = metadata_map::get_id( sequence_data, map );
-    if( found_id.empty() )
-        {
-            throw std::runtime_error("Protein file contains sequences not represented in metadata file");
-        }
-    return found_id;
+    return metadata_map::get_id(sequence_data, map);
 }
 
 void module_link::create_pep_map( std::unordered_map<std::string,
