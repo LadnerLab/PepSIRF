@@ -25,8 +25,6 @@ void module_zscore::run( options *opts )
     time_keep::timer time;
     time.start();
 
-    Log::info("Zscore module has started!\n");
-
     // parse the input
     peptide_score_data_sample_major input;
 

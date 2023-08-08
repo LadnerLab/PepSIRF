@@ -6,11 +6,6 @@ options_link::options_link() = default;
 
 std::string options_link::get_arguments()
 {
-    if (logfile.empty())
-    {
-        logfile = set_default_log();
-    }
-
     std::ostringstream str_stream;
 
     // returns the 'string' representation of a bool

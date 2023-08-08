@@ -5,6 +5,7 @@
 #include <limits>
 #include <stdexcept>
 #include <iostream>
+#include "logger.h"
 #include "stream_tools.h"
 #include "file_io.h"
 #include "predicate.h"
@@ -92,10 +93,11 @@ bool options_parser_enrich::parse( int argc, char ***argv, options *opts )
 
                               && params_str.empty() )
                               {
-                                  throw std::runtime_error( "If either 'raw_scores' "
-                                                            "or 'raw_score_constraint' options "
-                                                            "are included, BOTH must be."
-                                                            );
+                                Log::error(
+                                    "If either 'raw_scores' or"
+                                    " 'raw_score_constraint' options are"
+                                    " included, BOTH must be."
+                                );
                               }
                       }
                     ),

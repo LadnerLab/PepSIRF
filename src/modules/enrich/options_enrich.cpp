@@ -9,11 +9,6 @@ std::string options_enrich::get_arguments()
     // enable ADL
     using namespace std;
 
-    if (logfile.empty())
-    {
-        logfile = set_default_log();
-    }
-
     std::ostringstream stream;
     stream << "--samples                    " << in_samples_fname << "\n "
            << "--threshhold_file            " << threshold_fname << "\n "

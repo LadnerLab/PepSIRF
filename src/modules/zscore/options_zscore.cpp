@@ -5,13 +5,7 @@ options_zscore::options_zscore() = default;
 
 std::string options_zscore::get_arguments()
 {
-    if (logfile.empty())
-    {
-        logfile = set_default_log();
-    }
-
     std::ostringstream str_stream;
-
     str_stream << "--scores      " << in_fname << "\n "
                << "--bins        " << in_bins_fname << "\n "
                << "--trim        " << trim_percent << "\n "
@@ -22,6 +16,6 @@ std::string options_zscore::get_arguments()
                << "--logfile     " << logfile << "\n "
                << "\n";
 
-
     return str_stream.str();
 }
+
