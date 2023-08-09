@@ -1,4 +1,3 @@
-#include <format>
 #include <iostream>
 #include <fstream>
 #include <numeric>
