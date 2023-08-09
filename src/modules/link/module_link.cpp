@@ -22,21 +22,18 @@ void module_link::run( options *opts )
     std::vector<sequence> peptides = fp.parse( l_opts->peptide_file_fname );
     std::vector<sequence> proteins = fp.parse( l_opts->prot_file_fname    );
 
-    std::unordered_map<std::string,
-                       std::unordered_set<scored_entity<std::string,double>>
-                       >
-        kmer_sp_map;
+    std::unordered_map<
+        std::string,
+        std::unordered_set<scored_entity<std::string,double>>
+    > kmer_sp_map;
 
     std::vector<
         std::tuple<
             std::string,std::unordered_set<
-                scored_entity<
-                    std::string,double
-                    >
-                            >
+                scored_entity<std::string,double>
             >
         >
-        peptide_sp_map;
+    > peptide_sp_map;
     // When a metadata file is provided it is parsed for specific data and a kmer map is created, otherwise process uses ID index to create a kmer map
     if( l_opts->metadata_fname.empty() )
         {
@@ -67,27 +64,28 @@ void module_link::run( options *opts )
                             l_opts->k
                             );
         }
+
     write_outputs( l_opts->output_fname, peptide_sp_map );
-
-
-
 }
 
-void module_link::write_outputs( std::string fname,
-                                 std::vector<std::tuple<std::string,
-                                 std::unordered_set<scored_entity<std::string,double>>>>&
-                                 peptide_sp_vec
-                               )
-{
+void module_link::write_outputs(
+    std::string fname,
+    std::vector<
+        std::tuple<
+            std::string,
+            std::unordered_set<scored_entity<std::string,double>>
+        >
+    >& peptide_sp_vec
+) {
     std::ofstream out_file( fname );
 
     out_file << "Peptide Name\tLinked Species IDs with counts\n";
 
-    for( auto it = peptide_sp_vec.begin(); it != peptide_sp_vec.end(); ++it )
+    for( auto it = peptide_sp_vec.begin(); it != peptide_sp_vec.end(); ++it ) // iterate over in vector
         {
-            out_file << std::get<0>( *it ) << "\t";
+            out_file << std::get<0>( *it ) << "\t"; // access tuple space 1
 
-            auto in_vec = std::get<1>( *it );
+            auto in_vec = std::get<1>( *it ); // access tuple space 2
 
             std::size_t in_index = 0;
             for( auto it = in_vec.begin(); it != in_vec.end(); ++it )
@@ -106,14 +104,15 @@ void module_link::write_outputs( std::string fname,
 }
 
 template<typename retrieve_id>
-void module_link::create_prot_map( std::unordered_map<std::string,
-                                   std::unordered_set<scored_entity<std::string,double>>>&
-                                   scores_map,
-                                   std::vector<sequence>& sequences,
-                                   std::size_t k,
-                                   retrieve_id retriever
-                                 )
-{
+void module_link::create_prot_map(
+    std::unordered_map<
+        std::string,
+        std::unordered_set<scored_entity<std::string,double>>
+    >& scores_map,
+    std::vector<sequence>& sequences,
+    std::size_t k,
+    retrieve_id retriever
+) {
     std::size_t index   = 0;
     std::string spec_id = "";
 
@@ -124,29 +123,28 @@ void module_link::create_prot_map( std::unordered_map<std::string,
         {
             ++num_prot;
             std::vector<std::string> kmers;
-            spec_id = verify_id_type( sequences[ index ].name, retriever );
             kmer_tools::get_kmers( kmers, sequences[ index ].seq, k );
-            std::unordered_map<std::string,std::size_t> val_map;
-
             std::unordered_set<scored_entity<std::string,double>>
                 val_set;
 
-            for( auto it = kmers.begin(); it != kmers.end(); ++it )
-                {
-                    // only inserts if key not already in map
-                    auto pair = std::get<0>(
-                                            scores_map.insert( std::make_pair( *it,
-                                                                               val_set
-                                                                               )
-                                                             )
-                                            );
+            spec_id = verify_id_type( sequences[ index ].name, retriever );
 
-                    auto scored_ent = pair->second.emplace( scored_entity<std::string,double>
-                                                            ( spec_id, 0 )
-                                                          )
-                                      .first;
-                    ++( scored_ent->get_score() );
-                }
+            for (
+                auto it = kmers.begin();
+                // protect when a species ID was not found
+                !spec_id.empty() && it != kmers.end();
+                ++it
+            ) {
+                // only inserts if key not already in map
+                auto pair = std::get<0>(
+                    scores_map.insert( std::make_pair( *it, val_set ) )
+                );
+
+                auto scored_ent = pair->second.emplace(
+                    scored_entity<std::string,double>( spec_id, 0 )
+                ).first;
+                ++( scored_ent->get_score() );
+            }
 
             kmers.clear();
         }
