@@ -82,6 +82,17 @@ After the branch that held the feature has been merged, it may be deleted.
 After merging the branch, a note should be added to the [CHANGELOG.md](CHANGELOG.md) file under the
 ```Unreleased``` section giving a brief overview of the changes that were made.
 
+# Merging into prerelease
+Prerelease is a branch for features that have been tested by developers but have 
+not had sufficient testing by users. When a new release is ready but needs more testing
+to ensure it's ready for an official release, it may be pushed to prerelease with an updated
+version number of "Unreleased". No official release is created.
+
+```
+git checkout prerelease
+git merge develop --no-ff
+```
+
 # Updating version number, creating a release
 After one or more features have been implemented as described above, an official
 version may be released. The version number of the new release should be created as
@@ -111,8 +122,26 @@ git merge develop --no-ff
 git tag -a PEPSIRF_VERSION
 git push
 git push --follow-tags
+git checkout prerelease
+git merge master
 git checkout develop
 git merge master
 ```
+
+If prerelease has features that must be merged into develop, follow these steps:
+```
+git checkout master
+git merge prerelease --no-ff
+git tag -a PEPSIRF_VERSION
+git push
+git push --follow-tags
+git checkout prerelease
+git merge master
+git checkout develop *
+git merge master *
+```
+
+*If develop has been developed past the point of prerelease do not include these lines
+
 
 The new version of PepSIRF has been officially released!
