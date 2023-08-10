@@ -122,7 +122,7 @@ void module_link::create_prot_map(
     std::string spec_id = "";
 
     double t_start = omp_get_wtime();
-    double num_prot = 0;
+    size_t num_prot = 0;
 
     for( index = 0; index < sequences.size(); ++index )
         {
@@ -156,7 +156,7 @@ void module_link::create_prot_map(
 
     double t_end = omp_get_wtime();
     std::string str_interval = std::to_string(t_end - t_start);
-    std::string str_rate = std::to_string((t_end - t_start) / num_prot);
+    std::string str_rate = std::to_string((t_end - t_start) / (double)num_prot);
 
     Log::info(
         std::to_string(num_prot) + " proteins done in " + str_interval
