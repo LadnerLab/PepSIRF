@@ -5,6 +5,7 @@
 #include "scored_entity.h"
 #include "sequence.h"
 #include "metadata_map.h"
+#include <filesystem>
 #include <regex>
 #include <vector>
 #include <unordered_set>

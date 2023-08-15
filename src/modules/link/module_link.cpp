@@ -36,7 +36,9 @@ void module_link::run( options *opts )
             >
         >
     > peptide_sp_map;
-    // When a metadata file is provided it is parsed for specific data and a kmer map is created, otherwise process uses ID index to create a kmer map
+    // When a metadata file is provided it is parsed for specific data and a
+    // kmer map is created, otherwise process uses ID index to create a kmer
+    // map
     if( l_opts->metadata_fname.empty() )
         {
             create_prot_map( kmer_sp_map, proteins, l_opts->k, l_opts->id_index );
@@ -175,6 +177,17 @@ void module_link::create_prot_map(
             << " \"SpeciesID\" column - they have been excluded from this run.\n"
             << "Please review the aforementioned sequences in"
             << " \"excluded_protein_sequences.txt\"\n";
+    }
+    // otherwise, assume all specified sequences had a species ID
+    else
+    {
+        // remove excluded protein seqs list file - not needed
+        std::__fs::filesystem::path ex_file_path = "./excluded_protein_sequences.txt";
+
+        // result not captured because file is guaranteed to exist; maybe this
+        // can be refactored in such a way the file is not created unless
+        // written to
+        std::__fs::filesystem::remove(ex_file_path);
     }
 
     double t_end = omp_get_wtime();
