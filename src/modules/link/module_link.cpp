@@ -176,12 +176,12 @@ void module_link::create_prot_map(
     else
     {
         // remove excluded protein seqs list file - not needed
-        std::__fs::filesystem::path ex_file_path = "./excluded_protein_sequences.txt";
+        fs::path ex_file_path = "./excluded_protein_sequences.txt";
 
         // result not captured because file is guaranteed to exist; maybe this
         // can be refactored in such a way the file is not created unless
         // written to
-        std::__fs::filesystem::remove(ex_file_path);
+        fs::remove(ex_file_path);
     }
 
     double t_end = omp_get_wtime();
