@@ -46,6 +46,7 @@ void metadata_map::build_map(std::unordered_map<std::string, std::string> *meta_
             spec_index = count;
         count++;
     }
+
     std::vector<std::string> metadata_row;
     while(std::getline(metadata_file, line))
     {
