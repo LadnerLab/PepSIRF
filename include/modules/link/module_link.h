@@ -11,6 +11,13 @@
 #include <unordered_set>
 #include <unordered_map>
 
+// set filesystem namespace for clang
+#ifdef __clang__
+    namespace fs = std::__fs::filesystem;
+#else
+    namespace fs = std::filesystem;
+#endif
+
 
 class module_link : public module
 {
