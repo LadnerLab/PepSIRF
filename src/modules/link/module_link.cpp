@@ -119,6 +119,11 @@ void module_link::create_prot_map(
     double t_start = omp_get_wtime();
     double num_prot = 0;
 
+    std::size_t missing_spec_id_count = 0;
+    std::ofstream ex_seqs_log(
+        "excluded_protein_sequences.txt", std::ios::out
+    );
+
     for( index = 0; index < sequences.size(); ++index )
         {
             ++num_prot;
@@ -129,12 +134,18 @@ void module_link::create_prot_map(
 
             spec_id = verify_id_type( sequences[ index ].name, retriever );
 
-            for (
-                auto it = kmers.begin();
-                // protect when a species ID was not found
-                !spec_id.empty() && it != kmers.end();
-                ++it
-            ) {
+            // check value for species ID column was missing in metadata file
+            if (spec_id.empty())
+            {
+                ex_seqs_log << sequences[index].name << "\n";
+                missing_spec_id_count += 1;
+
+                kmers.clear();
+                continue; // consider next sequence
+            }
+
+            for (auto it = kmers.begin(); it != kmers.end(); ++it)
+            {
                 // only inserts if key not already in map
                 auto pair = std::get<0>(
                     scores_map.insert( std::make_pair( *it, val_set ) )
@@ -146,8 +157,20 @@ void module_link::create_prot_map(
                 ++( scored_ent->get_score() );
             }
 
+            // TODO: remove? since the vector is realloced every iteration
+            // (line 130)
             kmers.clear();
         }
+
+    // check for at least one species ID missing for proteins
+    if (missing_spec_id_count > 0)
+    {
+        std::cout << "WARNING: " << missing_spec_id_count
+            << " sequence(s) in metadata file did not have a value for their"
+            << " \"SpeciesID\" column - they have been excluded from this run.\n"
+            << "Please review the aforementioned sequences in"
+            << " \"excluded_protein_sequences.txt\"\n";
+    }
 
     double t_end = omp_get_wtime();
 
