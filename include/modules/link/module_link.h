@@ -5,18 +5,10 @@
 #include "scored_entity.h"
 #include "sequence.h"
 #include "metadata_map.h"
-#include <filesystem>
 #include <regex>
 #include <vector>
 #include <unordered_set>
 #include <unordered_map>
-
-// set filesystem namespace for clang
-#ifdef __clang__
-    namespace fs = std::__fs::filesystem;
-#else
-    namespace fs = std::filesystem;
-#endif
 
 
 class module_link : public module
