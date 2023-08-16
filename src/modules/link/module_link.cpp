@@ -4,6 +4,7 @@
 #include "fasta_parser.h"
 #include "omp_opt.h"
 
+#include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/regex.hpp>
@@ -181,6 +182,9 @@ void module_link::create_prot_map(
     // otherwise, assume all specified sequences had a species ID
     else
     {
+        // temp namespace
+        namespace fs = boost::filesystem;
+
         // remove excluded protein seqs list file - not needed
         fs::path ex_file_path = "./excluded_protein_sequences.txt";
 
