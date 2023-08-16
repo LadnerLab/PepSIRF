@@ -190,7 +190,7 @@ void module_demux::run( options *opts )
     #else
             Log::error(
                 "A gzipped file was required, but boost zlib is not available."
-                " Please either configure boost with zlib or unzip the file
+                " Please either configure boost with zlib or unzip the file"
                 " before attempting to demux."
             );
     #endif
