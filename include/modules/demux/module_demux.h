@@ -48,7 +48,7 @@ class module_demux : public module
      *      that has been initialized. If opts is unitialized,
      *      undefined behavior will result.
      **/
-    void run( options *opts );
+    void run(options *opts);
 
 
     std::string get_name();
@@ -61,18 +61,18 @@ class module_demux : public module
      * @param num_samples The number of samples that were processed in the sequencing run.
 
      **/
-    void add_seqs_to_map( parallel_map<sequence, std::vector<std::size_t>*>& input_map, std::vector<sequence>& seqs, size_t num_samples );
+    void add_seqs_to_map(parallel_map<sequence, std::vector<std::size_t>*>& input_map, std::vector<sequence>& seqs, size_t num_samples);
 
     /**
      * Writes output to diagnostic_fname. Output as tab-delimited file, with three columns, samplename, index pair matches, variable region matches.
      * Output is optional, defaulted as unused.
     **/
-    void write_diagnostic_output( options_demux* d_opts,
-                                  phmap::parallel_flat_hash_map<sample, std::vector<std::size_t>>& diagnostic_map );
+    void write_diagnostic_output(options_demux* d_opts,
+                                  phmap::parallel_flat_hash_map<sample, std::vector<std::size_t>>& diagnostic_map);
 
-    void create_diagnostic_map( bool reference_dependent,
+    void create_diagnostic_map(bool reference_dependent,
                                 phmap::parallel_flat_hash_map<sample,std::vector<std::size_t>>& diagnostic_map,
-                                std::vector<sample> samplelist );
+                                std::vector<sample> samplelist);
 
     /**
      * Writes output to the outfile_name.
@@ -91,12 +91,12 @@ class module_demux : public module
      * @param duplicate_map map of dna tags. contains the number of each dna tag that 
      *        appears in a run. used to determine the samples included in the output.
      **/
-    void write_outputs( std::string outfile_name,
+    void write_outputs(std::string outfile_name,
                         parallel_map<sequence, std::vector<std::size_t>*>& seq_scores,
                         std::map<std::string, std::size_t> duplicate_map,
                         bool ref_dependent,
                         std::vector<sample>& samples
-                      );
+                     );
 
     /**
      * Writes outputs to the outfile_name
@@ -111,7 +111,7 @@ class module_demux : public module
      *      elements, each element from vec[ 0 ] to vec[ size - 1 ]
      *      will be zero'd out.
      **/
-    void _zero_vector( std::vector<std::size_t>* vec );
+    void _zero_vector(std::vector<std::size_t>* vec);
 
     /**
      * Find the sequence mapped to, allowing for either one shift to the right or up to two shifts to the left,
@@ -136,76 +136,109 @@ class module_demux : public module
      * @returns Iterator to the match if found, map.end() otherwise
      **/
     template<class M>
-    typename M::iterator _find_with_shifted_mismatch( M& map,
-                                                      sequence probe_seq,
-                                                      sequence_indexer& idx, std::size_t num_mism,
-                                                      std::size_t f_start, std::size_t f_len
-                                                    )
+    typename M::iterator _find_with_shifted_mismatch(
+        M& map,
+        sequence probe_seq,
+        sequence_indexer& idx,
+        std::size_t num_mism, std::size_t f_start, std::size_t f_len,
+        bool pos_toggle
+   ) {
+        std::vector<std::pair<sequence *, int>> query_matches;
+        sequence *best_match = nullptr;
+        sequence seq_temp;
+        std::string empty_string = "";
+        unsigned int num_matches = 0;
+
+        std::string substr = probe_seq.seq.substr(f_start, f_len);
+
+        // Note: hash(sequence& seq) = hash(seq.seq)
+        auto temp = map.find(sequence(empty_string, substr));
+
+        // first check for an exact match in the expected location
+        if (temp != map.end())
         {
-            std::vector<std::pair<sequence *, int>> query_matches;
-            sequence *best_match = nullptr;
-            sequence seq_temp;
-            std::string empty_string = "";
-            unsigned int num_matches = 0;
+            return temp;
+        }
 
-            std::string substr = probe_seq.seq.substr( f_start, f_len );
+        if (f_start > 0) // check that we are not shifting left from the beginning
+        {
+            substr = probe_seq.seq.substr(f_start - 1, f_len);
+            temp = map.find(sequence(empty_string, substr));
 
-            // Note: hash( sequence& seq ) = hash( seq.seq )
-            auto temp = map.find( sequence( empty_string, substr ) );
+            if (temp == map.end())
+            {
+                substr = probe_seq.seq.substr(f_start - 2, f_len);
+                temp = map.find(sequence(empty_string, substr));
+            }
 
-            // first check for an exact match in the expected location
-            if( temp != map.end() )
-                {
-                    return temp;
-                }
+            if (temp != map.end())
+            {
+                return temp;
+            }
+        }
 
-            if( f_start > 0 ) // check that we are not shifting left from the beginning
-                {
-                    substr = probe_seq.seq.substr( f_start - 1, f_len );
-                    temp = map.find( sequence( empty_string, substr ) );
+        // shift one to the right, look for exact match.
+        // but only if we have enough substring to search
+        if (f_start + 1 + f_len <= probe_seq.seq.length())
+        {
+            substr = probe_seq.seq.substr(f_start + 1, f_len);
+            temp = map.find(sequence(empty_string, substr));
+        }
 
-                    if( temp == map.end() )
-                        {
-                            substr = probe_seq.seq.substr( f_start - 2, f_len );
-                            temp = map.find( sequence( empty_string, substr ) );
-                        }
+        // look for a match at the expected coordinates within
+        // the number of mismatches that are tolerated
+        if (num_mism > 0 && temp == map.end())
+        {
+            substr = probe_seq.seq.substr(f_start, f_len);
+            seq_temp.set_name(empty_string);
+            seq_temp.set_seq(substr);
+            num_matches = idx.query(query_matches,
+                                     seq_temp,
+                                     num_mism
+                                 );
+            if (num_matches
+                && !_multiple_best_matches(query_matches))
+            {
+                best_match = _get_min_dist(query_matches);
+                temp = map.find(*best_match);
+            }
+        }
 
-                    if( temp != map.end() )
-                        {
-                            return temp;
-                        }
-                }
-
-            // shift one to the right, look for exact match.
-            // but only if we have enough substring to search
-            if( f_start + 1 + f_len <= probe_seq.seq.length() )
-                {
-                    substr = probe_seq.seq.substr( f_start + 1, f_len );
-                    temp = map.find( sequence( empty_string, substr ) );
-                }
+        // shift one to the right, look for exact match.
+        // but only if we have enough substring to search
+        // and the position toggle flag is true.
+        if (pos_toggle)
+        {
+            if (f_start + 1 + f_len <= probe_seq.seq.length())
+            {
+                substr = probe_seq.seq.substr(f_start + 1, f_len);
+                temp = map.find(sequence("", substr));
+            }
 
             // look for a match at the expected coordinates within
             // the number of mismatches that are tolerated
-            if( num_mism > 0 && temp == map.end() )
-                {
-                    substr = probe_seq.seq.substr( f_start, f_len );
-                    seq_temp.set_name( empty_string );
-                    seq_temp.set_seq( substr );
-                    num_matches = idx.query( query_matches,
-                                             seq_temp,
-                                             num_mism
-                                           );
-                    if( num_matches
-                        && !_multiple_best_matches( query_matches ) )
-                        {
-                            best_match = _get_min_dist( query_matches );
-                            temp = map.find( *best_match );
-                        }
-                }
+            if (num_mism > 0 && temp == map.end())
+            {
+                substr = probe_seq.seq.substr(f_start, f_len);
+                seq_temp = sequence("", substr);
 
-            // return the match, if found. Otherwise, map.end() is returned
-            return temp;
+                num_matches = idx.query(
+                    query_matches,
+                    seq_temp,
+                    num_mism
+                );
+
+                if (num_matches && !_multiple_best_matches(query_matches))
+                {
+                    best_match = _get_min_dist(query_matches);
+                    temp = map.find(*best_match);
+                }
+            }
         }
+
+        // return the match, if found. Otherwise, map.end() is returned
+        return temp;
+    }
 
     /**
      * Gets the minimum distance from a vectors, returns a pointer to the
@@ -215,7 +248,7 @@ class module_demux : public module
      *       in each pair
      * @returns The item with the smallest value in the vector.
      **/
-    sequence *_get_min_dist( std::vector<std::pair<sequence *, int>>& matches );
+    sequence *_get_min_dist(std::vector<std::pair<sequence *, int>>& matches);
 
     /**
      * @note Creates two unordered multimaps based on DNA tag sequences referenced by the samplelist index columns.
@@ -229,11 +262,11 @@ class module_demux : public module
      * This allows access to individual elements directly by the sequence object.
      * @param seq_lookup identical in concept to the map.
      **/
-    void create_index_map( sequential_map<sequence, sample>& map,
+    void create_index_map(sequential_map<sequence, sample>& map,
                            std::vector<sequence>& dna_tags,
                            std::vector<sample>& samplelist,
                            sequential_map<sequence, sample>& seq_lookup
-                         );
+                        );
 
     /**
      * Determine if a sequence has had more than one best match. We say for sequence a
@@ -245,7 +278,7 @@ class module_demux : public module
      *          false
      * @pre matches should be sorted
      **/
-    bool _multiple_best_matches( std::vector<std::pair<sequence *, int>>& matches );
+    bool _multiple_best_matches(std::vector<std::pair<sequence *, int>>& matches);
 
     /**
      * Aggregate output counts, creating count data at the aa-level.
@@ -262,10 +295,10 @@ class module_demux : public module
      *      ID of the particular encoding of that sequence. Note the '-' separating
      *      the two identifiers.
      **/
-    void aggregate_counts( parallel_map<sequence, std::vector<std::size_t>*>& agg_map,
+    void aggregate_counts(parallel_map<sequence, std::vector<std::size_t>*>& agg_map,
                            parallel_map<sequence, std::vector<std::size_t>*>& count_map,
                            std::size_t num_samples
-                         );
+                        );
 
     /**
      * Write FASTQ output, appends fastq data to file
@@ -274,18 +307,18 @@ class module_demux : public module
      * @param sample_name sample file name to append
      */
 
-    void write_fastq_output( std::map<std::string, std::vector<fastq_sequence>> samp_map,
+    void write_fastq_output(std::map<std::string, std::vector<fastq_sequence>> samp_map,
                              std::string outfile
-                           )
+                          )
         {
-            for( auto samp : samp_map ) 
+            for(auto samp : samp_map) 
                 {
                     std::string outfile_path = "";
                     outfile_path = outfile + "/" + samp.first + ".fastq";
                     std::ofstream output;
                     output.open(outfile_path, std::ios_base::app);
 
-                    for( auto fastq_seq : samp.second )
+                    for(auto fastq_seq : samp.second)
                         {
                             output << fastq_seq.name << "\n";
                             output << fastq_seq.seq << "\n";
@@ -314,37 +347,37 @@ class module_demux : public module
     template<typename Translator,
              typename Map
         >
-        void aggregate_translated_counts( const Translator& translator,
+        void aggregate_translated_counts(const Translator& translator,
                                           Map& agg_map,
                                           Map& count_map,
                                           size_t num_samples
-                                        )
+                                       )
         {
             sequence current;
             std::vector<std::size_t> *current_vec_agg   = nullptr;
             std::vector<std::size_t> *current_vec_count = nullptr;
             sequential_map<std::string, std::vector<std::size_t>*> ptr_map;
 
-            for( auto iter = count_map.begin(); iter != count_map.end(); ++iter )
+            for(auto iter = count_map.begin(); iter != count_map.end(); ++iter)
                 {
 
                     try
                         {
-                            current = translator( iter->first );
+                            current = translator(iter->first);
                             current.name = current.seq;
                         }
-                    catch( std::out_of_range& e )
+                    catch(std::out_of_range& e)
                         {
                             continue;
                         }
 
                     // if the new name not in agg_map
-                    if( ptr_map.find( current.name ) == ptr_map.end() )
+                    if(ptr_map.find(current.name) == ptr_map.end())
                         {
                             // add the sequence to agg_map, initialize its data
-                            agg_map[ current ] = new std::vector<std::size_t>( num_samples );
+                            agg_map[ current ] = new std::vector<std::size_t>(num_samples);
                             ptr_map[ current.name ] = agg_map[ current ];
-                            std::fill( agg_map[ current ]->begin(), agg_map[ current ]->end(), 0 );
+                            std::fill(agg_map[ current ]->begin(), agg_map[ current ]->end(), 0);
                         }
 
                     current_vec_agg   = ptr_map[ current.name ];
@@ -352,9 +385,9 @@ class module_demux : public module
 
                     // add the counts from the untrimmed count_map entry to
                     // the trimmed agg_map entry
-                    for( std::size_t index = 0; index < num_samples; ++index )
+                    for(std::size_t index = 0; index < num_samples; ++index)
                         {
-                            current_vec_agg->at( index ) += current_vec_count->at( index );
+                            current_vec_agg->at(index) += current_vec_count->at(index);
                         }
                 }
 

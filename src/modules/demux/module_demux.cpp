@@ -88,32 +88,35 @@ void module_demux::run( options *opts )
     bool r2_reads_included = d_opts->input_r2_fname.length() > 0;
 
     if( r2_reads_included )
-        {
-            r2_reads.open( d_opts->input_r2_fname, std::ios_base::in );
-        }
+    {
+        r2_reads.open( d_opts->input_r2_fname, std::ios_base::in );
+    }
     else
+    {
+        // Should we give a warning for the case of how many index col names are given?
+        if( d_opts->sample_indexes.size() > 1 )
         {
-            // Should we give a warning for the case of how many index col names are given?
-            if( d_opts->sample_indexes.size() > 1 )
-                {
-                    std::cout << "WARNING: \"--input_r2\" does not include a filepath while more "
-                    "than one samplelist index column name has been given. See the \"--sname\" "
-                    "and \"--samplelist\" options for information on default values and usage.\n";
-                }
+            std::cout << "WARNING: \"--input_r2\" does not include a filepath while more "
+            "than one samplelist index column name has been given. See the \"--sname\" "
+            "and \"--samplelist\" options for information on default values and usage.\n";
         }
+    }
 
     const bool reference_dependent = !d_opts->library_fname.empty();
 
+    // check for ref-dependent mode
     if( reference_dependent )
-        {
-            library_seqs   = fasta_p.parse( d_opts->library_fname );
-        }
+    {
+        library_seqs = fasta_p.parse( d_opts->library_fname );
+    }
+    // otherwise, assume ref-independent mode
     else
-        {
-            std::cout << "WARNING: A set of reference sequences was not provided. "
-                      << "Demux will be run in reference-independent mode, where each "
-                      << "read is treated as its own reference.\n";
-        }
+    {
+        std::cout << "WARNING: A set of reference sequences was not provided. "
+                  << "Demux will be run in reference-independent mode, where each "
+                  << "read is treated as its own reference.\n";
+    }
+
     sequential_map<sequence, sample> index_map;
     sequential_map<sequence, sample> seq_lookup;
     dna_tags = fasta_p.parse( d_opts->index_fname );
@@ -157,75 +160,73 @@ void module_demux::run( options *opts )
     pepsirf_io::gzip_reader gzip_r1_reader( reads_file );
     pepsirf_io::gzip_reader gzip_r2_reader( r2_reads );
 
-
     #endif
 
     if( pepsirf_io::is_gzipped( reads_file ) )
-        {
+    {
 
     #ifdef ZLIB_ENABLED
-            reads_ptr = &gzip_r1_reader;
+        reads_ptr = &gzip_r1_reader;
     #else
-            throw std::runtime_error( "A gzipped file was supplied, but "
-                                      "boost zlib is not available. "
-                                      "Please either configure boost with zlib "
-                                      "or unzip the file before attempting to demux."
-                                    );
+        throw std::runtime_error( "A gzipped file was supplied, but "
+                                  "boost zlib is not available. "
+                                  "Please either configure boost with zlib "
+                                  "or unzip the file before attempting to demux."
+                                );
     #endif
-        }
+    }
 
-    if( r2_reads_included
+    if(
+        r2_reads_included
         && pepsirf_io::is_gzipped( r2_reads )
-      )
-        {
-
+    ) {
     #ifdef ZLIB_ENABLED
-            r2_reads_ptr = &gzip_r2_reader;
+        r2_reads_ptr = &gzip_r2_reader;
     #else
-            throw std::runtime_error( "A gzipped file was required, but "
-                                      "boost zlib is not available. "
-                                      "Please either configure boost with zlib "
-                                      "or unzip the file before attempting to demux."
-                                    );
+        throw std::runtime_error( "A gzipped file was required, but "
+                                  "boost zlib is not available. "
+                                  "Please either configure boost with zlib "
+                                  "or unzip the file before attempting to demux."
+                                );
     #endif
-        }
+    }
 
     std::istream& reads_file_ref = *reads_ptr;
     std::istream& r2_reads_ref   = *r2_reads_ptr;
     std::vector<std::pair<std::string,size_t>> index_match_totals;
     for( const auto& curr_index : flexible_idx_data )
-        {
-            index_match_totals.emplace_back( std::make_pair( curr_index.idx_name, 0 ) );
-        }
+    {
+        index_match_totals.emplace_back( std::make_pair( curr_index.idx_name, 0 ) );
+    }
     phmap::parallel_flat_hash_map<sample, std::vector<std::size_t>> diagnostic_map;
     if( !d_opts->diagnostic_fname.empty() )
-        {
-            create_diagnostic_map( reference_dependent, diagnostic_map, samplelist);
-        }
+    {
+        create_diagnostic_map( reference_dependent, diagnostic_map, samplelist);
+    }
 
     if( !d_opts->fastq_out.empty() )
+    {
+        auto output_path = fs_tools::path( d_opts->fastq_out );
+        bool dir_exists = !fs_tools::create_directories( output_path );
+
+        if( dir_exists )
         {
-            auto output_path = fs_tools::path( d_opts->fastq_out );
-            bool dir_exists = !fs_tools::create_directories( output_path );
-
-            if( dir_exists )
-            {
-                std::cout << "WARNING: the directory '" << d_opts->fastq_out
-                          << "' exists, any files with "
-                          << "colliding filenames will be overwritten!\n";
-            }
-
-            std::stringstream build;
-
-            for( auto sample : samplelist ) 
-                {
-                    std::ofstream clear_file;
-                    build << d_opts->fastq_out << "/" << sample.name << ".fastq";
-                    clear_file.open(build.str(), std::ios_base::out);
-                    clear_file.close();
-                    build.clear();
-                }
+            std::cout << "WARNING: the directory '" << d_opts->fastq_out
+                      << "' exists, any files with "
+                      << "colliding filenames will be overwritten!\n";
         }
+
+        std::stringstream build;
+
+        for( auto sample : samplelist ) 
+        {
+            std::ofstream clear_file;
+            build << d_opts->fastq_out << "/" << sample.name << ".fastq";
+            clear_file.open(build.str(), std::ios_base::out);
+            clear_file.close();
+            build.clear();
+        }
+    }
 
 
     while( fastq_p.parse( reads_file_ref, reads, d_opts->read_per_loop  ) )
@@ -316,63 +317,69 @@ void module_demux::run( options *opts )
                         };
 
                     auto found_concatemer = [&]() -> bool
-                        {
-                            return
-                                     d_opts->concatemer.length() > 0
-                                       && reads[ read_index ].seq.find( d_opts->concatemer,
-                                                                        0
-                                                                        ) != std::string::npos;
-
-                        };
+                    {
+                        return d_opts->concatemer.length() > 0
+                            && reads[read_index].seq
+                                    .find(d_opts->concatemer, 0)
+                                != std::string::npos;
+                    };
 
                     auto quality_match = [&]() -> bool
-                        {
-                            return ( !d_opts->min_phred_score
-                                     || ( fastq_score::get_avg_score( reads[ read_index ]
-                                                                      .scores.begin() + seq_start,
-
-                                                                      reads[ read_index ]
-                                                                      .scores.begin() + seq_start + seq_length,
-                                                                      d_opts->phred_base
-                                                                    ) >= d_opts->min_phred_score
-                                        )
-                                   );
-                        };
+                    {
+                        return (
+                            !d_opts->min_phred_score
+                            || (fastq_score::get_avg_score(
+                                    reads[read_index].scores
+                                        .begin() + seq_start,
+                                    reads[read_index].scores
+                                        .begin() + seq_start + seq_length,
+                                    d_opts->phred_base
+                                ) >= d_opts->min_phred_score
+                            )
+                        );
+                    };
                     // Add valid matches
-                    for( const auto& index : flexible_idx_data )
+                    for(const auto& index : flexible_idx_data)
+                    {
+                        sequential_map<sequence, sample>::iterator index_match;
+                        if(index.read_name == "r1")
                         {
-                            sequential_map<sequence, sample>::iterator index_match;
-                            if( index.read_name == "r1" )
-                                {
-                                            index_match = _find_with_shifted_mismatch( seq_lookup, reads[ read_index ],
-                                                                    index_idx, index.num_mismatch,
-                                                                    index.idx_start, index.idx_len
-                                                                    );
-                                }
+                            index_match = _find_with_shifted_mismatch(
+                                seq_lookup, reads[ read_index ],
+                                index_idx, index.num_mismatch,
+                                index.idx_start, index.idx_len,
+                                d_opts->pos_toggle
+                            );
+                        }
+                        else
+                        {
+                            if(r2_seqs.size() == 0)
+                            {
+                                index_match = _find_with_shifted_mismatch(
+                                    seq_lookup, reads[ read_index ],
+                                    index_idx, index.num_mismatch,
+                                    index.idx_start, index.idx_len,
+                                    d_opts->pos_toggle
+                                );
+                            }
                             else
                             {
-                                if( r2_seqs.size() == 0 )
-                                    {
-                                        index_match = _find_with_shifted_mismatch( seq_lookup, reads[ read_index ],
-                                                                                index_idx, index.num_mismatch,
-                                                                                index.idx_start, index.idx_len
-                                                                                );
-                                    }
-                            else
-                                {
-                                    index_match = _find_with_shifted_mismatch( seq_lookup, r2_seqs[ read_index ],
-                                                                            index_idx, index.num_mismatch,
-                                                                            index.idx_start, index.idx_len
-                                                                            );
-                                }
+                                index_match = _find_with_shifted_mismatch(
+                                    seq_lookup, r2_seqs[ read_index ],
+                                    index_idx, index.num_mismatch,
+                                    index.idx_start, index.idx_len,
+                                    d_opts->pos_toggle
+                                );
                             }
-                            idx_match_list.push_back( index_match );
                         }
+
+                        idx_match_list.push_back(index_match);
+                    }
                     // Handle match found
-                    if( match_found()
+                    if(
+                        match_found()
                         && quality_match()
-                      )
-                        {
+                    ) {
                             using seq_map = parallel_map<sequence, std::vector<std::size_t>*>;
                             sequential_map<sequence,sample>::iterator d_id;
     
