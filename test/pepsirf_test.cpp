@@ -617,7 +617,7 @@ TEST_CASE("Full test of info module", "[module_info]")
         // collect expected lines into a set
         {
             std::ifstream ifexpected(
-                "../test/expected/test_expected_info_pep_names.tsv",
+                "../test/expected/test_expected_info_col_sums.tsv",
                 std::ios_base::in
             );
 
@@ -630,7 +630,7 @@ TEST_CASE("Full test of info module", "[module_info]")
         // collect actual lines into a set
         {
             std::ifstream ifactual(
-                "../test/test_info_pep_names.tsv",
+                "../test/test_info_col_sums.tsv",
                 std::ios_base::in
             );
 
