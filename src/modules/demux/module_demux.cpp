@@ -376,207 +376,218 @@ void module_demux::run( options *opts )
                         idx_match_list.push_back(index_match);
                     }
                     // Handle match found
-                    if(
+                    if (
                         match_found()
                         && quality_match()
                     ) {
-                            using seq_map = parallel_map<sequence, std::vector<std::size_t>*>;
-                            sequential_map<sequence,sample>::iterator d_id;
+                        using seq_map = parallel_map<sequence, std::vector<std::size_t>*>;
+                        sequential_map<sequence,sample>::iterator d_id;
     
-                            if( reference_dependent )
+                        if (reference_dependent)
+                        {
+                            et_seq_search<seq_map,true> library_searcher(lib_idx, reference_counts, num_samples);
+
+                            auto seq_match = library_searcher.find(
+                                reads[ read_index ],
+                                std::get<2>(d_opts->seq_data),
+                                seq_start,
+                                seq_length
+                            );
+
+                            if (seq_match != reference_counts.end())
+                            {
+                                if(flexible_idx_data.size() > 1)
                                 {
-                                    et_seq_search<seq_map,true> library_searcher( lib_idx, reference_counts, num_samples );
+                                    std::string concat_idx = "";
+                                #ifndef __clang__
+                                    #pragma omp critical
+                                    {
+                                #endif
+                                    for(std::size_t curr_index = 0; curr_index < idx_match_list.size(); curr_index++)
+                                    {
+                                        if(idx_match_list[curr_index] != index_map.end())
+                                            {
+                                                concat_idx.append(idx_match_list[curr_index]->first.seq);
+                                            }
+                                    }
 
-                                    auto seq_match = library_searcher.find( reads[ read_index ],
-                                                                            std::get<2>( d_opts->seq_data ),
-                                                                            seq_start,
-                                                                            seq_length
-                                                                          );
-                                    if( seq_match != reference_counts.end() )
+                                     d_id = index_map.find(sequence("", concat_idx));
+                                #ifndef __clang__
+                                    }
+                                #endif
+                                }
+                                else
+                                {
+                                    d_id = index_map.find(sequence("", idx_match_list[0]->first.seq));
+                                }
+
+                                if (d_id != index_map.end())
+                                {
+                                    sample_id = d_id->second.id;
+
+                                    if(!d_opts->fastq_out.empty())
                                         {
-                                            if( flexible_idx_data.size() > 1 )
-                                                {
-                                                    std::string concat_idx = "";
-
 #ifndef __clang__
-                                                    #pragma omp critical
-                                                    {
-#endif
-                                                    for( std::size_t curr_index = 0; curr_index < idx_match_list.size(); curr_index++ )
-                                                        {
-                                                            if( idx_match_list[curr_index] != index_map.end() )
-                                                                {
-                                                                    concat_idx.append( idx_match_list[curr_index]->first.seq );
-                                                                }
-                                                        }
-
-                                                     d_id = index_map.find( sequence( "", concat_idx ) );
-#ifndef __clang__
-                                                    }
-#endif
-                                                }
-                                            else
-                                                {
-                                                    d_id = index_map.find( sequence( "", idx_match_list[0]->first.seq ) );
-                                                }
-
-                                            if( d_id != index_map.end() )
-                                                {
-                                                    sample_id = d_id->second.id;
-
-                                                    if( !d_opts->fastq_out.empty() )
-                                                        {
-#ifndef __clang__
-                                                            #pragma omp critical
-                                                            {
+                                            #pragma omp critical
+                                            {
 #endif                                                          
-                                                                fastq_output[d_id->second.name].emplace_back(reads[ read_index ]);
+                                                fastq_output[d_id->second.name].emplace_back(reads[read_index]);
 #ifndef __clang__
-                                                            }
+                                            }
 #endif
-                                                        }
-#ifndef __clang__
-                                                    #pragma omp critical
-                                                        {
-#endif
-                                                            seq_match->second->at( sample_id ) += 1;
-#ifndef __clang__
-                                                        }
-#endif
-                                                    ++processed_success;
-                                                    
-                                                    if( !d_opts->diagnostic_fname.empty() )
-                                                        {
-#ifndef __clang__
-                                                            #pragma omp critical
-                                                                {
-#endif
-                                                                    diagnostic_map.find( d_id->second )->second[idx_match_list.size()] += 1;
-#ifndef __clang__
-                                                                }
-#endif
-                                                            
-                                                        }
-                                                }
                                         }
-                                    else if( seq_match == reference_counts.end()
-                                             && found_concatemer() )
+#ifndef __clang__
+                                        #pragma omp critical
+                                        {
+#endif
+                                            seq_match->second->at(sample_id) += 1;
+#ifndef __clang__
+                                        }
+#endif
+                                    ++processed_success;
+                                    
+                                    if (!d_opts->diagnostic_fname.empty())
                                         {
 #ifndef __clang__
                                             #pragma omp critical
                                                 {
 #endif
-                                                    ++concatemer_found;
+                                                    diagnostic_map.find(d_id->second)->second[idx_match_list.size()] += 1;
 #ifndef __clang__
                                                 }
 #endif
+                                            
                                         }
                                 }
-                            else
-                                {
-
-                                    et_seq_search<seq_map,false> library_searcher( lib_idx, reference_counts, num_samples );
-
-
-                                    if( flexible_idx_data.size() == 1 )
-                                        {
-                                            auto seq_match = library_searcher.find( reads[ read_index ],
-                                                                                    std::get<2>( d_opts->seq_data ),
-                                                                                    seq_start,
-                                                                                    seq_length
-                                                                                    );
-                                            
-                                            
-                                            if( seq_match != reference_counts.end() )
-                                                {
-                                                    // if seq_match found, increase count for given sample
-                                                    auto sample_id = idx_match_list[0]->second.id;
-
-#ifndef __clang__
-                                                    #pragma omp critical
-                                                    {
-#endif
-                                                        fastq_output[d_id->second.name].emplace_back(reads[ read_index ]);
-#ifndef __clang__
-                                                    }
-#endif
-#ifndef __clang__
-                                                    #pragma omp critical
-                                                        {
-#endif
-                                                            seq_match->second->at(sample_id) += 1;
-#ifndef __clang__
-                                                        }
-#endif
-                                                    ++processed_success;
-                                                }        
-                                        }
-                                    else if( flexible_idx_data.size() > 1 )
-                                        {
-                                            std::string concat_idx = "";
-                                            for( const auto& index : idx_match_list )
-                                                {
-                                                    sequential_map<sequence, sample> find_end;
-                                                    if( index != find_end.end() )
-                                                        {
-                                                            concat_idx.append( index->first.seq );
-                                                        }
-                                                }
-
-                                            d_id = index_map.find( sequence( "", concat_idx ) );
-
-                                            if( d_id != index_map.end() )
-                                                {
-                                                    auto seq_match = library_searcher.find( reads[ read_index ],
-                                                                                            std::get<2>( d_opts->seq_data ),
-                                                                                            seq_start,
-                                                                                            seq_length
-                                                                                            );
-                                                    if( seq_match != reference_counts.end() )
-                                                        {
-                                                            sample_id = d_id->second.id;
-#ifndef __clang__
-                                                            #pragma omp critical
-                                                                {
-#endif
-                                                                    seq_match->second->at( sample_id ) += 1;
-                                                                    //ISS169
-#ifndef __clang__
-                                                                }
-#endif
-
-                                                            ++processed_success;
-                                                        }
-                                                }
-                                        }
-                                    else if( found_concatemer() )
-                                        {
-#ifndef __clang__
-                                            #pragma omp critical
-                                                {
-#endif
-                                                    ++concatemer_found;
-#ifndef __clang__
-                                                }
-#endif
-                                        }
-
-                                }
-
+                            }
+                            else if (
+                                seq_match == reference_counts.end()
+                                && found_concatemer()
+                            ) {
+                                #ifndef __clang__
+                                    #pragma omp critical
+                                    {
+                                #endif
+                                        ++concatemer_found;
+                                #ifndef __clang__
+                                    }
+                                #endif
+                            }
                         }
+                        else
+                        {
+                            // Give warning in case of toggle flag == true and ref-dependent == false:
+                            // If the position shift flag is toggled, give a
+                            // warning that the flag is toggled while demux is
+                            // running in ref-independent mode.
+                            // This may result in erroneous DNA tag calls.
+                            if (d_opts->pos_toggle)
+                            {
+                                std::cout << "WARNING: The position toggling flag \'--include_toggle\' is set to true and demux is "
+                                "running in ref-independent mode. This may result in erroneous DNA tag calls.\n";
+                            }
+
+                            et_seq_search<seq_map,false> library_searcher(
+                                lib_idx, reference_counts, num_samples
+                            );
+
+                            if (flexible_idx_data.size() == 1)
+                            {
+                                auto seq_match = library_searcher.find(
+                                    reads[read_index],
+                                    std::get<2>(d_opts->seq_data),
+                                    seq_start,
+                                    seq_length
+                                );
+
+                                if (seq_match != reference_counts.end())
+                                {
+                                    // if seq_match found, increase count for given sample
+                                    auto sample_id = idx_match_list[0]->second.id;
+                                    #ifndef __clang__
+                                    #pragma omp critical
+                                    {
+                                    #endif
+                                        fastq_output[d_id->second.name].emplace_back(reads[ read_index ]);
+                                    #ifndef __clang__
+                                    }
+                                    #endif
+                                    #ifndef __clang__
+                                    #pragma omp critical
+                                        {
+                                    #endif
+                                            seq_match->second->at(sample_id) += 1;
+                                    #ifndef __clang__
+                                        }
+                                    #endif
+                                    ++processed_success;
+                                }        
+                            }
+                            else if (flexible_idx_data.size() > 1)
+                            {
+                                std::string concat_idx = "";
+                                for(const auto& index : idx_match_list)
+                                {
+                                    sequential_map<sequence, sample> find_end;
+                                    if(index != find_end.end())
+                                    {
+                                        concat_idx.append(index->first.seq);
+                                    }
+                                }
+
+                                d_id = index_map.find(sequence("", concat_idx));
+
+                                if (d_id != index_map.end())
+                                {
+                                    auto seq_match = library_searcher.find(
+                                        reads[ read_index ],
+                                        std::get<2>(d_opts->seq_data),
+                                        seq_start,
+                                        seq_length
+                                    );
+
+                                    if (seq_match != reference_counts.end())
+                                    {
+                                        sample_id = d_id->second.id;
+                                        #ifndef __clang__
+                                            #pragma omp critical
+                                            {
+                                        #endif
+                                                seq_match->second->at(sample_id) += 1;
+                                        #ifndef __clang__
+                                            }
+                                        #endif
+
+                                        ++processed_success;
+                                    }
+                                }
+                            }
+                            else if (found_concatemer())
+                            {
+                                #ifndef __clang__
+                                #pragma omp critical
+                                {
+                                #endif
+                                    ++concatemer_found;
+                                #ifndef __clang__
+                                }
+                                #endif
+                            }
+                        }
+                    }
                     // record the number of records that are processed
                     ++processed_total;
                     idx_match_list.clear();
                 }
 
-#ifndef __clang__
-            #pragma omp critical
+            #ifndef __clang__
+                #pragma omp critical
                 {
-#endif
+            #endif
                     write_fastq_output(fastq_output, d_opts->fastq_out);
-#ifndef __clang__
+            #ifndef __clang__
                 }
-#endif
+            #endif
 
             fastq_output.clear();
 
