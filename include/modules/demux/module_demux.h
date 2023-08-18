@@ -177,42 +177,14 @@ class module_demux : public module
             }
         }
 
-        // shift one to the right, look for exact match.
-        // but only if we have enough substring to search
-        if (f_start + 1 + f_len <= probe_seq.seq.length())
-        {
-            substr = probe_seq.seq.substr(f_start + 1, f_len);
-            temp = map.find(sequence(empty_string, substr));
-        }
-
-        // look for a match at the expected coordinates within
-        // the number of mismatches that are tolerated
-        if (num_mism > 0 && temp == map.end())
-        {
-            substr = probe_seq.seq.substr(f_start, f_len);
-            seq_temp.set_name(empty_string);
-            seq_temp.set_seq(substr);
-            num_matches = idx.query(query_matches,
-                                     seq_temp,
-                                     num_mism
-                                 );
-            if (num_matches
-                && !_multiple_best_matches(query_matches))
-            {
-                best_match = _get_min_dist(query_matches);
-                temp = map.find(*best_match);
-            }
-        }
-
-        // shift one to the right, look for exact match.
-        // but only if we have enough substring to search
-        // and the position toggle flag is true.
         if (pos_toggle)
         {
+            // shift one to the right, look for exact match.
+            // but only if we have enough substring to search
             if (f_start + 1 + f_len <= probe_seq.seq.length())
             {
                 substr = probe_seq.seq.substr(f_start + 1, f_len);
-                temp = map.find(sequence("", substr));
+                temp = map.find(sequence(empty_string, substr));
             }
 
             // look for a match at the expected coordinates within
@@ -220,11 +192,10 @@ class module_demux : public module
             if (num_mism > 0 && temp == map.end())
             {
                 substr = probe_seq.seq.substr(f_start, f_len);
-                seq_temp = sequence("", substr);
-
+                seq_temp.set_name(empty_string);
+                seq_temp.set_seq(substr);
                 num_matches = idx.query(
-                    query_matches,
-                    seq_temp,
+                    query_matches, seq_temp,
                     num_mism
                 );
 

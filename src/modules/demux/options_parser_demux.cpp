@@ -172,29 +172,28 @@ bool options_parser_demux::parse(int argc, char ***argv, options *opts)
          ->default_value(""),
          "Include this to output sample-level fastq files"
         )
-        ("include_toggle", po::value<bool>(&opts_demux->pos_toggle)->default_value(false),
-          "The position toggling for the indexes. By default this is set to"
-          " true. By setting this flag to true, the position toggling will be"
-          " turned on and the normal ref-dependent based demux behavior is"
-          " used. By setting this flag to false, the position toggling will be"
-          " turned off and only the exact location specified will be checked"
-          " for a match.\n"
-        )
+        ("include_toggle", po::value<bool>(&opts_demux->pos_toggle)
+            ->default_value(true),
+         "The position toggling for the indexes. By default this is set to"
+         " true. By setting this flag to true, the position toggling will be"
+         " turned on and the normal ref-dependent based demux behavior is"
+         " used. By setting this flag to false, the position toggling will be"
+         " turned off and only the exact location specified will be checked"
+         " for a match.\n"
+         )
         ;
 
 
     po::store(po::command_line_parser(argc, *argv).options(desc).allow_unregistered().run(), vm);
 
-    if(vm.count("help")
-	    || argc == 2
-	 )
-        {
-            std::cout << desc << std::endl;
-            return false;
-        }
+    if (vm.count("help") || argc == 2)
+    {
+        std::cout << desc << std::endl;
+        return false;
+    }
     else
-        {
-            po::notify(vm);
-            return true;
-        }
+    {
+        po::notify(vm);
+        return true;
+    }
 }

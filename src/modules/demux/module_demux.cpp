@@ -82,19 +82,19 @@ void module_demux::run( options *opts )
     samplelist_parser samplelist_p;
     std::vector<sample> samplelist = samplelist_p.parse( d_opts, flexible_idx_data );
 
-    std::ifstream reads_file( d_opts->input_r1_fname, std::ios_base::in );
+    std::ifstream reads_file(d_opts->input_r1_fname, std::ios_base::in);
     std::ifstream r2_reads;
 
     bool r2_reads_included = d_opts->input_r2_fname.length() > 0;
 
-    if( r2_reads_included )
+    if (r2_reads_included)
     {
-        r2_reads.open( d_opts->input_r2_fname, std::ios_base::in );
+        r2_reads.open(d_opts->input_r2_fname, std::ios_base::in);
     }
     else
     {
         // Should we give a warning for the case of how many index col names are given?
-        if( d_opts->sample_indexes.size() > 1 )
+        if(d_opts->sample_indexes.size() > 1)
         {
             std::cout << "WARNING: \"--input_r2\" does not include a filepath while more "
             "than one samplelist index column name has been given. See the \"--sname\" "
@@ -105,9 +105,10 @@ void module_demux::run( options *opts )
     const bool reference_dependent = !d_opts->library_fname.empty();
 
     // check for ref-dependent mode
-    if( reference_dependent )
+    if (reference_dependent)
     {
-        library_seqs = fasta_p.parse( d_opts->library_fname );
+        d_opts->pos_toggle = true;
+        library_seqs = fasta_p.parse(d_opts->library_fname);
     }
     // otherwise, assume ref-independent mode
     else
@@ -376,16 +377,16 @@ void module_demux::run( options *opts )
                         idx_match_list.push_back(index_match);
                     }
                     // Handle match found
-                    if (
-                        match_found()
-                        && quality_match()
-                    ) {
+                    if (match_found() && quality_match())
+                    {
                         using seq_map = parallel_map<sequence, std::vector<std::size_t>*>;
                         sequential_map<sequence,sample>::iterator d_id;
     
                         if (reference_dependent)
                         {
-                            et_seq_search<seq_map,true> library_searcher(lib_idx, reference_counts, num_samples);
+                            et_seq_search<seq_map, true> library_searcher(
+                                lib_idx, reference_counts, num_samples
+                            );
 
                             auto seq_match = library_searcher.find(
                                 reads[ read_index ],

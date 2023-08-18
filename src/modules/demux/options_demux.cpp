@@ -23,7 +23,7 @@ std::string options_demux::get_arguments()
                   " --library               " << library_fname << "\n" <<
                   " --read_per_loop         " << read_per_loop << "\n" <<
                   " --num_threads           " << num_threads << "\n" <<
-                  " --include_toggle        " << std::boolalpha << pos_toggle << "\n" <<
+                  " --include_toggle        " << pos_toggle << "\n" <<
                   " --seq                   " << tup_to_string( seq_data ) << "\n" <<
                   " --index1                " << tup_to_string( index1_data ) << "\n" <<
                   " --index2                " << tup_to_string( index2_data ) << "\n" <<
