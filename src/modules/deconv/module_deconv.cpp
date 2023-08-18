@@ -11,6 +11,7 @@
 #include <boost/range/iterator_range.hpp>
 #include <algorithm>
 
+#include "logger.h"
 #include "fs_tools.h"
 #include "module_deconv.h"
 #include "kmer_tools.h"
@@ -21,11 +22,9 @@
 #include "overlap_data.h"
 #include "distance_matrix.h"
 
-module_deconv::module_deconv() = default;
-
-std::string module_deconv::get_name()
+module_deconv::module_deconv()
 {
-    return "Deconv";
+    name = "Deconv";
 }
 
 void module_deconv::run( options *opts )
@@ -56,11 +55,13 @@ void module_deconv::run( options *opts )
 
             if( output_existed )
                 {
-                    std::cout << "WARNING: Output directory '"
-                              << output_base.string()
-                              << "' already exists. Any "
-                              << "files with colliding names will be "
-                              << "overwritten.\n";
+                    Log::warn(
+                        "Output directory '"
+                        + output_base.string()
+                        + "' already exists. Any "
+                        "files with colliding names will be "
+                        "overwritten.\n"
+                    );
                 }
 
             auto in_dir_iter = fs_tools::directory_iterator( input_base );
@@ -102,7 +103,10 @@ void module_deconv::run( options *opts )
 
     timer.stop();
 
-    std::cout << "Took " << time_keep::get_elapsed( timer ) << " second(s).\n";
+    Log::info(
+        "Took " + std::to_string(time_keep::get_elapsed(timer))
+        + " second(s).\n"
+    );
 }
 
 void module_deconv::choose_kmers( options_deconv *opts )
@@ -492,15 +496,21 @@ module_deconv::parse_linked_file( std::string fname )
                                     if( match[ 1 ] != ""
                                         && match[ 2 ] == "" )
                                         {
-                                            throw std::runtime_error( "No score count found "
-                                            "for ID: " + item + ".\n"
-                                            "The format follows the link module output. "
-                                            "The link module outputs linkage maps with "
-                                            "\":score\" after each ID that is linked to "
-                                            "a given peptide. This score is utilized in "
-                                            "the summation scoring method, but "
-                                            "not utilized in the fractional or integer "
-                                            "scoring methods.\n" );
+                                            Log::error(
+                                                "No score count found"
+                                                " for ID: " + item + ".\n"
+                                                "The format follows the link"
+                                                " module output. The link"
+                                                " module outputs linkage maps"
+                                                " with \":score\" after each"
+                                                " ID that is linked to a given"
+                                                " peptide. This score is"
+                                                " utilized in the summation"
+                                                " scoring method, but not"
+                                                " utilized in the fractional"
+                                                " or integer scoring methods."
+                                                "\n"
+                                            );
                                         }
                                     // matched 'id:count'
                                     else if( match[ 1 ] != ""
@@ -516,8 +526,10 @@ module_deconv::parse_linked_file( std::string fname )
                                         }
                                     else
                                         {
-                                            std::cout << "Failed to line: \n";
-                                            std::cout << item << "\n";
+                                            Log::info(
+                                                "Failed to line: \n"
+                                                + item + "\n"
+                                            );
                                         }
 
                                 }
@@ -994,9 +1006,11 @@ module_deconv::get_evaluation_strategy( options_deconv *opts )
         {
             return evaluation_strategy::score_strategy::SUMMATION_SCORING;
         }
-    throw std::runtime_error( "The scoring strategy, " + opts->scoring_strategy
-            + ", provided for '--scoring_strategy' is not a valid argument. "
-            "Valid arguments include: \"summation\", \"integer\", and \"fraction\"." );
+    Log::error(
+        "The scoring strategy, " + opts->scoring_strategy + ", provided for"
+        " '--scoring_strategy' is not a valid argument. Valid arguments"
+        " include: \"summation\", \"integer\", and \"fraction\"."
+    );
 }
 
 evaluation_strategy::tie_eval_strategy
@@ -1139,7 +1153,7 @@ module_deconv::get_tie_type( std::size_t to_convert )
     switch( to_convert )
         {
         case 0:
-            throw std::runtime_error( "to_convert must be > 0" );
+            Log::error("to_convert must be > 0");
             break;
         case 1:
             ret_val =  tie_data::tie_type::SINGLE_WAY_TIE;

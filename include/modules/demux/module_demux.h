@@ -30,9 +30,6 @@
 class module_demux : public module
 {
  public:
-
-    std::string name;
-
     /**
      * Default constructor, sets the 'name' member of the
      * class to 'demux'.
@@ -49,9 +46,6 @@ class module_demux : public module
      *      undefined behavior will result.
      **/
     void run( options *opts );
-
-
-    std::string get_name();
 
     /**
      * Adds sequences to an unordered map, where the key is the string sequence, and the value is a vector of
@@ -364,4 +358,5 @@ class module_demux : public module
 };
 
 
-#endif // MODULE_DEMUX_HH_INCLUDED
+#endif /* MODULE_DEMUX_HH_INCLUDED */
+

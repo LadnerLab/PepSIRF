@@ -5,12 +5,11 @@
 #include <stdexcept>
 #include <string>
 
+#include "logger.h"
 #include "options_parser_normalize.h"
 #include "options_normalize.h"
 
 options_parser_normalize::options_parser_normalize() = default;
-
-
 
 bool options_parser_normalize::parse( int argc, char ***argv, options *opts )
 {
@@ -68,7 +67,14 @@ bool options_parser_normalize::parse( int argc, char ***argv, options *opts )
           "way the input file provided with 'peptide_scores' (i.e., a score matrix with samples "
           "on the columns and scores for a certain peptide on the rows). The score for each peptide "
           "in the output has been normalized in the manner specified.\n"
-        );
+        )
+        ( "logfile", po::value( &opts_normalize->logfile )
+          ->default_value( options_normalize::set_default_log() ),
+          "Designated file to which the module's processes are logged. By "
+          "default, the logfile's name will include the module's name and the "
+          "time the module started running.\n"
+        )
+        ;
 
     po::store( po::command_line_parser( argc, *argv ).options( desc ).run(), vm);
 
@@ -76,7 +82,11 @@ bool options_parser_normalize::parse( int argc, char ***argv, options *opts )
         || argc == 2 // argc == 2 when 'pepsirf norm' is called
       )
         {
-            std::cout << desc << std::endl;
+            std::ostringstream info_str;
+            info_str << desc << std::endl;
+
+            Log::info(info_str.str());
+
             return false;
         }
     else

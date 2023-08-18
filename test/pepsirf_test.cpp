@@ -617,7 +617,7 @@ TEST_CASE("Full test of info module", "[module_info]")
         // collect expected lines into a set
         {
             std::ifstream ifexpected(
-                "../test/expected/test_expected_info_pep_names.tsv",
+                "../test/expected/test_expected_info_col_sums.tsv",
                 std::ios_base::in
             );
 
@@ -630,7 +630,7 @@ TEST_CASE("Full test of info module", "[module_info]")
         // collect actual lines into a set
         {
             std::ifstream ifactual(
-                "../test/test_info_pep_names.tsv",
+                "../test/test_info_col_sums.tsv",
                 std::ios_base::in
             );
 
@@ -646,7 +646,7 @@ TEST_CASE("Full test of info module", "[module_info]")
 
         auto expected_ref = expected_set.find("BB.5_1X_NS30_B\t2995.00");
         REQUIRE(actual_set.find(*expected_ref) != actual_set.end());
-
+        
         expected_ref = expected_set.find("BB.6_1X_NS30_A\t49.00");
         REQUIRE(actual_set.find(*expected_ref) != actual_set.end());
 

@@ -1,5 +1,7 @@
 #ifndef MODULE_ENRICH_HH_INCLUDED
 #define MODULE_ENRICH_HH_INCLUDED
+
+#include <map>
 #include <string>
 #include <type_traits>
 
@@ -7,13 +9,17 @@
 #include "options_enrich.h"
 #include "peptide_scoring.h"
 #include "paired_score.h"
-#include <map>
 
 class module_enrich : public module
 {
-
 public:
     using sample_type = std::vector<std::string>;
+
+    /**
+     * Default constructor
+     */
+    module_enrich();
+
     /**
      * Run the bin module, passing
      * the options specified by a user.
@@ -40,10 +46,10 @@ public:
      * @returns true if the threshold is met, false otherwise.
      **/
     template<typename ValType>
-    bool pair_threshold_met( const std::pair<ValType,ValType> values,
-                             const std::pair<ValType,ValType> thresholds
-                           )
-    {
+    bool pair_threshold_met(
+        const std::pair<ValType,ValType> values,
+        const std::pair<ValType,ValType> thresholds
+    ) {
         const ValType& a = values.first;
         const ValType& b = values.second;
         const ValType& c = thresholds.first;
@@ -53,7 +59,6 @@ public:
         // not a and b are both less than either one
         bool at_least = ( a >= c || a >= d ) && ( b >= c || b >= d );
         bool not_less = ( a < c || a < d ) && ( b < c || b < d );
-
 
         return at_least && !not_less;
     }
@@ -69,13 +74,16 @@ public:
      * @returns true if the threshold is met, false otherwise.
      **/
     template<typename ValType>
-    bool thresholds_met( const std::vector<ValType> values,
-                             const std::vector<double> thresholds
-                           )
-    {
-        if( *std::max_element( values.begin(), values.end() ) >= *std::max_element( thresholds.begin(), thresholds.end() )
-            && *std::min_element( values.begin(), values.end() ) >= *std::min_element( thresholds.begin(), thresholds.end() )
-          )
+    bool thresholds_met(
+        const std::vector<ValType> values,
+        const std::vector<double> thresholds
+    ) {
+        if(
+            *std::max_element( values.begin(), values.end() )
+                >= *std::max_element( thresholds.begin(), thresholds.end() )
+            && *std::min_element( values.begin(), values.end() )
+                >= *std::min_element( thresholds.begin(), thresholds.end() )
+        )
             return true;
         else
             return false;
@@ -97,10 +105,19 @@ public:
         std::vector<double> sums( raw_scores[0].size(), 0.0 );
         std::size_t raw_score_lists_idx;
 
-        for( raw_score_lists_idx = 0; raw_score_lists_idx < raw_scores.size(); raw_score_lists_idx++ )
-            {
-                std::transform( raw_scores[raw_score_lists_idx].begin(), raw_scores[raw_score_lists_idx].end(), sums.begin(), sums.begin(), std::plus<double>());
-            }
+        for(
+            raw_score_lists_idx = 0;
+            raw_score_lists_idx < raw_scores.size();
+            raw_score_lists_idx++ 
+        ) {
+            std::transform(
+                raw_scores[raw_score_lists_idx].begin(),
+                raw_scores[raw_score_lists_idx].end(),
+                sums.begin(),
+                sums.begin(),
+                std::plus<double>()
+            );
+        }
 
         return sums;
     }
@@ -111,9 +128,11 @@ public:
      * @param raw_score_data The pointer to the raw score data used to find raw scores.
      * @param sample_names The pointer to the sample name vectors to get raw scores from.
      **/
-    void get_raw_scores( std::vector<std::vector<double>> *raw_scores_dest,
-                                      const peptide_score_data_sample_major *raw_score_data,
-                                      const std::vector<std::string> sample_names );
+    void get_raw_scores(
+        std::vector<std::vector<double>> *raw_scores_dest,
+        const peptide_score_data_sample_major *raw_score_data,
+        const std::vector<std::string> sample_names
+    );
 
     /**
      * Get enrichment candidates for peptides in a sample list. Each candidate is a pair:
@@ -124,10 +143,13 @@ public:
      * @param sample_names the list of samples to get enrichment candidates for.
      * @param returns void
      **/
-    void get_enrichment_candidates( std::map<std::string,std::vector<double>> *enrichment_candidates,
-                                            const peptide_score_data_sample_major *matrix_score_data,
-                                            const std::vector<std::string> sample_names
-                                  );
+    void get_enrichment_candidates(
+        std::map<std::string,std::vector<double>> *enrichment_candidates,
+        const peptide_score_data_sample_major *matrix_score_data,
+        const std::vector<std::string> sample_names
+    );
 };
 
-#endif // MODULE_ENRICH_HH_ENCLUDED
+
+#endif /* MODULE_ENRICH_HH_ENCLUDED */
+

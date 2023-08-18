@@ -1,3 +1,4 @@
+#include "logger.h"
 #include "module_link.h"
 #include "kmer_tools.h"
 #include "fasta_parser.h"
@@ -11,7 +12,10 @@
 #include <boost/range/adaptor/transformed.hpp>
 
 
-module_link::module_link() = default;
+module_link::module_link()
+{
+    name = "Link";
+}
 
 void module_link::run( options *opts )
 {
@@ -43,7 +47,10 @@ void module_link::run( options *opts )
         }
     else
         {
-            std::cout << "WARNING: Metadata file has been provided and will be implemented with taxonomic ID index ignored." << std::endl;
+            Log::warn(
+                "Metadata file has been provided and will be implemented with"
+                " taxonomic ID index ignored\n"
+            );
             metadata_map mp = metadata_map();
             std::unordered_map<std::string, std::string> meta_map;
             mp.build_map( &meta_map, l_opts->metadata_fname );
@@ -119,7 +126,7 @@ void module_link::create_prot_map(
     std::string spec_id = "";
 
     double t_start = omp_get_wtime();
-    double num_prot = 0;
+    size_t num_prot = 0;
 
     std::size_t missing_spec_id_count = 0;
     std::ofstream ex_seqs_log(
@@ -189,11 +196,13 @@ void module_link::create_prot_map(
     }
 
     double t_end = omp_get_wtime();
+    std::string str_interval = std::to_string(t_end - t_start);
+    std::string str_rate = std::to_string((t_end - t_start) / (double)num_prot);
 
-    std::cout << num_prot << " proteins done in "
-              << t_end - t_start
-              << " seconds. (" << ( t_end - t_start ) / num_prot
-              << " seconds per peptide)\n";
+    Log::info(
+        std::to_string(num_prot) + " proteins done in " + str_interval
+        + " seconds." + " (" + str_rate + " seconds per peptide)\n"
+    );
 }
 
 std::string module_link::get_id( std::string name, std::size_t id_index )
@@ -355,3 +364,4 @@ void module_link
             kmers.clear();
         }
 }
+

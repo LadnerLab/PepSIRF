@@ -1,3 +1,4 @@
+#include "logger.h"
 #include "options_parser_link.h"
 #include "options_link.h"
 
@@ -72,20 +73,30 @@ bool options_parser_link::parse( int argc, char ***argv, options *opts )
         ( "kmer_size,k", po::value<std::size_t>( &opts_link->k ), "Kmer size to use when creating "
           "the linkage map.\n"
         )
+        ("logfile", po::value( &opts_link->logfile )
+         ->default_value( options_link::set_default_log() ),
+         "Designated file to which the module's processes are logged. By "
+         "default, the logfile's name will include the module's name and the "
+         "time the module started running.\n"
+        )
         ;
 
     po::store( po::command_line_parser( argc, *argv ).options( desc ).run(), vm);
 
-    if( vm.count( "help" )
+    if (
+        vm.count( "help" )
         || argc == 2
-        )
-        {
-            std::cout << desc << std::endl;
-            return false;
-        }
+    ) {
+        std::ostringstream info_str;
+        info_str << desc << "\n";
+
+        Log::info(info_str.str());
+
+        return false;
+    }
     else
-        {
-            po::notify( vm );
-            return true;
-        }
+    {
+        po::notify( vm );
+        return true;
+    }
 }
