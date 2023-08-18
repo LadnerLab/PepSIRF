@@ -4,11 +4,13 @@
 #include "fasta_parser.h"
 #include "omp_opt.h"
 
+#include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/regex.hpp>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/range/adaptor/transformed.hpp>
+
 
 module_link::module_link()
 {
@@ -36,7 +38,9 @@ void module_link::run( options *opts )
             >
         >
     > peptide_sp_map;
-    // When a metadata file is provided it is parsed for specific data and a kmer map is created, otherwise process uses ID index to create a kmer map
+    // When a metadata file is provided it is parsed for specific data and a
+    // kmer map is created, otherwise process uses ID index to create a kmer
+    // map
     if( l_opts->metadata_fname.empty() )
         {
             create_prot_map( kmer_sp_map, proteins, l_opts->k, l_opts->id_index );
@@ -124,6 +128,11 @@ void module_link::create_prot_map(
     double t_start = omp_get_wtime();
     size_t num_prot = 0;
 
+    std::size_t missing_spec_id_count = 0;
+    std::ofstream ex_seqs_log(
+        "excluded_protein_sequences.txt", std::ios::out
+    );
+
     for( index = 0; index < sequences.size(); ++index )
         {
             ++num_prot;
@@ -134,12 +143,18 @@ void module_link::create_prot_map(
 
             spec_id = verify_id_type( sequences[ index ].name, retriever );
 
-            for (
-                auto it = kmers.begin();
-                // protect when a species ID was not found
-                !spec_id.empty() && it != kmers.end();
-                ++it
-            ) {
+            // check value for species ID column was missing in metadata file
+            if (spec_id.empty())
+            {
+                ex_seqs_log << sequences[index].name << "\n";
+                missing_spec_id_count += 1;
+
+                kmers.clear();
+                continue; // consider next sequence
+            }
+
+            for (auto it = kmers.begin(); it != kmers.end(); ++it)
+            {
                 // only inserts if key not already in map
                 auto pair = std::get<0>(
                     scores_map.insert( std::make_pair( *it, val_set ) )
@@ -151,8 +166,34 @@ void module_link::create_prot_map(
                 ++( scored_ent->get_score() );
             }
 
+            // TODO: remove? since the vector is realloced every iteration
+            // (line 130)
             kmers.clear();
         }
+
+    // check for at least one species ID missing for proteins
+    if (missing_spec_id_count > 0)
+    {
+        std::cout << "WARNING: " << missing_spec_id_count
+            << " sequence(s) in metadata file did not have a value for their"
+            << " \"SpeciesID\" column - they have been excluded from this run.\n"
+            << "Please review the aforementioned sequences in"
+            << " \"excluded_protein_sequences.txt\"\n";
+    }
+    // otherwise, assume all specified sequences had a species ID
+    else
+    {
+        // temp namespace
+        namespace fs = boost::filesystem;
+
+        // remove excluded protein seqs list file - not needed
+        fs::path ex_file_path = "./excluded_protein_sequences.txt";
+
+        // result not captured because file is guaranteed to exist; maybe this
+        // can be refactored in such a way the file is not created unless
+        // written to
+        fs::remove(ex_file_path);
+    }
 
     double t_end = omp_get_wtime();
     std::string str_interval = std::to_string(t_end - t_start);
