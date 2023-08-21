@@ -95,7 +95,7 @@ void module_demux::run( options *opts )
     else
     {
         // Should we give a warning for the case of how many index col names are given?
-        if(d_opts->sample_indexes.size() > 1)
+        if (d_opts->sample_indexes.size() > 1)
         {
             Log::warn(
                 "\"--input_r2\" does not include a filepath while more"

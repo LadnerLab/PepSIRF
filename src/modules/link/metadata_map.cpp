@@ -22,7 +22,6 @@ void metadata_map::build_map(std::unordered_map<std::string, std::string> *meta_
     std::getline(metadata_file, line);
     std::for_each(++metadata_options.begin(), metadata_options.end(), [&](std::string header)
     {
-        // verify metadata file header
         if(line.find(header) == std::string::npos)
         {
             Log::error(
@@ -44,6 +43,7 @@ void metadata_map::build_map(std::unordered_map<std::string, std::string> *meta_
             name_index = count;
         if(column_val.compare(metadata_options[ 2 ]) == 0)
             spec_index = count;
+      
         count++;
     }
 
@@ -58,7 +58,6 @@ void metadata_map::build_map(std::unordered_map<std::string, std::string> *meta_
 std::string metadata_map::get_id(std::string sequence_data, std::unordered_map<std::string, std::string> *meta_map)
 {
     std::unordered_map<std::string, std::string>::const_iterator name = meta_map->find(sequence_data);
-
     if(name != meta_map->end())
     {
         return name->second;
@@ -68,4 +67,3 @@ std::string metadata_map::get_id(std::string sequence_data, std::unordered_map<s
         return "";
     }
 }
-

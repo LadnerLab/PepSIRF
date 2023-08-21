@@ -361,6 +361,4 @@ class module_demux : public module
 
 };
 
-
 #endif /* MODULE_DEMUX_HH_INCLUDED */
-
