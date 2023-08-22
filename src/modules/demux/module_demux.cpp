@@ -83,43 +83,47 @@ void module_demux::run( options *opts )
     samplelist_parser samplelist_p;
     std::vector<sample> samplelist = samplelist_p.parse( d_opts, flexible_idx_data );
 
-    std::ifstream reads_file( d_opts->input_r1_fname, std::ios_base::in );
+    std::ifstream reads_file(d_opts->input_r1_fname, std::ios_base::in);
     std::ifstream r2_reads;
 
     bool r2_reads_included = d_opts->input_r2_fname.length() > 0;
 
-    if( r2_reads_included )
-        {
-            r2_reads.open( d_opts->input_r2_fname, std::ios_base::in );
-        }
+    if (r2_reads_included)
+    {
+        r2_reads.open(d_opts->input_r2_fname, std::ios_base::in);
+    }
     else
+    {
+        // Should we give a warning for the case of how many index col names are given?
+        if (d_opts->sample_indexes.size() > 1)
         {
-            // Should we give a warning for the case of how many index col names are given?
-            if( d_opts->sample_indexes.size() > 1 )
-                {
-                    Log::warn(
-                        "\"--input_r2\" does not include a filepath while more"
-                        " than one samplelist index column name has been"
-                        " given. See the \"--sname\" and \"--samplelist\""
-                        " options for information on default values and usage.\n"
-                    );
-                }
+            Log::warn(
+                "\"--input_r2\" does not include a filepath while more"
+                " than one samplelist index column name has been"
+                " given. See the \"--sname\" and \"--samplelist\""
+                " options for information on default values and usage.\n"
+            );
         }
+    }
 
     const bool reference_dependent = !d_opts->library_fname.empty();
 
-    if( reference_dependent )
-        {
-            library_seqs   = fasta_p.parse( d_opts->library_fname );
-        }
+    // check for ref-dependent mode
+    if (reference_dependent)
+    {
+        d_opts->pos_toggle = true;
+        library_seqs = fasta_p.parse(d_opts->library_fname);
+    }
+    // otherwise, assume ref-independent mode
     else
-        {
-            Log::warn(
-                "A set of reference sequences was not provided. Demux will be"
-                " run in reference-independent mode, where each read is"
-                " treated as its own reference.\n"
-            );
-        }
+    {
+        Log::warn(
+            "A set of reference sequences was not provided. Demux will be"
+            " run in reference-independent mode, where each read is"
+            " treated as its own reference.\n"
+        );
+    }
+
     sequential_map<sequence, sample> index_map;
     sequential_map<sequence, sample> seq_lookup;
     dna_tags = fasta_p.parse( d_opts->index_fname );
@@ -163,78 +167,74 @@ void module_demux::run( options *opts )
     pepsirf_io::gzip_reader gzip_r1_reader( reads_file );
     pepsirf_io::gzip_reader gzip_r2_reader( r2_reads );
 
-
     #endif
 
     if( pepsirf_io::is_gzipped( reads_file ) )
-        {
+    {
 
     #ifdef ZLIB_ENABLED
-            reads_ptr = &gzip_r1_reader;
+        reads_ptr = &gzip_r1_reader;
     #else
-            Log::error(
-                "A gzipped file was supplied, but boost zlib is not available."
-                " Please either configure boost with zlib or unzip the file"
-                " before attempting to demux."
-            );
+        Log::error(
+            "A gzipped file was supplied, but boost zlib is not available."
+            " Please either configure boost with zlib or unzip the file"
+            " before attempting to demux."
+        );
     #endif
-        }
+    }
 
-    if( r2_reads_included
+    if(
+        r2_reads_included
         && pepsirf_io::is_gzipped( r2_reads )
-      )
-        {
-
+    ) {
     #ifdef ZLIB_ENABLED
-            r2_reads_ptr = &gzip_r2_reader;
+        r2_reads_ptr = &gzip_r2_reader;
     #else
-            Log::error(
-                "A gzipped file was required, but boost zlib is not available."
-                " Please either configure boost with zlib or unzip the file"
-                " before attempting to demux."
-            );
+        Log::error(
+            "A gzipped file was required, but boost zlib is not available."
+            " Please either configure boost with zlib or unzip the file
+            " before attempting to demux."
+        );
     #endif
-        }
+    }
 
     std::istream& reads_file_ref = *reads_ptr;
     std::istream& r2_reads_ref   = *r2_reads_ptr;
     std::vector<std::pair<std::string,size_t>> index_match_totals;
     for( const auto& curr_index : flexible_idx_data )
-        {
-            index_match_totals.emplace_back( std::make_pair( curr_index.idx_name, 0 ) );
-        }
+    {
+        index_match_totals.emplace_back( std::make_pair( curr_index.idx_name, 0 ) );
+    }
     phmap::parallel_flat_hash_map<sample, std::vector<std::size_t>> diagnostic_map;
     if( !d_opts->diagnostic_fname.empty() )
-        {
-            create_diagnostic_map( reference_dependent, diagnostic_map, samplelist);
-        }
+    {
+        create_diagnostic_map( reference_dependent, diagnostic_map, samplelist);
+    }
 
     if( !d_opts->fastq_out.empty() )
+    {
+        auto output_path = fs_tools::path( d_opts->fastq_out );
+        bool dir_exists = !fs_tools::create_directories( output_path );
+
+        if (dir_exists)
         {
-            auto output_path = fs_tools::path( d_opts->fastq_out );
-            bool dir_exists = !fs_tools::create_directories( output_path );
-
-            if( dir_exists )
-            {
-                Log::warn(
-                    "WARNING: the directory '" + d_opts->fastq_out
-                    + "' exists, any files with colliding filenames will be"
-                    " overwritten!\n"
-                );
-            }
-
-            std::stringstream build;
-
-            for( auto sample : samplelist ) 
-                {
-                    std::ofstream clear_file;
-                    build << d_opts->fastq_out << "/" << sample.name << ".fastq";
-                    clear_file.open(build.str(), std::ios_base::out);
-                    clear_file.close();
-                    build.clear();
-                }
+            Log::warn(
+                "The directory '" + d_opts->fastq_out + "' exists, any files"
+                " with colliding filenames will be overwritten!\n"
+            );
         }
 
+        std::stringstream build;
+
+        for( auto sample : samplelist ) 
+        {
+            std::ofstream clear_file;
+            build << d_opts->fastq_out << "/" << sample.name << ".fastq";
+            clear_file.open(build.str(), std::ios_base::out);
+            clear_file.close();
+            build.clear();
+        }
+    }
 
     while( fastq_p.parse( reads_file_ref, reads, d_opts->read_per_loop  ) )
         {
@@ -324,260 +324,277 @@ void module_demux::run( options *opts )
                         };
 
                     auto found_concatemer = [&]() -> bool
-                        {
-                            return
-                                     d_opts->concatemer.length() > 0
-                                       && reads[ read_index ].seq.find( d_opts->concatemer,
-                                                                        0
-                                                                        ) != std::string::npos;
-
-                        };
+                    {
+                        return d_opts->concatemer.length() > 0
+                            && reads[read_index].seq
+                                    .find(d_opts->concatemer, 0)
+                                != std::string::npos;
+                    };
 
                     auto quality_match = [&]() -> bool
-                        {
-                            return ( !d_opts->min_phred_score
-                                     || ( fastq_score::get_avg_score( reads[ read_index ]
-                                                                      .scores.begin() + seq_start,
-
-                                                                      reads[ read_index ]
-                                                                      .scores.begin() + seq_start + seq_length,
-                                                                      d_opts->phred_base
-                                                                    ) >= d_opts->min_phred_score
-                                        )
-                                   );
-                        };
+                    {
+                        return (
+                            !d_opts->min_phred_score
+                            || (fastq_score::get_avg_score(
+                                    reads[read_index].scores
+                                        .begin() + seq_start,
+                                    reads[read_index].scores
+                                        .begin() + seq_start + seq_length,
+                                    d_opts->phred_base
+                                ) >= d_opts->min_phred_score
+                            )
+                        );
+                    };
                     // Add valid matches
-                    for( const auto& index : flexible_idx_data )
+                    for(const auto& index : flexible_idx_data)
+                    {
+                        sequential_map<sequence, sample>::iterator index_match;
+                        if(index.read_name == "r1")
                         {
-                            sequential_map<sequence, sample>::iterator index_match;
-                            if( index.read_name == "r1" )
-                                {
-                                            index_match = _find_with_shifted_mismatch( seq_lookup, reads[ read_index ],
-                                                                    index_idx, index.num_mismatch,
-                                                                    index.idx_start, index.idx_len
-                                                                    );
-                                }
+                            index_match = _find_with_shifted_mismatch(
+                                seq_lookup, reads[ read_index ],
+                                index_idx, index.num_mismatch,
+                                index.idx_start, index.idx_len,
+                                d_opts->pos_toggle
+                            );
+                        }
+                        else
+                        {
+                            if(r2_seqs.size() == 0)
+                            {
+                                index_match = _find_with_shifted_mismatch(
+                                    seq_lookup, reads[ read_index ],
+                                    index_idx, index.num_mismatch,
+                                    index.idx_start, index.idx_len,
+                                    d_opts->pos_toggle
+                                );
+                            }
                             else
                             {
-                                if( r2_seqs.size() == 0 )
-                                    {
-                                        index_match = _find_with_shifted_mismatch( seq_lookup, reads[ read_index ],
-                                                                                index_idx, index.num_mismatch,
-                                                                                index.idx_start, index.idx_len
-                                                                                );
-                                    }
-                            else
+                                index_match = _find_with_shifted_mismatch(
+                                    seq_lookup, r2_seqs[ read_index ],
+                                    index_idx, index.num_mismatch,
+                                    index.idx_start, index.idx_len,
+                                    d_opts->pos_toggle
+                                );
+                            }
+                        }
+
+                        idx_match_list.push_back(index_match);
+                    }
+                    // Handle match found
+                    if (match_found() && quality_match())
+                    {
+                        using seq_map = parallel_map<sequence, std::vector<std::size_t>*>;
+                        sequential_map<sequence,sample>::iterator d_id;
+    
+                        if (reference_dependent)
+                        {
+                            et_seq_search<seq_map, true> library_searcher(
+                                lib_idx, reference_counts, num_samples
+                            );
+
+                            auto seq_match = library_searcher.find(
+                                reads[ read_index ],
+                                std::get<2>(d_opts->seq_data),
+                                seq_start,
+                                seq_length
+                            );
+
+                            if (seq_match != reference_counts.end())
+                            {
+                                if(flexible_idx_data.size() > 1)
                                 {
-                                    index_match = _find_with_shifted_mismatch( seq_lookup, r2_seqs[ read_index ],
-                                                                            index_idx, index.num_mismatch,
-                                                                            index.idx_start, index.idx_len
-                                                                            );
+                                    std::string concat_idx = "";
+                                #ifndef __clang__
+                                    #pragma omp critical
+                                    {
+                                #endif
+                                    for(std::size_t curr_index = 0; curr_index < idx_match_list.size(); curr_index++)
+                                    {
+                                        if(idx_match_list[curr_index] != index_map.end())
+                                            {
+                                                concat_idx.append(idx_match_list[curr_index]->first.seq);
+                                            }
+                                    }
+
+                                     d_id = index_map.find(sequence("", concat_idx));
+                                #ifndef __clang__
+                                    }
+                                #endif
+                                }
+                                else
+                                {
+                                    d_id = index_map.find(sequence("", idx_match_list[0]->first.seq));
+                                }
+
+                                if (d_id != index_map.end())
+                                {
+                                    sample_id = d_id->second.id;
+
+                                    if(!d_opts->fastq_out.empty())
+                                        {
+#ifndef __clang__
+                                            #pragma omp critical
+                                            {
+#endif                                                          
+                                                fastq_output[d_id->second.name].emplace_back(reads[read_index]);
+#ifndef __clang__
+                                            }
+#endif
+                                        }
+#ifndef __clang__
+                                        #pragma omp critical
+                                        {
+#endif
+                                            seq_match->second->at(sample_id) += 1;
+#ifndef __clang__
+                                        }
+#endif
+                                    ++processed_success;
+                                    
+                                    if (!d_opts->diagnostic_fname.empty())
+                                        {
+#ifndef __clang__
+                                            #pragma omp critical
+                                                {
+#endif
+                                                    diagnostic_map.find(d_id->second)->second[idx_match_list.size()] += 1;
+#ifndef __clang__
+                                                }
+#endif
+                                            
+                                        }
                                 }
                             }
-                            idx_match_list.push_back( index_match );
+                            else if (
+                                seq_match == reference_counts.end()
+                                && found_concatemer()
+                            ) {
+                                #ifndef __clang__
+                                    #pragma omp critical
+                                    {
+                                #endif
+                                        ++concatemer_found;
+                                #ifndef __clang__
+                                    }
+                                #endif
+                            }
                         }
-                    // Handle match found
-                    if( match_found()
-                        && quality_match()
-                      )
+                        else
                         {
-                            using seq_map = parallel_map<sequence, std::vector<std::size_t>*>;
-                            sequential_map<sequence,sample>::iterator d_id;
-    
-                            if( reference_dependent )
+                            // Give warning in case of toggle flag == true and ref-dependent == false:
+                            // If the position shift flag is toggled, give a
+                            // warning that the flag is toggled while demux is
+                            // running in ref-independent mode.
+                            // This may result in erroneous DNA tag calls.
+                            if (d_opts->pos_toggle)
+                            {
+                                std::cout << "WARNING: The position toggling flag \'--include_toggle\' is set to true and demux is "
+                                "running in ref-independent mode. This may result in erroneous DNA tag calls.\n";
+                            }
+
+                            et_seq_search<seq_map,false> library_searcher(
+                                lib_idx, reference_counts, num_samples
+                            );
+
+                            if (flexible_idx_data.size() == 1)
+                            {
+                                auto seq_match = library_searcher.find(
+                                    reads[read_index],
+                                    std::get<2>(d_opts->seq_data),
+                                    seq_start,
+                                    seq_length
+                                );
+
+                                if (seq_match != reference_counts.end())
                                 {
-                                    et_seq_search<seq_map,true> library_searcher( lib_idx, reference_counts, num_samples );
-
-                                    auto seq_match = library_searcher.find( reads[ read_index ],
-                                                                            std::get<2>( d_opts->seq_data ),
-                                                                            seq_start,
-                                                                            seq_length
-                                                                          );
-                                    if( seq_match != reference_counts.end() )
+                                    // if seq_match found, increase count for given sample
+                                    auto sample_id = idx_match_list[0]->second.id;
+                                    #ifndef __clang__
+                                    #pragma omp critical
+                                    {
+                                    #endif
+                                        fastq_output[d_id->second.name].emplace_back(reads[ read_index ]);
+                                    #ifndef __clang__
+                                    }
+                                    #endif
+                                    #ifndef __clang__
+                                    #pragma omp critical
                                         {
-                                            if( flexible_idx_data.size() > 1 )
-                                                {
-                                                    std::string concat_idx = "";
-
-#ifndef __clang__
-                                                    #pragma omp critical
-                                                    {
-#endif
-                                                    for( std::size_t curr_index = 0; curr_index < idx_match_list.size(); curr_index++ )
-                                                        {
-                                                            if( idx_match_list[curr_index] != index_map.end() )
-                                                                {
-                                                                    concat_idx.append( idx_match_list[curr_index]->first.seq );
-                                                                }
-                                                        }
-
-                                                     d_id = index_map.find( sequence( "", concat_idx ) );
-#ifndef __clang__
-                                                    }
-#endif
-                                                }
-                                            else
-                                                {
-                                                    d_id = index_map.find( sequence( "", idx_match_list[0]->first.seq ) );
-                                                }
-
-                                            if( d_id != index_map.end() )
-                                                {
-                                                    sample_id = d_id->second.id;
-
-                                                    if( !d_opts->fastq_out.empty() )
-                                                        {
-#ifndef __clang__
-                                                            #pragma omp critical
-                                                            {
-#endif                                                          
-                                                                fastq_output[d_id->second.name].emplace_back(reads[ read_index ]);
-#ifndef __clang__
-                                                            }
-#endif
-                                                        }
-#ifndef __clang__
-                                                    #pragma omp critical
-                                                        {
-#endif
-                                                            seq_match->second->at( sample_id ) += 1;
-#ifndef __clang__
-                                                        }
-#endif
-                                                    ++processed_success;
-                                                    
-                                                    if( !d_opts->diagnostic_fname.empty() )
-                                                        {
-#ifndef __clang__
-                                                            #pragma omp critical
-                                                                {
-#endif
-                                                                    diagnostic_map.find( d_id->second )->second[idx_match_list.size()] += 1;
-#ifndef __clang__
-                                                                }
-#endif
-                                                            
-                                                        }
-                                                }
+                                    #endif
+                                            seq_match->second->at(sample_id) += 1;
+                                    #ifndef __clang__
                                         }
-                                    else if( seq_match == reference_counts.end()
-                                             && found_concatemer() )
-                                        {
-#ifndef __clang__
-                                            #pragma omp critical
-                                                {
-#endif
-                                                    ++concatemer_found;
-#ifndef __clang__
-                                                }
-#endif
-                                        }
-                                }
-                            else
+                                    #endif
+                                    ++processed_success;
+                                }        
+                            }
+                            else if (flexible_idx_data.size() > 1)
+                            {
+                                std::string concat_idx = "";
+                                for(const auto& index : idx_match_list)
                                 {
-
-                                    et_seq_search<seq_map,false> library_searcher( lib_idx, reference_counts, num_samples );
-
-
-                                    if( flexible_idx_data.size() == 1 )
-                                        {
-                                            auto seq_match = library_searcher.find( reads[ read_index ],
-                                                                                    std::get<2>( d_opts->seq_data ),
-                                                                                    seq_start,
-                                                                                    seq_length
-                                                                                    );
-                                            
-                                            
-                                            if( seq_match != reference_counts.end() )
-                                                {
-                                                    // if seq_match found, increase count for given sample
-                                                    auto sample_id = idx_match_list[0]->second.id;
-
-#ifndef __clang__
-                                                    #pragma omp critical
-                                                    {
-#endif
-                                                        fastq_output[d_id->second.name].emplace_back(reads[ read_index ]);
-#ifndef __clang__
-                                                    }
-#endif
-#ifndef __clang__
-                                                    #pragma omp critical
-                                                        {
-#endif
-                                                            seq_match->second->at(sample_id) += 1;
-#ifndef __clang__
-                                                        }
-#endif
-                                                    ++processed_success;
-                                                }        
-                                        }
-                                    else if( flexible_idx_data.size() > 1 )
-                                        {
-                                            std::string concat_idx = "";
-                                            for( const auto& index : idx_match_list )
-                                                {
-                                                    sequential_map<sequence, sample> find_end;
-                                                    if( index != find_end.end() )
-                                                        {
-                                                            concat_idx.append( index->first.seq );
-                                                        }
-                                                }
-
-                                            d_id = index_map.find( sequence( "", concat_idx ) );
-
-                                            if( d_id != index_map.end() )
-                                                {
-                                                    auto seq_match = library_searcher.find( reads[ read_index ],
-                                                                                            std::get<2>( d_opts->seq_data ),
-                                                                                            seq_start,
-                                                                                            seq_length
-                                                                                            );
-                                                    if( seq_match != reference_counts.end() )
-                                                        {
-                                                            sample_id = d_id->second.id;
-#ifndef __clang__
-                                                            #pragma omp critical
-                                                                {
-#endif
-                                                                    seq_match->second->at( sample_id ) += 1;
-                                                                    //ISS169
-#ifndef __clang__
-                                                                }
-#endif
-
-                                                            ++processed_success;
-                                                        }
-                                                }
-                                        }
-                                    else if( found_concatemer() )
-                                        {
-#ifndef __clang__
-                                            #pragma omp critical
-                                                {
-#endif
-                                                    ++concatemer_found;
-#ifndef __clang__
-                                                }
-#endif
-                                        }
-
+                                    sequential_map<sequence, sample> find_end;
+                                    if(index != find_end.end())
+                                    {
+                                        concat_idx.append(index->first.seq);
+                                    }
                                 }
 
+                                d_id = index_map.find(sequence("", concat_idx));
+
+                                if (d_id != index_map.end())
+                                {
+                                    auto seq_match = library_searcher.find(
+                                        reads[ read_index ],
+                                        std::get<2>(d_opts->seq_data),
+                                        seq_start,
+                                        seq_length
+                                    );
+
+                                    if (seq_match != reference_counts.end())
+                                    {
+                                        sample_id = d_id->second.id;
+                                        #ifndef __clang__
+                                            #pragma omp critical
+                                            {
+                                        #endif
+                                                seq_match->second->at(sample_id) += 1;
+                                        #ifndef __clang__
+                                            }
+                                        #endif
+
+                                        ++processed_success;
+                                    }
+                                }
+                            }
+                            else if (found_concatemer())
+                            {
+                                #ifndef __clang__
+                                #pragma omp critical
+                                {
+                                #endif
+                                    ++concatemer_found;
+                                #ifndef __clang__
+                                }
+                                #endif
+                            }
                         }
+                    }
                     // record the number of records that are processed
                     ++processed_total;
                     idx_match_list.clear();
                 }
 
-#ifndef __clang__
-            #pragma omp critical
+            #ifndef __clang__
+                #pragma omp critical
                 {
-#endif
+            #endif
                     write_fastq_output(fastq_output, d_opts->fastq_out);
-#ifndef __clang__
+            #ifndef __clang__
                 }
-#endif
+            #endif
 
             fastq_output.clear();
 

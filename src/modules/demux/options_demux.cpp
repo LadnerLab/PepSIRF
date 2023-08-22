@@ -23,16 +23,17 @@ std::string options_demux::get_arguments()
         << "--sindex                " << indexes << "\n"
         << "--library               " << library_fname << "\n"
         << "--read_per_loop         " << read_per_loop << "\n"
-		<< "--num_threads           " << num_threads << "\n"
-		<< "--seq                   " << tup_to_string( seq_data ) << "\n"
-		<< "--index1                " << tup_to_string( index1_data ) << "\n"
-		<< "--index2                " << tup_to_string( index2_data ) << "\n"
-		<< "--phred_base            " << phred_base << "\n"
-		<< "--phred_min_score       " << min_phred_score << "\n"
-		<< "--concatemer            " << concatemer << "\n"
-		<< "--diagnostic_info       " << diagnostic_fname << "\n"
-		<< "--fastq_output          " << fastq_out << "\n"
-		<< "--logfile               " << logfile << "\n\n";
+    		<< "--num_threads           " << num_threads << "\n"
+        << "--include_toggle        " << pos_toggle << "\n"
+        << "--seq                   " << tup_to_string( seq_data ) << "\n"
+        << "--index1                " << tup_to_string( index1_data ) << "\n"
+        << "--index2                " << tup_to_string( index2_data ) << "\n"
+        << "--phred_base            " << phred_base << "\n"
+        << "--phred_min_score       " << min_phred_score << "\n"
+        << "--concatemer            " << concatemer << "\n"
+        << "--diagnostic_info       " << diagnostic_fname << "\n"
+        << "--fastq_output          " << fastq_out << "\n"
+        << "--logfile               " << logfile << "\n\n";
 
     return str_stream.str();
 }
@@ -72,4 +73,3 @@ void options_demux::set_info( std::tuple<std::size_t, std::size_t, std::size_t>
                               );
     this->*member = tup;
 }
-

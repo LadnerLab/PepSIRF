@@ -5,7 +5,6 @@ void metadata_map::build_map(std::unordered_map<std::string, std::string> *meta_
     std::vector<std::string> metadata_options;
     boost::split(metadata_options, metadata_fname, boost::is_any_of(","));
     std::ifstream metadata_file(metadata_options[0], std::ios_base::in);
-
     if(!metadata_file.is_open())
     {
         Log::error("File could not be opened. Verify metadata file exists.\n");
