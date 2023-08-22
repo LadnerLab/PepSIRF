@@ -27,79 +27,79 @@ module_deconv::module_deconv()
     name = "Deconv";
 }
 
-void module_deconv::run( options *opts )
+void module_deconv::run(options *opts)
 {
-    options_deconv *d_opts = ( options_deconv * ) opts;
+    options_deconv *d_opts = (options_deconv*) opts;
     time_keep::timer timer;
 
     timer.start();
 
     fs_tools::path input_base{ d_opts->enriched_fname };
 
-    if( fs_tools::is_directory( input_base ) )
+    if (fs_tools::is_directory(input_base))
+    {
+        if (d_opts->output_fname == "deconv_output.tsv")
         {
-            if( d_opts->output_fname == "deconv_output.tsv" )
-                {
-                    d_opts->output_fname = "deconv_output";
-                }
+            d_opts->output_fname = "deconv_output";
+        }
 
-            fs_tools::path output_base{ d_opts->output_fname };
-            fs_tools::path assign_map_base{ d_opts->species_peptides_out };
+        fs_tools::path output_base{ d_opts->output_fname };
+        fs_tools::path assign_map_base{ d_opts->species_peptides_out };
+
+        if (!assign_map_base.empty())
+        {
+            fs_tools::create_directory(assign_map_base);
+        }
+
+        bool output_existed = !fs_tools::create_directory(output_base);
+
+        if (output_existed)
+        {
+            Log::warn(
+                "Output directory '"
+                + output_base.string()
+                + "' already exists. Any "
+                "files with colliding names will be "
+                "overwritten.\n"
+            );
+        }
+
+        auto in_dir_iter = fs_tools::directory_iterator(input_base);
+
+        for (auto& input_f : boost::make_iterator_range(in_dir_iter, {}))
+        {
+            std::string file_name = input_f.path().filename().string();
+
+            if (boost::algorithm::ends_with(file_name, d_opts->enriched_file_ending) == 0)
+            {
+                continue;
+            }
+
+            if(d_opts->remove_file_types)
+            {
+                file_name = input_f.path().filename().stem().string();
+            }
+
+            fs_tools::path in_path = input_f;
+            fs_tools::path out_path = output_base/( file_name + d_opts->outfile_suffix );
 
             if( !assign_map_base.empty() )
-                {
-                    fs_tools::create_directory( assign_map_base );
-                }
+            {
+                fs_tools::path map_path = assign_map_base/( file_name + d_opts->map_suffix );
 
-            bool output_existed = !fs_tools::create_directory( output_base );
+                d_opts->species_peptides_out = map_path.string();
+            }
 
-            if( output_existed )
-                {
-                    Log::warn(
-                        "Output directory '"
-                        + output_base.string()
-                        + "' already exists. Any "
-                        "files with colliding names will be "
-                        "overwritten.\n"
-                    );
-                }
+            d_opts->enriched_fname = in_path.string();
+            d_opts->output_fname   = out_path.string();
 
-            auto in_dir_iter = fs_tools::directory_iterator( input_base );
-
-            for( auto& input_f : boost::make_iterator_range( in_dir_iter, {} ) )
-                {
-                    std::string file_name = input_f.path().filename().string();
-
-                    if ( boost::algorithm::ends_with(file_name, d_opts->enriched_file_ending) == 0 )
-                    {
-                        continue;
-                    }
-
-                    if( d_opts->remove_file_types )
-                        {
-                            file_name = input_f.path().filename().stem().string();
-                        }
-
-                    fs_tools::path in_path = input_f;
-                    fs_tools::path out_path = output_base/( file_name + d_opts->outfile_suffix );
-
-                    if( !assign_map_base.empty() )
-                        {
-                            fs_tools::path map_path = assign_map_base/( file_name + d_opts->map_suffix );
-
-                            d_opts->species_peptides_out = map_path.string();
-                        }
-
-                    d_opts->enriched_fname = in_path.string();
-                    d_opts->output_fname   = out_path.string();
-
-                    choose_kmers( d_opts );
-                }
-        }
-    else
-        {
             choose_kmers( d_opts );
         }
+    }
+    else
+    {
+        choose_kmers(d_opts);
+    }
 
     timer.stop();
 
@@ -162,74 +162,73 @@ void module_deconv::choose_kmers( options_deconv *opts )
 
     std::vector<std::pair<species_data, bool>> output_counts;
 
-    std::string id_name_map_fname;
-
     std::map<std::string,std::string> name_id_map;
     std::map<std::string,std::string>* name_id_map_ptr = nullptr;
 
-    if( !util::empty( d_opts->id_name_map_fname ) )
+    if (!d_opts->id_name_map_fname.empty())
+    {
+        parse_ncbi_name_map(d_opts->id_name_map_fname, name_id_map);
+        name_id_map_ptr = &name_id_map;
+    }
+    else if (!d_opts->custom_id_name_map_fname.empty())
+    {
+        parse_custom_name_map(d_opts->custom_id_name_map_fname, name_id_map);
+        name_id_map_ptr = &name_id_map;
+    }
+
+    auto filter = [&](evaluation_strategy::filter_strategy filter_strat)
+    {
+        if (filter_strat == evaluation_strategy::filter_strategy::SCORE_FILTER)
         {
-            parse_name_map( d_opts->id_name_map_fname, name_id_map );
-            name_id_map_ptr = &name_id_map;
+            filter_counts<std::string,double>
+            (species_scores, thresh);
         }
-
-    auto filter = [&]( evaluation_strategy::filter_strategy filter_strat )
-        {
-            if( filter_strat
-                == evaluation_strategy::filter_strategy::SCORE_FILTER )
-                {
-                    filter_counts<std::string,double>
-                    ( species_scores, thresh );
-
-
-                }
-            else if( filter_strat
-                      == evaluation_strategy::filter_strategy::COUNT_FILTER
-                   )
-                {
-
-                    // recreate species_scores
-                    filter_counts<std::string,double>
-                    ( species_peptide_counts, thresh );
-                }
-        };
+        else if (
+            filter_strat == evaluation_strategy::filter_strategy::COUNT_FILTER
+        ) {
+            // recreate species_scores
+            filter_counts<std::string,double>
+            ( species_peptide_counts, thresh );
+        }
+    };
 
     auto make_map = [&]()
-        {
+    {
         #pragma omp parallel
+        {
+            #pragma omp sections
             {
-                #pragma omp sections
+                #pragma omp section
                 {
-                    #pragma omp section
-                    {
-                        id_to_pep( id_pep_map, pep_species_vec );
-                    }
-
-                    #pragma omp section
-                    {
-                        pep_to_id( pep_id_map, pep_species_vec );
-                    }
+                    id_to_pep(id_pep_map, pep_species_vec);
                 }
 
-                // implicit barrier
-                #pragma omp sections
+                #pragma omp section
                 {
-                    #pragma omp section
-                    {
-                        score_species( species_scores, id_pep_map, pep_id_map,
-                                       score_strat
-                                     );
-                    }
-
-                    #pragma omp section
-                    {
-                        get_species_counts_per_peptide( id_pep_map,
-                                                        species_peptide_counts
-                                                      );
-                    }
+                    pep_to_id(pep_id_map, pep_species_vec);
                 }
             }
-        };
+
+            // implicit barrier
+            #pragma omp sections
+            {
+                #pragma omp section
+                {
+                    score_species(
+                        species_scores, id_pep_map,
+                        pep_id_map, score_strat
+                    );
+                }
+
+                #pragma omp section
+                {
+                    get_species_counts_per_peptide(
+                        id_pep_map, species_peptide_counts
+                    );
+                }
+            }
+        }
+    };
 
     auto make_map_and_filter = [&]( evaluation_strategy::filter_strategy filter_strat )
         {
@@ -1014,23 +1013,25 @@ module_deconv::get_evaluation_strategy( options_deconv *opts )
 }
 
 evaluation_strategy::tie_eval_strategy
-module_deconv::get_tie_eval_strategy( options_deconv *opts )
+module_deconv::get_tie_eval_strategy(options_deconv *opts)
 {
-    if( opts->scoring_strategy.compare( "summation" ) == 0 )
-        {
-            return evaluation_strategy::tie_eval_strategy::SUMMATION_SCORING_TIE_EVAL;
-        }
+    if(opts->scoring_strategy.compare("summation") == 0)
+    {
+        return evaluation_strategy
+            ::tie_eval_strategy::SUMMATION_SCORING_TIE_EVAL;
+    }
 
-    return use_ratio_overlap_threshold( opts->score_overlap_threshold ) ?
+    return use_ratio_overlap_threshold(opts->score_overlap_threshold) ?
         evaluation_strategy::tie_eval_strategy::PERCENT_TIE_EVAL        :
         evaluation_strategy::tie_eval_strategy::INTEGER_TIE_EVAL;
 }
 
 
-void module_deconv::parse_name_map(
+void module_deconv::parse_ncbi_name_map(
     std::string fname,
     std::map<std::string,std::string>& name_map
 ) {
+    Log::info("module_deconv::parse_ncbi_name_map() called with file " + fname + "!\n"); // remove
     std::ifstream in_stream(fname);
     std::size_t lineno = 0;
 
@@ -1060,6 +1061,13 @@ void module_deconv::parse_name_map(
 
         ++lineno;
     }
+}
+
+
+void module_deconv::parse_custom_name_map(
+    std::string fname, std::map<std::string, std::string>& name_map
+) {
+    Log::info("module_deconv::parse_custom_name_map() called with file " + fname + "!\n"); // remove
 }
 
 

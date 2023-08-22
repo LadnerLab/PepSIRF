@@ -107,25 +107,35 @@ class module_deconv : public module
      * @note id is only used for summation scoring
      * @returns The score the id contributes to the species, as defined by 
      *          score_strat
-     **/
-    double score_peptide_for_species( const peptide& peptide,
-                                      std::unordered_map
-                                      <std::string,
-                                      std::vector<std::pair<std::string,double>
-                                      >>&
-                                      spec_count_map,
-                                      std::string id,
-                                      evaluation_strategy::score_strategy score_strat
-                                    );
-    /**
-     * Parse a map that will provide name->tax id mappings. This map should be formatted 
-     * in the same manner as that of 'lineage.dmp' from NCBI. 
-     * @param fname The name fo the file to parse
-     * @param name_map the destination map that will store the mappings of id->name
-     **/
-    void
-        parse_name_map( std::string fname, std::map<std::string,std::string>& name_map );
+     */
+    double score_peptide_for_species(
+        const peptide& peptide,
+        std::unordered_map<
+            std::string, std::vector<std::pair<std::string,double>>
+        >& spec_count_map,
+        std::string id,
+        evaluation_strategy::score_strategy score_strat
+    );
 
+    /**
+     * Parse a map which provides name->taxID mappings. This map should be
+     * formatted in the same manner as that of 'lineage.dmp' from NCBI. 
+     * @param fname Name of the file to parse
+     * @param name_map Destination map which stores mappings of ID->name
+     */
+    void parse_ncbi_name_map(
+        std::string fname, std::map<std::string, std::string>& name_map
+    );
+
+    /**
+     * Parse a map which providing name->tax ID mappings. This map shoudl be
+     * tab-delimited.
+     * @param fname Name of file to be parsed
+     * @param name_map Destination map which stores mappings of ID->name
+     */
+    void parse_custom_name_map(
+        std::string fname, std::map<std::string, std::string>& name_map
+    );
 
     /**
      * Write output to a file that will be named 'out_name'
@@ -137,7 +147,7 @@ class module_deconv : public module
      *        used for outputting what the original count/score of each enriched species is.
      *        This is useful for seeing how the scores and counts have changed for each 
      *        of the enriched species.
-     **/
+     */
     void write_outputs( std::string out_name,
                         std::map<std::string,std::string>*
                         id_name_map,

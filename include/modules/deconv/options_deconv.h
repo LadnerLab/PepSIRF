@@ -126,6 +126,7 @@ class options_deconv : public options
     /**
      * Name of file containing NCBI taxID to taxon name mappings
      */
+    // TODO: should this be renamed to something like ncbi_name_map_fname?
     std::string id_name_map_fname;
 
     /**
