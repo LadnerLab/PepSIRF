@@ -59,8 +59,8 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "Use this flag to exclude input file ('--enrich') extensions from the names of output files. "
           "Not used in singular mode.\n"
         )
-        ( "scores_per_round,s", po::value<std::string>( &opts_deconv->orig_scores_dname )->default_value( "" )
-          ->notifier(
+        ("scores_per_round,s", po::value<std::string>( &opts_deconv->orig_scores_dname )->default_value( "" )
+         ->notifier(
             [&]( const std::string& val )
             {
                 // check that a directory was actually supplied
@@ -154,61 +154,71 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "but both 4 and 0.45 are.\n"
         )
         ( "id_name_map", po::value<std::string>( &opts_deconv->id_name_map_fname )->default_value( "" ),
-          "Optional file containing mappings from taxonomic id to taxon name. This file should be formatted like the "
+          "Optional file containing mappings from taxonomic ID to taxon name. This file should be formatted like the "
           "file 'rankedlineage.dmp' from NCBI. It is recommended to either use this file or a subset of this file "
           "that contains all of the taxon ids linked to peptides of interest. If included, the output will contain "
-          "a column denoting the name of the species as well as the id. \n"
+          "a column denoting the name of the species as well as the id.\n"
         )
-        ( "score_overlap_threshold", po::value<double>( &opts_deconv->score_overlap_threshold )->default_value( 1.0 )
-          ->notifier( [&]( const double val ) {
-                  if( val > 1 && !util::is_integer( val ) )
-                      {
-                          throw boost::program_options::invalid_option_value( "If score_overlap_threshold is not an integer, "
-                                                                              "it must be in (0, 1 ). Otherwise an integer must be "
-                                                                              "provided."
-                                                                            );
-                      }
-
-              }),
-          "Once two species have been determined to be tied, according to '--score_tie_threshold', they are "
-          "then evaluated as a tie. To use integer tie evaluation, where species must share an integer number of "
-          "peptides, not a ratio of their total peptides, provide this argument with a value in the interval [1, inf). "
-          "For ratio tie evaluation, which is used when this argument is provided with a value in the "
-          "interval (0,1), two taxon must reciprocally share at least the specified proportion of peptides to be "
-          "reported together. For example, suppose species 1 shares half (0.5) of its peptides with species 2, but species "
-          "2 only shares a tenth (0.1) of its peptides with species 1. These two will only be reported together if "
-          "score_overlap_threshold' <= 0.1.\n"
+        ("custom_id_name_map",
+         po::value<std::string>(&opts_deconv->custom_id_name_map_fname)
+            ->default_value(""),
+         "Optional file containing mappings from taxonomic IDs to taxon names."
+         " The format of this file is dictated by the user. It is recommended"
+         " to either use this file or a subset of this file that contains all"
+         " of the taxon ids linked to peptides of interest. If included, the"
+         " output will contain a column denoting the name of the species as"
+         " well as the ID.\n"
+        )
+        ("score_overlap_threshold",
+         po::value<double>(&opts_deconv->score_overlap_threshold)->default_value(1.0)
+            ->notifier(
+                [&](const double val)
+                {
+                    if(val > 1 && !util::is_integer(val))
+                    {
+                        throw boost::program_options::invalid_option_value(
+                            "If score_overlap_threshold is not an integer, it"
+                            " must be in (0, 1). Otherwise an integer must be"
+                            " provided."
+                        );
+                    }
+                }),
+         "Once two species have been determined to be tied, according to '--score_tie_threshold', they are "
+         "then evaluated as a tie. To use integer tie evaluation, where species must share an integer number of "
+         "peptides, not a ratio of their total peptides, provide this argument with a value in the interval [1, inf). "
+         "For ratio tie evaluation, which is used when this argument is provided with a value in the "
+         "interval (0,1), two taxon must reciprocally share at least the specified proportion of peptides to be "
+         "reported together. For example, suppose species 1 shares half (0.5) of its peptides with species 2, but species "
+         "2 only shares a tenth (0.1) of its peptides with species 1. These two will only be reported together if "
+         "score_overlap_threshold' <= 0.1.\n"
         )
         ( "enriched_file_ending", po::value<std::string>( &opts_deconv->enriched_file_ending )->default_value( "_enriched.txt" ),
           "Optional flag that specifies what string is expected at the end of each file containing enriched peptides. "
           "Set to \"_enriched.txt\" by default \n"
         )
-        (
-         "logfile", po::value( &opts_deconv->logfile )
-         ->default_value( options_deconv::set_default_log() ),
-          "Designated file to which the module's processes are logged. By "
-          "default, the logfile's name will include the module's name and the "
-          "time the module started running.\n"
+        ("logfile", po::value(&opts_deconv->logfile)
+            ->default_value(options_deconv::set_default_log()),
+         "Designated file to which the module's processes are logged. By"
+         " default, the logfile's name will include the module's name and the"
+         " time the module started running.\n"
         )
         ;
 
     po::store( po::command_line_parser( argc, *argv ).options( desc ).run(), vm);
 
-    if( vm.count( "help" )
-	    || argc == 2
-	  )
-        {
-            std::ostringstream info_str;
-            info_str << desc << "\n";
+    if (vm.count( "help" ) || argc == 2)
+    {
+        std::ostringstream info_str;
+        info_str << desc << "\n";
 
-            Log::info(info_str.str());
+        Log::info(info_str.str());
 
-            return false;
-        }
+        return false;
+    }
     else
-        {
-            po::notify( vm );
-            return true;
-        }
+    {
+        po::notify( vm );
+        return true;
+    }
 }
 

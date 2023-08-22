@@ -1027,42 +1027,39 @@ module_deconv::get_tie_eval_strategy( options_deconv *opts )
 }
 
 
-void
-module_deconv::parse_name_map( std::string fname,
-                               std::map<std::string,std::string>& name_map
-                             )
-{
-    std::ifstream in_stream( fname );
+void module_deconv::parse_name_map(
+    std::string fname,
+    std::map<std::string,std::string>& name_map
+) {
+    std::ifstream in_stream(fname);
     std::size_t lineno = 0;
 
     std::string line;
 
-    while( std::getline( in_stream, line ) )
+    while (std::getline(in_stream, line))
+    {
+        std::vector<std::string> split_line;
+
+        if (lineno)
         {
-            std::vector<std::string> split_line;
-            if( lineno )
-                {
+            boost::trim_right(line);
+            boost::split(split_line, line, boost::is_any_of("|"));
 
-                    boost::trim_right( line );
-                    boost::split( split_line, line,
-                                  boost::is_any_of( "|" )
-                                );
+            // if this is a species-level ID,
+            // then this will provide the mapping.
+            // Otherwise some space is wasted, but that's not
+            // a major concern.
+            boost::trim(split_line[0]);
+            boost::trim(split_line[1]);
 
-                    // if this is a species-level ID,
-                    // then this will provide the mapping.
-                    // Otherwise some space is wasted, but that's not
-                    // a major concern.
-                    boost::trim( split_line[ 0 ] );
-                    boost::trim( split_line[ 1 ] );
+            std::string id   = (split_line[0]);
+            std::string name = split_line[1];
 
-                    std::string id   = ( split_line[ 0 ] );
-                    std::string name = split_line[ 1 ];
-
-                    name_map.insert( std::make_pair( id, name ) );
-                }
-
-            ++lineno;
+            name_map.insert(std::make_pair(id, name));
         }
+
+        ++lineno;
+    }
 }
 
 

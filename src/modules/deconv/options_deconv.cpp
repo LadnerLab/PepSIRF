@@ -19,6 +19,7 @@ std::string options_deconv::get_arguments()
         << "--scoring_strategy        " << scoring_strategy << "\n"
         << "--score_filtering         " << bool_str( score_filtering ) << "\n"
         << "--id_name_map             " << id_name_map_fname << "\n"
+        << "--custom_id_name_map      " << custom_id_name_map_fname << "\n"
         << "--score_tie_threshold     " << score_tie_threshold << "\n"
         << "--score_overlap_threshold " << score_overlap_threshold << "\n"
         << "--output                  " << output_fname << "\n"
@@ -31,3 +32,4 @@ std::string options_deconv::get_arguments()
 
     return str_stream.str();
 }
+

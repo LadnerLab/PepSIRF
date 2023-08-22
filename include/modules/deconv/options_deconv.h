@@ -119,9 +119,13 @@ class options_deconv : public options
     std::size_t k;
 
     /**
-     * The name of the file to
-     * write the id name map to.
-     **/
+     * Name of file containing user-defined taxID to taxon name mappings
+     */
+    std::string custom_id_name_map_fname;
+
+    /**
+     * Name of file containing NCBI taxID to taxon name mappings
+     */
     std::string id_name_map_fname;
 
     /**
@@ -129,7 +133,7 @@ class options_deconv : public options
      * with enriched peptides
      **/
     std::string enriched_file_ending;
-
 };
 
-#endif // OPTIONS_DECONV_HH_INCLUDED
+#endif /* OPTIONS_DECONV_HH_INCLUDED */
+
