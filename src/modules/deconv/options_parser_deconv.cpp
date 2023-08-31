@@ -167,8 +167,7 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
                     opts_deconv->set_info(
                         opts_deconv->custom_id_name_map_info, vals
                     );
-                })
-            ->default_value(""),
+                }),
          "Optional file containing mappings from taxonomic IDs to taxon names."
          " The format of this file is dictated by the user. It is recommended"
          " to either use this file or a subset of this file that contains all"
