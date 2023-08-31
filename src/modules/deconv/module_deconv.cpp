@@ -1,3 +1,4 @@
+#include <__tuple>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -10,6 +11,7 @@
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/iterator_range.hpp>
 #include <algorithm>
+#include <type_traits>
 
 #include "logger.h"
 #include "fs_tools.h"
@@ -170,9 +172,10 @@ void module_deconv::choose_kmers( options_deconv *opts )
         parse_ncbi_name_map(d_opts->id_name_map_fname, name_id_map);
         name_id_map_ptr = &name_id_map;
     }
-    else if (!d_opts->custom_id_name_map_fname.empty())
+    else if (!std::get<0>(d_opts->custom_id_name_map_info).empty())
     {
-        parse_custom_name_map(d_opts->custom_id_name_map_fname, name_id_map);
+        std::string id_name_map_fname = std::get<0>(d_opts->custom_id_name_map_info);
+        parse_custom_name_map(id_name_map_fname, name_id_map);
         name_id_map_ptr = &name_id_map;
     }
 

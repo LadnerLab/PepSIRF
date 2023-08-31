@@ -1,10 +1,13 @@
 #ifndef OPTIONS_DECONV_HH_INCLUDED
 #define OPTIONS_DECONV_HH_INCLUDED
 
+#include "logger.h"
 #include "options.h"
 
 #include <string>
+#include <tuple>
 #include <vector>
+#include <boost/algorithm/string.hpp>
 
 class options_deconv : public options
 {
@@ -119,14 +122,14 @@ class options_deconv : public options
     std::size_t k;
 
     /**
-     * Name of file containing user-defined taxID to taxon name mappings
+     * Tuple containing information for parsing user-defined ID name map
      */
-    std::string custom_id_name_map_fname;
+    std::tuple<std::string, std::string, std::string>
+        custom_id_name_map_info; //!< 0 = ID name map, 1 = Taxon ID column name, 2 = Sequence column name
 
     /**
      * Name of file containing NCBI taxID to taxon name mappings
      */
-    // TODO: should this be renamed to something like ncbi_name_map_fname?
     std::string id_name_map_fname;
 
     /**
@@ -134,6 +137,27 @@ class options_deconv : public options
      * with enriched peptides
      **/
     std::string enriched_file_ending;
+
+    /**
+     * Translates information from string 'info' into a tuple of length 3 and
+     * any type.
+     * Note: is probably only going to be used to move custom ID name map
+     * information.
+     * @param tup Reference to tuple which will be filled
+     * @param info Comma-delimited string of information
+     */
+    // TODO: make into a generic function in options class,
+    // or a virtual method - whichever is more practical for the future
+    void set_info(
+        std::tuple<std::string, std::string, std::string>& tup,
+        std::string info
+    );
+
+    /**
+     */
+    // TODO: make into a generic function in options class,
+    // or a virtual method - whichever is more practical for the future
+    std::string tuple_to_string(std::tuple<std::string, std::string, std::string>& tup);
 };
 
 #endif /* OPTIONS_DECONV_HH_INCLUDED */

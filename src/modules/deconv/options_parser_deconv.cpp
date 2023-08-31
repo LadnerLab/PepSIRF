@@ -153,14 +153,21 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "the set { x: x >= 1 } - Z, where Z is the set of integers, will result in an error. So 4.45 is not a valid value, "
           "but both 4 and 0.45 are.\n"
         )
-        ( "id_name_map", po::value<std::string>( &opts_deconv->id_name_map_fname )->default_value( "" ),
-          "Optional file containing mappings from taxonomic ID to taxon name. This file should be formatted like the "
-          "file 'rankedlineage.dmp' from NCBI. It is recommended to either use this file or a subset of this file "
-          "that contains all of the taxon ids linked to peptides of interest. If included, the output will contain "
-          "a column denoting the name of the species as well as the id.\n"
-        )
+        ("id_name_map", po::value<std::string>( &opts_deconv->id_name_map_fname )->default_value( "" ),
+         "Optional file containing mappings from taxonomic ID to taxon name. This file should be formatted like the "
+         "file 'rankedlineage.dmp' from NCBI. It is recommended to either use this file or a subset of this file "
+         "that contains all of the taxon ids linked to peptides of interest. If included, the output will contain "
+         "a column denoting the name of the species as well as the id.\n"
+         )
         ("custom_id_name_map",
-         po::value<std::string>(&opts_deconv->custom_id_name_map_fname)
+         po::value<std::string>()
+            ->notifier(
+                [&](const std::string &vals)
+                {
+                    opts_deconv->set_info(
+                        opts_deconv->custom_id_name_map_info, vals
+                    );
+                })
             ->default_value(""),
          "Optional file containing mappings from taxonomic IDs to taxon names."
          " The format of this file is dictated by the user. It is recommended"
