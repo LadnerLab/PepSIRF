@@ -1,12 +1,13 @@
 #ifndef MODULE_DECONV_HH_INCLUDED 
 #define MODULE_DECONV_HH_INCLUDED 
+#include <algorithm>
+#include <boost/algorithm/string.hpp>
+#include <map>
+#include <memory>
+#include <set>
 #include <string>
 #include <vector>
-#include <algorithm>
-#include <set>
-#include <memory>
 #include <unordered_map>
-#include <map>
 #include <unordered_set>
 
 #include "overlap_data.h"
@@ -134,7 +135,8 @@ class module_deconv : public module
      * @param name_map Destination map which stores mappings of ID->name
      */
     void parse_custom_name_map(
-        std::string fname, std::map<std::string, std::string>& name_map
+        std::tuple<std::string, std::string, std::string>& tup,
+        std::map<std::string, std::string>& name_map
     );
 
     /**

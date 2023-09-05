@@ -1,4 +1,5 @@
 #include <__tuple>
+#include <ios>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -111,48 +112,52 @@ void module_deconv::run(options *opts)
     );
 }
 
-void module_deconv::choose_kmers( options_deconv *opts )
+void module_deconv::choose_kmers(options_deconv *opts)
 {
     options_deconv *d_opts = opts;
 
-    auto enriched_species = parse_enriched_file( d_opts->enriched_fname );
-    auto pep_species_vec  = parse_linked_file( d_opts->linked_fname );
+    auto enriched_species = parse_enriched_file(d_opts->enriched_fname);
+    auto pep_species_vec  = parse_linked_file(d_opts->linked_fname);
 
-    evaluation_strategy::score_strategy score_strat   = get_evaluation_strategy( d_opts );
-    evaluation_strategy::filter_strategy filter_strat = get_filter_method( d_opts );
-    evaluation_strategy::tie_eval_strategy tie_eval_strat = get_tie_eval_strategy( d_opts );
+    evaluation_strategy::score_strategy score_strat = get_evaluation_strategy(d_opts);
+    evaluation_strategy::filter_strategy filter_strat = get_filter_method(d_opts);
+    evaluation_strategy::tie_eval_strategy tie_eval_strat = get_tie_eval_strategy(d_opts);
 
     // filter out the peptides that are not enriched
-    auto it = std::remove_if( pep_species_vec.begin(), pep_species_vec.end(),
-                              [&]( std::pair<std::string,std::vector<std::pair<std::string,double>>>& i) -> bool
-                              { return enriched_species.find( std::get<0>( i ) )
-                                      == enriched_species.end();
-                              }
+    auto it = std::remove_if(
+        pep_species_vec.begin(), pep_species_vec.end(),
+        [&](std::pair<
+                std::string,
+                std::vector<std::pair<std::string, double>>
+            >& i
+        ) -> bool
+        {
+            return enriched_species.find(std::get<0>(i)) == enriched_species.end();
+        }
                             );
-    pep_species_vec.erase( it, pep_species_vec.end() );
+    pep_species_vec.erase(it, pep_species_vec.end());
 
     std::unordered_map<std::string,std::vector<std::pair<std::string,double>>>
         peptide_assignment_global;
 
-    std::unordered_map<species_id<std::string>,
-                       scored_entity<peptide, double>
-                       >
+    std::unordered_map<species_id<std::string>, scored_entity<peptide, double>>
         species_highest_peptide;
 
     // add what species were originally shown to "hit" which peptides
-    for( const auto& x : pep_species_vec )
+    for (const auto& x : pep_species_vec)
+    {
+        auto ref = peptide_assignment_global
+            .emplace(x.first, std::vector<std::pair<std::string,double>>())
+            .first;
+        for (const auto& i : x.second)
         {
-            auto ref = peptide_assignment_global
-                .emplace( x.first, std::vector<std::pair<std::string,double>>() ).first;
-            for( const auto& i : x.second )
-                {
-                    ref->second.emplace_back( i );
-                }
+            ref->second.emplace_back( i );
         }
+    }
 
     std::size_t thresh = d_opts->threshold;
 
-    omp_set_num_threads( d_opts->single_threaded ? 1 : 2 );
+    omp_set_num_threads(d_opts->single_threaded ? 1 : 2);
 
     std::unordered_map<std::string, std::vector<std::string>> id_pep_map;
     std::unordered_map<std::string, std::vector<std::pair<std::string,double>>>
@@ -174,8 +179,7 @@ void module_deconv::choose_kmers( options_deconv *opts )
     }
     else if (!std::get<0>(d_opts->custom_id_name_map_info).empty())
     {
-        std::string id_name_map_fname = std::get<0>(d_opts->custom_id_name_map_info);
-        parse_custom_name_map(id_name_map_fname, name_id_map);
+        parse_custom_name_map(d_opts->custom_id_name_map_info, name_id_map);
         name_id_map_ptr = &name_id_map;
     }
 
@@ -183,15 +187,13 @@ void module_deconv::choose_kmers( options_deconv *opts )
     {
         if (filter_strat == evaluation_strategy::filter_strategy::SCORE_FILTER)
         {
-            filter_counts<std::string,double>
-            (species_scores, thresh);
+            filter_counts<std::string,double>(species_scores, thresh);
         }
         else if (
             filter_strat == evaluation_strategy::filter_strategy::COUNT_FILTER
         ) {
             // recreate species_scores
-            filter_counts<std::string,double>
-            ( species_peptide_counts, thresh );
+            filter_counts<std::string,double>(species_peptide_counts, thresh);
         }
     };
 
@@ -233,59 +235,56 @@ void module_deconv::choose_kmers( options_deconv *opts )
         }
     };
 
-    auto make_map_and_filter = [&]( evaluation_strategy::filter_strategy filter_strat )
-        {
-            make_map();
-            filter( filter_strat );
-        };
+    auto make_map_and_filter = [&](evaluation_strategy::filter_strategy filter_strat)
+    {
+        make_map();
+        filter(filter_strat);
+    };
 
     make_map();
 
+    auto write_round_scores = [&](std::size_t round_no)
+    {
+        std::unordered_map<std::string,std::pair<double,double>> round_scores;
 
-    auto write_round_scores = [&]( std::size_t round_no )
-        {
-            std::unordered_map<std::string,std::pair<double,double>> round_scores;
+        std::ofstream out_f;
+        std::string fname;
+        fs_tools::create_fname(
+            fname, d_opts->orig_scores_dname,
+            "round_", round_no
+        );
 
-            std::ofstream out_f;
-            std::string fname;
-            fs_tools::create_fname( fname,
-                                    d_opts->orig_scores_dname,
-                                    "round_", round_no
-                                  );
+        // populate the unfiltered scores with counts, scores for all species
+        combine_count_and_score(
+            round_scores, species_peptide_counts,
+            species_scores
+        );
 
-            // populate the unfiltered scores with counts, scores for all species
-            combine_count_and_score( round_scores,
-                                     species_peptide_counts,
-                                     species_scores
-                                   );
+        out_f.open(fname);
 
-            out_f.open( fname );
+        write_scores(out_f, name_id_map_ptr, round_scores);
 
-            write_scores( out_f,
-                          name_id_map_ptr,
-                          round_scores
-                        );
+        out_f.close();
+    };
 
-            out_f.close();
-        };
-
-    filter( filter_strat );
+    filter(filter_strat);
 
     // used to track the original scores for each species
     std::unordered_map<std::string,std::pair<double,double>> original_scores;
     std::size_t round_no = 0;
 
-    if( !util::empty( d_opts->orig_scores_dname ) )
-        {
-            write_round_scores( round_no );
-        }
+    if (!util::empty(d_opts->orig_scores_dname))
+    {
+        write_round_scores(round_no);
+    }
 
-    combine_count_and_score( original_scores,
-                             species_peptide_counts,
-                             species_scores
-                           );
+    combine_count_and_score(
+        original_scores, species_peptide_counts,
+        species_scores
+    );
 
-    std::unordered_map<std::string,std::vector<std::string>> peptide_assignment_map;
+    std::unordered_map<std::string,std::vector<std::string>>
+        peptide_assignment_map;
 
     std::unordered_map<std::string,std::unordered_map<std::string,double>>
         pep_spec_map_w_counts;
@@ -416,15 +415,15 @@ void module_deconv::choose_kmers( options_deconv *opts )
                         }
                 }
 
-            for( auto it = pep_id_map.begin(); it != pep_id_map.end(); ++it )
-                {
-                    pep_species_vec.emplace_back( it->first, it->second );
-                }
+            for (auto it = pep_id_map.begin(); it != pep_id_map.end(); ++it)
+            {
+                pep_species_vec.emplace_back(it->first, it->second);
+            }
 
-            if( !util::empty( d_opts->orig_scores_dname ) )
-                {
-                    write_round_scores( round_no );
-                }
+            if (!util::empty(d_opts->orig_scores_dname))
+            {
+                write_round_scores(round_no);
+            }
 
             tied_species.clear();
             tie_candidates.clear();
@@ -435,24 +434,23 @@ void module_deconv::choose_kmers( options_deconv *opts )
             species_peptide_scores.clear();
             species_with_highest_peptide.clear();
 
-            make_map_and_filter( filter_strat );
+            make_map_and_filter(filter_strat);
 
             ++round_no;
         }
 
-    write_outputs( d_opts->output_fname,
-                   name_id_map_ptr,
-                   output_counts,
-                   original_scores
-                 );
+    write_outputs(
+        d_opts->output_fname, name_id_map_ptr,
+        output_counts, original_scores
+    );
 
-    if( d_opts->species_peptides_out.compare( "" ) )
-        {
-            write_species_assign_map( d_opts->species_peptides_out,
-                                      peptide_assignment_global,
-                                      peptide_assignment_map
-                                    );
-        }
+    if (d_opts->species_peptides_out.compare(""))
+    {
+        write_species_assign_map(
+            d_opts->species_peptides_out, peptide_assignment_global,
+            peptide_assignment_map
+        );
+    }
 }
 
 
@@ -1034,7 +1032,6 @@ void module_deconv::parse_ncbi_name_map(
     std::string fname,
     std::map<std::string,std::string>& name_map
 ) {
-    Log::info("module_deconv::parse_ncbi_name_map() called with file " + fname + "!\n"); // remove
     std::ifstream in_stream(fname);
     std::size_t lineno = 0;
 
@@ -1068,9 +1065,48 @@ void module_deconv::parse_ncbi_name_map(
 
 
 void module_deconv::parse_custom_name_map(
-    std::string fname, std::map<std::string, std::string>& name_map
+    std::tuple<std::string, std::string, std::string>& tup,
+    std::map<std::string, std::string>& name_map
 ) {
-    Log::info("module_deconv::parse_custom_name_map() called with file " + fname + "!\n"); // remove
+    std::ifstream map_stream(std::get<0>(tup), std::ios::in);
+    std::string line;
+    std::vector<std::string> split_line;
+
+    // get indices to taxon ID and species name
+    std::size_t taxID_idx = 0;
+    std::size_t spec_name_idx = 0;
+
+    std::getline(map_stream, line);
+    boost::split(split_line, line, boost::is_any_of("\t"));
+
+    for (
+        std::size_t header_col_idx = 0;
+        header_col_idx < split_line.size();
+        header_col_idx += 1
+    ) {
+        // check for taxon ID index
+        if (std::get<1>(tup).compare(split_line[header_col_idx]) == 0)
+        {
+            taxID_idx = header_col_idx;
+        }
+        // otherwise, check for species name index
+        else if (std::get<2>(tup).compare(split_line[header_col_idx]) == 0)
+        {
+            spec_name_idx = header_col_idx;
+        }
+    }
+
+    // map taxon IDs to species names
+    while (std::getline(map_stream, line))
+    {
+        // TODO: make sure don't need to trim anything
+        boost::split(split_line, line, boost::is_any_of("\t"));
+
+        std::string id = split_line[taxID_idx];
+        std::string name = split_line[spec_name_idx];
+
+        name_map.insert(std::make_pair(id, name));
+    }
 }
 
 
