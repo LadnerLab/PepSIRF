@@ -99,6 +99,18 @@ class module_demux : public module
 
 
     /**
+     * Truncates library sequences to length provided by the user
+     * @param seq_length Sequence length specified with the "--seq" option
+     * @param lib_seqs Reference to library sequences received from file
+     *        specified by the "--library"
+     **/
+    void trunc_lib_seqs(
+        std::size_t seq_length,
+        std::vector<sequence> &lib_seqs
+    );
+
+
+    /**
      * Method to zero a vector of size_t elements.
      * @param vec Pointer to the vector to zero.
      * @pre vec must have been initialized with some number of

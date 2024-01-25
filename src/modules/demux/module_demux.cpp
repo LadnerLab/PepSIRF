@@ -127,11 +127,18 @@ void module_demux::run( options *opts )
     std::size_t seq_start  = std::get<0>( d_opts->seq_data );
     std::size_t seq_length = std::get<1>( d_opts->seq_data );
 
+    std::stringstream lib_seq_debug;
+    lib_seq_debug
+        << library_seqs[0].name << "\n"
+        << library_seqs[0].seq  << "\n"
+        << "length = " << library_seqs[0].length() << "\n";
+    Log::info(lib_seq_debug.str());
+
     {
         std::size_t lib_length = library_seqs[0].length();
         if (seq_length < lib_length)
         {
-            // op to truncate seqs
+            trunc_lib_seqs(seq_length, library_seqs);
         }
         else if (seq_length > lib_length)
         {
@@ -142,6 +149,14 @@ void module_demux::run( options *opts )
             Log::error(err_stream.str());
         }
     }
+
+    lib_seq_debug.flush();
+    lib_seq_debug
+        << "Truncated:\n"
+        << library_seqs[0].name << "\n"
+        << library_seqs[0].seq  << "\n"
+        << "length = " << library_seqs[0].length() << "\n";
+    Log::info(lib_seq_debug.str());
 
     sequential_map<sequence, sample> index_map;
     sequential_map<sequence, sample> seq_lookup;
@@ -915,6 +930,18 @@ void module_demux::write_outputs( std::string outfile_name,
         }
     outfile.close();
 }
+
+
+void module_demux::trunc_lib_seqs(
+    std::size_t seq_length,
+    std::vector<sequence> &lib_seqs
+) {
+    for (sequence &lib_seq : lib_seqs)
+    {
+        lib_seq.seq.resize(seq_length);
+    }
+}
+
 
 void module_demux::_zero_vector( std::vector<std::size_t>* vec )
 {
