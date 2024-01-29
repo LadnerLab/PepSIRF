@@ -497,6 +497,71 @@ TEST_CASE( "Diagnostics give a detailed count for the occurring read matches dur
 	}
 }
 
+TEST_CASE("Automatic truncation of library sequences", "[module_demux]")
+{
+    // run demux using a real-world dataset (31250 records) with diagnostic output
+    module_demux d_mod;
+    options_demux d_opts;
+
+    d_opts.input_r1_fname = std::string("../test/input_data/test_input_r1_NS30.fastq");
+    d_opts.input_r2_fname = std::string("../test/input_data/test_input_r2_NS30.fastq");
+    d_opts.index_fname = std::string("../test/input_data/test_barcodes.fa");
+    d_opts.library_fname = std::string("../test/input_data/test_extended_demux_library_NS30.fna");
+    d_opts.samplelist_fname = std::string("../test/input_data/test_samplelist_NS30.tsv");
+    d_opts.flexible_idx_fname = std::string("");
+    d_opts.output_fname = std::string("../test/test_actual_trunc_demux_output.tsv");
+    d_opts.diagnostic_fname = std::string("../test/test_actual_trunc_diagnostic_output.tsv");
+    d_opts.read_per_loop = 80000;
+    d_opts.aggregate_fname = std::string();
+    d_opts.concatemer = std::string();
+    d_opts.min_phred_score = 0;
+    d_opts.phred_base = 33;
+    d_opts.samplename = "SampleName";
+    d_opts.indexes = "Index1,Index2";
+    d_opts.sample_indexes = { "Index1", "Index2" };
+    d_opts.set_info(&options_demux::index1_data, "12,10,1");
+    d_opts.set_info(&options_demux::index2_data, "0,8,1");
+
+    SECTION("Library sequences are resized to expected size from user")
+    {
+        d_opts.set_info(&options_demux::seq_data, "41,40,2");
+        d_mod.run(&d_opts);
+
+        // test resulting demultiplexed file
+        std::string expected = "../test/expected/test_expected_demux_NS30.tsv";
+        std::string actual = "../test/test_actual_trunc_demux_output.tsv";
+        std::ifstream ifexpected(expected, std::ios_base::in);
+        std::ifstream ifactual(actual, std::ios_base::in);
+        std::string expected_line;
+        std::string actual_line;
+  
+      	while (!ifexpected.eof() && !ifactual.eof())
+      	{
+        		std::getline(ifexpected, expected_line);
+            std::getline(ifactual, actual_line);
+            REQUIRE(actual_line.compare(expected_line) == 0);
+      	}
+
+        // test resulting diagnostic file
+        expected = "../test/expected/test_expected_diagnostic_NS30.tsv";
+        actual = "../test/test_actual_trunc_diagnostic_output.tsv";
+        ifexpected = std::ifstream(expected, std::ios_base::in);
+        ifactual = std::ifstream(actual, std::ios_base::in);
+
+        while(!ifexpected.eof() && !ifactual.eof())
+        {
+            std::getline(ifexpected, expected_line);
+            std::getline(ifactual, actual_line);
+            REQUIRE(actual_line.compare(expected_line) == 0);
+        }
+    }
+    SECTION("Demux throws an error if user passes sequence length longer than the length of library sequences")
+    {
+        d_opts.set_info(&options_demux::seq_data, "41,100,2");
+        REQUIRE_THROWS(d_mod.run(&d_opts));
+    }
+}
+
 TEST_CASE("Demux output demostrates demux removes references with matching sequences", "[module_demux]")
 {
 	std::vector<std::string> split_line;
