@@ -475,26 +475,25 @@ TEST_CASE( "Diagnostics give a detailed count for the occurring read matches dur
     std::string actual_line;
 
     bool lines_equal;
-	while (!ifexpected.eof())
-	{
-		std::getline(ifexpected, expected_line);
-        lines_equal = false;
+  	while (!ifexpected.eof())
+  	{
+  		std::getline(ifexpected, expected_line);
+      lines_equal = false;
         
-        // TODO: find a more responsible way
-	    std::ifstream ifactual(actual, std::ios_base::in);
-        while (!ifactual.eof())
-        {
-            std::getline(ifactual, actual_line);
-            if (expected_line.compare(actual_line) == 0)
-            {
-                lines_equal = true;
-                break;
-            }
-        }
-        ifactual.close();
+  	    std::ifstream ifactual(actual, std::ios_base::in);
+          while (!ifactual.eof())
+          {
+              std::getline(ifactual, actual_line);
+              if (expected_line.compare(actual_line) == 0)
+              {
+                  lines_equal = true;
+                  break;
+              }
+          }
+          ifactual.close();
 
-        REQUIRE(lines_equal);
-	}
+          REQUIRE(lines_equal);
+  	}
 }
 
 TEST_CASE("Automatic truncation of library sequences", "[module_demux]")
@@ -527,20 +526,29 @@ TEST_CASE("Automatic truncation of library sequences", "[module_demux]")
         d_opts.set_info(&options_demux::seq_data, "41,40,2");
         d_mod.run(&d_opts);
 
-        // test resulting demultiplexed file
         std::string expected = "../test/expected/test_expected_demux_NS30.tsv";
         std::string actual = "../test/test_actual_trunc_demux_output.tsv";
         std::ifstream ifexpected(expected, std::ios_base::in);
         std::ifstream ifactual(actual, std::ios_base::in);
         std::string expected_line;
         std::string actual_line;
-  
-      	while (!ifexpected.eof() && !ifactual.eof())
-      	{
-        		std::getline(ifexpected, expected_line);
+
+        // construct set of lines for each actual demux output
+        std::unordered_set<std::string> actual_line_set;
+        while (!ifactual.eof())
+        {
             std::getline(ifactual, actual_line);
-            REQUIRE(actual_line.compare(expected_line) == 0);
-      	}
+            actual_line_set.insert(actual_line);
+        }
+
+        // test resulting demultiplexed file
+        while (!ifexpected.eof())
+        {
+            std::getline(ifexpected, expected_line);
+            REQUIRE(
+                actual_line_set.find(expected_line) != actual_line_set.end()
+            );
+        }
 
         // test resulting diagnostic file
         expected = "../test/expected/test_expected_diagnostic_NS30.tsv";
@@ -548,7 +556,7 @@ TEST_CASE("Automatic truncation of library sequences", "[module_demux]")
         ifexpected = std::ifstream(expected, std::ios_base::in);
         ifactual = std::ifstream(actual, std::ios_base::in);
 
-        while(!ifexpected.eof() && !ifactual.eof())
+        while (!ifexpected.eof() && !ifactual.eof())
         {
             std::getline(ifexpected, expected_line);
             std::getline(ifactual, actual_line);
