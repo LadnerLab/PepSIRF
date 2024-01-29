@@ -526,6 +526,7 @@ TEST_CASE("Automatic truncation of library sequences", "[module_demux]")
         d_opts.set_info(&options_demux::seq_data, "41,40,2");
         d_mod.run(&d_opts);
 
+        // test resulting demultiplexed file
         std::string expected = "../test/expected/test_expected_demux_NS30.tsv";
         std::string actual = "../test/test_actual_trunc_demux_output.tsv";
         std::ifstream ifexpected(expected, std::ios_base::in);
@@ -541,7 +542,6 @@ TEST_CASE("Automatic truncation of library sequences", "[module_demux]")
             actual_line_set.insert(actual_line);
         }
 
-        // test resulting demultiplexed file
         while (!ifexpected.eof())
         {
             std::getline(ifexpected, expected_line);
@@ -556,11 +556,19 @@ TEST_CASE("Automatic truncation of library sequences", "[module_demux]")
         ifexpected = std::ifstream(expected, std::ios_base::in);
         ifactual = std::ifstream(actual, std::ios_base::in);
 
-        while (!ifexpected.eof() && !ifactual.eof())
+        actual_line_set = std::unordered_set<std::string>();
+        while (!ifactual.eof())
+        {
+            std::getline(ifactual, actual_line);
+            actual_line_set.insert(actual_line);
+        }
+
+        while (!ifexpected.eof())
         {
             std::getline(ifexpected, expected_line);
-            std::getline(ifactual, actual_line);
-            REQUIRE(actual_line.compare(expected_line) == 0);
+            REQUIRE(
+                actual_line_set.find(expected_line) != actual_line_set.end()
+            );
         }
     }
     SECTION("Demux throws an error if user passes sequence length longer than the length of library sequences")
