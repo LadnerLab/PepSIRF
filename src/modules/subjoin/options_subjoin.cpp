@@ -81,6 +81,7 @@ std::string options_subjoin::get_arguments()
 
     str_stream << "--filter_peptide_names "
         << std::boolalpha << !use_sample_names << "\n";
+    str_stream << "--exclude " << std::boolalpha << !exclude_names << "\n ";
     str_stream << "--duplicate_evaluation "
         << evaluation_strategy::string_drs_map[ duplicate_resolution_strategy ]
         << "\n";
@@ -89,5 +90,6 @@ std::string options_subjoin::get_arguments()
     str_stream << "--logfile              " << logfile << "\n\n";
 
     return str_stream.str();
+    
 }
 
