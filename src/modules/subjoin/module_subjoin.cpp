@@ -131,7 +131,6 @@ void module_subjoin::run( options *opts )
                                 );
                 }
 
-
             bool exclude = !s_opts->exclude_names;
             std::unordered_set<std::string> nonexcluded_names;
 
@@ -141,9 +140,7 @@ void module_subjoin::run( options *opts )
                 nonexcluded_names = names;
                }
 
-
             std::size_t curr_name_idx;
-
             // verify given names from namelist exist and set up nonexluded names
             for( curr_name_idx = 0; curr_name_idx < orig_names.size(); curr_name_idx++ )
                 {
@@ -175,7 +172,6 @@ void module_subjoin::run( options *opts )
                             replacement_names.insert( {name, name} );
                         }
                 }
-
 
             if( !score_name_pair.second.empty() )
                 {
