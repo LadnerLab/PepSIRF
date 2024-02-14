@@ -143,7 +143,7 @@ void module_subjoin::run( options *opts )
                                 );
                 }
 
-            bool exclude = !s_opts->exclude_names;
+            bool exclude = s_opts->exclude_names;
             std::unordered_set<std::string> nonexcluded_names;
 
             // if exclude, create a names set for the names that are not excluded

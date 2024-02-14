@@ -90,6 +90,5 @@ std::string options_subjoin::get_arguments()
     str_stream << "--logfile              " << logfile << "\n\n";
 
     return str_stream.str();
-    
 }
 
