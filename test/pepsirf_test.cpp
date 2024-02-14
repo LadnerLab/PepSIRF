@@ -4117,6 +4117,67 @@ TEST_CASE( "Subjoin name list filter is optional", "[module_subjoin]" )
     mod.run( &opts );
 }
 
+TEST_CASE( "Run Subjoin exclude option", "[module_subjoin]" )
+{
+    module_subjoin mod = module_subjoin();
+    options_subjoin opts = options_subjoin();
+    opts.exclude_names = true;
+    opts.out_matrix_fname = "../test/test_subjoin_exclude_output.tsv";
+    opts.input_matrix_name_pairs.emplace_back( std::make_pair( "../test/input_data/test_zscore_score_matrix.tsv", 
+    															"../test/input_data/test_subjoin_exclude_namelist.txt" ) );
+    mod.run( &opts );
+    
+    /*
+    std::string expected = "../test/expected/test_expected_subjoin_exclude_output.tsv";
+    std::string actual = "../test/test_subjoin_exclude_output.tsv";
+    std::ifstream ifexpected( expected, std::ios_base::in );
+    std::ifstream ifactual( actual, std::ios_base::in );
+    std::string expected_line;
+    std::string actual_line;
+    std::unordered_set<std::string> expected_set;
+    std::unordered_set<std::string> actual_set;
+	*/
+    /*
+    // add each to the set
+	while( std::getline(ifexpected, expected_line) )
+        {	
+            expected_set.insert( expected_line ); 
+        }
+	ifexpected.close();
+
+	while( std::getline(ifactual, actual_line) )
+	    {	
+	        actual_set.insert( actual_line ); 
+	    }
+	ifactual.close();
+
+	REQUIRE( expected_set == actual_set );
+	*/
+	/*
+	bool lines_equal;
+	while (!ifexpected.eof())
+	{
+		std::getline(ifexpected, expected_line);
+        lines_equal = false;
+        
+        // TODO: find a more responsible way
+	    std::ifstream ifactual(actual, std::ios_base::in);
+        while (!ifactual.eof())
+        {
+            std::getline(ifactual, actual_line);
+            if (expected_line.compare(actual_line) == 0)
+            {
+                lines_equal = true;
+                break;
+            }
+        }
+        ifactual.close();
+
+        REQUIRE(lines_equal);
+	}
+	*/
+}
+
 TEST_CASE("Verify metadata map construction operation", "[metadata_map]")
 {
     std::string metadata_map_fname = "../test/input_data/full_design_clean_min30_taxtweak_100perc_jingmens_2019-09-12_segment.metadata";
