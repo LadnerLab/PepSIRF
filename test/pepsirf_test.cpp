@@ -4119,10 +4119,11 @@ TEST_CASE( "Subjoin name list filter is optional", "[module_subjoin]" )
 
 TEST_CASE( "Run Subjoin exclude option", "[module_subjoin]" )
 {
-    module_subjoin mod = module_subjoin();
-    options_subjoin opts = options_subjoin();
+    module_subjoin mod;
+    options_subjoin opts;
     opts.exclude_names = true;
     opts.out_matrix_fname = "../test/test_subjoin_exclude_output.tsv";
+    opts.input_matrix_name_pairs.clear();
     opts.input_matrix_name_pairs.emplace_back( std::make_pair( "../test/input_data/test_zscore_score_matrix.tsv", 
     															"../test/input_data/test_subjoin_exclude_namelist.txt" ) );
     mod.run( &opts );
@@ -4136,7 +4137,8 @@ TEST_CASE( "Run Subjoin exclude option", "[module_subjoin]" )
     std::string actual_line;
     std::unordered_set<std::string> expected_set;
     std::unordered_set<std::string> actual_set;
-	*/
+    */
+
     /*
     // add each to the set
 	while( std::getline(ifexpected, expected_line) )

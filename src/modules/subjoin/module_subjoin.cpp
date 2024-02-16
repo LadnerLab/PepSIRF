@@ -84,11 +84,11 @@ void module_subjoin::run( options *opts )
     std::uint32_t idx = 0;
 
     bool use_peptide_names = !s_opts->use_sample_names;
+    bool exclude = s_opts->exclude_names;
 
     time_keep::timer time;
 
     time.start();
-
 
     std::vector<std::string> orig_names;
     name_replacement_list replacement_names;
@@ -143,7 +143,6 @@ void module_subjoin::run( options *opts )
                                 );
                 }
 
-            bool exclude = s_opts->exclude_names;
             std::unordered_set<std::string> nonexcluded_names;
 
             // if exclude, create a names set for the names that are not excluded

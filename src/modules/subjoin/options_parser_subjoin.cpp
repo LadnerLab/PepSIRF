@@ -135,10 +135,9 @@ bool options_parser_subjoin::parse( int argc, char ***argv, options *opts )
           "peptide (i.e. row) names instead of sample (i.e. column) names. With the inclusion of this flag, the input files will "
           "be filtered on peptide names (rows) instead of sample names (column).\n"
         )
-        (
-         "exclude,e", po::bool_switch( &opts_subjoin->exclude_names)->default_value( false )
-         ->notifier( [&]( bool val ){ opts_subjoin->exclude_names = val; } ),
-         "New data file will contain all of the input samples (or peptides) except the ones specified in the sample names.\n"
+        ( "exclude,e", po::bool_switch( &opts_subjoin->exclude_names)->default_value( false )
+          ->notifier( [&]( bool val ){ opts_subjoin->exclude_names = val; } ),
+          "New data file will contain all of the input samples (or peptides) except the ones specified in the sample names.\n"
         )
         ( "duplicate_evaluation,d", po::value<std::string>()->default_value( "include" )
           ->notifier( [&]( const std::string& provided_value )
