@@ -4119,6 +4119,7 @@ TEST_CASE( "Subjoin name list filter is optional", "[module_subjoin]" )
 
 TEST_CASE( "Run Subjoin exclude option", "[module_subjoin]" )
 {
+	std:bool exclude_identical = false;
     module_subjoin mod;
     options_subjoin opts;
     opts.exclude_names = true;
@@ -4134,19 +4135,43 @@ TEST_CASE( "Run Subjoin exclude option", "[module_subjoin]" )
     std::ifstream ifactual( actual, std::ios_base::in );
     std::string expected_line;
     std::string actual_line;
-    std::unordered_set<std::string> expected_set;
-    std::unordered_set<std::string> actual_set;
+    std::unordered_set<std::string> expected_names_set;
+    std::unordered_set<std::string> actual_names_set;
+    std::unordered_set<std::string> expected_lines_set;
+    std::unordered_set<std::string> actual_lines_set;
 
-    // add each to the set
+    // get the first line (names)
+    if( std::getline(ifexpected, expected_line) && std::getline(ifactual, actual_line) )
+    	{
+    		std::stringstream expected_line_s(expected_line);
+    		std::stringstream actual_line_s(actual_line);
+    		std::string expected_name, actual_name;
+
+    		// add each name to a set
+    		while(std::getline(expected_line_s, expected_name, '\t') && 
+    									std::getline(actual_line_s, actual_name, '\t'))
+    			{
+    				expected_names_set.insert(expected_name);
+    				actual_names_set.insert(actual_name);
+    			}
+    	}
+
+    // add each line to the set
 	while( std::getline(ifexpected, expected_line) && std::getline(ifactual, actual_line) )
         {	
-            expected_set.insert( expected_line );
-            actual_set.insert( actual_line );
+            expected_lines_set.insert( expected_line );
+            actual_lines_set.insert( actual_line );
         }
 	ifexpected.close();
 	ifactual.close();
 
-	REQUIRE( expected_set == actual_set );
+	// all lines and names of expected outfile are in the actual outfile
+	if( expected_lines_set == actual_lines_set && expected_names_set == actual_names_set )
+		{
+			exclude_identical = true;
+		}
+
+	REQUIRE( exclude_identical );
 }
 
 TEST_CASE("Verify metadata map construction operation", "[metadata_map]")
