@@ -4119,7 +4119,7 @@ TEST_CASE( "Subjoin name list filter is optional", "[module_subjoin]" )
 
 TEST_CASE( "Run Subjoin exclude option", "[module_subjoin]" )
 {
-	std:bool exclude_identical = false;
+    std:bool exclude_identical = false;
     module_subjoin mod;
     options_subjoin opts;
     opts.exclude_names = true;
@@ -4157,21 +4157,21 @@ TEST_CASE( "Run Subjoin exclude option", "[module_subjoin]" )
     	}
 
     // add each line to the set
-	while( std::getline(ifexpected, expected_line) && std::getline(ifactual, actual_line) )
+    while( std::getline(ifexpected, expected_line) && std::getline(ifactual, actual_line) )
         {	
             expected_lines_set.insert( expected_line );
             actual_lines_set.insert( actual_line );
         }
-	ifexpected.close();
-	ifactual.close();
+    ifexpected.close();
+    ifactual.close();
 
-	// all lines and names of expected outfile are in the actual outfile
-	if( expected_lines_set == actual_lines_set && expected_names_set == actual_names_set )
-		{
-			exclude_identical = true;
-		}
+    // all lines and names of expected outfile are in the actual outfile
+    if( expected_lines_set == actual_lines_set && expected_names_set == actual_names_set )
+    	{
+    	    exclude_identical = true;
+    	}
 
-	REQUIRE( exclude_identical );
+    REQUIRE( exclude_identical );
 }
 
 TEST_CASE("Verify metadata map construction operation", "[metadata_map]")
