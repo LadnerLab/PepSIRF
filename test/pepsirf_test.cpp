@@ -4117,6 +4117,63 @@ TEST_CASE( "Subjoin name list filter is optional", "[module_subjoin]" )
     mod.run( &opts );
 }
 
+TEST_CASE( "Run Subjoin exclude option", "[module_subjoin]" )
+{
+    std:bool exclude_identical = false;
+    module_subjoin mod;
+    options_subjoin opts;
+    opts.exclude_names = true;
+    opts.use_sample_names = true;
+    opts.out_matrix_fname = "../test/test_subjoin_exclude_output.tsv";
+    opts.input_matrix_name_pairs.emplace_back( std::make_pair( "../test/input_data/test_zscore_score_matrix.tsv", 
+    															"../test/input_data/test_subjoin_exclude_namelist.txt" ) );
+    mod.run( &opts );
+
+    std::string expected = "../test/expected/test_expected_subjoin_exclude_output.tsv";
+    std::string actual = "../test/test_subjoin_exclude_output.tsv";
+    std::ifstream ifexpected( expected, std::ios_base::in );
+    std::ifstream ifactual( actual, std::ios_base::in );
+    std::string expected_line;
+    std::string actual_line;
+    std::unordered_set<std::string> expected_names_set;
+    std::unordered_set<std::string> actual_names_set;
+    std::unordered_set<std::string> expected_lines_set;
+    std::unordered_set<std::string> actual_lines_set;
+
+    // get the first line (names)
+    if( std::getline(ifexpected, expected_line) && std::getline(ifactual, actual_line) )
+    	{
+    		std::stringstream expected_line_s(expected_line);
+    		std::stringstream actual_line_s(actual_line);
+    		std::string expected_name, actual_name;
+
+    		// add each name to a set
+    		while(std::getline(expected_line_s, expected_name, '\t') && 
+    									std::getline(actual_line_s, actual_name, '\t'))
+    			{
+    				expected_names_set.insert(expected_name);
+    				actual_names_set.insert(actual_name);
+    			}
+    	}
+
+    // add each line to the set
+    while( std::getline(ifexpected, expected_line) && std::getline(ifactual, actual_line) )
+        {	
+            expected_lines_set.insert( expected_line );
+            actual_lines_set.insert( actual_line );
+        }
+    ifexpected.close();
+    ifactual.close();
+
+    // all lines and names of expected outfile are in the actual outfile
+    if( expected_lines_set == actual_lines_set && expected_names_set == actual_names_set )
+    	{
+    	    exclude_identical = true;
+    	}
+
+    REQUIRE( exclude_identical );
+}
+
 TEST_CASE("Verify metadata map construction operation", "[metadata_map]")
 {
     std::string metadata_map_fname = "../test/input_data/full_design_clean_min30_taxtweak_100perc_jingmens_2019-09-12_segment.metadata";
