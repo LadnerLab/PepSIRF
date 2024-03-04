@@ -358,6 +358,11 @@ class module_demux : public module
 
 
         }
+    /**
+     * Finds replicates in sample list and returns map with each sample name with the number of replicates
+     * Returns sample list information: 1) Number of samples 2) Number of replicates 3) Number of samples starting with “Sblk_”
+     **/
+    std::string get_sample_info( std::vector<sample>& samplelist );
 
 };
 

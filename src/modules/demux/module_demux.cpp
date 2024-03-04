@@ -12,6 +12,7 @@
 #include <mutex>
 #include "fs_tools.h"
 
+
 module_demux::module_demux()
 {
     name = "Demux";
@@ -258,7 +259,7 @@ void module_demux::run( options *opts )
 #ifdef __clang__
             for( read_index = 0; read_index < reads.size(); ++read_index )
 #endif
-                {
+                {   
                     // Identify found matches
                     auto match_found = [&]() -> bool
                         {
@@ -667,6 +668,9 @@ void module_demux::run( options *opts )
                 << "% of total).\n";
             Log::info(info_str.str());
         }
+    
+    // log samplelist info
+    Log::info( get_sample_info( samplelist ) );
 
     if( !d_opts->diagnostic_fname.empty() )
         {
@@ -772,8 +776,9 @@ void module_demux::add_seqs_to_map(
 
     #pragma omp parallel for private( index ) shared ( seqs, input_map, num_samples )
     for( index = 0; index < seqs.size(); ++index )
-        {
+        {   
             input_map[ seqs[ index ] ] = new std::vector<std::size_t>( num_samples );
+
         }
     for( auto& x : input_map )
         {
@@ -943,5 +948,48 @@ bool module_demux::_multiple_best_matches( std::vector<std::pair<sequence *, int
 sequence *module_demux::_get_min_dist( std::vector<std::pair<sequence *, int>>& matches )
 {
     return std::get<0>( *matches.begin() );
+}
+
+std::string module_demux::get_sample_info( std::vector<sample>& samplelist )
+{
+    std::map<std::string, std::size_t> replicates;
+    std::vector<std::string> possible_replicates;
+    std::stringstream info_str;
+    std::size_t sblk_count = 0;
+
+    // append number of total samples
+    info_str << "Number of Samples: " << samplelist.size() << "\n";
+
+    for( const auto& sample : samplelist )
+    {   
+        // remove everything past last "_"
+        possible_replicates.emplace_back( 
+                sample.name.substr( 0, sample.name.find_last_of("_") )
+                );
+        sort(possible_replicates.begin(), possible_replicates.end());
+    }
+
+    // construct replicate list
+    for( size_t name_index = 0; name_index < possible_replicates.size(); name_index++ )
+    {
+        replicates[ possible_replicates[ name_index ] ] ++; 
+    }
+
+    // append replicate information
+    for( const auto& element : replicates )
+    {
+        info_str << element.first << ": " << element.second << " replicate(s)\n";
+
+        // get number of sample names that start with "Sblk_"
+        if( element.first.substr(0,5) == "Sblk_" )
+           {
+                sblk_count = sblk_count + element.second;
+           }
+    }
+
+    // append number samples that start with "Sblk_"
+    info_str << "Number of Samples starting with \"Sblk_\": " << sblk_count << "\n";
+
+    return info_str.str();
 }
 
