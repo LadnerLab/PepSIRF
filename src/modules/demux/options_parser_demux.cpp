@@ -209,7 +209,7 @@ bool options_parser_demux::parse(int argc, char ***argv, options *opts)
         )
         ("replicate_info", po::value<std::string>(&opts_demux->replicate_info_fname)->default_value(""),
           "Include this flag with an output file name to provide a more thorough summary of "
-          " replicates in the samplelistin an output file. The information will be tab-delimited "
+          " replicates in the sample list in an output file. The information will be tab-delimited "
           " with two headers: “Sample Name” and “Number of Replicates”\"."
         )
         ;
