@@ -669,8 +669,8 @@ void module_demux::run( options *opts )
             Log::info(info_str.str());
         }
     
-    // log samplelist info
-    Log::info( get_sample_info( samplelist ) );
+    // log samplelist info (also create sample names replicate info file if user species)
+    Log::info( get_sample_info( samplelist, d_opts->replicate_info_fname ) );
 
     if( !d_opts->diagnostic_fname.empty() )
         {
@@ -950,16 +950,19 @@ sequence *module_demux::_get_min_dist( std::vector<std::pair<sequence *, int>>& 
     return std::get<0>( *matches.begin() );
 }
 
-std::string module_demux::get_sample_info( std::vector<sample>& samplelist )
+std::string module_demux::get_sample_info( std::vector<sample>& samplelist, std::string outfile_name )
 {
+    const std::string DELIMITER = "\t";
     std::map<std::string, std::size_t> replicates;
     std::vector<std::string> possible_replicates;
     std::stringstream info_str;
     std::size_t sblk_count = 0;
+    std::size_t largest_count = 1;
 
     // append number of total samples
     info_str << "Number of Samples: " << samplelist.size() << "\n";
 
+    
     for( const auto& sample : samplelist )
     {   
         // remove everything past last "_"
@@ -970,15 +973,22 @@ std::string module_demux::get_sample_info( std::vector<sample>& samplelist )
     }
 
     // construct replicate list
-    for( size_t name_index = 0; name_index < possible_replicates.size(); name_index++ )
+    for( std::size_t name_index = 0; name_index < possible_replicates.size(); name_index++ )
     {
-        replicates[ possible_replicates[ name_index ] ] ++; 
+        replicates[ possible_replicates[ name_index ] ] ++;
+
+        if( replicates[ possible_replicates[ name_index ] ] > largest_count )
+           {
+                largest_count = replicates[ possible_replicates[ name_index ] ];
+           }
     }
 
-    // append replicate information
+    // create replicate count vector
+    std::vector<std::size_t> replicate_counts (largest_count);
+    std::string replicate_str = "replicate";
     for( const auto& element : replicates )
-    {
-        info_str << element.first << ": " << element.second << " replicate(s)\n";
+    {   
+        replicate_counts[ element.second - 1] ++;
 
         // get number of sample names that start with "Sblk_"
         if( element.first.substr(0,5) == "Sblk_" )
@@ -987,8 +997,35 @@ std::string module_demux::get_sample_info( std::vector<sample>& samplelist )
            }
     }
 
+    // append replicate information
+    for( std::size_t index = 0; index < largest_count; index++ )
+    {   
+        // make word plural if it goes past index 0
+        if(index == 1)
+        {
+            replicate_str += "s";
+        }
+        info_str << "Samples with " << index + 1 << " " << replicate_str 
+                                << ": " << replicate_counts[index] << "\n";
+    }
+
     // append number samples that start with "Sblk_"
     info_str << "Number of Samples starting with \"Sblk_\": " << sblk_count << "\n";
+
+    // create output file if specified by user
+    if(!outfile_name.empty())
+    {
+        std::ofstream outfile( outfile_name, std::ofstream::out );
+
+        outfile << "Sample Name"<<DELIMITER<<"Number of Replicates\n";
+
+        for( const auto& element : replicates )
+        {
+            outfile << element.first << DELIMITER << element.second << "\n";
+        }
+
+        outfile.close();
+    }
 
     return info_str.str();
 }
