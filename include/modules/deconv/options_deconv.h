@@ -92,7 +92,7 @@ class options_deconv : public options
      * If this value is true only one thread will be used for
      * operations. Otherwise, two will be used.
      **/
-    bool single_threaded;
+    std::size_t num_threads;
 
     /**
      * Flag stores scoring strategy. Default: summation.

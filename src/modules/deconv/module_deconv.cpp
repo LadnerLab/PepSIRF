@@ -150,7 +150,7 @@ void module_deconv::choose_kmers( options_deconv *opts )
 
     std::size_t thresh = d_opts->threshold;
 
-    omp_set_num_threads( d_opts->single_threaded ? 1 : 2 );
+    omp_set_num_threads(d_opts->num_threads);
 
     std::unordered_map<std::string, std::vector<std::string>> id_pep_map;
     std::unordered_map<std::string, std::vector<std::pair<std::string,double>>>

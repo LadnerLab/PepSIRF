@@ -83,9 +83,12 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "directory after each subsequent round. If this flag is included "
           "and the specified directory exists, the program will exit with an error.\n"
         )
-        ( "single_threaded", po::bool_switch( &opts_deconv->single_threaded )->default_value( false ),
-          "By default this module uses two threads. Include this option with no arguments if you only want "
-          "only one thread to be used. \n"
+        // ( "single_threaded", po::bool_switch( &opts_deconv->single_threaded )->default_value( false ),
+        //   "By default this module uses two threads. Include this option with no arguments if you only want "
+        //   "only one thread to be used. \n"
+        // )
+        ( "num_threads", po::value<std::size_t>(&opts_deconv->num_threads)->default_value(2),
+          "Specifies the number of threads deconv will use."
         )
         ( "scoring_strategy", po::value<std::string>( &opts_deconv->scoring_strategy )->default_value( "summation" ),
           "Scoring strategies \"summation\", \"integer\", or \"fraction\" can be specified. "

@@ -15,7 +15,7 @@ std::string options_deconv::get_arguments()
         << "--linked                  " << linked_fname << "\n"
         << "--threshold               " << threshold << "\n"
         << "--enriched                " << enriched_fname << "\n"
-        << "--single_threaded         " << bool_str( single_threaded ) << "\n"
+        << "--num_threads             " << num_threads << "\n"
         << "--scoring_strategy        " << scoring_strategy << "\n"
         << "--score_filtering         " << bool_str( score_filtering ) << "\n"
         << "--id_name_map             " << id_name_map_fname << "\n"
