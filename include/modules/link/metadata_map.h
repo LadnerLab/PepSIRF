@@ -9,6 +9,8 @@
 #include <algorithm>
 #include <unordered_map>
 
+#include "logger.h"
+
 class metadata_map
 {
  public:

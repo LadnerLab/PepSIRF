@@ -1,3 +1,4 @@
+#include "logger.h"
 #include "options_parser_zscore.h"
 #include "options_zscore.h"
 #include "file_io.h"
@@ -21,8 +22,7 @@ bool options_parser_zscore::parse( int argc, char ***argv, options *opts )
                                 );
 
     desc.add_options()
-        (
-         "help,h", "Produce help message\n"
+        ("help,h", "Produce help message\n"
          "The zscore module is used to calculate Z scores for each peptide in each sample. "
          "These Z scores represent the number of standard deviations away from the mean, "
          "with the mean and standard deviation both calculated separately for each bin of peptides.\n"
@@ -32,43 +32,45 @@ bool options_parser_zscore::parse( int argc, char ***argv, options *opts )
           "format as output by the demux and subjoin modules. "
           "Raw or normalized read counts can be used.\n"
         )
-        ( "bins,b", po::value( &opts_zscore->in_bins_fname )->required()
-          ->notifier( [&]( std::string input_filename )->void
-                      {
-
-                        // test whether the second row, second column and every column on contains a double
-                        // if the bin file contains a double, then it is not a bin file and a runtime error should be thrown.
-                        std::ifstream input_f{ input_filename };
-                        if( input_f.fail() )
-                            {
-                              throw std::runtime_error( "Unable to open bins file.\n" );
-                            }
-                        std::string line;
-                        std::vector<std::string> first_row;
-                        getline( input_f, line );
-                        getline( input_f, line );
-                        boost::split( first_row, line, boost::is_any_of( "\t" ) );
-                        bool is_double = true;
-                        for( const auto& col : first_row )
-                          {
-                            is_double = true;
-                            try
-                              {
-                                std::stod(col);
-                              }
-                            catch(...)
-                              {
-                                is_double = false;
-                              }
-                            if( is_double )
-                              {
-                                throw std::runtime_error( "Bins file '" + input_filename +
-                                "' provided contains score values. Verify the bins file is valid.\n" +
-                                "Note: this error could also be triggered IF your peptide names include 'inf' or 'nan' (case insensitive).\n");
-                              }
-                          }
-                      }
-                      ),
+        ("bins,b", po::value( &opts_zscore->in_bins_fname )->required()
+         ->notifier( [&]( std::string input_filename )->void
+             {
+                // test whether the second row, second column and every column on contains a double
+                // if the bin file contains a double, then it is not a bin file and a runtime error should be thrown.
+                std::ifstream input_f{ input_filename };
+                if( input_f.fail() )
+                {
+                    Log::error("Unable to open bins file.\n");
+                }
+                std::string line;
+                std::vector<std::string> first_row;
+                getline( input_f, line );
+                getline( input_f, line );
+                boost::split( first_row, line, boost::is_any_of( "\t" ) );
+                bool is_double = true;
+                for( const auto& col : first_row )
+                {
+                    is_double = true;
+                    try
+                    {
+                        std::stod(col);
+                    }
+                    catch(...)
+                    {
+                        is_double = false;
+                    }
+                    if( is_double )
+                    {
+                        Log::error(
+                            "Bins file '" + input_filename + "' provided"
+                            " contains score values. Verify the bins file is"
+                            " valid.\n Note: this error could also be"
+                            " triggered IF your peptide names include 'inf' or"
+                            " 'nan' (case insensitive).\n"
+                        );
+                    }
+                }
+            }),
           "Name of the file containing bins, one bin per line, as output by the bin module. "
           "Each bin contains a tab-delimited list of peptide names.\n"
         )
@@ -131,6 +133,12 @@ bool options_parser_zscore::parse( int argc, char ***argv, options *opts )
           ->default_value( opts_zscore->DEFAULT_NUM_THREADS ),
           "The number of threads to use for analyses.\n"
         )
+        ("logfile", po::value( &opts_zscore->logfile )
+         ->default_value( options_zscore::set_default_log() ),
+         "Designated file to which the module's processes are logged. By "
+         "default, the logfile's name will include the module's name and the "
+         "time the module started running.\n"
+        )
         ;
 
 
@@ -140,7 +148,11 @@ bool options_parser_zscore::parse( int argc, char ***argv, options *opts )
 	    || argc == 2
 	  )
         {
-            std::cout << desc << std::endl;
+            std::ostringstream info_str;
+            info_str << desc << std::endl;
+
+            Log::info(info_str.str());
+
             return false;
         }
     else

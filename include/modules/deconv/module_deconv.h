@@ -819,7 +819,6 @@ class module_deconv : public module
         return get_map_value( *map, search, default_return );
     }
 
-
     /**
      * The base case for to_stream_if.
      * @param stream The stream to write output to (if cond is true)

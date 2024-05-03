@@ -1,3 +1,4 @@
+#include "logger.h"
 #include "module_zscore.h"
 #include "time_keep.h"
 #include "stats.h"
@@ -11,7 +12,10 @@
 #include <fstream>
 
 
-module_zscore::module_zscore() = default;
+module_zscore::module_zscore()
+{
+    name = "Zscore";
+}
 
 void module_zscore::run( options *opts )
 {
@@ -30,9 +34,7 @@ void module_zscore::run( options *opts )
 
     if( bins_file.fail() )
         {
-            throw std::runtime_error( "Unable to open the "
-                                      "specified bins file for reading"
-                                    );
+            Log::error("Unable to open the specified bins file for reading!");
         }
 
     bin_collection peptide_bins = peptide_bin_io::parse_bins( bins_file );
@@ -49,14 +51,14 @@ void module_zscore::run( options *opts )
 
     if(names_size != input.pep_names.size())
         {
-            throw std::runtime_error("Bins file does not match peptide file");
+            Log::error("Bins file does not match peptide file!");
         }
 
     for(size_t index = 0; index < input.pep_names.size(); ++index)
         {
             if(names_map[input.pep_names[index]] != 1)
             {
-                throw std::runtime_error("Bins file does not match peptide file");
+                Log::error("Bins file does not match peptide file!");
             }
         }
 
@@ -94,5 +96,6 @@ void module_zscore::run( options *opts )
 
     time.stop();
 
-    std::cout << "Took " << time.get_elapsed() << " seconds.\n";
+    Log::info("Took " + std::to_string(time.get_elapsed()) + " seconds.\n");
 }
+

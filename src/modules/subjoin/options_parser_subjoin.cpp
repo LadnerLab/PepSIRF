@@ -1,5 +1,6 @@
 #include "options_parser_subjoin.h"
 #include "file_io.h"
+#include "logger.h"
 #include <boost/algorithm/string.hpp>
 options_parser_subjoin::options_parser_subjoin() = default;
 
@@ -32,7 +33,7 @@ bool options_parser_subjoin::parse( int argc, char ***argv, options *opts )
                                     std::ifstream input_f{ provided_string };
                                     if( input_f.fail() )
                                         {
-                                            throw std::runtime_error( "Unable to open multi_file input.\n" );
+                                            Log::error("Unable to open multi_file input.\n");
                                         }
                                     pepsirf_io::read_file(  input_f,
                                                             boost::is_any_of( "\t" ),
@@ -93,10 +94,11 @@ bool options_parser_subjoin::parse( int argc, char ***argv, options *opts )
                                       }
                                   else if( split_output.size() == 1 )
                                       {
-
-                                          std::cout << "\nWARNING: No sample name list has been given for "
-                                                    << split_output[0]
-                                                    << ". All samples from this input matrix will be included.\n";
+                                          Log::warn(
+                                            "No sample name list has been given for "
+                                            + split_output[0]
+                                            + ". All samples from this input matrix will be included.\n"
+                                        );
                                           opts_subjoin->input_matrix_name_pairs.emplace_back( std::make_pair( split_output[0], "" ) );
                                       }
                                   else
@@ -133,6 +135,10 @@ bool options_parser_subjoin::parse( int argc, char ***argv, options *opts )
           "peptide (i.e. row) names instead of sample (i.e. column) names. With the inclusion of this flag, the input files will "
           "be filtered on peptide names (rows) instead of sample names (column).\n"
         )
+        ( "exclude,e", po::bool_switch( &opts_subjoin->exclude_names)->default_value( false )
+          ->notifier( [&]( bool val ){ opts_subjoin->exclude_names = val; } ),
+          "New data file will contain all of the input samples (or peptides) except the ones specified in the sample names.\n"
+        )
         ( "duplicate_evaluation,d", po::value<std::string>()->default_value( "include" )
           ->notifier( [&]( const std::string& provided_value )
                       {
@@ -165,6 +171,12 @@ bool options_parser_subjoin::parse( int argc, char ***argv, options *opts )
          "Name for the output score matrix file. The output will be in the form of the input, but with only the "
          "specified values (samplenames or peptides) found in the namelists. \n"
         )
+        ("logfile", po::value( &opts_subjoin->logfile )
+         ->default_value( options_subjoin::set_default_log() ),
+         "Designated file to which the module's processes are logged. By "
+         "default, the logfile's name will include the module's name and the "
+         "time the module started running.\n"
+        )
         ;
 
 
@@ -173,7 +185,11 @@ bool options_parser_subjoin::parse( int argc, char ***argv, options *opts )
 	    || argc == 2
 	  )
         {
-            std::cout << desc << std::endl;
+            std::ostringstream info_str;
+            info_str << desc << std::endl;
+
+            Log::info(info_str.str());
+
             return false;
         }
     else

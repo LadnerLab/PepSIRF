@@ -5,6 +5,7 @@
 #include <stdexcept>
 
 #include "fs_tools.h"
+#include "logger.h"
 #include "options_parser_deconv.h"
 #include "util.h"
 
@@ -60,28 +61,22 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "Not used in singular mode.\n"
         )
         ( "scores_per_round,s", po::value<std::string>( &opts_deconv->orig_scores_dname )->default_value( "" )
-          ->notifier( [&]( const std::string& val )
-                      {
-                          // check that a directory was actually supplied
-                          if( val.length() )
-                              {
-                                  if( boost::filesystem::exists( val ) )
-                                      {
-                                          std::stringstream error_msg;
-
-                                          error_msg << "Directory '"
-                                                    << val
-                                                    << "' already exists!";
-                                          throw std::runtime_error
-                                              ( error_msg.str() );
-                                      }
-                                  else
-                                      {
-
-                                          fs_tools::create_directory( val );
-                                      }
-                              }
-                      }),
+          ->notifier(
+            [&]( const std::string& val )
+            {
+                // check that a directory was actually supplied
+                if( val.length() )
+                {
+                    if( boost::filesystem::exists( val ) )
+                    {
+                        Log::error("Directory '" + val + "' already exists!");
+                    }
+                    else
+                    {
+                        fs_tools::create_directory(val);
+                    }
+                }
+            }),
           "Optional. Name of directory to write counts/scores to after every round. If included, "
           "the counts and scores for all remaining taxa will be recorded after every round. "
           "Filenames will be written in the format '$dir/round_x', where x is the round number. "
@@ -189,6 +184,13 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "Optional flag that specifies what string is expected at the end of each file containing enriched peptides. "
           "Set to \"_enriched.txt\" by default \n"
         )
+        (
+         "logfile", po::value( &opts_deconv->logfile )
+         ->default_value( options_deconv::set_default_log() ),
+          "Designated file to which the module's processes are logged. By "
+          "default, the logfile's name will include the module's name and the "
+          "time the module started running.\n"
+        )
         ;
 
     po::store( po::command_line_parser( argc, *argv ).options( desc ).run(), vm);
@@ -197,7 +199,11 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
 	    || argc == 2
 	  )
         {
-            std::cout << desc << std::endl;
+            std::ostringstream info_str;
+            info_str << desc << "\n";
+
+            Log::info(info_str.str());
+
             return false;
         }
     else

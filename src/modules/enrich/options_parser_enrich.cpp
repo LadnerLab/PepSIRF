@@ -5,6 +5,7 @@
 #include <limits>
 #include <stdexcept>
 #include <iostream>
+#include "logger.h"
 #include "stream_tools.h"
 #include "file_io.h"
 #include "predicate.h"
@@ -33,32 +34,39 @@ bool options_parser_enrich::parse( int argc, char ***argv, options *opts )
     desc.add_options()
         ( "help,h", "Produce help message and exit.\n"
         )
-        ( "threshhold_file,t", po::value( &opts_enrich->threshold_fname )->required()->notifier(
-                                [&]( std::string input_filename )->void
-                                  {
-                                    std::ifstream input_f{ input_filename };
-                                    if( input_f.fail() )
-                                        {
-                                          throw std::runtime_error( "Unable to open threshold_file input.\n" );
-                                        }
-                                    std::string line;
-                                    std::vector<std::string> matrix_thresh_pairs;
-                                    while( getline( input_f, line ) )
-                                      {
-                                        boost::split( matrix_thresh_pairs, line, boost::is_any_of( "\t" ) );
-                                        if( matrix_thresh_pairs.size() == 2 )
-                                          {
-                                            opts_enrich->matrix_thresh_fname_pairs.emplace_back(
-                                                          std::make_pair( matrix_thresh_pairs[0], matrix_thresh_pairs[1] ) );
-                                          }
-                                        else
-                                          {
-                                            throw std::runtime_error( "The input file must contain a matrix filename with threshold(s) "
-                                            "where the filename and thresholds are tab-delimited and thresholds are comma-delimited.\n" );
-                                          }
-                                      }
-                                  }
-                                ),
+        ("threshhold_file,t",
+         po::value( &opts_enrich->threshold_fname )->required()
+         ->notifier([&]( std::string input_filename )->void
+             {
+                std::ifstream input_f{ input_filename };
+                if( input_f.fail() )
+                {
+                    Log::error("Unable to open threshold_file input.\n");
+                }
+
+                std::string line;
+                std::vector<std::string> matrix_thresh_pairs;
+                while( getline( input_f, line ) )
+                {
+                    boost::split( matrix_thresh_pairs, line, boost::is_any_of( "\t" ) );
+                    if( matrix_thresh_pairs.size() == 2 )
+                    {
+                        opts_enrich->matrix_thresh_fname_pairs
+                            .emplace_back(
+                                std::make_pair(matrix_thresh_pairs[0], matrix_thresh_pairs[1]
+                            ));
+                    }
+                    else
+                    {
+                        Log::error(
+                            "The input file must contain a matrix filename"
+                            " with threshold(s) where the filename and"
+                            " thresholds are tab-delimited and thresholds are"
+                            " comma-delimited.\n"
+                        );
+                    }
+                }
+             }),
           "The name of a tab-delimited file containing one tab-delimited matrix filename and threshold(s), one per line. "
           "If using more than one threshold for a given matrix, then separate by comma. A matrix file may contain any score of interest, as long as "
           "it includes scores for each peptide in every sample of interest, with peptides on the rows and sample names on the columns. "
@@ -85,10 +93,11 @@ bool options_parser_enrich::parse( int argc, char ***argv, options *opts )
 
                               && params_str.empty() )
                               {
-                                  throw std::runtime_error( "If either 'raw_scores' "
-                                                            "or 'raw_score_constraint' options "
-                                                            "are included, BOTH must be."
-                                                            );
+                                Log::error(
+                                    "If either 'raw_scores' or"
+                                    " 'raw_score_constraint' options are"
+                                    " included, BOTH must be."
+                                );
                               }
                       }
                     ),
@@ -120,7 +129,7 @@ bool options_parser_enrich::parse( int argc, char ***argv, options *opts )
           "output file names. For a pair of samples, 'A' and 'B', the resulting file will "
           "have the name 'A~B' if this flag is not given. Otherwise, the given value will "
           "be used in place of '~'.\n"
-         )
+        )
         ( "output_filename_truncate", po::bool_switch( &opts_enrich->truncate_names )
           ->default_value( false ),
           "By default each filename in the output directory will include every replicate name "
@@ -140,6 +149,12 @@ bool options_parser_enrich::parse( int argc, char ***argv, options *opts )
           "generated for each sample with at least one enriched peptide. This directory "
           "will be created by the module.\n"
         )
+        ("logfile", po::value( &opts_enrich->logfile )
+         ->default_value( options_enrich::set_default_log() ),
+         "Designated file to which the module's processes are logged. By "
+         "default, the logfile's name will include the module's name and the "
+         "time the module started running.\n"
+        )
         ;
 
     po::store( po::command_line_parser( argc, *argv ).options( desc ).run(), vm);
@@ -148,7 +163,11 @@ bool options_parser_enrich::parse( int argc, char ***argv, options *opts )
         || argc == 2
         )
         {
-            std::cout << desc << std::endl;
+            std::ostringstream info_str;
+            info_str << desc << "\n";
+
+            Log::info(info_str.str());
+
             return false;
         }
     else

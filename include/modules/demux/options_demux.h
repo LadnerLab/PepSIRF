@@ -20,6 +20,7 @@ public:
     std::string output_fname; //!< Filename of file to write output to.
     std::string aggregate_fname; //!< Filename to write aggregate counts to.
     std::string flexible_idx_fname;
+    bool pos_toggle;
     std::string samplelist_fname; //!< Name of tab-delimited file containing a list of samples.
     std::string samplename;
     std::string indexes;
@@ -33,6 +34,7 @@ public:
     int phred_base;
     int min_phred_score;
     int num_indexes;
+    std::string replicate_info_fname;
 
     bool translation_aggregation;
     std::string fastq_out;

@@ -9,11 +9,12 @@ std::string options_bin::get_arguments()
 {
     std::ostringstream str_stream;
 
-    str_stream << "--scores   " << input_scores_fname << "\n " 
-               << "--bin_size " << min_bin_size << "\n "
-               << "--round_to " << rounding_factor << "\n "
-               << "--output   " << output_bins_fname << "\n"
-        ;
+    str_stream
+        << "--scores   " << input_scores_fname << "\n"
+        << "--bin_size " << min_bin_size << "\n"
+        << "--round_to " << rounding_factor << "\n"
+        << "--output   " << output_bins_fname << "\n"
+        << "--logfile  " << logfile << "\n\n";
 
     return str_stream.str();
 };
