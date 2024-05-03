@@ -40,8 +40,9 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
           "Name of linkage map to be used for deconvolution. It should be in the format output "
           "by the 'link' module.\n"
         )
-        ( "threshold,t", po::value<std::size_t>( &opts_deconv->threshold ),
-          "Minimum score that a taxon must obtain in order to be included in the deconvolution report.\n"
+        ( "threshold,t", po::value<std::size_t>( &opts_deconv->threshold),
+          "Filepath to tab delimited file with a TaxID column and a score threshold for that TaxID. "
+          "Each threshold is the minimum score that a taxon must obtain in order to be included in the deconvolution report.\n"
         )
         ( "outfile_suffix", po::value( &opts_deconv->outfile_suffix )
           ->default_value( "" ),

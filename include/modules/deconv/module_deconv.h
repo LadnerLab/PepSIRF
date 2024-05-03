@@ -889,6 +889,14 @@ class module_deconv : public module
      *          false otherwise
      **/
     bool use_ratio_overlap_threshold( double threshold );
+
+    /**
+     * Created a map of threshold for each taxaID from linkage map
+     * @param thresh_map to populated with taxID as key and threshold as value
+     * @param filename filepath to tab-delimited file
+     * @returns map of taxID and threshold
+     **/
+    void thresh_file_to_map( std::unordered_map<std::string, std::size_t>& thresh_map, std::string filename );
 };
 
 #endif // MODULE_DECONV_HH_INCLUDED 

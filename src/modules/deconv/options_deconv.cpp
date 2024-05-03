@@ -12,7 +12,7 @@ std::string options_deconv::get_arguments()
         { return opt == true ? "true" : "false"; };
 
     str_stream << "--linked                  " << linked_fname  << "\n" <<  // not sure why but this one needs one space fewer
-        " --threshold               " << threshold <<  "\n" <<
+        " --threshold              " << threshold <<  "\n" <<
         " --enriched                " << enriched_fname <<  "\n" <<
         " --single_threaded         " << bool_str( single_threaded ) <<  "\n" <<
         " --scoring_strategy        " << scoring_strategy <<  "\n" <<

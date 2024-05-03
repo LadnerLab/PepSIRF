@@ -37,6 +37,10 @@ void module_deconv::run( options *opts )
 
     fs_tools::path input_base{ d_opts->enriched_fname };
 
+    // create dictionary from theshold file
+    // std::unorder_map<std::string, std::size_t> thresholds;
+    // thresh_file_to_map(thresholds, d_opts->thresholds_fname);
+
     if( fs_tools::is_directory( input_base ) )
         {
             if( d_opts->output_fname == "deconv_output.tsv" )
@@ -1228,4 +1232,17 @@ bool module_deconv
 ::use_ratio_overlap_threshold( double threshold )
 {
     return !util::is_integer( threshold );
+}
+
+void thresh_file_to_map( std::unordered_map<std::string, std::size_t>& thresh_map, std::string filename )
+{   
+    boost::filesystem::ifstream file( filename );
+    std::string line;
+    std::vector<std::string> split_line;
+
+    // read each line of file
+    while( std::getline( file, line ) )
+        {
+            // assign values to map (use boost:split)
+        }
 }
