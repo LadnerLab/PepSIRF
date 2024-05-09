@@ -81,17 +81,25 @@ def cluster(
 		
 		# Generate kmers for all sequences that meet size threshold
 		kmer_dict = kt.kmerDictSet(largeD,kmer_size,["X"])
+		# Calculate distances between all large sequences
 		dists, seqNames = calcDistances(kmer_dict)
-		
+
+		# Generate kmers for all sequences that DO NOT meet size threshold
+		kmer_dict_small = kt.kmerDictSet(smallD,kmer_size,["X"])
+
 		for dt in distance_thresh:
+			# Cluster long sequences
 			clusters = clusterSeqs(dists,dt, seqNames)
 			
-			#Make a dictionary linking a sequence name to its assigned cluster
+			# Start to assigning the short sequences to the clusters built using long sequences
+			assignShortSequences(kmer_dict_small, kmer_dict, clusters)
+			
+			# Make a dictionary linking a sequence name to its assigned cluster
 			seq2clust = {}
 			for clustNum, seqL in clusters.items():
 				for sn in seqL:
 					seq2clust[sn] = clustNum
-			#Add cluster numbers to putput dictionary in order of seqNames
+			# Add cluster numbers to output dictionary in order of seqNames
 			outD[dt] = [seq2clust[sn] for sn in seqNames]
 					
 		# Write out results for this input file
@@ -104,6 +112,23 @@ def cluster(
 # 			numClusts = len(clusters)
 # 			multi, initialSpecies, multiClustSpecies = clustersBySpecies(clusters, speciesD)
 # 			print(f"{dt}\t{numClusts}\t{multi}\t{multi/numClusts:.4f}\t{len(multiClustSpecies)}\t{len(multiClustSpecies)/initialSpecies:.4f}")
+
+# For each short sequence, calculate the smallest distance between this sequence and the clusters of long sequences
+	# Based on these distances, assign the short sequences to clusters
+def assignShortSequences(shortKD, longKD, clusters):
+	for ssN, ssK in shortKD.items():
+		distD = {}
+		for clustNum, seqL in clusters.items():
+			theseDists = []
+			for lsN in seqL:
+				lsK = longKD[lsN]
+				ovlp = ssK.intersection(lsK)
+				theseDists.append(1-(len(ovlp)/(min([len(ssK), len(lsK)]))))
+			distD[clustNum] = min(theseDists)
+		
+		if max(distD.values())<0.95:
+			print(ssN)
+			print(distD)
 
 def sortSeqsBySize(fastaDict, min_propn, topPerc=0.1):
 	# Sort the sequence lengths in ascending order
