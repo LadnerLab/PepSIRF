@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import scipy.cluster.hierarchy as sch
 import pandas as pd
 import numpy as np
@@ -10,12 +12,17 @@ from collections import defaultdict
 
 def main():
 	parser = argparse.ArgumentParser(description="Generates clusters of similar sequences for each protein")
-	parser.add_argument("--meta-filepath", type=str, metavar="", required=True, help="")
-	parser.add_argument("--input-files", nargs="+", default=[], metavar="", required=True, help="")
-	parser.add_argument("--distance-thresh", nargs="+", type=float, metavar="", required=True, help="")
-	parser.add_argument("--kmer-size", type=int, metavar="", required=True, help="")
-	parser.add_argument("--min-propn", type=float, metavar="", required=False, default=1, help="Proportion of the max sequence size to not cluster.")
-	parser.add_argument("-o", "--output-dir", type=str, metavar="", required=True, help="Directory to save cluster files.")
+    
+    # Required arguments
+	parser.add_argument("-i", "--input-files", nargs="+", default=[], metavar="", required=True, help="Fasta files containing sequences to be clustered. One or more fasta files can be provided. Sequences in each will be separately clustered.")
+	parser.add_argument("-d", "--distance-thresh", nargs="+", type=float, metavar="", required=True, help="Distance thresholds to use for hierarchical clustering. Multiple values may be provided, all of which should be between 0 and 1.")
+	parser.add_argument("-o", "--output-dir", type=str, metavar="", required=True, help="Directory to save cluster files. This directory will be created, if it doesn't already exist.")
+
+    # Optional arguments
+	parser.add_argument("-k", "--kmer-size", type=int, metavar="", required=False, default=7, help="Size of kmers used to compare sequences.")
+	parser.add_argument("-p", "--min-propn", type=float, metavar="", required=False, default=1, help="Proportion of the max sequence size to not cluster.")
+	parser.add_argument("-m", "--meta-filepath", type=str, metavar="", required=False, help="Optional tab-delimited file that can be used to link the input sequences to metadata. If provided, summary statistics about the generated clusters will be generated.")
+
 	args=parser.parse_args()
 
 	cluster(
@@ -41,10 +48,11 @@ def cluster(
 	else:
 		print(f"Warning: The directory \"{output_dir}\" already exists. Files may be overwritten.")
 
+# Want to make this section optional 
 	# meta_filepath = "PM1_targets_taxInfo.tsv"
-	speciesD = io.fileDictHeader(meta_filepath, "SequenceName", "Species")
-	sidD = io.fileDictHeader(meta_filepath, "SequenceName", "SpeciesID")
-	sid2spD = io.fileDictHeader(meta_filepath, "SpeciesID", "Species")
+# 	speciesD = io.fileDictHeader(meta_filepath, "SequenceName", "Species")
+# 	sidD = io.fileDictHeader(meta_filepath, "SequenceName", "SpeciesID")
+# 	sid2spD = io.fileDictHeader(meta_filepath, "SpeciesID", "Species")
 
 	'''
 	# I want the user to be able to provide multiple input files, each which will be clustered separately
@@ -79,9 +87,10 @@ def cluster(
 	                
 	        # This is an example of calculating some summary statistics to help us better understand the clusters
 	        # We will likely want to expand this functionality in the future
-	        numClusts = len(clusters)
-	        multi, initialSpecies, multiClustSpecies = clustersBySpecies(clusters, speciesD)
-	        print(f"{dt}\t{numClusts}\t{multi}\t{multi/numClusts:.4f}\t{len(multiClustSpecies)}\t{len(multiClustSpecies)/initialSpecies:.4f}")
+# Want to make this section optional 
+# 	        numClusts = len(clusters)
+# 	        multi, initialSpecies, multiClustSpecies = clustersBySpecies(clusters, speciesD)
+# 	        print(f"{dt}\t{numClusts}\t{multi}\t{multi/numClusts:.4f}\t{len(multiClustSpecies)}\t{len(multiClustSpecies)/initialSpecies:.4f}")
 	    
 	    # Write out results for this input file
 	    outDF = pd.DataFrame(outD, index=seqNames)
