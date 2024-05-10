@@ -4,11 +4,10 @@ import scipy.cluster.hierarchy as sch
 import pandas as pd
 import numpy as np
 import kmertools as kt	 # Available from https://github.com/jtladner/Modules
-import fastatools as ft	# Available from https://github.com/jtladner/Modules
+import fastatools as ft # Available from https://github.com/jtladner/Modules
 import inout as io		 # Available from https://github.com/jtladner/Modules
 
-import argparse
-import os
+import argparse, random, os
 from collections import defaultdict
 
 def main():
@@ -22,6 +21,7 @@ def main():
 	# Optional arguments
 	parser.add_argument("-k", "--kmer-size", type=int, metavar="", required=False, default=7, help="Size of kmers used to compare sequences.")
 	parser.add_argument("-p", "--min-propn", type=float, metavar="", required=False, default=0, help="Proportion of the top 10%% of sequence sizes to be included in the initial round of clustering.")
+	parser.add_argument("-m", "--meta-filepath", type=str, metavar="", required=False, help="Optional tab-delimited file that can be used to link the input sequences to metadata. If provided, summary statistics about the generated clusters will be generated.")
 	parser.add_argument("-m", "--meta-filepath", type=str, metavar="", required=False, help="Optional tab-delimited file that can be used to link the input sequences to metadata. If provided, summary statistics about the generated clusters will be generated.")
 
 	args=parser.parse_args()
@@ -54,9 +54,9 @@ def cluster(
 
 # Want to make this section optional 
 	# meta_filepath = "PM1_targets_taxInfo.tsv"
-# 	speciesD = io.fileDictHeader(meta_filepath, "SequenceName", "Species")
-# 	sidD = io.fileDictHeader(meta_filepath, "SequenceName", "SpeciesID")
-# 	sid2spD = io.fileDictHeader(meta_filepath, "SpeciesID", "Species")
+#	speciesD = io.fileDictHeader(meta_filepath, "SequenceName", "Species")
+#	sidD = io.fileDictHeader(meta_filepath, "SequenceName", "SpeciesID")
+#	sid2spD = io.fileDictHeader(meta_filepath, "SpeciesID", "Species")
 
 	'''
 	# I want the user to be able to provide multiple input files, each which will be clustered separately
@@ -86,36 +86,40 @@ def cluster(
 
 		# Generate kmers for all sequences that DO NOT meet size threshold
 		kmer_dict_small = kt.kmerDictSet(smallD,kmer_size,["X"])
+		shortSeqNames = list(smallD.keys())
 
 		for dt in distance_thresh:
 			# Cluster long sequences
-			clusters = clusterSeqs(dists,dt, seqNames)
+			clusters = clusterSeqs(dists, dt, seqNames)
 			
-			# Start to assigning the short sequences to the clusters built using long sequences
-			assignShortSequences(kmer_dict_small, kmer_dict, clusters)
-			
-			# Make a dictionary linking a sequence name to its assigned cluster
-			seq2clust = {}
+			if len(kmer_dict_small) > 0:
+				# Start to assigning the short sequences to the clusters built using long sequences
+				seq2clust = assignShortSequences(kmer_dict_small, kmer_dict, clusters, dt)
+			else:
+				# Make a dictionary linking a sequence name to its assigned cluster
+				seq2clust = {}
+
 			for clustNum, seqL in clusters.items():
 				for sn in seqL:
 					seq2clust[sn] = clustNum
 			# Add cluster numbers to output dictionary in order of seqNames
-			outD[dt] = [seq2clust[sn] for sn in seqNames]
+			outD[dt] = [seq2clust[sn] for sn in seqNames + shortSeqNames]
 					
 		# Write out results for this input file
-		outDF = pd.DataFrame(outD, index=seqNames)
+		outDF = pd.DataFrame(outD, index=seqNames + shortSeqNames)
 		outDF.to_csv(f"{output_dir}/clusters_{os.path.basename(i)}.tsv", sep="\t", index_label="Sequence")
 
 			# This is an example of calculating some summary statistics to help us better understand the clusters
 			# We will likely want to expand this functionality in the future
 # Want to make this section optional 
-# 			numClusts = len(clusters)
-# 			multi, initialSpecies, multiClustSpecies = clustersBySpecies(clusters, speciesD)
-# 			print(f"{dt}\t{numClusts}\t{multi}\t{multi/numClusts:.4f}\t{len(multiClustSpecies)}\t{len(multiClustSpecies)/initialSpecies:.4f}")
+#			numClusts = len(clusters)
+#			multi, initialSpecies, multiClustSpecies = clustersBySpecies(clusters, speciesD)
+#			print(f"{dt}\t{numClusts}\t{multi}\t{multi/numClusts:.4f}\t{len(multiClustSpecies)}\t{len(multiClustSpecies)/initialSpecies:.4f}")
 
 # For each short sequence, calculate the smallest distance between this sequence and the clusters of long sequences
 	# Based on these distances, assign the short sequences to clusters
-def assignShortSequences(shortKD, longKD, clusters):
+def assignShortSequences(shortKD, longKD, clusters, distThresh):
+	clustAssign = {}
 	for ssN, ssK in shortKD.items():
 		distD = {}
 		for clustNum, seqL in clusters.items():
@@ -123,13 +127,18 @@ def assignShortSequences(shortKD, longKD, clusters):
 			for lsN in seqL:
 				lsK = longKD[lsN]
 				ovlp = ssK.intersection(lsK)
-				theseDists.append(1-(len(ovlp)/(min([len(ssK), len(lsK)]))))
+				theseDists.append( 1-( len(ovlp)/(min([len(ssK), len(lsK)])) ) )
 			distD[clustNum] = min(theseDists)
 		
-		if max(distD.values())<0.95:
-			print(ssN)
-			print(distD)
-
+		bestScore = min(distD.values())
+		if bestScore <= distThresh:
+			bestClusts = [k for k,v in distD.items() if v==bestScore]
+			clustAssign[ssN] = random.choice(bestClusts)
+		else:
+			clustAssign[ssN] = ""
+	
+	return clustAssign
+		
 def sortSeqsBySize(fastaDict, min_propn, topPerc=0.1):
 	# Sort the sequence lengths in ascending order
 	lenSortedL = sorted([len(seq) for seq in fastaDict.values()])
