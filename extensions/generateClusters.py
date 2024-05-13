@@ -22,7 +22,7 @@ def main():
 	parser.add_argument("-k", "--kmer-size", type=int, metavar="", required=False, default=7, help="Size of kmers used to compare sequences.")
 	parser.add_argument("-p", "--min-propn", type=float, metavar="", required=False, default=0, help="Proportion of the top 10%% of sequence sizes to be included in the initial round of clustering.")
 	parser.add_argument("-m", "--meta-filepath", type=str, metavar="", required=False, help="Optional tab-delimited file that can be used to link the input sequences to metadata. If provided, summary statistics about the generated clusters will be generated.")
-	parser.add_argument("-m", "--meta-filepath", type=str, metavar="", required=False, help="Optional tab-delimited file that can be used to link the input sequences to metadata. If provided, summary statistics about the generated clusters will be generated.")
+	parser.add_argument("--make-dist-boxplots", required=False, default=False, action="store_true", help="Optional tab-delimited file that can be used to link the input sequences to metadata. If provided, summary statistics about the generated clusters will be generated.")
 
 	args=parser.parse_args()
 
@@ -104,10 +104,13 @@ def cluster(
 					seq2clust[sn] = clustNum
 			# Add cluster numbers to output dictionary in order of seqNames
 			outD[dt] = [seq2clust[sn] for sn in seqNames + shortSeqNames]
-					
+		
 		# Write out results for this input file
 		outDF = pd.DataFrame(outD, index=seqNames + shortSeqNames)
 		outDF.to_csv(f"{output_dir}/clusters_{os.path.basename(i)}.tsv", sep="\t", index_label="Sequence")
+
+		# Summary statistics
+		clusterStats(outD, i , output_dir)
 
 			# This is an example of calculating some summary statistics to help us better understand the clusters
 			# We will likely want to expand this functionality in the future
@@ -202,5 +205,16 @@ def clustersBySpecies(clusters, speciesD):
 	
 	return multi, len(clusterCountD),{k:v for k,v in clusterCountD.items() if v>1}
 
+# Generate some summary statistics about the generated clusters
+def clusterStats(outD, inName, output_dir):
+	with open(f"{output_dir}/{inName}_summaryStats.tsv", "w") as fstats:
+		fstats.write("Distance_Threshold\tNumberOfClusters\tAvgSeqsPerCluster\tSeqsUnassigned\n")
+		for dt, clustL in outD.items():
+			uniq = set(clustL).difference({""})
+			numClust = len(uniq)
+			numUnassigned = clustL.count("")
+			perClust=np.mean([clustL.count(x) for x in uniq])
+			fstats.write(f"{dt:.3f}\t{numClust}\t{perClust:.1f}\t{numUnassigned}\n")
+		
 if __name__ == "__main__":
 	main()
