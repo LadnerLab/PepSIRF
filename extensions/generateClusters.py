@@ -25,7 +25,7 @@ def main():
 	parser.add_argument("-p", "--min-propn", type=float, metavar="", required=False, default=0, help="Proportion of the top 10%% of sequence sizes to be included in the initial round of clustering.")
 	parser.add_argument("-m", "--meta-filepath", type=str, metavar="", required=False, help="Optional tab-delimited file that can be used to link the input sequences to metadata. If provided, summary statistics about the generated clusters will be generated.")
 	parser.add_argument("--make-dist-boxplots", required=False, default=False, action="store_true", help="Optional tab-delimited file that can be used to link the input sequences to metadata. If provided, summary statistics about the generated clusters will be generated.")
-	parser.add_argument("--boxplots-output-dir", type=str, metavar="", required=False, help="Directory to save boxplots if boxplots are made.")
+	parser.add_argument("--boxplots-output-dir", type=str, metavar="", default="boxplots", required=False, help="Directory to save boxplots if boxplots are made.")
 
 	args=parser.parse_args()
 
@@ -120,7 +120,7 @@ def cluster(
 
 
 			if make_dist_boxplots:
-				make_boxplots(i, dt, outD, kmer_dict, seqNames+shortSeqNames, boxplots_output_dir);
+				make_boxplots(i, dt, clusters, kmer_dict, outD, boxplots_output_dir);
 		
 
 		# Write out results for this input file
@@ -249,46 +249,37 @@ def clusterStats(outD, inName, output_dir):
 			perClust=np.mean([clustL.count(x) for x in uniq])
 			fstats.write(f"{dt:.3f}\t{numClust}\t{perClust:.1f}\t{numUnassigned}\n")
 
-def make_boxplots(input_filename, dist_thresh, outD, kmer_dict, seqNames, boxplots_output_dir):
-	clustSeqDict = defaultdict(list)
+def make_boxplots(input_filename, dist_thresh, clusters, kmer_dict, outD, boxplots_output_dir):
 	clustDistWithin = list()
 	clustDistBetween = list()
-	# loop through each group num associated with a seqName
-	for index, clustNum in enumerate(outD[dist_thresh]):
-		clustSeqDict[ clustNum ].append( seqNames[index] )
 
-	# calculate distances between sequences WITHIN each cluster
-	for clustNum, clustSeqNames in clustSeqDict.items():
-		kmerSubDict = {seq:kmer_dict[seq] for seq in clustSeqNames}
-
-		clustDists, clustSeqNames = calcDistances(kmerSubDict)
-
-		for dist in clustDists:
-			clustDistWithin.append((dist, clustNum, "Within"))
-
-	withinDf = pd.DataFrame(clustDistWithin, columns = ["Distance", "Cluster", "Type"])
-
-	for clustNum1, clustSeqNames1 in clustSeqDict.items():
+	for clustNum1, clustSeqNames1 in clusters.items():
 		kmerSubDict1 = {seq:kmer_dict[seq] for seq in clustSeqNames1}
 
-		for clustNum2, clustSeqNames2 in clustSeqDict.items():
+		clustDistsWithin, clustSeqNames = calcDistances(kmerSubDict1)
+
+		for dist in clustDistsWithin:
+			clustDistWithin.append((dist, clustNum1, "Within"))
+
+		for clustNum2, clustSeqNames2 in clusters.items():
 			if clustNum1 != clustNum2:
 				kmerSubDict2 = {seq:kmer_dict[seq] for seq in clustSeqNames2}
 
-				clustDists = calcDistancesBetweenClusters(kmerSubDict1, kmerSubDict2)
+				clustDistsBetween = calcDistancesBetweenClusters(kmerSubDict1, kmerSubDict2)
 
-				for dist in clustDists:
+				for dist in clustDistsBetween:
 					clustDistBetween.append((dist, clustNum1, "Between"))
 
+	withinDf = pd.DataFrame(clustDistWithin, columns = ["Distance", "Cluster", "Type"])
 	betweenDf=pd.DataFrame(clustDistBetween, columns = ["Distance", "Cluster", "Type"])
 
 	clustDistDf = pd.concat([withinDf, betweenDf])
 
 	width = max(outD[dist_thresh])
-	fig, ax = plt.subplots(figsize=(width, width * 2 / 3))
+	fig, ax = plt.subplots(figsize=(width, width * 2 / 3), facecolor='w')
 	sns.boxplot(x="Cluster", y="Distance", hue="Type", data=clustDistDf, ax=ax)
-	ax.set_xlabel("Clusters", fontsize=20)
-	ax.set_ylabel("Distances", fontsize=20)
+	ax.set_xlabel("Cluster", fontsize=width * 5/4)
+	ax.set_ylabel("Distance", fontsize=width * 5/4)
 	plt.savefig(f"{boxplots_output_dir}/{input_filename}_{dist_thresh}_boxplot.png")
 
 if __name__ == "__main__":
