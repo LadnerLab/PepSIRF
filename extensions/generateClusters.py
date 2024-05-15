@@ -276,10 +276,13 @@ def make_boxplots(input_filename, dist_thresh, clusters, kmer_dict, outD, boxplo
 	clustDistDf = pd.concat([withinDf, betweenDf])
 
 	width = max(outD[dist_thresh])
-	fig, ax = plt.subplots(figsize=(width, width * 2 / 3), facecolor='w')
+	height = 20
+	fontsize = width * 5/4
+	fig, ax = plt.subplots(figsize=(width, height), facecolor='w')
 	sns.boxplot(x="Cluster", y="Distance", hue="Type", data=clustDistDf, ax=ax)
-	ax.set_xlabel("Cluster", fontsize=width * 5/4)
-	ax.set_ylabel("Distance", fontsize=width * 5/4)
+	ax.set_xlabel("Cluster", fontsize=fontsize)
+	ax.set_ylabel("Distance", fontsize=fontsize)
+	plt.grid()
 	plt.savefig(f"{boxplots_output_dir}/{input_filename}_{dist_thresh}_boxplot.png")
 
 if __name__ == "__main__":
