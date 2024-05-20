@@ -953,8 +953,16 @@ TEST_CASE( "get_tie_candidates_integer", "[module_deconv]" )
 
     std::vector<std::pair<std::string, double>> candidates;
     std::vector<std::pair<std::string, double>> scores;
-    double threshold      = 4.0;
+    std::unordered_map<std::string, std::size_t> thresholds;
     double ovlp_threshold = 4.0;
+
+    // double threshold = 4.0;
+    thresholds.emplace( "100", 4.0 );
+    thresholds.emplace( "101", 4.0 );
+    thresholds.emplace( "102", 4.0 );
+    thresholds.emplace( "103", 4.0 );
+    thresholds.emplace( "104", 4.0 );
+    thresholds.emplace( "105", 4.0 );
 
     scores.emplace_back( "100", 245.0 );
     scores.emplace_back( "101", 105.0 );
@@ -970,7 +978,7 @@ TEST_CASE( "get_tie_candidates_integer", "[module_deconv]" )
 
     auto t_type = mod.get_tie_candidates( candidates,
                                           scores,
-                                          threshold,
+                                          thresholds,
                                           ovlp_threshold,
                                           difference<double>()
                                         );
@@ -983,7 +991,7 @@ TEST_CASE( "get_tie_candidates_integer", "[module_deconv]" )
 
     t_type = mod.get_tie_candidates( candidates,
                                      scores,
-                                     threshold,
+                                     thresholds,
                                      ovlp_threshold,
                                      difference<double>()
                                    );
@@ -992,11 +1000,17 @@ TEST_CASE( "get_tie_candidates_integer", "[module_deconv]" )
     REQUIRE( t_type == tie_data::tie_type::K_WAY_TIE );
 
     candidates.clear();
-    threshold = 6;
+    // threshold = 6;
+    thresholds["100"] = 6;
+    thresholds["101"] = 6;
+    thresholds["102"] = 6;
+    thresholds["103"] = 6;
+    thresholds["104"] = 6;
+    thresholds["105"] = 6;
 
     t_type = mod.get_tie_candidates( candidates,
                                      scores,
-                                     threshold,
+                                     thresholds,
                                      ovlp_threshold,
                                      difference<double>()
                                    );
@@ -1012,7 +1026,7 @@ TEST_CASE( "get_tie_candidates_integer", "[module_deconv]" )
 
     t_type = mod.get_tie_candidates( candidates,
                                      scores,
-                                     threshold,
+                                     thresholds,
                                      ovlp_threshold,
                                      difference<double>()
                                    );
@@ -1025,7 +1039,7 @@ TEST_CASE( "get_tie_candidates_integer", "[module_deconv]" )
 
     t_type = mod.get_tie_candidates( candidates,
                                      scores,
-                                     threshold,
+                                     thresholds,
                                      ovlp_threshold,
                                      difference<double>()
                                    );
@@ -1041,8 +1055,16 @@ TEST_CASE( "get_tie_candidates_ratio", "[module_deconv]" )
 
     std::vector<std::pair<std::string, double>> candidates;
     std::vector<std::pair<std::string, double>> scores;
-    double threshold      = 4.0;
+    std::unordered_map<std::string, std::size_t> thresholds;
+    // double threshold      = 4.0;
     double ovlp_threshold = 0;
+
+    thresholds.emplace( "100", 4.0 );
+    thresholds.emplace( "101", 4.0 );
+    thresholds.emplace( "102", 4.0 );
+    thresholds.emplace( "103", 4.0 );
+    thresholds.emplace( "104", 4.0 );
+    thresholds.emplace( "105", 4.0 );
 
     scores.emplace_back( "100", 245.0 );
     scores.emplace_back( "101", 105.0 );
@@ -1059,7 +1081,7 @@ TEST_CASE( "get_tie_candidates_ratio", "[module_deconv]" )
 
     auto t_type = mod.get_tie_candidates( candidates,
                                           scores,
-                                          threshold,
+                                          thresholds,
                                           ovlp_threshold,
                                           util::ratio<double>()
                                         );
@@ -1073,7 +1095,7 @@ TEST_CASE( "get_tie_candidates_ratio", "[module_deconv]" )
 
     t_type = mod.get_tie_candidates( candidates,
                                      scores,
-                                     threshold,
+                                     thresholds,
                                      ovlp_threshold,
                                      util::ratio<double>()
                                    );
@@ -1089,7 +1111,7 @@ TEST_CASE( "get_tie_candidates_ratio", "[module_deconv]" )
 
     t_type = mod.get_tie_candidates( candidates,
                                      scores,
-                                     threshold,
+                                     thresholds,
                                      ovlp_threshold,
                                      ratio<double>()
                                    );
@@ -1101,11 +1123,17 @@ TEST_CASE( "get_tie_candidates_ratio", "[module_deconv]" )
     candidates.clear();
 
     ovlp_threshold = 0.00000001;
-    threshold = 6;
+    // threshold = 6;
+    thresholds["100"] = 6;
+    thresholds["101"] = 6;
+    thresholds["102"] = 6;
+    thresholds["103"] = 6;
+    thresholds["104"] = 6;
+    thresholds["105"] = 6;
 
     t_type = mod.get_tie_candidates( candidates,
                                      scores,
-                                     threshold,
+                                     thresholds,
                                      ovlp_threshold,
                                      ratio<double>()
                                    );
@@ -1758,7 +1786,7 @@ TEST_CASE( "Deconv end_to_end", "[module_deconv]" )
     opts.enriched_fname = std::string( "../test/input_data/test_enriched_file.tsv" );
     opts.id_name_map_fname = std::string();
 
-    opts.threshold = 00;
+    opts.thresholds_fname = std::string( "../test/input_data/test_spec_thesholds.tsv" );
     opts.single_threaded = false;
     opts.scoring_strategy = "summation";
     opts.score_filtering = true;
@@ -1912,6 +1940,8 @@ TEST_CASE( "to_dir_name", "[fs_tools]" )
 TEST_CASE( "filter_counts (vector template)", "[module_deconv]" )
 {
     std::vector<std::pair<std::size_t,double>> filter_vec;
+   std::unordered_map<std::size_t, std::size_t> thresholds;
+
     module_deconv mod;
 
     for( std::size_t index = 0; index < 100; ++index )
@@ -1919,8 +1949,13 @@ TEST_CASE( "filter_counts (vector template)", "[module_deconv]" )
             filter_vec.emplace_back( std::make_pair( index, index + 1 ) );
         }
 
+    for( auto& pair : filter_vec )
+       	{
+       		thresholds.emplace( std::make_pair( pair.first, 50 ) );
+       	}
 
-    mod.filter_counts<std::size_t,double>( filter_vec, 50  );
+
+    mod.filter_counts<std::size_t,double,std::size_t>( filter_vec, thresholds  );
 
     REQUIRE( filter_vec.size() == 51 );
     auto comp_pair = []( const std::pair<size_t,double> first,
