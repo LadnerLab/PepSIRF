@@ -389,7 +389,7 @@ class module_deconv : public module
      * @param scores The vector of species and scores to search 
      *        for ties. This vector must be sorted in non-increasing order
      *        of the scores.
-     * @param threshold The threshold for species to be enriched.
+     * @param thresholds Map of the thresholds for each species to be enriched.
      *        This method terminates if if reaches a species whose score does 
      *        not reach this threshold.
      * @param ovlp_threshold The score threshold species scores must be within 
@@ -407,7 +407,7 @@ class module_deconv : public module
                             candidates,
                             std::vector<std::pair<std::string,double>>&
                             scores,
-                            double threshold,
+                            std::unordered_map<std::string, std::size_t> thresholds,
                             double ovlp_threshold,
                             DistanceCalc distance
                           )
@@ -427,7 +427,7 @@ class module_deconv : public module
 
             for( index = 1;
                  index < scores.size()
-                     && scores[ index ].second >= threshold;
+                     && scores[ index ].second >= thresholds[scores[ index ].first];
                  ++index
                  )
                 {
@@ -604,18 +604,18 @@ class module_deconv : public module
     /**
      * Filter counts that do not have a high enough score out of the id_counts structure.
      * @param id_counts Structure containing <species_id, score> pairs.
-     * @param thresh The threshold value. Any pairs in id_counts whose second 
+     * @param thresholds Map of thresholds for each species. Any pairs in id_counts whose second 
      *        entry is strictly less than this value will be removed.
      * @note This method has the side effect of removing items from id_counts
      **/
-    template<class K, class V>
+    template<class K, class V, class T>
         void filter_counts( std::unordered_map<K,V>& id_counts,
-                            V thresh
+                            std::unordered_map<K,T> thresholds
                           )
     {
         for( auto& item : id_counts )
             {
-                if( item.second < thresh )
+                if( item.second < thresholds[item.first] )
                     {
                         id_counts.erase( item.first );
                     }
@@ -626,20 +626,20 @@ class module_deconv : public module
      * Filter counts that do not have a high enough score out of the id_counts structure.
      * This is a partial specialization for filter_counts.
      * @param id_counts Structure containing <species_id, score> pairs.
-     * @param thresh The threshold value. Any pairs in id_counts whose second 
+     * @param thresholds Map of thresholds for each species. Any pairs in id_counts whose second 
      *        entry is strictly less than this value will be removed.
      * @note This method has the side effect of removing items from id_counts
      **/
-    template<class K, class V>
+    template<class K, class V, class T>
         void filter_counts( std::vector<std::pair<K,V>>& in_vec,
-                       V thresh
+                       std::unordered_map<K,T> thresholds
                     )
     {
         auto it = std::remove_if( in_vec.begin(),
                                   in_vec.end(),
                                   [&]( const std::pair<K,V>& p ) -> bool
                                   {
-                                      return p.second < thresh;
+                                      return p.second < thresholds[p.first];
                                   }
                                 );
 
@@ -888,6 +888,14 @@ class module_deconv : public module
      *          false otherwise
      **/
     bool use_ratio_overlap_threshold( double threshold );
+
+    /**
+     * Created a map of threshold for each taxaID from linkage map
+     * @param thresh_map to populated with taxID as key and threshold as value
+     * @param filename filepath to tab-delimited file
+     * @returns map of taxID and threshold
+     **/
+    void thresh_file_to_map( std::unordered_map<std::string, std::size_t>& thresh_map, std::string filename );
 };
 
 #endif // MODULE_DECONV_HH_INCLUDED 
