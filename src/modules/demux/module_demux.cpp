@@ -253,6 +253,17 @@ void module_demux::run( options *opts )
         }
     }
 
+    if( !d_opts->unmapped_reads_fname.empty() )
+    {
+        if( boost::filesystem::exists(d_opts->unmapped_reads_fname) )
+        {
+            Log::warn(
+                "The file '" + d_opts->unmapped_reads_fname + "' exists,"
+                " data will be overwritten!\n"
+            );
+        }
+    }
+
     while( fastq_p.parse( reads_file_ref, reads, d_opts->read_per_loop  ) )
         {
 
@@ -482,7 +493,7 @@ void module_demux::run( options *opts )
 #endif
                                             
                                         }
-                                }
+                                }  
                             }
                             else if (
                                 seq_match == reference_counts.end()
@@ -545,7 +556,7 @@ void module_demux::run( options *opts )
                                         }
                                     #endif
                                     ++processed_success;
-                                }        
+                                }
                             }
                             else if (flexible_idx_data.size() > 1)
                             {
@@ -613,11 +624,23 @@ void module_demux::run( options *opts )
                 }
             #endif
 
-            fastq_output.clear();
+            if( !d_opts->unmapped_reads_fname.empty() )
+                {
+                    #ifndef __clang__
+                    #pragma omp critical
+                    {
+                    #endif
+                        create_unmapped_reads_file(d_opts->unmapped_reads_fname, fastq_output, reads);
+                    #ifndef __clang__
+                    }
+                    #endif
+                }
 
+            fastq_output.clear();
             reads.clear();
             r2_seqs.clear();
         }
+
     total_time.stop();
     // check for duplicates
 #ifndef __clang__
@@ -1056,5 +1079,31 @@ std::string module_demux::get_sample_info( std::vector<sample>& samplelist, std:
     }
 
     return info_str.str();
+}
+
+void module_demux::create_unmapped_reads_file( std::string filename, 
+                            std::map<std::string, std::vector<fastq_sequence>> samp_map, std::vector<fastq_sequence> reads_dup )
+{
+    std::vector<fastq_sequence>::iterator found_position;
+
+    for(auto samp : samp_map) 
+        {
+            for(auto fastq_seq : samp.second)
+                {
+                    // delete from reads_dup
+                    reads_dup.erase(std::remove(reads_dup.begin(), reads_dup.end(), fastq_seq), reads_dup.end());
+                }
+        }
+
+    // write to file
+    std::ofstream output( filename, std::ofstream::out );
+    for(auto fastq_seq : reads_dup)
+        {
+            output << fastq_seq.name << "\n";
+            output << fastq_seq.seq << "\n";
+            output << "+" << "\n";
+            output << fastq_seq.scores << "\n";
+        }
+    output.close();
 }
 
