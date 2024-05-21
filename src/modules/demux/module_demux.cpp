@@ -125,6 +125,25 @@ void module_demux::run( options *opts )
         );
     }
 
+    std::size_t seq_start  = std::get<0>( d_opts->seq_data );
+    std::size_t seq_length = std::get<1>( d_opts->seq_data );
+
+    {
+        std::size_t lib_length = library_seqs[0].length();
+        if (seq_length < lib_length)
+        {
+            trunc_lib_seqs(seq_length, library_seqs);
+        }
+        else if (seq_length > lib_length)
+        {
+            std::stringstream err_stream;
+            err_stream
+                << "The sequence length provide (" << seq_length << ")"
+                << " was longer than the lengths found in the library!\n";
+            Log::error(err_stream.str());
+        }
+    }
+
     sequential_map<sequence, sample> index_map;
     sequential_map<sequence, sample> seq_lookup;
     dna_tags = fasta_p.parse( d_opts->index_fname );
@@ -145,9 +164,6 @@ void module_demux::run( options *opts )
     std::string nuc_seq;
 
     parallel_map<sequence, std::vector<std::size_t>*>::iterator seq_iter;
-
-    std::size_t seq_start  = std::get<0>( d_opts->seq_data );
-    std::size_t seq_length = std::get<1>( d_opts->seq_data );
 
     std::size_t processed_total   = 0;
     std::size_t processed_success = 0;
@@ -904,6 +920,18 @@ void module_demux::write_outputs( std::string outfile_name,
         }
     outfile.close();
 }
+
+
+void module_demux::trunc_lib_seqs(
+    std::size_t seq_length,
+    std::vector<sequence> &lib_seqs
+) {
+    for (sequence &lib_seq : lib_seqs)
+    {
+        lib_seq.seq.resize(seq_length);
+    }
+}
+
 
 void module_demux::_zero_vector( std::vector<std::size_t>* vec )
 {
