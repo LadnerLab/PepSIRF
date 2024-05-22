@@ -57,64 +57,91 @@ def find_linkage_scores(
 	mdDf = pd.read_csv(metadata, sep="\t", index_col=seq_header)
 
 	# create dictionary with distance threshold: cluster id: cluster number: {set of nucleotide accessions}
-	NT_dict = create_NT_accession_dict(mdDf, nt_header, cluster_dir, cluster_prefix, cluster_suffix)
+	nt_dict = create_NT_accession_dict(mdDf, nt_header, cluster_dir, cluster_prefix, cluster_suffix)
+	
+	# create dictionary with distance threshold: cluster id: {set of nucleotide accessions for the entire ID}
+	id_nt_dict = defaultdict(dict)
+	for dist_thresh in nt_dict:
+		for id_key in nt_dict[dist_thresh]:
+			# create NT accession "cluster" for the entire id
+			nt_set = set()
+			for clust in nt_dict[dist_thresh][id_key]:
+				nt_set.update(nt_dict[dist_thresh][id_key][clust])
+			id_nt_dict[dist_thresh][id_key] = nt_set
 
 	# calulate linkage scores and create output dataframe for each dist_thresh
-	for dist_thresh in NT_dict.keys():
+	for dist_thresh in nt_dict.keys():
 		out_data = list()
 
 		# loop through each id 1
-		for id_1 in NT_dict[dist_thresh]:
+		for id_1 in nt_dict[dist_thresh]:
 			# loop throuch each cluster 1
-			for clust_1 in NT_dict[dist_thresh][id_1]:
+			for clust_1 in nt_dict[dist_thresh][id_1]:
 				# loop through each following id 2
-				for id_2 in NT_dict[dist_thresh]:
+				for id_2 in nt_dict[dist_thresh]:
 					if id_1 < id_2:
 						# loop through each cluster 2
-						for clust_2 in NT_dict[dist_thresh][id_2]:
-							# initialize linkage score
-							linkage_score = 0
+						for clust_2 in nt_dict[dist_thresh][id_2]:
 
-							# convert entire nucleotide accession numbers in cluster 2 into set 2
-							NT_set_2 = set()
-							for NT_accession in NT_dict[dist_thresh][id_2][clust_2]:
-								NT_set_2.update( set(NT_accession.split(nt_delim)) )
+							linkage_score_1 = calc_linkage_score_from_c1_to_c2(
+														nt_clust_1=nt_dict[dist_thresh][id_1][clust_1], 
+														nt_clust_2=nt_dict[dist_thresh][id_2][clust_2], 
+														nt_delim=nt_delim
+														)
 
-							# loop through each nucleotide accession number in cluster 1
-							for NT_accession in NT_dict[dist_thresh][id_1][clust_1]:
-								# test if pair exists with set 2
-								for curr_accession in NT_accession.split(nt_delim):
-									if curr_accession in NT_set_2:
-										# increment linkage score
-										linkage_score += 1
-										break
+							if linkage_score_1 > 0:
+								max_linkage_score_1 = calc_linkage_score_from_c1_to_c2(
+															nt_clust_1=nt_dict[dist_thresh][id_1][clust_1], 
+															nt_clust_2=id_nt_dict[dist_thresh][id_2], 
+															nt_delim=nt_delim
+														)
+								norm_linkage_score = linkage_score_1 / max_linkage_score_1
+								out_data.append( (id_1, clust_1, id_2, clust_2, norm_linkage_score) )
 
-							# do it the other way
+							# do it the otherway
+							linkage_score_2 = calc_linkage_score_from_c1_to_c2(
+														nt_clust_1=nt_dict[dist_thresh][id_2][clust_2], 
+														nt_clust_2=nt_dict[dist_thresh][id_1][clust_1], 
+														nt_delim=nt_delim
+														)
 
-							# convert entire nucleotide accession numbers in cluster 1 into set 1
-							NT_set_1 = set()
-							for NT_accession in NT_dict[dist_thresh][id_1][clust_1]:
-								NT_set_1.update( set(NT_accession.split(nt_delim)) )
+							if linkage_score_2 > 0:
+								max_linkage_score_2 = calc_linkage_score_from_c1_to_c2(
+															nt_clust_1=nt_dict[dist_thresh][id_2][clust_2], 
+															nt_clust_2=id_nt_dict[dist_thresh][id_1], 
+															nt_delim=nt_delim
+															)
+								norm_linkage_score = linkage_score_2 / max_linkage_score_2
+								out_data.append( (id_2, clust_2, id_1, clust_1, norm_linkage_score) )
 
-							# loop through each nucleotide accession number in cluster 2
-							for NT_accession in NT_dict[dist_thresh][id_2][clust_2]:
-								# test if pair exists with set 1
-								for curr_accession in NT_accession.split(nt_delim):
-									if curr_accession in NT_set_1:
-										# increment linkage score
-										linkage_score += 1
-										break
-
-							# divide linkage score by 2 (get average)
-							linkage_score /= 2
-
-							# add data
-							if linkage_score > 0:
-								out_data.append( (id_1, clust_1, id_2, clust_2, linkage_score) )
-
-		outDf = pd.DataFrame( out_data, columns=["p1", "c1", "p2", "c2", "linkageScore"] )
+		outDf = pd.DataFrame( out_data, columns=["p1", "c1", "p2", "c2", "normalizedLinkageScore"] )
 
 		outDf.to_csv(f"{output_dir}/{cluster_prefix}{dist_thresh}_linkage_scores.tsv", sep="\t", index=False)
+
+# calculate linkage score based on nucleotide accession numbers between clusters
+def calc_linkage_score_between_clusts(nt_clust_1, nt_clust_2, nt_delim):
+	return (calc_linkage_score_from_c1_to_c2(nt_clust_1, nt_clust_2, nt_delim) + 
+		calc_linkage_score_from_c1_to_c2(nt_clust_2, nt_clust_1, nt_delim)) / 2
+
+def calc_linkage_score_from_c1_to_c2(nt_clust_1, nt_clust_2, nt_delim):
+	# initialize linkage score
+	linkage_score = 0
+
+	# convert entire nucleotide accession numbers in cluster 2 into set 2
+	NT_set_2 = set()
+	for NT_accession in nt_clust_2:
+		NT_set_2.update( set(NT_accession.split(nt_delim)) )
+
+	# loop through each nucleotide accession number in cluster 1
+	for NT_accession in nt_clust_1:
+		# test if pair exists with set 2
+		for curr_accession in NT_accession.split(nt_delim):
+			if curr_accession in NT_set_2:
+				# increment linkage score
+				linkage_score += 1
+				break
+
+	return linkage_score
 
 def create_NT_accession_dict(mdDf, nt_header, cluster_dir, cluster_prefix, cluster_suffix):
 	# collect cluster files (sort alphabetically)
@@ -123,7 +150,7 @@ def create_NT_accession_dict(mdDf, nt_header, cluster_dir, cluster_prefix, clust
 	# create SequenceName to NCBIaccession-NT dictionary
 	seq_2_NT = mdDf[nt_header].to_dict()
 
-	NT_dict = defaultdict(dict)
+	nt_dict = defaultdict(dict)
 
 	for file in clust_files:
 		# read file and remove sequences that are not associated with a cluster
@@ -142,9 +169,9 @@ def create_NT_accession_dict(mdDf, nt_header, cluster_dir, cluster_prefix, clust
 				# check if sequence is assigned to a cluster
 				clust_2_NTs[ int(clust) ].add(seq_2_NT[ seq ])
 
-			NT_dict[dist_thresh][file_id] = clust_2_NTs
+			nt_dict[dist_thresh][file_id] = clust_2_NTs
 
-	return NT_dict
+	return nt_dict
 
 #------------------------------------------
 if __name__ == "__main__":
