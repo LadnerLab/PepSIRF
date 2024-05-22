@@ -21,7 +21,7 @@ def main():
 	parser.add_argument("-o", "--output-dir", type=str, metavar="", required=True, help="Directory to save cluster files. This directory will be created, if it doesn't already exist.")
 
 	# Optional arguments
-	parser.add_argument("--method", type=str, metavar="", required=False, default="Hierarchical", help="Method of generating clusters. Current options are: Hierarchical or Louvain")
+	# parser.add_argument("--method", type=str, metavar="", required=False, default="Hierarchical", help="Method of generating clusters. Current options are: Hierarchical or Louvain")
 	parser.add_argument("-k", "--kmer-size", type=int, metavar="", required=False, default=7, help="Size of kmers used to compare sequences.")
 	parser.add_argument("-p", "--min-propn", type=float, metavar="", required=False, default=0, help="Proportion of the top 10%% of sequence sizes to be included in the initial round of clustering.")
 	parser.add_argument("-m", "--meta-filepath", type=str, metavar="", required=False, help="Optional tab-delimited file that can be used to link the input sequences to metadata. If provided, summary statistics about the generated clusters will be generated.")
@@ -36,7 +36,7 @@ def main():
 	cluster(
 		meta_filepath = args.meta_filepath,
 		input_files = args.input_files,
-		method = args.method,
+		# method = args.method,
 		distance_thresh = args.distance_thresh,
 		kmer_size = args.kmer_size,
 		min_propn = args.min_propn,
@@ -54,7 +54,7 @@ def main():
 def cluster(
 	meta_filepath: str,
 	input_files: list,
-	method: str,
+	# method: str,
 	distance_thresh: list,
 	kmer_size: int,
 	min_propn: float,
@@ -224,7 +224,6 @@ def calcDistancesBetweenClusters(kmer_dict1, kmer_dict2):
 
 
 def clusterSeqs(dists, distThresh, seqNames, linkage_meth='average', clust_method):
-	if clust_method = 
 	hm = sch.linkage(np.array(dists), method=linkage_meth)
 	groups = sch.cut_tree(hm,height=distThresh)
 
