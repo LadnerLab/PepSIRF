@@ -21,24 +21,30 @@ def main():
 	parser.add_argument("-o", "--output-dir", type=str, metavar="", required=True, help="Directory to save cluster files. This directory will be created, if it doesn't already exist.")
 
 	# Optional arguments
+	parser.add_argument("--method", type=str, metavar="", required=False, default="Hierarchical", help="Method of generating clusters. Current options are: Hierarchical or Louvain")
 	parser.add_argument("-k", "--kmer-size", type=int, metavar="", required=False, default=7, help="Size of kmers used to compare sequences.")
 	parser.add_argument("-p", "--min-propn", type=float, metavar="", required=False, default=0, help="Proportion of the top 10%% of sequence sizes to be included in the initial round of clustering.")
 	parser.add_argument("-m", "--meta-filepath", type=str, metavar="", required=False, help="Optional tab-delimited file that can be used to link the input sequences to metadata. If provided, summary statistics about the generated clusters will be generated.")
 	parser.add_argument("--make-dist-boxplots", required=False, default=False, action="store_true", help="Optional tab-delimited file that can be used to link the input sequences to metadata. If provided, summary statistics about the generated clusters will be generated.")
 	parser.add_argument("--boxplots-output-dir", type=str, metavar="", default="boxplots", required=False, help="Directory to save boxplots if boxplots are made.")
 	parser.add_argument("--min-seqs", type=int, metavar="", default=2, required=False, help="Number of sequences a cluster needs to be included in the boxplot.")
+	parser.add_argument("--make-sim-hists", required=False, default=False, action="store_true", help="If provided, distribution of k-mer similarities for each input file will be provided.")
+	parser.add_argument("--hists-output-dir", type=str, metavar="", required=False, default="histograms", help="Directory to save histograms if histograms are made.")
 
 	args=parser.parse_args()
 
 	cluster(
 		meta_filepath = args.meta_filepath,
 		input_files = args.input_files,
+		method = args.method,
 		distance_thresh = args.distance_thresh,
 		kmer_size = args.kmer_size,
 		min_propn = args.min_propn,
 		make_dist_boxplots = args.make_dist_boxplots,
 		boxplots_output_dir = args.boxplots_output_dir,
 		min_seqs = args.min_seqs,
+		make_sim_hists = args.make_sim_hists,
+		hists_output_dir = args.hists_output_dir,
 		output_dir = args.output_dir
 		)
 
@@ -48,12 +54,15 @@ def main():
 def cluster(
 	meta_filepath: str,
 	input_files: list,
+	method: str,
 	distance_thresh: list,
 	kmer_size: int,
 	min_propn: float,
 	make_dist_boxplots: bool,
 	boxplots_output_dir: str,
 	min_seqs: int,
+	make_sim_hists: bool,
+	hists_output_dir: str,
 	output_dir: str
 	) -> None:
 	
@@ -66,24 +75,17 @@ def cluster(
 			os.mkdir(boxplots_output_dir)
 		else:
 			print(f"Warning: The directory \"{boxplots_output_dir}\" already exists. Boxplots may be overwritten.")
+	if make_sim_hists:
+		if not os.path.exists(hists_output_dir):
+			os.mkdir(hists_output_dir)
+		else:
+			print(f"Warning: The directory \"{hists_output_dir}\" already exists. Histograms may be overwritten.")
 
 # Want to make this section optional 
 	# meta_filepath = "PM1_targets_taxInfo.tsv"
 #	speciesD = io.fileDictHeader(meta_filepath, "SequenceName", "Species")
 #	sidD = io.fileDictHeader(meta_filepath, "SequenceName", "SpeciesID")
 #	sid2spD = io.fileDictHeader(meta_filepath, "SpeciesID", "Species")
-
-	'''
-	# I want the user to be able to provide multiple input files, each which will be clustered separately
-	input_files = ["39733_Astroviridae_Targets.fasta", "2842321_Kolmioviridae_Targets.fasta"]
-	# I want the user to be able to provide multiple distance thresholds to use for clustering
-	distance_thresh = [0.8, 0.9, 0.95]
-	# I want the user to specify the kmer size to use
-	kmer_size=7
-	# I want the user to specify the location of an output directory
-	# If this directory doesn't already exist, please create it
-	output_dir = "clusters"
-	'''
 
 	for i in input_files:
 #		print(i) # This doesn't need to be done in the standalone script, just temp for tracking
@@ -97,7 +99,7 @@ def cluster(
 		# Generate kmers for all sequences that meet size threshold
 		kmer_dict = kt.kmerDictSet(largeD,kmer_size,["X"])
 		# Calculate distances between all large sequences
-		dists, seqNames = calcDistances(kmer_dict)
+		dists, similarities, seqNames = calcDistances(kmer_dict)
 
 		# Generate kmers for all sequences that DO NOT meet size threshold
 		kmer_dict_small = kt.kmerDictSet(smallD,kmer_size,["X"])
@@ -124,7 +126,9 @@ def cluster(
 
 			if make_dist_boxplots:
 				make_boxplots(i, dt, clusters, kmer_dict, outD, boxplots_output_dir, min_seqs);
-		
+			if make_sim_hists:
+				make_hist(i, similarities, hists_output_dir);
+
 
 		# Write out results for this input file
 		outDF = pd.DataFrame(outD, index=seqNames + shortSeqNames)
@@ -192,15 +196,19 @@ def calcDistances(kD):
 	# Currently, one distance measure is implemented
 	# But, in the future, it would be nice to support multiple distance options
 	dists = []
+	similarities = []
 	for i, ni in enumerate(seqNames):
 		ki = kD[seqNames[i]]
 		for j, nj in enumerate(seqNames):
 			if j>i:
 				kj = kD[seqNames[j]]
 				ovlp = ki.intersection(kj)
-				dists.append(1-(len(ovlp)/(min([len(ki), len(kj)]))))
-	return dists, seqNames
+				similarity = len(ovlp)/(min([len(ki), len(kj)]))
+				similarities.append(similarity)
+				dists.append(1-similarity)
+	return dists, similarities, seqNames
 
+#TODO: account for similarities
 def calcDistancesBetweenClusters(kmer_dict1, kmer_dict2):
 	seqNames1 = list(kmer_dict1.keys())
 	seqNames2 = list(kmer_dict2.keys())
@@ -215,9 +223,9 @@ def calcDistancesBetweenClusters(kmer_dict1, kmer_dict2):
 	return dists
 
 
-def clusterSeqs(dists, distThresh, seqNames, meth='average'):
-	
-	hm = sch.linkage(np.array(dists), method=meth)
+def clusterSeqs(dists, distThresh, seqNames, linkage_meth='average', clust_method):
+	if clust_method = 
+	hm = sch.linkage(np.array(dists), method=linkage_meth)
 	groups = sch.cut_tree(hm,height=distThresh)
 
 	gD=defaultdict(list)
@@ -260,7 +268,7 @@ def make_boxplots(input_filename, dist_thresh, clusters, kmer_dict, outD, boxplo
 		if len(clustSeqNames1) >= min_seqs:
 			kmerSubDict1 = {seq:kmer_dict[seq] for seq in clustSeqNames1}
 
-			clustDistsWithin, clustSeqNames = calcDistances(kmerSubDict1)
+			clustDistsWithin, similarities, clustSeqNames = calcDistances(kmerSubDict1)
 
 			for dist in clustDistsWithin:
 				clustDistWithin.append((dist, clustNum1, "Within"))
@@ -288,6 +296,14 @@ def make_boxplots(input_filename, dist_thresh, clusters, kmer_dict, outD, boxplo
 	ax.set_ylabel("Distance", fontsize=fontsize)
 	plt.grid()
 	plt.savefig(f"{boxplots_output_dir}/{input_filename}_{dist_thresh}_boxplot.png", dpi=300, bbox_inches='tight')
+
+def make_hist(input_filename, similarities, output_dir):
+	fig, ax = plt.subplots(figsize=(11,8.5), facecolor='w')
+	ax.hist(similarities, bins=100)
+	plt.xticks(np.arange(0,1, step=0.1))
+	plt.xlabel("similarity")
+	plt.ylabel("count")
+	plt.savefig(f"{output_dir}/{input_filename}_histogram.png")
 
 if __name__ == "__main__":
 	main()
