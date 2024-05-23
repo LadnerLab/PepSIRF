@@ -29,6 +29,9 @@ def main():
 	parser.add_argument("--make-network-vis", required=False, default=False, action="store_true", help="If provided, network visualization will be created for each threshold. The size of the nodes are based on the "
 																										"number of sequences in the cluster and the size of the edges are based on the normalized linkage score.")
 	parser.add_argument("--vis-output-dir", type=str, metavar="", required=False, default="networks_visualizations", help="Directory to save graphs if graphs are made.")
+	parser.add_argument("--vis-seed", type=int, metavar="", required=False, default="1234", help="Seed used to generate network visualization. Changes node positions.")
+
+
 
 	args=parser.parse_args()
 
@@ -42,6 +45,7 @@ def main():
 		nt_delim = args.nt_accession_delim,
 		make_net_vis = args.make_network_vis,
 		vis_output_dir = args.vis_output_dir,
+		vis_seed = args.vis_seed,
 		output_dir = args.output_dir
 		)
 
@@ -57,6 +61,7 @@ def find_linkage_scores(
 	nt_delim: str,
 	make_net_vis: bool,
 	vis_output_dir: str,
+	vis_seed: int,
 	output_dir: str
 	)->None:
 
@@ -135,7 +140,7 @@ def find_linkage_scores(
 		outDf.to_csv(f"{output_dir}/{cluster_prefix}{dist_thresh}_linkage_scores.tsv", sep="\t", index=False)
 
 		if make_net_vis:
-			create_network_visualization( dist_thresh, nt_dict, outDf, cluster_prefix, vis_output_dir)
+			create_network_visualization( dist_thresh, nt_dict, outDf, cluster_prefix, vis_output_dir, vis_seed)
 
 
 # calculate linkage score based on nucleotide accession numbers between clusters
@@ -193,14 +198,15 @@ def create_NT_accession_dict(mdDf, nt_header, cluster_dir, cluster_prefix, clust
 
 	return nt_dict
 
-def create_network_visualization( dist_thresh, nt_dict, outDf,  cluster_prefix, vis_output_dir ):
-	G = nx.DiGraph()
+def create_network_visualization( dist_thresh, nt_dict, outDf,  cluster_prefix, vis_output_dir, vis_seed):
+	G = nx.MultiDiGraph()
 	color_assigned = defaultdict()
 	color_index = 0
 	cluster_colors = list()
 
 	# add nodes from first column clusters
 	clusters = list(set((outDf["p1"] + "_" + outDf["c1"].astype(str)).to_list()))
+	clusters.sort()
 	cluster_sizes = list()
 	for cluster in clusters:
 		cluster = cluster.split("_")
@@ -217,17 +223,17 @@ def create_network_visualization( dist_thresh, nt_dict, outDf,  cluster_prefix, 
 	G.add_nodes_from(clusters)
 
 	# add edges, thickness based on linkage scores
-	weights = list()
 	for index, row in outDf.iterrows():
 		c1 = f"{row['p1']}_{row['c1']}"
 		c2 = f"{row['p2']}_{row['c2']}"
-		weights.append(row["normalizedLinkageScore"] * 2)
-		G.add_edge(c1, c2)
+		G.add_edge(c1, c2, color="k", weight=row["normalizedLinkageScore"] * 2)
 
-	pos=nx.spring_layout(G, k=0.75, seed=5)
+	weights = nx.get_edge_attributes(G,'weight').values()
+
+	pos=nx.spring_layout(G, k=0.75, seed=vis_seed)
 	fig, ax = plt.subplots(figsize = (20, 14))
 	nx.draw_networkx_nodes(G, pos, ax=ax, node_size=cluster_sizes, node_color=cluster_colors)
-	nx.draw_networkx_edges(G, pos, ax=ax, connectionstyle=f'arc3, rad = 0.25', arrows=True, width=weights)
+	nx.draw_networkx_edges(G, pos, ax=ax, connectionstyle=f'arc3, rad = 0.25', arrows=True, width=list(weights))
 	nx.draw_networkx_labels(G, pos, ax=ax)
 	fig.savefig(f"{vis_output_dir}/{cluster_prefix}{dist_thresh}_visualization.png", bbox_inches='tight', dpi=300)
 
