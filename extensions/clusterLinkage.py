@@ -114,21 +114,6 @@ def find_linkage_scores(
 								norm_linkage_score = linkage_score_1 / max_linkage_score_1
 								out_data.append( (id_1, clust_1, id_2, clust_2, norm_linkage_score) )
 
-							linkage_score_1 = calc_linkage_score_from_c1_to_c2(
-														nt_clust_1=nt_dict[dist_thresh][id_1][clust_1], 
-														nt_clust_2=nt_dict[dist_thresh][id_2][clust_2], 
-														nt_delim=nt_delim
-														)
-
-							if linkage_score_1 > 0:
-								max_linkage_score_1 = calc_linkage_score_from_c1_to_c2(
-															nt_clust_1=nt_dict[dist_thresh][id_1][clust_1], 
-															nt_clust_2=id_nt_dict[dist_thresh][id_2], 
-															nt_delim=nt_delim
-														)
-								norm_linkage_score = linkage_score_1 / max_linkage_score_1
-								out_data.append( (id_1, clust_1, id_2, clust_2, norm_linkage_score) )
-
 							# do it the otherway
 							linkage_score_2 = calc_linkage_score_from_c1_to_c2(
 														nt_clust_1=nt_dict[dist_thresh][id_2][clust_2], 
