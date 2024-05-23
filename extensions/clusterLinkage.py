@@ -5,6 +5,11 @@ import glob
 import os
 import pandas as pd
 from collections import defaultdict
+import numpy as np
+import matplotlib.pyplot as plt
+import networkx as nx
+
+COLOR_LIST = ['#ff0000', '#deff0a', '#0aefff', '#be0aff', '#ff8700', '#a1ff0a', '#147df5', '#ffd300', '#0aff99', '#580aff']
 
 def main():
 	parser = argparse.ArgumentParser(description="Generates linkage scores between each cluster.")
@@ -21,6 +26,9 @@ def main():
 	parser.add_argument("--seq-name-header", default="SequenceName", type=str, metavar="", required=False, help="Header for sequence name column in the metadata file.")
 	parser.add_argument("--nt-accession-header", default="NCBIaccession-NT", type=str, metavar="", required=False, help="Header for nucleotide accession number column in the metadata file.")
 	parser.add_argument("--nt-accession-delim", default=",", type=str, metavar="", required=False, help="Delimiter for multiple nucleotide accession numbers associated with a single sequence in the metadata file.")
+	parser.add_argument("--make-network-vis", required=False, default=False, action="store_true", help="If provided, network visualization will be created for each threshold. The size of the nodes are based on the "
+																										"number of sequences in the cluster and the size of the edges are based on the normalized linkage score.")
+	parser.add_argument("--vis-output-dir", type=str, metavar="", required=False, default="networks_visualizations", help="Directory to save graphs if graphs are made.")
 
 	args=parser.parse_args()
 
@@ -32,6 +40,8 @@ def main():
 		seq_header = args.seq_name_header,
 		nt_header = args.nt_accession_header,
 		nt_delim = args.nt_accession_delim,
+		make_net_vis = args.make_network_vis,
+		vis_output_dir = args.vis_output_dir,
 		output_dir = args.output_dir
 		)
 
@@ -45,6 +55,8 @@ def find_linkage_scores(
 	seq_header: str,
 	nt_header: str,
 	nt_delim: str,
+	make_net_vis: bool,
+	vis_output_dir: str,
 	output_dir: str
 	)->None:
 
@@ -52,6 +64,11 @@ def find_linkage_scores(
 		os.mkdir(output_dir)
 	else:
 		print(f"Warning: The directory \"{output_dir}\" already exists. Files may be overwritten.")
+	if make_net_vis:
+		if not os.path.exists(vis_output_dir):
+			os.mkdir(vis_output_dir)
+		else:
+			print(f"Warning: The directory \"{vis_output_dir}\" already exists. Graphs may be overwritten.")
 	
 	# create metadata dataframe
 	mdDf = pd.read_csv(metadata, sep="\t", index_col=seq_header)
@@ -82,6 +99,20 @@ def find_linkage_scores(
 					if id_1 < id_2:
 						# loop through each cluster 2
 						for clust_2 in nt_dict[dist_thresh][id_2]:
+							linkage_score_1 = calc_linkage_score_from_c1_to_c2(
+														nt_clust_1=nt_dict[dist_thresh][id_1][clust_1], 
+														nt_clust_2=nt_dict[dist_thresh][id_2][clust_2], 
+														nt_delim=nt_delim
+														)
+
+							if linkage_score_1 > 0:
+								max_linkage_score_1 = calc_linkage_score_from_c1_to_c2(
+															nt_clust_1=nt_dict[dist_thresh][id_1][clust_1], 
+															nt_clust_2=id_nt_dict[dist_thresh][id_2], 
+															nt_delim=nt_delim
+														)
+								norm_linkage_score = linkage_score_1 / max_linkage_score_1
+								out_data.append( (id_1, clust_1, id_2, clust_2, norm_linkage_score) )
 
 							linkage_score_1 = calc_linkage_score_from_c1_to_c2(
 														nt_clust_1=nt_dict[dist_thresh][id_1][clust_1], 
@@ -117,6 +148,10 @@ def find_linkage_scores(
 		outDf = pd.DataFrame( out_data, columns=["p1", "c1", "p2", "c2", "normalizedLinkageScore"] )
 
 		outDf.to_csv(f"{output_dir}/{cluster_prefix}{dist_thresh}_linkage_scores.tsv", sep="\t", index=False)
+
+		if make_net_vis:
+			create_network_visualization( dist_thresh, nt_dict, outDf, cluster_prefix, vis_output_dir)
+
 
 # calculate linkage score based on nucleotide accession numbers between clusters
 def calc_linkage_score_between_clusts(nt_clust_1, nt_clust_2, nt_delim):
@@ -172,6 +207,44 @@ def create_NT_accession_dict(mdDf, nt_header, cluster_dir, cluster_prefix, clust
 			nt_dict[dist_thresh][file_id] = clust_2_NTs
 
 	return nt_dict
+
+def create_network_visualization( dist_thresh, nt_dict, outDf,  cluster_prefix, vis_output_dir ):
+	G = nx.DiGraph()
+	color_assigned = defaultdict()
+	color_index = 0
+	cluster_colors = list()
+
+	# add nodes from first column clusters
+	clusters = list(set((outDf["p1"] + "_" + outDf["c1"].astype(str)).to_list()))
+	cluster_sizes = list()
+	for cluster in clusters:
+		cluster = cluster.split("_")
+		id_ = cluster[0]
+		num = int(cluster[1])
+		cluster_sizes.append(len(nt_dict[dist_thresh][id_][num]) * 25)
+
+		if id_ not in color_assigned.keys():
+			color_assigned[id_] = COLOR_LIST[color_index]
+			color_index += 1
+
+		# assign color for id
+		cluster_colors.append(color_assigned[id_])
+	G.add_nodes_from(clusters)
+
+	# add edges, thickness based on linkage scores
+	weights = list()
+	for index, row in outDf.iterrows():
+		c1 = f"{row['p1']}_{row['c1']}"
+		c2 = f"{row['p2']}_{row['c2']}"
+		weights.append(row["normalizedLinkageScore"] * 2)
+		G.add_edge(c1, c2)
+
+	pos=nx.spring_layout(G, k=0.75, seed=5)
+	fig, ax = plt.subplots(figsize = (20, 14))
+	nx.draw_networkx_nodes(G, pos, ax=ax, node_size=cluster_sizes, node_color=cluster_colors)
+	nx.draw_networkx_edges(G, pos, ax=ax, connectionstyle=f'arc3, rad = 0.25', arrows=True, width=weights)
+	nx.draw_networkx_labels(G, pos, ax=ax)
+	fig.savefig(f"{vis_output_dir}/{cluster_prefix}{dist_thresh}_visualization.png", bbox_inches='tight', dpi=300)
 
 #------------------------------------------
 if __name__ == "__main__":
