@@ -620,21 +620,16 @@ void module_demux::run( options *opts )
                 {
             #endif
                     write_fastq_output(fastq_output, d_opts->fastq_out);
+
+                    if( !d_opts->unmapped_reads_fname.empty() )
+                    {
+                        create_unmapped_reads_file(d_opts->unmapped_reads_fname, fastq_output, reads);
+                    }
             #ifndef __clang__
                 }
             #endif
 
-            if( !d_opts->unmapped_reads_fname.empty() )
-                {
-                    #ifndef __clang__
-                    #pragma omp critical
-                    {
-                    #endif
-                        create_unmapped_reads_file(d_opts->unmapped_reads_fname, fastq_output, reads);
-                    #ifndef __clang__
-                    }
-                    #endif
-                }
+            
 
             fastq_output.clear();
             reads.clear();
@@ -1084,8 +1079,6 @@ std::string module_demux::get_sample_info( std::vector<sample>& samplelist, std:
 void module_demux::create_unmapped_reads_file( std::string filename, 
                             std::map<std::string, std::vector<fastq_sequence>> samp_map, std::vector<fastq_sequence> reads_dup )
 {
-    std::vector<fastq_sequence>::iterator found_position;
-
     for(auto samp : samp_map) 
         {
             for(auto fastq_seq : samp.second)
