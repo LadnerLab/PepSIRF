@@ -1096,7 +1096,7 @@ void module_demux::create_unmapped_reads_file( std::string filename,
 
     // delete from reads_dup
     // info_str1 << "total reads: "<< reads_dup.size() << "\n";
-    // info_str2 << "unmapped_reads: "<< to_remove_set.size() << "\n";
+    // info_str2 << "mapped_reads: "<< to_remove_set.size() << "\n";
     // Log::info(info_str1.str());
     // Log::info(info_str2.str());
     reads_dup.erase(std::remove_if(reads_dup.begin(), reads_dup.end(),
@@ -1104,7 +1104,7 @@ void module_demux::create_unmapped_reads_file( std::string filename,
                                        return to_remove_set.find(value.seq) != to_remove_set.end();
                                    }),
                     reads_dup.end());
-    // info_str3 << "mapped_reads: "<< reads_dup.size() << "\n";
+    // info_str3 << "unmapped_reads: "<< reads_dup.size() << "\n";
     // Log::info(info_str3.str());
 
     // write to file
