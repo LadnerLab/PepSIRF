@@ -59,7 +59,6 @@ void module_demux::run( options *opts )
                 }
         }
 
-
     std::size_t read_index = 0;
     struct time_keep::timer total_time;
     parallel_map<sequence, std::vector<std::size_t>*> reference_counts;
@@ -261,6 +260,9 @@ void module_demux::run( options *opts )
                 "The file '" + d_opts->unmapped_reads_fname + "' exists,"
                 " data will be overwritten!\n"
             );
+
+            std::ofstream output(d_opts->unmapped_reads_fname, std::ios::trunc);
+            output.close();
         }
     }
 
@@ -1080,8 +1082,9 @@ void module_demux::create_unmapped_reads_file( std::string filename,
                             std::map<std::string, std::vector<fastq_sequence>> samp_map, std::vector<fastq_sequence> reads_dup )
 {
     std::unordered_set<std::string> to_remove_set;
-    // std::stringstream info_str1;
-    // std::stringstream info_str2;
+    std::stringstream info_str1;
+    std::stringstream info_str2;
+    std::stringstream info_str3;
 
     for(auto samp : samp_map) 
         {
@@ -1092,18 +1095,20 @@ void module_demux::create_unmapped_reads_file( std::string filename,
         }
 
     // delete from reads_dup
-    // info_str1 << "Begin removal...\n";
+    // info_str1 << "total reads: "<< reads_dup.size() << "\n";
+    // info_str2 << "unmapped_reads: "<< to_remove_set.size() << "\n";
     // Log::info(info_str1.str());
+    // Log::info(info_str2.str());
     reads_dup.erase(std::remove_if(reads_dup.begin(), reads_dup.end(),
                                    [&to_remove_set](const fastq_sequence& value) {
                                        return to_remove_set.find(value.seq) != to_remove_set.end();
                                    }),
                     reads_dup.end());
-    // info_str2 << "End removal...\n";
-    // Log::info(info_str2.str());
+    // info_str3 << "mapped_reads: "<< reads_dup.size() << "\n";
+    // Log::info(info_str3.str());
 
     // write to file
-    std::ofstream output( filename, std::ofstream::out );
+    std::ofstream output( filename, std::ios_base::app );
     for(auto fastq_seq : reads_dup)
         {
             output << fastq_seq.name << "\n";
