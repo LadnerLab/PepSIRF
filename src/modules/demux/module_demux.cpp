@@ -1079,14 +1079,28 @@ std::string module_demux::get_sample_info( std::vector<sample>& samplelist, std:
 void module_demux::create_unmapped_reads_file( std::string filename, 
                             std::map<std::string, std::vector<fastq_sequence>> samp_map, std::vector<fastq_sequence> reads_dup )
 {
+    std::unordered_set<std::string> to_remove_set;
+    // std::stringstream info_str1;
+    // std::stringstream info_str2;
+
     for(auto samp : samp_map) 
         {
             for(auto fastq_seq : samp.second)
                 {
-                    // delete from reads_dup
-                    reads_dup.erase(std::remove(reads_dup.begin(), reads_dup.end(), fastq_seq), reads_dup.end());
+                    to_remove_set.insert(fastq_seq.seq);
                 }
         }
+
+    // delete from reads_dup
+    // info_str1 << "Begin removal...\n";
+    // Log::info(info_str1.str());
+    reads_dup.erase(std::remove_if(reads_dup.begin(), reads_dup.end(),
+                                   [&to_remove_set](const fastq_sequence& value) {
+                                       return to_remove_set.find(value.seq) != to_remove_set.end();
+                                   }),
+                    reads_dup.end());
+    // info_str2 << "End removal...\n";
+    // Log::info(info_str2.str());
 
     // write to file
     std::ofstream output( filename, std::ofstream::out );
