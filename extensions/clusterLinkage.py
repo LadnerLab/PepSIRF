@@ -151,8 +151,7 @@ def find_linkage_scores(
 
 		outDf.to_csv(f"{output_dir}/{cluster_prefix}{dist_thresh}_linkage_scores.tsv", sep="\t", index=False)
 
-		if make_net_vis:
-			create_network_visualization( dist_thresh, data_dict, outDf, cluster_prefix, vis_output_dir, vis_seed, output_dir)
+		create_network_visualization( dist_thresh, data_dict, outDf, cluster_prefix, vis_output_dir, vis_seed, output_dir, make_net_vis)
 
 
 # calculate linkage score based on nucleotide accession numbers between clusters
@@ -216,7 +215,7 @@ def create_data_dict(mdDf, linkage_cols, cluster_dir, cluster_prefix, cluster_su
 
 	return data_dict
 
-def create_network_visualization( dist_thresh, data_dict, outDf,  cluster_prefix, vis_output_dir, vis_seed, output_dir):
+def create_network_visualization( dist_thresh, data_dict, outDf,  cluster_prefix, vis_output_dir, vis_seed, output_dir, make_net_vis):
 	G = nx.MultiDiGraph()
 	color_assigned = defaultdict()
 	color_index = 0
@@ -246,32 +245,41 @@ def create_network_visualization( dist_thresh, data_dict, outDf,  cluster_prefix
 		c2 = f"{row['p2']}_{row['c2']}"
 		G.add_edge(c1, c2, color="k", weight=row["normalizedLinkageScore"] * 2)
 
-	weights = nx.get_edge_attributes(G,'weight').values()
+	if make_net_vis:
+		'''
+		comps = nx.strongly_connected_components(G)
+		pos = {}
+		for net_num, comp in enumerate(comps):
+			subgraph = G.subgraph(comp)
+			subgraph_pos = nx.spring_layout(subgraph)
 
-	'''
-	comps = nx.strongly_connected_components(G)
-	pos = {}
-	for net_num, comp in enumerate(comps):
-		subgraph = G.subgraph(comp)
-		subgraph_pos = nx.spring_layout(subgraph)
-
-		# Offset positions to space out clusters
-		offset = np.array([net_num * 5, 0])
-		for node in subgraph_pos:
-			pos[node] = subgraph_pos[node] + offset
-	'''
-	
-	pos=nx.spring_layout(G, k=0.75, seed=vis_seed)
-	fig, ax = plt.subplots(figsize = (20, 14))
-	nx.draw_networkx_nodes(G, pos, ax=ax, node_size=cluster_sizes, node_color=cluster_colors)
-	nx.draw_networkx_edges(G, pos, ax=ax, connectionstyle=f'arc3, rad = 0.25', arrows=True, width=list(weights))
-	nx.draw_networkx_labels(G, pos, ax=ax)
-	fig.savefig(f"{vis_output_dir}/{cluster_prefix}{dist_thresh}_visualization.png", bbox_inches='tight', dpi=300)
+			# Offset positions to space out clusters
+			offset = np.array([net_num * 5, 0])
+			for node in subgraph_pos:
+				pos[node] = subgraph_pos[node] + offset
+		'''
+		weights = nx.get_edge_attributes(G,'weight').values()
+		pos=nx.spring_layout(G, k=0.75, seed=vis_seed)
+		fig, ax = plt.subplots(figsize = (20, 14))
+		nx.draw_networkx_nodes(G, pos, ax=ax, node_size=cluster_sizes, node_color=cluster_colors)
+		nx.draw_networkx_edges(G, pos, ax=ax, connectionstyle=f'arc3, rad = 0.25', arrows=True, width=list(weights))
+		nx.draw_networkx_labels(G, pos, ax=ax)
+		fig.savefig(f"{vis_output_dir}/{cluster_prefix}{dist_thresh}_visualization.png", bbox_inches='tight', dpi=300)
 
 	#---------Summary Statistics-----------
+	orphaned_cluster_dict = defaultdict(set)
+	for id_ in data_dict[dist_thresh].keys():
+		for num in data_dict[dist_thresh][id_]:
+			orphaned_cluster_dict[id_].add(num)
+
+	counts_dict = defaultdict(list)
 	net_stats = list()
 	comps = nx.strongly_connected_components(G)
 	for net_num, comp in enumerate(comps):
+		# initialze dict for network num
+		for id_ in data_dict[dist_thresh].keys():
+			counts_dict[id_].append(0)
+
 		# find average linkage score
 		avg_linkage_score = 0
 		edge_count = 0
@@ -279,6 +287,10 @@ def create_network_visualization( dist_thresh, data_dict, outDf,  cluster_prefix
 			clust_1_list = clust_1.split("_")
 			id_1 = clust_1_list[0]
 			num_1 = int(clust_1_list[1])
+
+			orphaned_cluster_dict[id_1].remove(num_1)
+
+			counts_dict[id_1][net_num] += 1
 
 			connecting_edges = G.out_edges(clust_1)
 			for j, clust_2 in enumerate(comp):
@@ -302,11 +314,25 @@ def create_network_visualization( dist_thresh, data_dict, outDf,  cluster_prefix
 			num = int(clust_list[1])
 			seq_num += len(data_dict[dist_thresh][id_][num])
 
-		net_stats.append( (net_num, ",".join(comp), avg_linkage_score, seq_num) )
-		# print("\n")
+		net_stats.append( (net_num, avg_linkage_score, seq_num) )
+	
+	# get orphaned clusters stats
+	orphaned_data = defaultdict()
+	seq_num = 0
+	for id_ in orphaned_cluster_dict.keys():
+		orphaned_data[id_] = len(orphaned_cluster_dict[id_])
+		for num in orphaned_cluster_dict[id_]:
+			seq_num += len(data_dict[dist_thresh][id_][num])
+	orphaned_data["NumberOfSequences"] = seq_num
+	orphaned_data["AvgNormLinkageScore"] = 0
 
-	statsDF = pd.DataFrame( net_stats, columns=["Network", "Clusters", "AvgNormLinkageScore", "NumberOfSequences"]).set_index("Network")
-	statsDF.to_csv(f"{output_dir}/{cluster_prefix}{dist_thresh}_summary_stats.tsv", sep="\t")
+	countsDf = pd.DataFrame.from_dict(counts_dict).rename_axis("MultiProteinCluster")
+	statsDf = pd.DataFrame( net_stats, columns=["MultiProteinCluster", "AvgNormLinkageScore", "NumberOfSequences"]).set_index("MultiProteinCluster")
+	statsDf = countsDf.merge(statsDf, on="MultiProteinCluster", how="right")
+	statsDf.loc["Orphaned"] = orphaned_data
+	for id_ in data_dict[dist_thresh].keys():
+		statsDf.rename( columns = {id_:f"{id_}_Clusters"}, inplace = True)
+	statsDf.to_csv(f"{output_dir}/{cluster_prefix}{dist_thresh}_summary_stats.tsv", sep="\t")
 	#--------------------------------------
 
 #------------------------------------------
