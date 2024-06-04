@@ -267,6 +267,8 @@ def create_network_visualization( dist_thresh, data_dict, outDf,  cluster_prefix
 		fig.savefig(f"{vis_output_dir}/{cluster_prefix}{dist_thresh}_visualization.png", bbox_inches='tight', dpi=300)
 
 	#---------Summary Statistics-----------
+	seq_data = list()
+
 	orphaned_cluster_dict = defaultdict(set)
 	for id_ in data_dict[dist_thresh].keys():
 		for num in data_dict[dist_thresh][id_]:
@@ -314,25 +316,40 @@ def create_network_visualization( dist_thresh, data_dict, outDf,  cluster_prefix
 			num = int(clust_list[1])
 			seq_num += len(data_dict[dist_thresh][id_][num])
 
+			# assighn network number to sequence
+			for seq in data_dict[dist_thresh][id_][num].keys():
+				seq_data.append( (seq, net_num) )
+
 		net_stats.append( (net_num, avg_linkage_score, seq_num) )
 	
 	# get orphaned clusters stats
 	orphaned_data = defaultdict()
-	seq_num = 0
-	for id_ in orphaned_cluster_dict.keys():
-		orphaned_data[id_] = len(orphaned_cluster_dict[id_])
-		for num in orphaned_cluster_dict[id_]:
-			seq_num += len(data_dict[dist_thresh][id_][num])
-	orphaned_data["NumberOfSequences"] = seq_num
-	orphaned_data["AvgNormLinkageScore"] = 0
+	# go through each orphaned cluster
+	for orp_id in orphaned_cluster_dict.keys():
+		for orp_num in orphaned_cluster_dict[orp_id]:
+			seq_num = 0
+			net_num += 1
+			# add a row
+			for id_ in data_dict[dist_thresh].keys():
+				counts_dict[id_].append(0)
+			# increment orphaned cluster
+			counts_dict[orp_id][net_num] += 1
+
+			for seq in data_dict[dist_thresh][orp_id][orp_num].keys():
+				seq_data.append( (seq, net_num) )
+
+			# app row to net stats
+			net_stats.append( (net_num, 0, len(data_dict[dist_thresh][orp_id][orp_num])) )
 
 	countsDf = pd.DataFrame.from_dict(counts_dict).rename_axis("MultiProteinCluster")
 	statsDf = pd.DataFrame( net_stats, columns=["MultiProteinCluster", "AvgNormLinkageScore", "NumberOfSequences"]).set_index("MultiProteinCluster")
 	statsDf = countsDf.merge(statsDf, on="MultiProteinCluster", how="right")
-	statsDf.loc["Orphaned"] = orphaned_data
 	for id_ in data_dict[dist_thresh].keys():
 		statsDf.rename( columns = {id_:f"{id_}_Clusters"}, inplace = True)
 	statsDf.to_csv(f"{output_dir}/{cluster_prefix}{dist_thresh}_summary_stats.tsv", sep="\t")
+
+	seqDf = pd.DataFrame(seq_data, columns=["Sequence", "MultiProteinCluster"]).set_index("Sequence")
+	seqDf.to_csv(f"{output_dir}/{cluster_prefix}{dist_thresh}_multiprotein_cluster_sequences.tsv", sep="\t")
 	#--------------------------------------
 
 #------------------------------------------
