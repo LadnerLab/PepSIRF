@@ -19,7 +19,7 @@ def main():
 	parser.add_argument("-i", "--input-cluster-manifest", type=str, metavar="", required=True, help="Filepath of the protein clusters manifest file. The manifest file is tab delimited containing a "
                           											"header with the column names 'ProtID' and 'ClustersFile'. Each line specifies the protein and the filepath to the associated alignment file.")
 	parser.add_argument("-m", "--metadata", type=str, metavar="", required=True, help="Distance thresholds to use for hierarchical clustering. Multiple values may be provided, all of which should be between 0 and 1.")
-	parser.add_argument("-o", "--output-dir", type=str, metavar="", required=True, help="Directory to save cluster files, each file will be each distance threshold.")
+	parser.add_argument("-o", "--output-dir", type=str, metavar="", required=True, help="Directory to save output files.")
 
 	# Optional arguments
 	parser.add_argument("-t", "--thresh-matrix", type=str, metavar="", required=False, default="", help="Filepath to tab delimited file of the threshold matrix. Each column should represent the same protein id and the transposed rows "
@@ -31,7 +31,6 @@ def main():
 	parser.add_argument("--col-val-delim", default=",", type=str, metavar="", required=False, help="Delimiter for multiple values of a column associated with a single sequence in the metadata file.")
 	parser.add_argument("--make-network-vis", required=False, default=False, action="store_true", help="If provided, network visualization will be created for each threshold. The size of the nodes are based on the "
 																										"number of sequences in the cluster and the size of the edges are based on the normalized linkage score.")
-	parser.add_argument("--vis-output-dir", type=str, metavar="", required=False, default="networks_visualizations", help="Directory to save graphs if graphs are made.")
 	parser.add_argument("--vis-seed", type=int, metavar="", required=False, default="1234", help="Seed used to generate network visualization. Changes node positions.")
 
 
@@ -46,7 +45,6 @@ def main():
 		linkage_cols = args.linkage_cols,
 		col_val_delim = args.col_val_delim,
 		make_net_vis = args.make_network_vis,
-		vis_output_dir = args.vis_output_dir,
 		vis_seed = args.vis_seed,
 		output_dir = args.output_dir
 		)
@@ -61,7 +59,6 @@ def find_linkage_scores(
 	linkage_cols: list,
 	col_val_delim: str,
 	make_net_vis: bool,
-	vis_output_dir: str,
 	vis_seed: int,
 	output_dir: str
 	)->None:
@@ -71,11 +68,6 @@ def find_linkage_scores(
 		os.mkdir(output_dir)
 	else:
 		print(f"Warning: The directory \"{output_dir}\" already exists. Files may be overwritten.")
-	if make_net_vis:
-		if not os.path.exists(vis_output_dir):
-			os.mkdir(vis_output_dir)
-		elif vis_output_dir != output_dir:
-			print(f"Warning: The directory \"{vis_output_dir}\" already exists. Graphs may be overwritten.")
 	
 	# create metadata dataframe
 	mdDf = pd.read_csv(metadata, sep="\t", index_col=seq_header)
@@ -94,6 +86,10 @@ def find_linkage_scores(
 
 	# calulate linkage scores and create output dataframe for each dist_thresh
 	for dist_idx in range(len(list(thresh_dict.values())[0])):
+		net_out_dir = f"{output_dir}/network_{dist_idx +1}"
+		if not os.path.exists(net_out_dir):
+			os.mkdir(net_out_dir)
+
 		out_data = list()
 
 		ids = [prot_id for prot_id in thresh_dict.keys() if thresh_dict[prot_id][dist_idx] != NA]
@@ -134,9 +130,16 @@ def find_linkage_scores(
 
 		outDf = pd.DataFrame( out_data, columns=["p1", "c1", "p2", "c2", "normalizedLinkageScore"] )
 
-		outDf.to_csv(f"{output_dir}/network_{dist_idx + 1}_linkage_scores.tsv", sep="\t", index=False)
+		outDf.to_csv(f"{net_out_dir}/network_{dist_idx +1}_linkage_scores.tsv", sep="\t", index=False)
 
-		create_network_visualization( dist_idx, thresh_dict, ids, data_dict, outDf, vis_output_dir, vis_seed, output_dir, make_net_vis)
+		create_network( dist_idx, thresh_dict, ids, data_dict, outDf, vis_seed, net_out_dir, make_net_vis)
+
+		# create a key linking network # to thresholds used
+		thresh_key = []
+		for prot_id in ids:
+			thresh_key.append(thresh_dict[prot_id][dist_idx])
+		thresh_key_df = pd.DataFrame( [thresh_key], columns=ids )
+		thresh_key_df.to_csv(f"{net_out_dir}/network_{dist_idx +1}_thresh_key.tsv", sep="\t", index=False)
 
 
 # calculate linkage score based on nucleotide accession numbers between clusters
@@ -210,7 +213,7 @@ def create_data_dict(mdDf, linkage_cols, manifest_file, thresh_matrix):
 
 	return data_dict, thresh_dict
 
-def create_network_visualization( dist_idx, thresh_dict, ids, data_dict, outDf, vis_output_dir, vis_seed, output_dir, make_net_vis):
+def create_network( dist_idx, thresh_dict, ids, data_dict, outDf, vis_seed, net_out_dir, make_net_vis):
 	G = nx.MultiDiGraph()
 	color_assigned = defaultdict()
 	color_index = 0
@@ -247,9 +250,10 @@ def create_network_visualization( dist_idx, thresh_dict, ids, data_dict, outDf, 
 		nx.draw_networkx_nodes(G, pos, ax=ax, node_size=cluster_sizes, node_color=cluster_colors)
 		nx.draw_networkx_edges(G, pos, ax=ax, connectionstyle=f'arc3, rad = 0.25', arrows=True, width=list(weights))
 		nx.draw_networkx_labels(G, pos, ax=ax)
-		fig.savefig(f"{vis_output_dir}/network_{dist_idx + 1}_visualization.png", bbox_inches='tight', dpi=300)
+		fig.savefig(f"{net_out_dir}/network_{dist_idx +1}_visualization.png", bbox_inches='tight', dpi=300)
 
 	#---------Summary Statistics-----------
+	# TODO: maybe put this in it's own function
 	seq_data = list()
 
 	orphaned_cluster_dict = defaultdict(set)
@@ -339,10 +343,10 @@ def create_network_visualization( dist_idx, thresh_dict, ids, data_dict, outDf, 
 	for id_ in ids:
 		statsDf.rename( columns = {id_:f"{id_}_Cluster_Count"}, inplace = True)
 	statsDf = statsDf.merge(compsDf, on="MultiProteinCluster", how="left")
-	statsDf.to_csv(f"{output_dir}/network_{dist_idx + 1}_summary_stats.tsv", sep="\t")
+	statsDf.to_csv(f"{net_out_dir}/network_{dist_idx +1}_summary_stats.tsv", sep="\t")
 
 	seqDf = pd.DataFrame(seq_data, columns=["Sequence", "MultiProteinCluster"]).set_index("Sequence")
-	seqDf.to_csv(f"{output_dir}/network_{dist_idx + 1}_multiprotein_cluster_sequences.tsv", sep="\t")
+	seqDf.to_csv(f"{net_out_dir}/network_{dist_idx +1}_multiprotein_cluster_sequences.tsv", sep="\t")
 	#--------------------------------------
 
 #------------------------------------------
