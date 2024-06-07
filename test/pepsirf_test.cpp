@@ -4241,8 +4241,7 @@ TEST_CASE( "Run Subjoin exclude option and test regex filtering", "[module_subjo
     opts.exclude_names = true;
     opts.use_sample_names = true;
     opts.out_matrix_fname = "../test/test_subjoin_exclude_output.tsv";
-    opts.input_matrix_name_pairs.emplace_back( std::make_pair( "../test/input_data/test_zscore_score_matrix.tsv", 
-    															"SB" ) );
+    opts.input_matrix_name_pairs.emplace_back( std::make_pair( "../test/input_data/test_zscore_score_matrix.tsv","SB" ) );
     mod.run( &opts );
 
     std::string expected = "../test/expected/test_expected_subjoin_exclude_output.tsv";
