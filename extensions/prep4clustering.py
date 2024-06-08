@@ -24,18 +24,25 @@ def main():
     
     #Read in sequence metadata file as a dataframe
     mDF = pd.read_csv(args.meta_filepath, sep="\t", header=0, index_col=0, keep_default_na=False)
+    
+    # Indexes for sequences with missing families
+    missFamIdx = mDF[mDF["Family"]==""].index
+    # Replace all of these with Unclassified
+    for idx in missFamIdx:
+        mDF.at[idx, 'Family'] = "Unclassified"
 
     #Read in cluster metadata
-    cD = defaultdict(dict)
+    cD = {"Family":defaultdict(dict), "Genus":defaultdict(dict)}
     with open (args.subsets, "r") as fin:
         next(fin)
         for line in fin:
             cols=line.rstrip("\n").split("\t")
-            cD[cols[0]][cols[1]] = cols[2]
-    
-    for fam, subCD in cD.items():
-        io.makeDir(fam)
-        famDF = mDF[mDF["Family"]==fam]
+            cD[cols[0]][cols[1]][cols[2]] = cols[3]
+
+    # Step through each family of interest
+    for each, subCD in cD["Family"].items():
+        io.makeDir(each)
+        famDF = mDF[mDF["Family"]==each]
         
         #Dictionary to link sequence names to cluster groups
         seqD = defaultdict(list)
@@ -43,11 +50,34 @@ def main():
         #Link sequence names to cluster groups
         for i, row in famDF.iterrows():
             for eachP in row["Protein"].split(","):
-                seqD[cD[fam][eachP]].append(i)
+                seqD[cD["Family"][each][eachP]].append(i)
     
         #Write out a fasta file for each cluster group
         for clustGroup, seqL in seqD.items():
-            ft.write_fasta(seqL, [fD[sn] for sn in seqL], f"{fam}/{fam}_{clustGroup}.fasta")
+            # To handle duplicates
+            seqL = sorted(list(set(seqL)))
+            ft.write_fasta(seqL, [fD[sn] for sn in seqL], f"{each}/{each}_{clustGroup}.fasta")
+
+    # Step through each genus of interest
+    for each, subCD in cD["Genus"].items():
+        io.makeDir(each)
+        famDF = mDF[mDF["Genus"]==each]
+        
+        #Dictionary to link sequence names to cluster groups
+        seqD = defaultdict(list)
+        
+        #Link sequence names to cluster groups
+        for i, row in famDF.iterrows():
+            for eachP in row["Protein"].split(","):
+                seqD[cD["Genus"][each][eachP]].append(i)
+    
+        #Write out a fasta file for each cluster group
+        for clustGroup, seqL in seqD.items():
+            # To handle duplicates
+            seqL = sorted(list(set(seqL)))
+            ft.write_fasta(seqL, [fD[sn] for sn in seqL], f"{each}/{each}_{clustGroup}.fasta")
+
+
 
 ###---------------End of main()-----------------------------------
 
