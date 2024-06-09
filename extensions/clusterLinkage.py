@@ -13,7 +13,7 @@ COLOR_LIST = ['#ff0000', '#deff0a', '#0aefff', '#be0aff', '#ff8700', '#a1ff0a', 
 NA = "NULL"
 
 def main():
-	parser = argparse.ArgumentParser(description="Generates linkage scores between each cluster.")
+	parser = argparse.ArgumentParser(description="Generates linkage scores between each cluster.", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 	
 	# Required arguments
 	parser.add_argument("-i", "--input-cluster-manifest", type=str, metavar="", required=True, help="Filepath of the protein clusters manifest file. The manifest file is tab delimited containing a "

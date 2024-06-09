@@ -18,7 +18,7 @@ import sknetwork as skn
 from dynamicTreeCut import cutreeHybrid
 
 def main():
-	parser = argparse.ArgumentParser(description="Generates clusters of similar sequences for each protein")
+	parser = argparse.ArgumentParser(description="Generates clusters of similar sequences for each protein", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 	
 	# Required arguments
 	parser.add_argument("-i", "--input-files", nargs="+", default=[], required=True, help="Fasta files containing sequences to be clustered. One or more fasta files can be provided. Sequences in each will be separately clustered.")
