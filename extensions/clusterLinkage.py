@@ -18,7 +18,7 @@ def main():
 	# Required arguments
 	parser.add_argument("-i", "--input-cluster-manifest", type=str, metavar="", required=True, help="Filepath of the protein clusters manifest file. The manifest file is tab delimited containing a "
                           											"header with the column names 'ProtID' and 'ClustersFile'. Each line specifies the protein and the filepath to the associated alignment file.")
-	parser.add_argument("-m", "--metadata", type=str, metavar="", required=True, help="Distance thresholds to use for hierarchical clustering. Multiple values may be provided, all of which should be between 0 and 1.")
+	parser.add_argument("-m", "--metadata", type=str, metavar="", required=True, help="Tab-delimited metadata file that links sequences to info that can be used to link sequences across clusters.")
 	parser.add_argument("-o", "--output-dir", type=str, metavar="", required=True, help="Directory to save output files.")
 
 	# Optional arguments
