@@ -15,22 +15,22 @@ def main():
 	parser = argparse.ArgumentParser(description="Generates linkage scores between each cluster.", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 	
 	# Required arguments
-	parser.add_argument("-i", "--input-cluster-manifest", type=str, metavar="", required=True, help="Filepath of the protein clusters manifest file. The manifest file is tab delimited containing a "
+	parser.add_argument("-i", "--input-cluster-manifest", type=str, required=True, help="Filepath of the protein clusters manifest file. The manifest file is tab delimited containing a "
                           											"header with the column names 'ProtID' and 'ClustersFile'. Each line specifies the protein and the filepath to the associated alignment file.")
-	parser.add_argument("-m", "--metadata", type=str, metavar="", required=True, help="Tab-delimited metadata file that links sequences to info that can be used to link sequences across clusters.")
-	parser.add_argument("-o", "--output-dir", type=str, metavar="", required=True, help="Directory to save output files.")
+	parser.add_argument("-m", "--metadata", type=str, required=True, help="Tab-delimited metadata file that links sequences to info that can be used to link sequences across clusters.")
+	parser.add_argument("-o", "--output-dir", type=str, required=True, help="Directory to save output files.")
 
 	# Optional arguments
-	parser.add_argument("-t", "--thresh-matrix", type=str, metavar="", required=False, default="", help="Filepath to tab delimited file of the threshold matrix. Each column should represent the same protein id and the transposed rows "
+	parser.add_argument("-t", "--thresh-matrix", type=str, required=False, default="", help="Filepath to tab delimited file of the threshold matrix. Each column should represent the same protein id and the transposed rows "
 																							"of the manifest file. Each row should be each seperate linkage network to create. The entries are the thresholds to use for each "
 																							"protein id for each network to create. Optionally, an entry can be left blank and it will not be contributed to that network")
-	parser.add_argument("--seq-name-header", default="SequenceName", type=str, metavar="", required=False, help="Header for sequence name column in the metadata file.")
-	parser.add_argument("--linkage-cols", nargs="+", default=["NCBIaccession-NT"], type=str, metavar="", required=False, help="Header of columns in the metadata file t consider for linkage. "
+	parser.add_argument("--seq-name-header", default="SequenceName", type=str, required=False, help="Header for sequence name column in the metadata file.")
+	parser.add_argument("--linkage-cols", nargs="+", default=["NCBIaccession-NT"], type=str, required=False, help="Header of columns in the metadata file t consider for linkage. "
 																											"Any given sequence only contributes one point to a linkage score")
-	parser.add_argument("--col-val-delim", default=",", type=str, metavar="", required=False, help="Delimiter for multiple values of a column associated with a single sequence in the metadata file.")
+	parser.add_argument("--col-val-delim", default=",", type=str, required=False, help="Delimiter for multiple values of a column associated with a single sequence in the metadata file.")
 	parser.add_argument("--make-network-vis", required=False, default=False, action="store_true", help="If provided, network visualization will be created for each threshold. The size of the nodes are based on the "
 																										"number of sequences in the cluster and the size of the edges are based on the normalized linkage score.")
-	parser.add_argument("--vis-seed", type=int, metavar="", required=False, default="1234", help="Seed used to generate network visualization. Changes node positions.")
+	parser.add_argument("--vis-seed", type=int, required=False, default="1234", help="Seed used to generate network visualization. Changes node positions.")
 
 
 
