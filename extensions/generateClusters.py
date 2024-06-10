@@ -98,18 +98,19 @@ def cluster(
 		else:
 			print(f"Warning: The directory \"{vis_output_dir}\" already exists. Histograms may be overwritten.")
 
-# Want to make this section optional 
-	# meta_filepath = "PM1_targets_taxInfo.tsv"
-#	speciesD = io.fileDictHeader(meta_filepath, "SequenceName", "Species")
-#	sidD = io.fileDictHeader(meta_filepath, "SequenceName", "SpeciesID")
-#	sid2spD = io.fileDictHeader(meta_filepath, "SpeciesID", "Species")
-
 	for i in input_files:
-#		print(i) # This doesn't need to be done in the standalone script, just temp for tracking
 		outD = {}
 		
 		# Read in sequences from fasta file
 		fD = ft.read_fasta_dict(i)
+
+		# special case single sequence
+		if len(fD) == 1:
+			for dt in distance_thresh:
+				outD[dt] = [0]
+				output_data( outD, i, output_dir, list(fD.keys()) )
+			break
+
 		# Sort into separate dictionaries according to size threshold
 		largeD, smallD = sortSeqsBySize(fD, min_propn)
 		
@@ -155,14 +156,12 @@ def cluster(
 				# Add cluster numbers to output dictionary in order of seqNames
 				outD[dt] = [seq2clust[sn] for sn in seqNames + shortSeqNames]
 
-				# Write out results for this input file
-				outDF = pd.DataFrame(outD, index=seqNames + shortSeqNames)
-				outDF.to_csv(f"{output_dir}/clusters_{os.path.basename(i)}.tsv", sep="\t", index_label="Sequence")
-				
-				# Summary statistics
-				clusterStats(outD, os.path.basename(i) , output_dir)
+				output_data( outD, i, output_dir, seqNames + shortSeqNames )
 
 		elif method == "Louvain":
+			# no distance threshold for louvain clustering
+			dt = 0
+
 			# Extract nodes and similarities
 			nodes = list(set([x[0] for x in seq_sim_list] + [x[1] for x in seq_sim_list]))
 			node_indices = {node: idx for idx, node in enumerate(nodes)}
@@ -175,22 +174,29 @@ def cluster(
 
 			louvain = skn.clustering.Louvain()
 			labels = louvain.fit_predict(adjacency)
+
 			if gen_vis:
 				image = skn.visualization.visualize_graph(adjacency, labels=labels, filename=f"{vis_output_dir}/visualization_{os.path.basename(i)}")
 
-			clust_map = list()
+			clusters = defaultdict(list)
 			for idx, seqName in enumerate(nodes):
-				clust_map.append((seqName, labels[idx]))
+				clusters[ labels[idx] ].append( seqName )
 
-			outDF = pd.DataFrame(clust_map, columns=["Sequence", "Cluster"])
-			outDF.to_csv(f"{output_dir}/clusters_{os.path.basename(str(i))}.tsv", sep="\t", index=False)
+			if len(kmer_dict_small) > 0:
+				# Start to assigning the short sequences to the clusters built using long sequences
+				seq2clust = assignShortSequences(kmer_dict_small, kmer_dict, clusters, dt)
+			else:
+				# Make a dictionary linking a sequence name to its assigned cluster
+				seq2clust = {}
 
-			if make_dist_boxplots:
-				clusters = defaultdict(list)
-				for pair in clust_map:
-					clusters[ pair[1] ].append( pair[0] )
+			for clustNum, seqL in clusters.items():
+				for sn in seqL:
+					seq2clust[sn] = clustNum
 
-				dt = "Cluster"
+			# Add cluster numbers to output dictionary in order of seqNames
+			outD[dt] = [seq2clust[sn] for sn in seqNames + shortSeqNames]
+
+			output_data( outD, i, output_dir, seqNames + shortSeqNames )
 
 		else:
 			raise Exception("Invalid method name provided.")
@@ -374,6 +380,14 @@ def make_hist(input_filename, similarities, output_dir):
 	plt.xlabel("similarity")
 	plt.ylabel("count")
 	plt.savefig(f"{output_dir}/{input_filename}_histogram.png")
+
+def output_data( outD, i, output_dir, allSeqNames ):
+	# Write out results for this input file
+	outDF = pd.DataFrame(outD, index=allSeqNames)
+	outDF.to_csv(f"{output_dir}/clusters_{os.path.basename(i)}.tsv", sep="\t", index_label="Sequence")
+	
+	# Summary statistics
+	clusterStats(outD, os.path.basename(i) , output_dir)
 
 if __name__ == "__main__":
 	main()
