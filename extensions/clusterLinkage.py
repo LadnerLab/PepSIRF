@@ -9,7 +9,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import networkx as nx
 
-COLOR_LIST = ['#ff0000', '#deff0a', '#0aefff', '#be0aff', '#ff8700', '#a1ff0a', '#147df5', '#ffd300', '#0aff99', '#580aff']
 NA = "NULL"
 
 def main():
@@ -54,7 +53,7 @@ def main():
 def find_linkage_scores(
 	manifest_file: str,
 	metadata: str,
-	thresh_matrix,
+	thresh_matrix: str,
 	seq_header: str,
 	linkage_cols: list,
 	col_val_delim: str,
@@ -215,8 +214,10 @@ def create_data_dict(mdDf, linkage_cols, manifest_file, thresh_matrix):
 
 def create_network( dist_idx, thresh_dict, ids, data_dict, outDf, vis_seed, net_out_dir, make_net_vis):
 	G = nx.MultiDiGraph()
+	color = iter(plt.cm.rainbow(np.linspace(0, 1, len(ids))))
 	color_assigned = defaultdict()
-	color_index = 0
+	for id_ in ids:
+		color_assigned[id_] = next(color)
 	cluster_colors = list()
 
 	# add nodes from first column clusters
@@ -228,10 +229,6 @@ def create_network( dist_idx, thresh_dict, ids, data_dict, outDf, vis_seed, net_
 		id_ = cluster[0]
 		num = int(cluster[1])
 		cluster_sizes.append(len(data_dict[thresh_dict[id_][dist_idx]][id_][num]) * 25)
-
-		if id_ not in color_assigned.keys():
-			color_assigned[id_] = COLOR_LIST[color_index]
-			color_index += 1
 
 		# assign color for id
 		cluster_colors.append(color_assigned[id_])
@@ -265,6 +262,8 @@ def create_network( dist_idx, thresh_dict, ids, data_dict, outDf, vis_seed, net_
 	net_stats = list()
 	comp_dict = defaultdict(list)
 	comps = nx.strongly_connected_components(G)
+	# initialize net_num in case no connected components
+	net_num = -1
 	for net_num, comp in enumerate(comps):
 		# initialze dict for network num
 		for id_ in ids:
