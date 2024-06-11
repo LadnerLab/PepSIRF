@@ -58,12 +58,11 @@ def main():
 
 	for folder in os.listdir(args.input_dir):
 		prot_dir = os.path.join(args.input_dir, folder)
-		if os.path.isdir(prot_dir):
+		if os.path.isdir(prot_dir) and len(glob.glob(os.path.join(prot_dir, '*.fasta'))) > 1:
 			gen_clust_input = list()
 
-			for file in glob.glob(os.path.join(prot_dir, '*')):
-				if file.endswith(".fasta"):
-					gen_clust_input.append(file)
+			for file in glob.glob(os.path.join(prot_dir, '*.fasta')):
+				gen_clust_input.append(file)
 
 			cluster(
 				input_files = gen_clust_input,
@@ -119,7 +118,7 @@ def main():
 
 		for net in net_species_dict.keys():
 			net_species_dict[net].to_csv(os.path.join(args.merged_spec_dir, f"{net}_merged_multiprotein_cluster_sequences.tsv"), sep="\t", index=False)
-				
+
 
 if __name__ == "__main__":
 	main()
