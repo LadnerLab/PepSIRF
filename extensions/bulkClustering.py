@@ -56,7 +56,7 @@ def main():
 
 	for folder in os.listdir(args.input_dir):
 		prot_dir = os.path.join(args.input_dir, folder)
-		if os.path.isdir(prot_dir) and len(glob.glob(os.path.join(prot_dir, '*.fasta'))) > 1:
+		if os.path.isdir(prot_dir) and len(glob.glob(os.path.join(prot_dir, '*.fasta'))) > 0:
 			gen_clust_input = list()
 
 			for file in glob.glob(os.path.join(prot_dir, '*.fasta')):
