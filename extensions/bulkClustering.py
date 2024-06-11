@@ -22,8 +22,6 @@ def main():
 	parser.add_argument("-i", "--input-dir", type=str, required=True, help="Directory containing protein directories with fasta files in each.")
 	parser.add_argument("-m", "--metadata", type=str, required=True, help="Tab-delimited metadata file that links sequences to info that can be used to link sequences across clusters.")
 	parser.add_argument("-d", "--distance-thresh", nargs="+", type=float, required=False, help="Required for Hierarchical Clustering. Distance thresholds to use for hierarchical clustering. Multiple values may be provided, all of which should be between 0 and 1.")
-
-	parser.add_argument("--merged-spec-dir", type=str, required=False, default="", help="If provided, multiprotein species files of the same network number will me merged and saved to the specified directory.")
 	
 	# Optional arguments (generate clusters)
 	parser.add_argument("--method", type=str, required=False, default="Hierarchical", help="Method of generating clusters. Current options are: Hierarchical or Louvain")
@@ -101,23 +99,20 @@ def main():
 					)
 
 			# append to network species
-			if args.merged_spec_dir:
-				for net in glob.glob(os.path.join(prot_dir, multi_prot_net_name, "*")):
-					if os.path.isdir(net):
-						network_name = os.path.basename(net)
-						curr_spec_df = pd.read_csv(os.path.join(net, f"{network_name}_multiprotein_cluster_sequences.tsv"), sep="\t")
-						curr_spec_df["MultiProteinCluster"] = f"{folder}_" + curr_spec_df["MultiProteinCluster"].astype(str)
-						net_species_dict[network_name] = pd.concat([net_species_dict[network_name], curr_spec_df], ignore_index=True)
+			for net in glob.glob(os.path.join(prot_dir, multi_prot_net_name, "*")):
+				if os.path.isdir(net):
+					network_name = os.path.basename(net)
+					curr_spec_df = pd.read_csv(os.path.join(net, f"{network_name}_multiprotein_cluster_sequences.tsv"), sep="\t")
+					curr_spec_df["MultiProteinCluster"] = f"{folder}_" + curr_spec_df["MultiProteinCluster"].astype(str)
+					net_species_dict[network_name] = pd.concat([net_species_dict[network_name], curr_spec_df], ignore_index=True)
 
 	# save networks
-	if args.merged_spec_dir:
-		if not os.path.exists(args.merged_spec_dir):
-			os.mkdir(args.merged_spec_dir)
-		else:
-			print(f"Warning: The directory \"{args.merged_spec_dir}\" already exists. Files may be overwritten.")
+	merged_spec_dir = os.path.join(args.input_dir, "merged_species")
+	if not os.path.exists(merged_spec_dir):
+		os.mkdir(merged_spec_dir)
 
-		for net in net_species_dict.keys():
-			net_species_dict[net].to_csv(os.path.join(args.merged_spec_dir, f"{net}_merged_multiprotein_cluster_sequences.tsv"), sep="\t", index=False)
+	for net in net_species_dict.keys():
+		net_species_dict[net].to_csv(os.path.join(merged_spec_dir, f"{net}_merged_multiprotein_cluster_sequences.tsv"), sep="\t", index=False)
 
 
 if __name__ == "__main__":
