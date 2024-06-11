@@ -249,6 +249,7 @@ def create_network( dist_idx, thresh_dict, ids, data_dict, outDf, vis_seed, net_
 		nx.draw_networkx_edges(G, pos, ax=ax, connectionstyle=f'arc3, rad = 0.25', arrows=True, width=list(weights))
 		nx.draw_networkx_labels(G, pos, ax=ax)
 		fig.savefig(f"{net_out_dir}/network_{dist_idx +1}_visualization.png", bbox_inches='tight', dpi=300)
+		plt.close()
 
 	#---------Summary Statistics-----------
 	# TODO: maybe put this in it's own function
