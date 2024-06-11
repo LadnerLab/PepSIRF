@@ -175,7 +175,8 @@ def calc_linkage_score_from_c1_to_c2(clust_1, clust_2, col_val_delim, num_metaco
 
 def create_data_dict(mdDf, linkage_cols, manifest_file, thresh_matrix):
 	# collect cluster files (sort alphabetically)
-	id_2_file = pd.read_csv(manifest_file, sep="\t", index_col="ProtID").to_dict('index')
+	# TODO: figure out what values to interpret as NA values
+	id_2_file = pd.read_csv(manifest_file, sep="\t", index_col="ProtID", keep_default_na=False).to_dict('index')
 	ids = list(id_2_file.keys())
 
 	thresh_dict = defaultdict(list)
