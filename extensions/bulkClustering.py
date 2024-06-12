@@ -1,11 +1,5 @@
 #!/usr/bin/env python
 
-import sys
-# ------file path(s) needs to be changed------
-sys.path.append("/Users/scg283/Documents/GitHub/PepSIRF/extensions")
-# -----------------------------------------
-
-
 from generateClusters import cluster
 from clusterLinkage import find_linkage_scores
 import argparse
