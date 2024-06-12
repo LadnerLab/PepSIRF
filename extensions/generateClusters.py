@@ -109,39 +109,78 @@ def cluster(
 			for dt in distance_thresh:
 				outD[dt] = [0]
 				output_data( outD, i, output_dir, list(fD.keys()) )
-			break
+		else:
+			# Sort into separate dictionaries according to size threshold
+			largeD, smallD = sortSeqsBySize(fD, min_propn)
+			
+			# Generate kmers for all sequences that meet size threshold
+			kmer_dict = kt.kmerDictSet(largeD,kmer_size,["X"])
+			# Calculate distances between all large sequences
+			dists, seqNames, similarities, seq_sim_list = calcDistances(kmer_dict)
 
-		# Sort into separate dictionaries according to size threshold
-		largeD, smallD = sortSeqsBySize(fD, min_propn)
-		
-		# Generate kmers for all sequences that meet size threshold
-		kmer_dict = kt.kmerDictSet(largeD,kmer_size,["X"])
-		# Calculate distances between all large sequences
-		dists, seqNames, similarities, seq_sim_list = calcDistances(kmer_dict)
+			# Generate kmers for all sequences that DO NOT meet size threshold
+			kmer_dict_small = kt.kmerDictSet(smallD,kmer_size,["X"])
+			shortSeqNames = list(smallD.keys())
 
-		# Generate kmers for all sequences that DO NOT meet size threshold
-		kmer_dict_small = kt.kmerDictSet(smallD,kmer_size,["X"])
-		shortSeqNames = list(smallD.keys())
+			# TODO: optimize method option
+			if method == "Hierarchical":
+				for dt in distance_thresh:
+					# Cluster long sequences
+					clusters, hm = clusterSeqs(dists, dt, seqNames)
 
-		# TODO: optimize method option
-		if method == "Hierarchical":
-			for dt in distance_thresh:
-				# Cluster long sequences
-				clusters, hm = clusterSeqs(dists, dt, seqNames)
+					if gen_vis:
+						# dendrogram visualization
+						fig, ax = plt.subplots(figsize=(30, 40), facecolor='w')
+						ax = sch.dendrogram(hm, color_threshold=dt)
+						plt.tick_params( \
+					    axis='x',
+					    which='both',
+					    bottom='off',
+					    top='off',
+					    labelbottom='off')
+						plt.axhline(y=dt, c='k')
+						plt.savefig(f"{vis_output_dir}/dendrogram_{os.path.basename(i)}_{dt}.png", dpi=300, bbox_inches='tight')
+					
+					if len(kmer_dict_small) > 0:
+						# Start to assigning the short sequences to the clusters built using long sequences
+						seq2clust = assignShortSequences(kmer_dict_small, kmer_dict, clusters, dt)
+					else:
+						# Make a dictionary linking a sequence name to its assigned cluster
+						seq2clust = {}
+
+					for clustNum, seqL in clusters.items():
+						for sn in seqL:
+							seq2clust[sn] = clustNum
+
+					# Add cluster numbers to output dictionary in order of seqNames
+					outD[dt] = [seq2clust[sn] for sn in seqNames + shortSeqNames]
+
+					output_data( outD, i, output_dir, seqNames + shortSeqNames )
+
+			elif method == "Louvain":
+				# no distance threshold for louvain clustering
+				dt = 0
+
+				# Extract nodes and similarities
+				nodes = list(set([x[0] for x in seq_sim_list] + [x[1] for x in seq_sim_list]))
+				node_indices = {node: idx for idx, node in enumerate(nodes)}
+
+				# Create edge list
+				edges = [(node_indices[a], node_indices[b], sim) for a, b, sim in seq_sim_list]
+
+				# Create adjacency matrix
+				adjacency = skn.data.from_edge_list(edges)
+
+				louvain = skn.clustering.Louvain()
+				labels = louvain.fit_predict(adjacency)
 
 				if gen_vis:
-					# dendrogram visualization
-					fig, ax = plt.subplots(figsize=(30, 40), facecolor='w')
-					ax = sch.dendrogram(hm, color_threshold=dt)
-					plt.tick_params( \
-				    axis='x',
-				    which='both',
-				    bottom='off',
-				    top='off',
-				    labelbottom='off')
-					plt.axhline(y=dt, c='k')
-					plt.savefig(f"{vis_output_dir}/dendrogram_{os.path.basename(i)}_{dt}.png", dpi=300, bbox_inches='tight')
-				
+					image = skn.visualization.visualize_graph(adjacency, labels=labels, filename=f"{vis_output_dir}/visualization_{os.path.basename(i)}")
+
+				clusters = defaultdict(list)
+				for idx, seqName in enumerate(nodes):
+					clusters[ labels[idx] ].append( seqName )
+
 				if len(kmer_dict_small) > 0:
 					# Start to assigning the short sequences to the clusters built using long sequences
 					seq2clust = assignShortSequences(kmer_dict_small, kmer_dict, clusters, dt)
@@ -158,54 +197,14 @@ def cluster(
 
 				output_data( outD, i, output_dir, seqNames + shortSeqNames )
 
-		elif method == "Louvain":
-			# no distance threshold for louvain clustering
-			dt = 0
-
-			# Extract nodes and similarities
-			nodes = list(set([x[0] for x in seq_sim_list] + [x[1] for x in seq_sim_list]))
-			node_indices = {node: idx for idx, node in enumerate(nodes)}
-
-			# Create edge list
-			edges = [(node_indices[a], node_indices[b], sim) for a, b, sim in seq_sim_list]
-
-			# Create adjacency matrix
-			adjacency = skn.data.from_edge_list(edges)
-
-			louvain = skn.clustering.Louvain()
-			labels = louvain.fit_predict(adjacency)
-
-			if gen_vis:
-				image = skn.visualization.visualize_graph(adjacency, labels=labels, filename=f"{vis_output_dir}/visualization_{os.path.basename(i)}")
-
-			clusters = defaultdict(list)
-			for idx, seqName in enumerate(nodes):
-				clusters[ labels[idx] ].append( seqName )
-
-			if len(kmer_dict_small) > 0:
-				# Start to assigning the short sequences to the clusters built using long sequences
-				seq2clust = assignShortSequences(kmer_dict_small, kmer_dict, clusters, dt)
 			else:
-				# Make a dictionary linking a sequence name to its assigned cluster
-				seq2clust = {}
+				raise Exception("Invalid method name provided.")
 
-			for clustNum, seqL in clusters.items():
-				for sn in seqL:
-					seq2clust[sn] = clustNum
+			if make_dist_boxplots:
+				make_boxplots(os.path.basename(i), dt, clusters, kmer_dict, outDF, boxplots_output_dir, min_seqs)
 
-			# Add cluster numbers to output dictionary in order of seqNames
-			outD[dt] = [seq2clust[sn] for sn in seqNames + shortSeqNames]
-
-			output_data( outD, i, output_dir, seqNames + shortSeqNames )
-
-		else:
-			raise Exception("Invalid method name provided.")
-
-		if make_dist_boxplots:
-			make_boxplots(os.path.basename(i), dt, clusters, kmer_dict, outDF, boxplots_output_dir, min_seqs)
-
-		if make_sim_hists:
-			make_hist(os.path.basename(i), similarities, hists_output_dir)
+			if make_sim_hists:
+				make_hist(os.path.basename(i), similarities, hists_output_dir)
 
 
 
