@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import scipy.cluster.hierarchy as sch
 import seaborn as sns

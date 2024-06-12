@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import argparse
 import glob
@@ -60,8 +60,7 @@ def find_linkage_scores(
 	make_net_vis: bool,
 	vis_seed: int,
 	output_dir: str
-	)->None:
-	# TODO: 2. let user specify threshold combination, if not use all together	
+	)->None:	
 
 	if not os.path.exists(output_dir):
 		os.mkdir(output_dir)
