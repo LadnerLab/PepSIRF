@@ -132,12 +132,12 @@ def cluster(
 						# dendrogram visualization
 						fig, ax = plt.subplots(figsize=(30, 40), facecolor='w')
 						ax = sch.dendrogram(hm, color_threshold=dt)
-						plt.tick_params( \
-					    axis='x',
-					    which='both',
-					    bottom='off',
-					    top='off',
-					    labelbottom='off')
+						plt.tick_params(
+						    axis='x',
+						    which='both',
+						    bottom='off',
+						    top='off',
+						    labelbottom='off')
 						plt.axhline(y=dt, c='k')
 						plt.savefig(f"{vis_output_dir}/dendrogram_{os.path.basename(i)}_{dt}.png", dpi=300, bbox_inches='tight')
 					
