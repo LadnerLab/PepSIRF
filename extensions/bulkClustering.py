@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from generateClusters import cluster
 from clusterLinkage import find_linkage_scores
@@ -25,6 +25,7 @@ def main():
 	parser.add_argument("--min-seqs", type=int, default=2, required=False, help="Number of sequences a cluster needs to be included in the boxplot.")
 	parser.add_argument("--make-sim-hists", required=False, default=False, action="store_true", help="If provided, distribution of k-mer similarities for each input file will be provided.")
 	parser.add_argument("--generate-vis", required=False, default=False, action="store_true", help="If provided, generates visualization of clusters for clustering method.")
+	parser.add_argument("--clust-unassigned-short", required=False, default=False, action="store_true", help="If provided, unassigned, short sequences will be clustered using the specified method. Only supported now for hierarchical clustering.")
 	
 	# Optional arguments (cluster linkage)
 	parser.add_argument("-t", "--thresh-matrix", type=str, required=False, default="", help="Filepath to tab delimited file of the threshold matrix. Each column should represent the same protein id and the transposed rows "
@@ -69,7 +70,8 @@ def main():
 				hists_output_dir = os.path.join(prot_dir, f"{method_cluster_name}_histograms"),
 				gen_vis = args.generate_vis,
 				vis_output_dir = os.path.join(prot_dir, f"{method_cluster_name}_visualization"),
-				output_dir = os.path.join(prot_dir, method_cluster_name)
+				output_dir = os.path.join(prot_dir, method_cluster_name),
+				clust_unassigned_short = args.clust_unassigned_short
 				)
 
 			# create temp manifest file
