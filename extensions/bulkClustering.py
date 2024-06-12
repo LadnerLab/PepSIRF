@@ -101,7 +101,7 @@ def main():
 					net_species_dict[network_name] = pd.concat([net_species_dict[network_name], curr_spec_df], ignore_index=True)
 
 	# save networks
-	merged_spec_dir = os.path.join(args.input_dir, "merged_species")
+	merged_spec_dir = os.path.join(args.input_dir, "merged_sequences")
 	if not os.path.exists(merged_spec_dir):
 		os.mkdir(merged_spec_dir)
 
