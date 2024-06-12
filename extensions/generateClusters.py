@@ -31,7 +31,8 @@ def main():
 	parser.add_argument("-k", "--kmer-size", type=int, required=False, default=7, help="Size of kmers used to compare sequences.")
 	# parser.add_argument("-m", "--meta-filepath", type=str, required=False, help="Optional tab-delimited file that can be used to link the input sequences to metadata. If provided, summary statistics about the generated clusters will be generated.")
 	parser.add_argument("-p", "--min-propn", type=float, required=False, default=0, help="Proportion of the top 10%% of sequence sizes to be included in the initial round of clustering.")
-	parser.add_argument("--make-dist-boxplots", required=False, default=False, action="store_true", help="Optional tab-delimited file that can be used to link the input sequences to metadata. If provided, summary statistics about the generated clusters will be generated.")
+	parser.add_argument("--clust-unassigned-short", required=False, default=False, action="store_true", help="If provided, unassigned, short sequences will be clustered using the specified method. Only supported now for hierarchical clustering.")
+	parser.add_argument("--make-dist-boxplots", required=False, default=False, action="store_true", help="If provided, distance boxplots will be generated.")
 	parser.add_argument("--boxplots-output-dir", type=str, default="boxplots", required=False, help="Directory to save boxplots if boxplots are made.")
 	parser.add_argument("--min-seqs", type=int, default=2, required=False, help="Number of sequences a cluster needs to be included in the boxplot.")
 	parser.add_argument("--make-sim-hists", required=False, default=False, action="store_true", help="If provided, distribution of k-mer similarities for each input file will be provided.")
@@ -56,7 +57,8 @@ def main():
 		hists_output_dir = args.hists_output_dir,
 		gen_vis = args.generate_vis,
 		vis_output_dir = args.vis_output_dir,
-		output_dir = args.output_dir
+		output_dir = args.output_dir,
+		clust_unassigned_short = args.clust_unassigned_short
 		)
 
 ###---------------End of main()-----------------------------------
@@ -75,7 +77,8 @@ def cluster(
 	hists_output_dir: str,
 	gen_vis: bool,
 	vis_output_dir: str,
-	output_dir: str
+	output_dir: str,
+	clust_unassigned_short: bool
 	) -> None:
 	
 	if not os.path.exists(output_dir):
@@ -151,7 +154,21 @@ def cluster(
 					for clustNum, seqL in clusters.items():
 						for sn in seqL:
 							seq2clust[sn] = clustNum
-
+					
+					if clust_unassigned_short:
+						kmer_dict_small_unass = {k:v for k,v in kmer_dict_small.items() if seq2clust[k]==""}
+						dists_su, seqNames_su, similarities_su, seq_sim_list_su = calcDistances(kmer_dict_small_unass)
+						clusters_su, hm_su = clusterSeqs(dists_su, dt, seqNames_su)
+						
+						baseClustNum = max([int(s) for s in seq2clust.values() if s!=""])+1
+						print(baseClustNum)
+						print(type(baseClustNum))
+						
+						for clustNum, seqL in clusters_su.items():
+							for sn in seqL:
+								seq2clust[sn] = str(int(clustNum)+baseClustNum)
+						
+						
 					# Add cluster numbers to output dictionary in order of seqNames
 					outD[dt] = [seq2clust[sn] for sn in seqNames + shortSeqNames]
 
@@ -265,7 +282,6 @@ def assignShortSequences(shortKD, longKD, clusters, distThresh):
 	#Assign unassigned sequences to their own clusters
 	for name in unassigned:
 		clustAssign[name] = ""
-
 	
 	return clustAssign
 		
