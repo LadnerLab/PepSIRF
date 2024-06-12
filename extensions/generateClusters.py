@@ -157,10 +157,13 @@ def cluster(
 					
 					if clust_unassigned_short:
 						kmer_dict_small_unass = {k:v for k,v in kmer_dict_small.items() if seq2clust[k]==""}
-						
+
 						if len(kmer_dict_small_unass) > 0:
-							dists_su, seqNames_su, similarities_su, seq_sim_list_su = calcDistances(kmer_dict_small_unass)
-							clusters_su, hm_su = clusterSeqs(dists_su, dt, seqNames_su)
+							if len(kmer_dict_small_unass) == 1:
+							    clusters_su = {"0":list(kmer_dict_small_unass.keys())}
+							else:
+							    dists_su, seqNames_su, similarities_su, seq_sim_list_su = calcDistances(kmer_dict_small_unass)
+							    clusters_su, hm_su = clusterSeqs(dists_su, dt, seqNames_su)
 						
 							baseClustNum = max([int(s) for s in seq2clust.values() if s!=""])+1
 							
