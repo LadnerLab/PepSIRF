@@ -133,11 +133,11 @@ def cluster(
 						fig, ax = plt.subplots(figsize=(30, 40), facecolor='w')
 						ax = sch.dendrogram(hm, color_threshold=dt)
 						plt.tick_params(
-						    axis='x',
-						    which='both',
-						    bottom='off',
-						    top='off',
-						    labelbottom='off')
+							axis='x',
+							which='both',
+							bottom='off',
+							top='off',
+							labelbottom='off')
 						plt.axhline(y=dt, c='k')
 						plt.savefig(f"{vis_output_dir}/dendrogram_{os.path.basename(i)}_{dt}.png", dpi=300, bbox_inches='tight')
 					
@@ -219,6 +219,10 @@ def cluster(
 	# Based on these distances, assign the short sequences to clusters
 def assignShortSequences(shortKD, longKD, clusters, distThresh):
 	clustAssign = {}
+	unassigned = []
+	assigned = []
+	
+	# Initial comparison of short sequences to clusters of long sequences
 	for ssN, ssK in shortKD.items():
 		distD = {}
 		for clustNum, seqL in clusters.items():
@@ -233,8 +237,35 @@ def assignShortSequences(shortKD, longKD, clusters, distThresh):
 		if bestScore <= distThresh:
 			bestClusts = [k for k,v in distD.items() if v==bestScore]
 			clustAssign[ssN] = random.choice(bestClusts)
+			assigned.append(ssN)
 		else:
-			clustAssign[ssN] = ""
+			unassigned.append(ssN)
+	
+	# Check remaining short sequences for matches to the short sequences already assigned to clusters
+	
+	while len(unassigned)>0 and len(assigned)>0:
+		assigned=[]
+		for ssN in unassigned:
+			best = [1,""]
+			ssK = shortKD[ssN]
+			for otherN, clustNum in clustAssign.items():
+				otherK = shortKD[otherN]
+				ovlp = ssK.intersection(otherK)
+				thisDist = 1-( len(ovlp)/(min([len(ssK), len(otherK)])) )
+				if thisDist<best[0]:
+					best=[thisDist,clustNum]
+			if best[0] <= distThresh:
+				clustAssign[ssN] = best[1]
+				assigned.append(ssN)
+		
+		# Remove any names from unassigned that have now been assigned
+		for name in assigned:
+			unassigned.remove(name)
+
+	#Assign unassigned sequences to their own clusters
+	for name in unassigned:
+		clustAssign[name] = ""
+
 	
 	return clustAssign
 		
