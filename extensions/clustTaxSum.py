@@ -5,6 +5,7 @@ import pandas as pd
 import os
 import glob
 from collections import defaultdict
+from natsort import natsorted
 
 def main():
 	parser = argparse.ArgumentParser(description="Generates taxomic summary from multiprotein cluster sequences", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -62,7 +63,7 @@ def gen_sum(
 			clust_seqs_dict[pair[1]].add(pair[0])
 
 		# get data for output
-		outDf = pd.DataFrame([(x, len(clust_seqs_dict[x])) for x in sorted(clust_seqs_dict.keys(), key=lambda key: key)], columns=["MultiProteinCluster", "Sequence_Count"])
+		outDf = pd.DataFrame([(x, len(clust_seqs_dict[x])) for x in natsorted(clust_seqs_dict.keys(), key=lambda key: key.lower())], columns=["MultiProteinCluster", "Sequence_Count"])
 		for col in tax_cols:
 			col_out_data = list()
 			for clust in clust_seqs_dict.keys():
