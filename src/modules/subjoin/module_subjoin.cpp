@@ -6,6 +6,7 @@
 #include "module_subjoin.h"
 #include "matrix.h"
 #include <iostream>
+#include <regex>
 #include <stdexcept>
 #include <algorithm>
 #include "time_keep.h"
@@ -112,22 +113,6 @@ void module_subjoin::run( options *opts )
                     my_data.scores = my_data.scores.transpose();
                 }
 
-            // parse the peptide scores
-            if( !score_name_pair.second.empty() )
-                {
-                    std::ifstream names_list( score_name_pair.second,
-                                            std::ios_base::in
-                                            );
-                    if( names_list.fail() )
-                        {
-                            Log::error(
-                                "Unable to open name list '"
-                                + score_name_pair.second + "'.\n"
-                            );
-                        }
-                    replacement_names = parse_namelist( orig_names, names_list );
-                }
-
             std::unordered_set<std::string> names;
             
             if( use_peptide_names )
@@ -141,6 +126,37 @@ void module_subjoin::run( options *opts )
                     names.insert( my_data.sample_names.begin(),
                                     my_data.sample_names.end()
                                 );
+                }
+
+            // parse the peptide scores
+            if( !score_name_pair.second.empty() )
+                {   
+                    std::ifstream names_list( score_name_pair.second,
+                                            std::ios_base::in
+                                            );
+
+                    replacement_names = parse_namelist( orig_names, names_list );
+
+                    if( names_list.fail() )
+                        {
+                            for( const std::string& name : names )
+                                {
+                                    if (std::regex_search( name, std::regex(score_name_pair.second) ))
+                                    {
+                                        orig_names.emplace_back( name );
+                                        replacement_names.insert( {name, name} );
+                                    }
+                                }
+                            if( orig_names.empty() )
+                                {
+                                    Log::error(
+                                        "Unable to open name list '"
+                                        + score_name_pair.second + "'.\n"
+                                        +"If regex expression was provided, no matches were found.\n"
+                                        +"Including all sample/peptide names.\n"
+                                    );
+                                }
+                        }   
                 }
 
             std::unordered_set<std::string> nonexcluded_names;

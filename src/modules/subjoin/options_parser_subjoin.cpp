@@ -65,7 +65,8 @@ bool options_parser_subjoin::parse( int argc, char ***argv, options *opts )
           "The namelist must have one name per line, but can optionally have 2, if "
           "renaming samples in the subjoin output. Optionally, a name list can be "
           "omitted if all samples from the input matrix should be included in the "
-          "output.\n"
+          "output. A regex pattern wrapped in quotation marks can also be provided instead of a name list, "
+          "which will filter through the names in the score matrix file in they contain the regex pattern.\n"
         )
         ( "input,i", po::value( &matrix_name_list_pairs )->notifier(
                     [&]( const std::vector<std::string>& name_pairs )

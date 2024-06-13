@@ -1,0 +1,18 @@
+PepSIRF (v1.6.0)
+Starting module Subjoin with arguments: 
+--input                comboWR_raw_2mm_i1mm_CS.tsv,(HCV(.*)|SB(.*))
+--filter_peptide_names false
+--exclude true
+ --duplicate_evaluation include
+--output               comboWR_raw_2mm_i1mm_CS_neg_ctrl_only.tsv
+--logfile              Subjoin_Fri_May_31_10-48-05_2024.log
+
+HCV-I_PV1_Run3_B
+HCV-H_PV1_Run3_B
+HCV-J_PV1_Run3_A
+HCV-H_PV1_Run3_A
+HCV-J_PV1_Run3_B
+SB_PV1_Run3_A
+HCV-I_PV1_Run3_A
+SB_PV1_Run3_B
+Took 0.061908 seconds.
