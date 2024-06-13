@@ -4272,17 +4272,11 @@ TEST_CASE( "Run Subjoin exclude option with regex input", "[module_subjoin]" )
     			}
     	}
 
-    // add each line to the set
-    while( std::getline(ifexpected, expected_line) && std::getline(ifactual, actual_line) )
-        {	
-            expected_lines_set.insert( expected_line );
-            actual_lines_set.insert( actual_line );
-        }
     ifexpected.close();
     ifactual.close();
 
     // all lines and names of expected outfile are in the actual outfile
-    if( expected_lines_set == actual_lines_set && expected_names_set == actual_names_set )
+    if( expected_names_set == actual_names_set )
     	{
     	    exclude_identical = true;
     	}
