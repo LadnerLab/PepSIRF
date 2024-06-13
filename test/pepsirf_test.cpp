@@ -576,6 +576,34 @@ TEST_CASE("Automatic truncation of library sequences", "[module_demux]")
         d_opts.set_info(&options_demux::seq_data, "41,100,2");
         REQUIRE_THROWS(d_mod.run(&d_opts));
     }
+    SECTION("Demux outputs unmapped reads file.")
+    {
+        d_opts.set_info(&options_demux::seq_data, "41,40,2");
+        d_opts.unmapped_reads_fname = "../test/test_unmapped_reads.fastq";
+        d_mod.run(&d_opts);
+
+        std::string expected = "../test/expected/test_expected_demux_unmapped_reads.fastq";
+        std::string actual = "../test/test_unmapped_reads.fastq";
+        std::ifstream ifexpected(expected, std::ios_base::in);
+        std::ifstream ifactual(actual, std::ios_base::in);
+        std::string expected_line;
+        std::string actual_line;
+
+        std::unordered_set<std::string> actual_line_set;
+        while (!ifactual.eof())
+        {
+            std::getline(ifactual, actual_line);
+            actual_line_set.insert(actual_line);
+        }
+
+        while (!ifexpected.eof())
+        {
+            std::getline(ifexpected, expected_line);
+            REQUIRE(
+                actual_line_set.find(expected_line) != actual_line_set.end()
+            );
+        }
+    }
 }
 
 TEST_CASE("Demux output demostrates demux removes references with matching sequences", "[module_demux]")

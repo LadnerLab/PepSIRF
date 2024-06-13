@@ -376,6 +376,15 @@ class module_demux : public module
      **/
     std::string get_sample_info( std::vector<sample>& samplelist, std::string outfile_name );
 
+    /**
+     * Creates a single output fastq file containing all of the reads that have not been mapped to a sample/peptide
+     * @param filename file to output to
+     * @param samp_map fastaq output map
+     * @reads_dup vector of all reads
+     **/
+    void create_unmapped_reads_file( std::string filename, 
+                            std::map<std::string, std::vector<fastq_sequence>> samp_map, std::vector<fastq_sequence> reads_dup );
+
 };
 
 #endif /* MODULE_DEMUX_HH_INCLUDED */
