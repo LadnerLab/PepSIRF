@@ -4233,7 +4233,7 @@ TEST_CASE( "Subjoin name list filter is optional", "[module_subjoin]" )
     mod.run( &opts );
 }
 
-TEST_CASE( "Run Subjoin exclude option", "[module_subjoin]" )
+TEST_CASE( "Run Subjoin exclude option with regex input", "[module_subjoin]" )
 {
     std:bool exclude_identical = false;
     module_subjoin mod;
@@ -4242,7 +4242,7 @@ TEST_CASE( "Run Subjoin exclude option", "[module_subjoin]" )
     opts.use_sample_names = true;
     opts.out_matrix_fname = "../test/test_subjoin_exclude_output.tsv";
     opts.input_matrix_name_pairs.emplace_back( std::make_pair( "../test/input_data/test_zscore_score_matrix.tsv", 
-    															"../test/input_data/test_subjoin_exclude_namelist.txt" ) );
+    															"SB" ) );
     mod.run( &opts );
 
     std::string expected = "../test/expected/test_expected_subjoin_exclude_output.tsv";
