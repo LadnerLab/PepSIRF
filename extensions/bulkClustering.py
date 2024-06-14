@@ -31,6 +31,7 @@ def main():
 	parser.add_argument("-t", "--thresh-matrix", type=str, required=False, default="", help="Filepath to tab delimited file of the threshold matrix. Each column should represent the same protein id and the transposed rows "
 																							"of the manifest file. Each row should be each seperate linkage network to create. The entries are the thresholds to use for each "
 																							"protein id for each network to create. Optionally, an entry can be left blank and it will not be contributed to that network")
+	parser.add_argument("--same-prot-linkage", required=False, default=False, action="store_true", help="Whether or not to allow linkage between clusters of the same protein.")
 	parser.add_argument("--seq-name-header", default="SequenceName", type=str, required=False, help="Header for sequence name column in the metadata file.")
 	parser.add_argument("--linkage-cols", nargs="+", default=["NCBIaccession-NT"], type=str, required=False, help="Header of columns in the metadata file t consider for linkage. "
 																											"Any given sequence only contributes one point to a linkage score")
@@ -86,6 +87,7 @@ def main():
 					manifest_file = tempManifest.name,
 					metadata = args.metadata,
 					thresh_matrix = args.thresh_matrix,
+					same_prot_linkage = args.same_prot_linkage,
 					seq_header = args.seq_name_header,
 					linkage_cols = args.linkage_cols,
 					col_val_delim = args.col_val_delim,
