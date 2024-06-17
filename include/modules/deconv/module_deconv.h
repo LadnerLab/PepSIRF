@@ -895,7 +895,8 @@ class module_deconv : public module
      * @param filename filepath to tab-delimited file
      * @returns map of taxID and threshold
      **/
-    void thresh_file_to_map( std::unordered_map<std::string, std::size_t>& thresh_map, std::string filename );
+    void thresh_file_to_map( std::unordered_map<std::string, std::size_t>& thresh_map, std::string filename, 
+                        const std::vector<std::pair<std::string, std::vector<std::pair<std::string, double>>>> pep_species_vec );
 };
 
 #endif // MODULE_DECONV_HH_INCLUDED 
