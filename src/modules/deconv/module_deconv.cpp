@@ -1369,7 +1369,7 @@ void module_deconv::thresh_file_to_map( std::unordered_map<std::string, std::siz
 
             if( file.fail() )
                 {
-                    Log::error("Threshold linkage map file does not exist.");
+                    Log::error("Threshold linkage map file does not exist or negative threshold was given.");
                 }
 
             // skip header
