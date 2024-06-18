@@ -148,10 +148,7 @@ void module_deconv::choose_kmers( options_deconv *opts )
                 }
         }
 
-    // std::size_t thresh = d_opts->threshold;
-    // create dictionary from theshold file
-    std::unordered_map<std::string, std::size_t> thresholds;
-    thresh_file_to_map(thresholds, d_opts->thresholds_fname);
+    std::size_t thresh = d_opts->threshold;
 
     omp_set_num_threads( d_opts->single_threaded ? 1 : 2 );
 
@@ -180,9 +177,9 @@ void module_deconv::choose_kmers( options_deconv *opts )
         {
             if( filter_strat
                 == evaluation_strategy::filter_strategy::SCORE_FILTER )
-                {   
-                    filter_counts<std::string,double,std::size_t>
-                    ( species_scores, thresholds );
+                {
+                    filter_counts<std::string,double>
+                    ( species_scores, thresh );
 
 
                 }
@@ -192,8 +189,8 @@ void module_deconv::choose_kmers( options_deconv *opts )
                 {
 
                     // recreate species_scores
-                    filter_counts<std::string,double,std::size_t>
-                    ( species_peptide_counts, thresholds );
+                    filter_counts<std::string,double>
+                    ( species_peptide_counts, thresh );
                 }
         };
 
@@ -328,7 +325,7 @@ void module_deconv::choose_kmers( options_deconv *opts )
         species_with_highest_peptide;
 
     while( species_peptide_counts.size()
-           && species_scores[ 0 ].second > thresholds[species_scores[ 0 ].first] )
+           && species_scores[ 0 ].second > thresh )
         {
             pep_species_vec.clear();
             std::vector<std::pair<std::string,double>>
@@ -342,7 +339,7 @@ void module_deconv::choose_kmers( options_deconv *opts )
                 {
                         tie = get_tie_candidates( tie_candidates,
                                                   species_scores,
-                                                  thresholds,
+                                                  thresh,
                                                   d_opts->score_tie_threshold,
                                                   util::difference<double>()
                                                 );
@@ -351,7 +348,7 @@ void module_deconv::choose_kmers( options_deconv *opts )
                 {
                         tie = get_tie_candidates( tie_candidates,
                                                   species_scores,
-                                                  thresholds,
+                                                  thresh,
                                                   d_opts->score_tie_threshold,
                                                   util::ratio<double>()
                                                 );
@@ -1332,31 +1329,4 @@ bool module_deconv
 ::use_ratio_overlap_threshold( double threshold )
 {
     return !util::is_integer( threshold );
-}
-
-void module_deconv::thresh_file_to_map( std::unordered_map<std::string, std::size_t>& thresh_map, std::string filename )
-{   
-    std::ifstream file( filename );
-    std::string line;
-    std::vector<std::string> split_line;
-
-    // skip header
-    std::getline( file, line );
-
-    // read each line of file
-    while( std::getline( file, line ) )
-        {
-            // assign values to map (use boost:split)
-            boost::split( split_line, line, boost::is_any_of("\t") );
-
-            if( split_line.size() == 2 )
-                {
-                    thresh_map[ split_line[0] ] = std::stoi(split_line[1]);
-                }
-            else
-                {
-                    Log::error("Incorrect formatting of threshold linkage map."
-                                " Make sure it is tab delimited with 2 columns");
-                }
-        }
 }
