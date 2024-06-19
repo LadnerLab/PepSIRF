@@ -173,7 +173,7 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
          " to either use this file or a subset of this file that contains all"
          " of the taxon ids linked to peptides of interest. If included, the"
          " output will contain a column denoting the name of the species as"
-         " well as the ID.\n"
+         " well as the ID. The order should be: filename,key_column,value_column.\n"
         )
         ("score_overlap_threshold",
          po::value<double>(&opts_deconv->score_overlap_threshold)->default_value(1.0)
