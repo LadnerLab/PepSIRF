@@ -159,7 +159,7 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
          "that contains all of the taxon ids linked to peptides of interest. If included, the output will contain "
          "a column denoting the name of the species as well as the id.\n"
          )
-        ("custom_id_name_map",
+        ("custom_id_name_map_info",
          po::value<std::string>()
             ->notifier(
                 [&](const std::string &vals)

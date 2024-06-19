@@ -158,7 +158,8 @@ class module_deconv : public module
                         >&
                         out_counts,
                         std::unordered_map<std::string,std::pair<double,double>>&
-                        original_scores
+                        original_scores,
+                        std::string custom_id_header
                       );
 
     /**

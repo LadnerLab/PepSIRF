@@ -441,7 +441,7 @@ void module_deconv::choose_kmers(options_deconv *opts)
 
     write_outputs(
         d_opts->output_fname, name_id_map_ptr,
-        output_counts, original_scores
+        output_counts, original_scores, std::get<2>(d_opts->custom_id_name_map_info)
     );
 
     if (d_opts->species_peptides_out.compare(""))
@@ -756,7 +756,8 @@ void module_deconv::write_outputs( std::string out_name,
                                    >&
                                    out_counts,
                                    std::unordered_map<std::string,std::pair<double,double>>&
-                                   original_scores
+                                   original_scores,
+                                   std::string custom_id_header
                                  )
 
 {
@@ -764,7 +765,14 @@ void module_deconv::write_outputs( std::string out_name,
 
     if( id_name_map != nullptr )
         {
-            out_file << "Species Name\t";
+            if( !custom_id_header.empty() )
+                {
+                    out_file << custom_id_header << '\t';
+                }
+            else
+                {
+                    out_file << "Species Name\t";
+                }
         }
 
     out_file << "Species ID\tCount\tScore\tOriginal Count\tOriginal Score\tMax Probe Score\n";
@@ -1077,6 +1085,10 @@ void module_deconv::parse_custom_name_map(
 
     std::getline(map_stream, line);
     boost::split(split_line, line, boost::is_any_of("\t"));
+    for( auto& header: split_line )
+        {
+            boost::trim(header);
+        }
 
     for (
         std::size_t header_col_idx = 0;
@@ -1100,6 +1112,10 @@ void module_deconv::parse_custom_name_map(
     {
         // TODO: make sure don't need to trim anything
         boost::split(split_line, line, boost::is_any_of("\t"));
+        for( auto& val: split_line )
+        {
+            boost::trim(val);
+        }
 
         std::string id = split_line[taxID_idx];
         std::string name = split_line[spec_name_idx];
