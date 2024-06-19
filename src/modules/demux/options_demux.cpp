@@ -23,7 +23,7 @@ std::string options_demux::get_arguments()
         << "--sindex                " << indexes << "\n"
         << "--library               " << library_fname << "\n"
         << "--read_per_loop         " << read_per_loop << "\n"
-    		<< "--num_threads           " << num_threads << "\n"
+    	<< "--num_threads           " << num_threads << "\n"
         << "--include_toggle        " << pos_toggle << "\n"
         << "--seq                   " << tup_to_string( seq_data ) << "\n"
         << "--index1                " << tup_to_string( index1_data ) << "\n"
@@ -33,7 +33,8 @@ std::string options_demux::get_arguments()
         << "--concatemer            " << concatemer << "\n"
         << "--diagnostic_info       " << diagnostic_fname << "\n"
         << "--fastq_output          " << fastq_out << "\n"
-        << "--logfile               " << logfile << "\n\n";
+        << "--logfile               " << logfile << "\n"
+        << "--replicate_info        " << replicate_info_fname << "\n\n";
 
     return str_stream.str();
 }

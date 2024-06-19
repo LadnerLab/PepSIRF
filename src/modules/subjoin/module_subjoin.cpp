@@ -84,10 +84,14 @@ void module_subjoin::run( options *opts )
     std::uint32_t idx = 0;
 
     bool use_peptide_names = !s_opts->use_sample_names;
+    bool exclude = s_opts->exclude_names;
 
     time_keep::timer time;
 
     time.start();
+
+    std::vector<std::string> orig_names;
+    name_replacement_list replacement_names;
 
     #pragma omp parallel for num_threads( 2 ) private( idx ) schedule( dynamic ) \
             shared( matrix_name_pairs, parsed_score_data )
@@ -109,8 +113,6 @@ void module_subjoin::run( options *opts )
                 }
 
             // parse the peptide scores
-            std::vector<std::string> orig_names;
-            name_replacement_list replacement_names;
             if( !score_name_pair.second.empty() )
                 {
                     std::ifstream names_list( score_name_pair.second,
@@ -140,11 +142,20 @@ void module_subjoin::run( options *opts )
                                     my_data.sample_names.end()
                                 );
                 }
+
+            std::unordered_set<std::string> nonexcluded_names;
+
+            // if exclude, create a names set for the names that are not excluded
+            if( exclude )
+               {
+                nonexcluded_names = names;
+               }
+
             std::size_t curr_name_idx;
-            // verify given names from namelist exist
+            // verify given names from namelist exist and set up nonexluded names
             for( curr_name_idx = 0; curr_name_idx < orig_names.size(); curr_name_idx++ )
                 {
-                    if( names.find( orig_names[ curr_name_idx ] )  == names.end()
+                    if( !exclude && names.find( orig_names[ curr_name_idx ] ) == names.end()
                         && boost::to_lower_copy( orig_names[ curr_name_idx ] ) != "sequence name" )
                         {
                             Log::warn(
@@ -154,7 +165,25 @@ void module_subjoin::run( options *opts )
                             );
                             orig_names.erase( orig_names.begin() + curr_name_idx );
                         }
+                    else
+                        {
+                            // remove the name from the non excluded names
+                            nonexcluded_names.erase( orig_names[ curr_name_idx ] );
+                        }
                 }
+
+            // test for exlude option, update names
+            if( exclude )
+                {  
+                    orig_names.clear();
+                    replacement_names.clear();
+                    for( std::string name : nonexcluded_names )
+                        {
+                            orig_names.emplace_back( name );
+                            replacement_names.insert( {name, name} );
+                        }
+                }
+
             if( !score_name_pair.second.empty() )
                 {
                     // filter out unused rows using namelist file.
@@ -167,7 +196,7 @@ void module_subjoin::run( options *opts )
                         {
                             output_names.emplace(output_name.second);
                         }
-                    if( output_names.size() != replacement_names.size() )
+                    if( output_names.size() != replacement_names.size() )   
                         {
                             Log::error(
                                 "Duplicate name found in output names provided"

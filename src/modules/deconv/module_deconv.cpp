@@ -155,7 +155,10 @@ void module_deconv::choose_kmers(options_deconv *opts)
         }
     }
 
-    std::size_t thresh = d_opts->threshold;
+    // std::size_t thresh = d_opts->threshold;
+    // create dictionary from theshold file
+    std::unordered_map<std::string, std::size_t> thresholds;
+    thresh_file_to_map(thresholds, d_opts->thresholds_fname, pep_species_vec);
 
     omp_set_num_threads(d_opts->single_threaded ? 1 : 2);
 
@@ -183,19 +186,26 @@ void module_deconv::choose_kmers(options_deconv *opts)
         name_id_map_ptr = &name_id_map;
     }
 
-    auto filter = [&](evaluation_strategy::filter_strategy filter_strat)
-    {
-        if (filter_strat == evaluation_strategy::filter_strategy::SCORE_FILTER)
+    auto filter = [&]( evaluation_strategy::filter_strategy filter_strat )
         {
-            filter_counts<std::string,double>(species_scores, thresh);
-        }
-        else if (
-            filter_strat == evaluation_strategy::filter_strategy::COUNT_FILTER
-        ) {
-            // recreate species_scores
-            filter_counts<std::string,double>(species_peptide_counts, thresh);
-        }
-    };
+            if( filter_strat
+                == evaluation_strategy::filter_strategy::SCORE_FILTER )
+                {   
+                    filter_counts<std::string,double,std::size_t>
+                    ( species_scores, thresholds );
+
+
+                }
+            else if( filter_strat
+                      == evaluation_strategy::filter_strategy::COUNT_FILTER
+                   )
+                {
+
+                    // recreate species_scores
+                    filter_counts<std::string,double,std::size_t>
+                    ( species_peptide_counts, thresholds );
+                }
+        };
 
     auto make_map = [&]()
     {
@@ -326,7 +336,7 @@ void module_deconv::choose_kmers(options_deconv *opts)
         species_with_highest_peptide;
 
     while( species_peptide_counts.size()
-           && species_scores[ 0 ].second > thresh )
+           && species_scores[ 0 ].second > thresholds[species_scores[ 0 ].first] )
         {
             pep_species_vec.clear();
             std::vector<std::pair<std::string,double>>
@@ -340,7 +350,7 @@ void module_deconv::choose_kmers(options_deconv *opts)
                 {
                         tie = get_tie_candidates( tie_candidates,
                                                   species_scores,
-                                                  thresh,
+                                                  thresholds,
                                                   d_opts->score_tie_threshold,
                                                   util::difference<double>()
                                                 );
@@ -349,7 +359,7 @@ void module_deconv::choose_kmers(options_deconv *opts)
                 {
                         tie = get_tie_candidates( tie_candidates,
                                                   species_scores,
-                                                  thresh,
+                                                  thresholds,
                                                   d_opts->score_tie_threshold,
                                                   util::ratio<double>()
                                                 );
@@ -1388,4 +1398,64 @@ bool module_deconv
 ::use_ratio_overlap_threshold( double threshold )
 {
     return !util::is_integer( threshold );
+}
+
+void module_deconv::thresh_file_to_map( std::unordered_map<std::string, std::size_t>& thresh_map, std::string filename, 
+                                        const std::vector<std::pair<std::string, std::vector<std::pair<std::string, double>>>> pep_species_vec )
+{   
+    bool is_digit = false;
+
+    // test if input is a digit
+    if (!filename.empty() && std::find_if(filename.begin(), filename.end(), [](unsigned char c) { return !std::isdigit(c); }) == filename.end() )
+        {
+            is_digit = true;
+        }
+
+    // set all values to number or initialze as 0
+    for( const auto& pep: pep_species_vec)
+        {
+            for( const auto& spec: pep.second )
+                {
+                    if( is_digit )
+                        {  
+                            thresh_map[spec.first] = std::stoi(filename);
+                        }
+                    else
+                        {
+                            thresh_map[spec.first] = 0;
+                        }
+                }
+        }
+
+    if( !is_digit )
+        {
+            std::ifstream file( filename );
+            std::string line;
+            std::vector<std::string> split_line;
+
+            if( file.fail() )
+                {
+                    Log::error("Threshold linkage map file does not exist or negative threshold was given.");
+                }
+
+            // skip header
+            std::getline( file, line );
+
+            // read each line of file
+            while( std::getline( file, line ) )
+                {
+                    // assign values to map (use boost:split)
+                    boost::split( split_line, line, boost::is_any_of("\t") );
+
+                    if( split_line.size() == 2 )
+                        {
+                            thresh_map[ split_line[0] ] = std::stoi(split_line[1]);
+                        }
+                    else
+                        {
+                            Log::error("Incorrect formatting of threshold linkage map."
+                                        " Make sure it is tab delimited with 2 columns.");
+                        }
+                }
+        }
 }
