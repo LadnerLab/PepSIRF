@@ -34,7 +34,6 @@ public:
     int phred_base;
     int min_phred_score;
     int num_indexes;
-    std::string replicate_info_fname;
 
     bool translation_aggregation;
     std::string fastq_out;

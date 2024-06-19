@@ -13,7 +13,7 @@ std::string options_deconv::get_arguments()
 
     str_stream
         << "--linked                  " << linked_fname << "\n"
-        << "--thresholds              " << thresholds_fname << "\n"
+        << "--threshold               " << threshold << "\n"
         << "--enriched                " << enriched_fname << "\n"
         << "--single_threaded         " << bool_str(single_threaded) << "\n"
         << "--scoring_strategy        " << scoring_strategy << "\n"
