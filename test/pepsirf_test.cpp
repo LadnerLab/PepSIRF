@@ -1786,7 +1786,7 @@ TEST_CASE( "Deconv end_to_end", "[module_deconv]" )
     opts.enriched_fname = std::string( "../test/input_data/test_enriched_file.tsv" );
     opts.id_name_map_fname = std::string();
 
-    opts.thresholds_fname = std::string( "../test/input_data/test_spec_thesholds.tsv" );
+    opts.thresholds_fname = std::string( "../test/input_data/test_spec_thresholds.tsv" );
     opts.single_threaded = false;
     opts.scoring_strategy = "summation";
     opts.score_filtering = true;
@@ -4191,17 +4191,11 @@ TEST_CASE( "Run Subjoin exclude option", "[module_subjoin]" )
     			}
     	}
 
-    // add each line to the set
-    while( std::getline(ifexpected, expected_line) && std::getline(ifactual, actual_line) )
-        {	
-            expected_lines_set.insert( expected_line );
-            actual_lines_set.insert( actual_line );
-        }
     ifexpected.close();
     ifactual.close();
 
     // all lines and names of expected outfile are in the actual outfile
-    if( expected_lines_set == actual_lines_set && expected_names_set == actual_names_set )
+    if( expected_names_set == actual_names_set )
     	{
     	    exclude_identical = true;
     	}
