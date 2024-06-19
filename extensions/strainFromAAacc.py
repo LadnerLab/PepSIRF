@@ -57,11 +57,12 @@ def main():
     biosampD = {}
     
     with open(f"{opts.outDir}/{opts.outName}", "w") as fout:
-        fout.write(f"{opts.aaName}\tStrain\tIsolate\n")
+        fout.write(f"{opts.aaName}\tStrain\tIsolate\tClone\n")
         for accRaw in accS:
             if accRaw != "":
                 strL=[]
                 isoL=[]
+                cloL=[]
                 for acc in accRaw.split(","):
                     if "|" not in acc:
                         outName = f"{opts.outDir}/{acc}.xml"
@@ -75,6 +76,7 @@ def main():
                                 ferr.write(f"{cmd}\t{spr.returncode}\n")
                                 strL.append("")
                                 isoL.append("")
+                                cloL.append("")
                                 continue
     
                         #Check to make sure the file isn't empty
@@ -82,6 +84,7 @@ def main():
                             femp.write(f"{cmd}\n")
                             strL.append("")
                             isoL.append("")
+                            cloL.append("")
                             os.remove(outName)
                         else:
                             try:
@@ -97,6 +100,7 @@ def main():
                                         strL.append("")
                                 else:
                                     strL.append("")
+
                                 if "isolate" in dfx:
                                     if type(dfx["isolate"]) == type(pd.Series()):
                                         isoL.append(",".join([x for x in dfx["isolate"].values if type(x)==type("s")]))
@@ -104,21 +108,34 @@ def main():
                                         isoL.append(dfx["isolate"])
                                     else:
                                         isoL.append("")
-                                    
                                 else:
                                     isoL.append("")
+
+                                if "clone" in dfx:
+                                    if type(dfx["clone"]) == type(pd.Series()):
+                                        cloL.append(",".join([x for x in dfx["clone"].values if type(x)==type("s")]))
+                                    elif type(dfx["clone"])==type("s"):
+                                        cloL.append(dfx["clone"])
+                                    else:
+                                        cloL.append("")
+                                else:
+                                    cloL.append("")
+
         
                             except:
                                 strL.append("")
                                 isoL.append("")
+                                cloL.append("")
                     else:
                         strL.append("")
                         isoL.append("")
+                        cloL.append("")
 
     
                 strOut = ",".join(strL)
                 isoOut = ",".join(isoL)
-                fout.write(f"{accRaw}\t{strOut}\t{isoOut}\n")
+                cloOut = ",".join(cloL)
+                fout.write(f"{accRaw}\t{strOut}\t{isoOut}\t{cloOut}\n")
         
 
 
