@@ -475,26 +475,107 @@ TEST_CASE( "Diagnostics give a detailed count for the occurring read matches dur
     std::string actual_line;
 
     bool lines_equal;
-	while (!ifexpected.eof())
-	{
-		std::getline(ifexpected, expected_line);
-        lines_equal = false;
+  	while (!ifexpected.eof())
+  	{
+  		std::getline(ifexpected, expected_line);
+      lines_equal = false;
         
-        // TODO: find a more responsible way
-	    std::ifstream ifactual(actual, std::ios_base::in);
+  	    std::ifstream ifactual(actual, std::ios_base::in);
+          while (!ifactual.eof())
+          {
+              std::getline(ifactual, actual_line);
+              if (expected_line.compare(actual_line) == 0)
+              {
+                  lines_equal = true;
+                  break;
+              }
+          }
+          ifactual.close();
+
+          REQUIRE(lines_equal);
+  	}
+}
+
+TEST_CASE("Automatic truncation of library sequences", "[module_demux]")
+{
+    // run demux using a real-world dataset (31250 records) with diagnostic output
+    module_demux d_mod;
+    options_demux d_opts;
+
+    d_opts.input_r1_fname = std::string("../test/input_data/test_input_r1_NS30.fastq");
+    d_opts.input_r2_fname = std::string("../test/input_data/test_input_r2_NS30.fastq");
+    d_opts.index_fname = std::string("../test/input_data/test_barcodes.fa");
+    d_opts.library_fname = std::string("../test/input_data/test_extended_demux_library_NS30.fna");
+    d_opts.samplelist_fname = std::string("../test/input_data/test_samplelist_NS30.tsv");
+    d_opts.flexible_idx_fname = std::string("");
+    d_opts.output_fname = std::string("../test/test_actual_trunc_demux_output.tsv");
+    d_opts.diagnostic_fname = std::string("../test/test_actual_trunc_diagnostic_output.tsv");
+    d_opts.read_per_loop = 80000;
+    d_opts.aggregate_fname = std::string();
+    d_opts.concatemer = std::string();
+    d_opts.min_phred_score = 0;
+    d_opts.phred_base = 33;
+    d_opts.samplename = "SampleName";
+    d_opts.indexes = "Index1,Index2";
+    d_opts.sample_indexes = { "Index1", "Index2" };
+    d_opts.set_info(&options_demux::index1_data, "12,10,1");
+    d_opts.set_info(&options_demux::index2_data, "0,8,1");
+
+    SECTION("Library sequences are resized to expected size from user")
+    {
+        d_opts.set_info(&options_demux::seq_data, "41,40,2");
+        d_mod.run(&d_opts);
+
+        // test resulting demultiplexed file
+        std::string expected = "../test/expected/test_expected_demux_NS30.tsv";
+        std::string actual = "../test/test_actual_trunc_demux_output.tsv";
+        std::ifstream ifexpected(expected, std::ios_base::in);
+        std::ifstream ifactual(actual, std::ios_base::in);
+        std::string expected_line;
+        std::string actual_line;
+
+        // construct set of lines for each actual demux output
+        std::unordered_set<std::string> actual_line_set;
         while (!ifactual.eof())
         {
             std::getline(ifactual, actual_line);
-            if (expected_line.compare(actual_line) == 0)
-            {
-                lines_equal = true;
-                break;
-            }
+            actual_line_set.insert(actual_line);
         }
-        ifactual.close();
 
-        REQUIRE(lines_equal);
-	}
+        while (!ifexpected.eof())
+        {
+            std::getline(ifexpected, expected_line);
+            REQUIRE(
+                actual_line_set.find(expected_line) != actual_line_set.end()
+            );
+        }
+
+        // test resulting diagnostic file
+        expected = "../test/expected/test_expected_diagnostic_NS30.tsv";
+        actual = "../test/test_actual_trunc_diagnostic_output.tsv";
+        ifexpected = std::ifstream(expected, std::ios_base::in);
+        ifactual = std::ifstream(actual, std::ios_base::in);
+
+        actual_line_set = std::unordered_set<std::string>();
+        while (!ifactual.eof())
+        {
+            std::getline(ifactual, actual_line);
+            actual_line_set.insert(actual_line);
+        }
+
+        while (!ifexpected.eof())
+        {
+            std::getline(ifexpected, expected_line);
+            REQUIRE(
+                actual_line_set.find(expected_line) != actual_line_set.end()
+            );
+        }
+    }
+    SECTION("Demux throws an error if user passes sequence length longer than the length of library sequences")
+    {
+        d_opts.set_info(&options_demux::seq_data, "41,100,2");
+        REQUIRE_THROWS(d_mod.run(&d_opts));
+    }
 }
 
 TEST_CASE("Demux output demostrates demux removes references with matching sequences", "[module_demux]")
@@ -953,8 +1034,16 @@ TEST_CASE( "get_tie_candidates_integer", "[module_deconv]" )
 
     std::vector<std::pair<std::string, double>> candidates;
     std::vector<std::pair<std::string, double>> scores;
-    double threshold      = 4.0;
+    std::unordered_map<std::string, std::size_t> thresholds;
     double ovlp_threshold = 4.0;
+
+    // double threshold = 4.0;
+    thresholds.emplace( "100", 4.0 );
+    thresholds.emplace( "101", 4.0 );
+    thresholds.emplace( "102", 4.0 );
+    thresholds.emplace( "103", 4.0 );
+    thresholds.emplace( "104", 4.0 );
+    thresholds.emplace( "105", 4.0 );
 
     scores.emplace_back( "100", 245.0 );
     scores.emplace_back( "101", 105.0 );
@@ -970,7 +1059,7 @@ TEST_CASE( "get_tie_candidates_integer", "[module_deconv]" )
 
     auto t_type = mod.get_tie_candidates( candidates,
                                           scores,
-                                          threshold,
+                                          thresholds,
                                           ovlp_threshold,
                                           difference<double>()
                                         );
@@ -983,7 +1072,7 @@ TEST_CASE( "get_tie_candidates_integer", "[module_deconv]" )
 
     t_type = mod.get_tie_candidates( candidates,
                                      scores,
-                                     threshold,
+                                     thresholds,
                                      ovlp_threshold,
                                      difference<double>()
                                    );
@@ -992,11 +1081,17 @@ TEST_CASE( "get_tie_candidates_integer", "[module_deconv]" )
     REQUIRE( t_type == tie_data::tie_type::K_WAY_TIE );
 
     candidates.clear();
-    threshold = 6;
+    // threshold = 6;
+    thresholds["100"] = 6;
+    thresholds["101"] = 6;
+    thresholds["102"] = 6;
+    thresholds["103"] = 6;
+    thresholds["104"] = 6;
+    thresholds["105"] = 6;
 
     t_type = mod.get_tie_candidates( candidates,
                                      scores,
-                                     threshold,
+                                     thresholds,
                                      ovlp_threshold,
                                      difference<double>()
                                    );
@@ -1012,7 +1107,7 @@ TEST_CASE( "get_tie_candidates_integer", "[module_deconv]" )
 
     t_type = mod.get_tie_candidates( candidates,
                                      scores,
-                                     threshold,
+                                     thresholds,
                                      ovlp_threshold,
                                      difference<double>()
                                    );
@@ -1025,7 +1120,7 @@ TEST_CASE( "get_tie_candidates_integer", "[module_deconv]" )
 
     t_type = mod.get_tie_candidates( candidates,
                                      scores,
-                                     threshold,
+                                     thresholds,
                                      ovlp_threshold,
                                      difference<double>()
                                    );
@@ -1041,8 +1136,16 @@ TEST_CASE( "get_tie_candidates_ratio", "[module_deconv]" )
 
     std::vector<std::pair<std::string, double>> candidates;
     std::vector<std::pair<std::string, double>> scores;
-    double threshold      = 4.0;
+    std::unordered_map<std::string, std::size_t> thresholds;
+    // double threshold      = 4.0;
     double ovlp_threshold = 0;
+
+    thresholds.emplace( "100", 4.0 );
+    thresholds.emplace( "101", 4.0 );
+    thresholds.emplace( "102", 4.0 );
+    thresholds.emplace( "103", 4.0 );
+    thresholds.emplace( "104", 4.0 );
+    thresholds.emplace( "105", 4.0 );
 
     scores.emplace_back( "100", 245.0 );
     scores.emplace_back( "101", 105.0 );
@@ -1059,7 +1162,7 @@ TEST_CASE( "get_tie_candidates_ratio", "[module_deconv]" )
 
     auto t_type = mod.get_tie_candidates( candidates,
                                           scores,
-                                          threshold,
+                                          thresholds,
                                           ovlp_threshold,
                                           util::ratio<double>()
                                         );
@@ -1073,7 +1176,7 @@ TEST_CASE( "get_tie_candidates_ratio", "[module_deconv]" )
 
     t_type = mod.get_tie_candidates( candidates,
                                      scores,
-                                     threshold,
+                                     thresholds,
                                      ovlp_threshold,
                                      util::ratio<double>()
                                    );
@@ -1089,7 +1192,7 @@ TEST_CASE( "get_tie_candidates_ratio", "[module_deconv]" )
 
     t_type = mod.get_tie_candidates( candidates,
                                      scores,
-                                     threshold,
+                                     thresholds,
                                      ovlp_threshold,
                                      ratio<double>()
                                    );
@@ -1101,11 +1204,17 @@ TEST_CASE( "get_tie_candidates_ratio", "[module_deconv]" )
     candidates.clear();
 
     ovlp_threshold = 0.00000001;
-    threshold = 6;
+    // threshold = 6;
+    thresholds["100"] = 6;
+    thresholds["101"] = 6;
+    thresholds["102"] = 6;
+    thresholds["103"] = 6;
+    thresholds["104"] = 6;
+    thresholds["105"] = 6;
 
     t_type = mod.get_tie_candidates( candidates,
                                      scores,
-                                     threshold,
+                                     thresholds,
                                      ovlp_threshold,
                                      ratio<double>()
                                    );
@@ -1758,7 +1867,7 @@ TEST_CASE( "Deconv end_to_end", "[module_deconv]" )
     opts.enriched_fname = std::string( "../test/input_data/test_enriched_file.tsv" );
     opts.id_name_map_fname = std::string();
 
-    opts.threshold = 00;
+    opts.thresholds_fname = std::string( "../test/input_data/test_spec_thesholds.tsv" );
     opts.single_threaded = false;
     opts.scoring_strategy = "summation";
     opts.score_filtering = true;
@@ -1912,6 +2021,8 @@ TEST_CASE( "to_dir_name", "[fs_tools]" )
 TEST_CASE( "filter_counts (vector template)", "[module_deconv]" )
 {
     std::vector<std::pair<std::size_t,double>> filter_vec;
+   std::unordered_map<std::size_t, std::size_t> thresholds;
+
     module_deconv mod;
 
     for( std::size_t index = 0; index < 100; ++index )
@@ -1919,8 +2030,13 @@ TEST_CASE( "filter_counts (vector template)", "[module_deconv]" )
             filter_vec.emplace_back( std::make_pair( index, index + 1 ) );
         }
 
+    for( auto& pair : filter_vec )
+       	{
+       		thresholds.emplace( std::make_pair( pair.first, 50 ) );
+       	}
 
-    mod.filter_counts<std::size_t,double>( filter_vec, 50  );
+
+    mod.filter_counts<std::size_t,double,std::size_t>( filter_vec, thresholds  );
 
     REQUIRE( filter_vec.size() == 51 );
     auto comp_pair = []( const std::pair<size_t,double> first,
@@ -4115,6 +4231,63 @@ TEST_CASE( "Subjoin name list filter is optional", "[module_subjoin]" )
     opts.out_matrix_fname = "../test/test_subjoin_output.txt";
     opts.input_matrix_name_pairs.emplace_back( std::make_pair( "../test/input_data/test_score_matrix.tsv", "" ) );
     mod.run( &opts );
+}
+
+TEST_CASE( "Run Subjoin exclude option", "[module_subjoin]" )
+{
+    std:bool exclude_identical = false;
+    module_subjoin mod;
+    options_subjoin opts;
+    opts.exclude_names = true;
+    opts.use_sample_names = true;
+    opts.out_matrix_fname = "../test/test_subjoin_exclude_output.tsv";
+    opts.input_matrix_name_pairs.emplace_back( std::make_pair( "../test/input_data/test_zscore_score_matrix.tsv", 
+    															"../test/input_data/test_subjoin_exclude_namelist.txt" ) );
+    mod.run( &opts );
+
+    std::string expected = "../test/expected/test_expected_subjoin_exclude_output.tsv";
+    std::string actual = "../test/test_subjoin_exclude_output.tsv";
+    std::ifstream ifexpected( expected, std::ios_base::in );
+    std::ifstream ifactual( actual, std::ios_base::in );
+    std::string expected_line;
+    std::string actual_line;
+    std::unordered_set<std::string> expected_names_set;
+    std::unordered_set<std::string> actual_names_set;
+    std::unordered_set<std::string> expected_lines_set;
+    std::unordered_set<std::string> actual_lines_set;
+
+    // get the first line (names)
+    if( std::getline(ifexpected, expected_line) && std::getline(ifactual, actual_line) )
+    	{
+    		std::stringstream expected_line_s(expected_line);
+    		std::stringstream actual_line_s(actual_line);
+    		std::string expected_name, actual_name;
+
+    		// add each name to a set
+    		while(std::getline(expected_line_s, expected_name, '\t') && 
+    									std::getline(actual_line_s, actual_name, '\t'))
+    			{
+    				expected_names_set.insert(expected_name);
+    				actual_names_set.insert(actual_name);
+    			}
+    	}
+
+    // add each line to the set
+    while( std::getline(ifexpected, expected_line) && std::getline(ifactual, actual_line) )
+        {	
+            expected_lines_set.insert( expected_line );
+            actual_lines_set.insert( actual_line );
+        }
+    ifexpected.close();
+    ifactual.close();
+
+    // all lines and names of expected outfile are in the actual outfile
+    if( expected_lines_set == actual_lines_set && expected_names_set == actual_names_set )
+    	{
+    	    exclude_identical = true;
+    	}
+
+    REQUIRE( exclude_identical );
 }
 
 TEST_CASE("Verify metadata map construction operation", "[metadata_map]")

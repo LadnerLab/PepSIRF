@@ -59,9 +59,10 @@ class options_deconv : public options
     std::string enriched_fname;
 
     /**
-     * Threshold value for a peptide to not be filtered out.
+     * Name of file that contains threshold values for each 
+     * peptide species to not be filtered out.
      **/
-    std::size_t threshold;
+    std::string thresholds_fname;
 
     /**
      * Directory name to write round scores/counts to
