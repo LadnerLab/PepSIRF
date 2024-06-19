@@ -860,7 +860,6 @@ void module_deconv::write_outputs( std::string out_name,
                                 }
                             );
                         }
-                    out_file << "\t";
                 }
 
             // check for ties
