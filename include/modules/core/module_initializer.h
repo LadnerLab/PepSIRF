@@ -15,6 +15,7 @@
 #include "options_zscore.h"
 #include "options_bin.h"
 #include "options_link.h"
+#include "options_link2.h"
 #include "options_enrich.h"
 #include "options_info.h"
 
@@ -26,6 +27,7 @@
 #include "options_parser_zscore.h"
 #include "options_parser_bin.h"
 #include "options_parser_link.h"
+#include "options_parser_link2.h"
 #include "options_parser_enrich.h"
 #include "options_parser_info.h"
 
@@ -37,6 +39,7 @@
 #include "module_zscore.h"
 #include "module_bin.h"
 #include "module_link.h"
+#include "module_link2.h"
 #include "module_enrich.h"
 #include "module_info.h"
 

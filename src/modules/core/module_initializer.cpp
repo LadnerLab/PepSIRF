@@ -67,6 +67,12 @@ void module_initializer::initialize( const std::string& mod_name )
             opt_parser  = new options_parser_link();
             mod         = new module_link();
         }
+    else if( !mod_name.compare( "link2" ) )
+        {
+            opts        = new options_link2();
+            opt_parser  = new options_parser_link2();
+            mod         = new module_link2();
+        }
     else if( !mod_name.compare( "enrich" ) )
         {
             opts        = new options_enrich();

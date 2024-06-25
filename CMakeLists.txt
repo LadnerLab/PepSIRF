@@ -22,6 +22,7 @@ include_directories(include/modules/subjoin)
 include_directories(include/modules/zscore)
 include_directories(include/modules/bin)
 include_directories(include/modules/link)
+include_directories(include/modules/link2)
 include_directories(include/modules/enrich)
 include_directories(include/modules/info)
 include_directories(lib)
@@ -40,6 +41,7 @@ set(PepSIRF_MODULES
     modules_normalize modules_subjoin
 	modules_zscore modules_bin
 	modules_link
+	modules_link2
 	modules_enrich
 	modules_info
    )
@@ -152,6 +154,12 @@ add_library( modules_enrich STATIC src/modules/enrich/module_enrich.cpp
 add_library( modules_info STATIC src/modules/info/module_info.cpp
 			 src/modules/info/options_info.cpp
 			 src/modules/info/options_parser_info.cpp
+		   )
+
+add_library( modules_link2 STATIC src/modules/link2/module_link2.cpp
+				src/modules/link2/options_link2.cpp
+				src/modules/link2/options_parser_link2.cpp
+				src/modules/link2/metadata_map2.cpp
 		   )
 
 option( BUILD_TESTS "Determines whether to build tests." ON )
