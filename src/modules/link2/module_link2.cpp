@@ -52,7 +52,7 @@ void module_link2::run( options *opts )
     {
         std::unordered_map<std::string, int> peptide_scores;
 
-        Log::info(meta_idx->first + "\n");
+        // Log::info(meta_idx->first + "\n");
 
         for( const auto &patt : all_patts)
         {
