@@ -52,6 +52,10 @@ bool options_parser_link2::parse( int argc, char ***argv, options *opts )
         )
         ( "span,s", po::value<std::size_t>( &opts_link2->span ), "Number of positions across which the match can span.\n"
         )
+        ("num_threads,t", po::value<int>( &opts_link2->num_threads )
+            ->default_value(opts_link2->DEFAULT_NUM_THREADS),
+         "Number of threads to use for analyses.\n"
+        )
         ("logfile", po::value( &opts_link2->logfile )
          ->default_value( options_link2::set_default_log() ),
          "Designated file to which the module's processes are logged. By "

@@ -40,7 +40,7 @@ void module_link2::run( options *opts )
     std::unordered_map<std::string, std::unordered_map<std::string, int>> out_scores;
 
     // TODO: implement parallelization
-    omp_set_num_threads( 4 );
+    omp_set_num_threads( l_opts->num_threads );
 
     std::unordered_map<std::string, std::unordered_set<std::string>>::iterator meta_idx;
 #ifndef __clang__

@@ -18,6 +18,7 @@ std::string options_link2::get_arguments()
                           " --meta                           " << metadata_info << "\n" <<
                           " --kmer_size                      " << kmer_size <<  "\n" <<
                           " --span                           " << span <<  "\n" <<
+                          " --num_threads                    " << num_threads << "\n"
                           " --output                         " << output_fname <<  "\n" <<
                           " --logfile                        " << logfile << "\n"
                                                                << "\n"
