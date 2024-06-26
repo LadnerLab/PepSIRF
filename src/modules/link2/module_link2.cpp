@@ -52,7 +52,7 @@ void module_link2::run( options *opts )
 #ifndef __clang__
     #pragma omp parallel for private( iter_idx ) shared( peptides, proteins, map_iterators )
 #endif
-    for( iter_idx = 0; iter_idx != map_iterators.size(); iter_idx++ )
+    for( iter_idx = 0; iter_idx < map_iterators.size(); iter_idx++ )
     {
         auto meta_idx = map_iterators[ iter_idx ];
 
