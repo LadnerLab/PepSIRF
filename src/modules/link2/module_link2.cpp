@@ -37,95 +37,105 @@ void module_link2::run( options *opts )
 
     std::vector<std::vector<std::size_t>> all_patts = generate_patterns(l_opts->kmer_size, l_opts->span);
 
+    std::unordered_map<std::string, std::unordered_map<std::string, int>> out_scores;
+
     // TODO: implement parallelization
     omp_set_num_threads( l_opts->num_threads );
 
-    std::unordered_map<std::string, std::unordered_set<std::string>>::iterator meta_idx;
-
-    #pragma omp parallel shared(peptides, proteins, meta_map)
+    std::vector<std::unordered_map<std::string, std::unordered_set<std::string>>::iterator> map_iterators;
+    for (auto it = meta_map.begin(); it != meta_map.end(); it++ ) 
     {
-        std::unordered_map<std::string, std::unordered_map<std::string, int>> out_scores;
+        map_iterators.push_back(it);
+    }
 
-        #pragma omp for
-        for( meta_idx = meta_map.begin(); meta_idx != meta_map.end(); meta_idx++ )
+    int iter_idx;
+#ifndef __clang__
+    #pragma omp parallel for private( iter_idx ) shared( peptides, proteins, map_iterators )
+#endif
+    for( iter_idx = 0; iter_idx != map_iterators.size(); iter_idx++ )
+    {
+        auto meta_idx = map_iterators[ iter_idx ];
+
+        std::unordered_map<std::string, int> peptide_scores;
+
+        // Log::info(meta_idx->first + "\n");
+
+        for( const auto &patt : all_patts)
         {
-            std::unordered_map<std::string, int> peptide_scores;
-
-            // Log::info(meta_idx->first + "\n");
-
-            for( const auto &patt : all_patts)
+            /*
+            Log::info("Pattern: ");
+            std::size_t temp_ct = 0;
+            for( const auto& val : patt )
             {
-                /*
-                Log::info("Pattern: ");
-                std::size_t temp_ct = 0;
-                for( const auto& val : patt )
+                Log::info(std::to_string(val));
+                if( temp_ct < patt.size() - 1 )
                 {
-                    Log::info(std::to_string(val));
-                    if( temp_ct < patt.size() - 1 )
-                    {
-                        Log::info(", ");
-                    }
-                    temp_ct++;
+                    Log::info(", ");
                 }
-                Log::info("\n");
-                */
+                temp_ct++;
+            }
+            Log::info("\n");
+            */
 
-                // generate all target kmers (for names in the metadata that are in the protein file) for this pattern
-                std::unordered_set<std::string> target_kmers;
-                std::unordered_set<std::string>::iterator meta_name;
-                for( meta_name = (meta_idx->second).begin(); meta_name != (meta_idx->second).end(); meta_name++ )
+            // generate all target kmers (for names in the metadata that are in the protein file) for this pattern
+            std::unordered_set<std::string> target_kmers;
+            std::unordered_set<std::string>::iterator meta_name;
+            for( meta_name = (meta_idx->second).begin(); meta_name != (meta_idx->second).end(); meta_name++ )
+            {
+                std::vector<sequence>::iterator protein_it;
+                protein_it = std::find_if( proteins.begin(), proteins.end(), 
+                    [&](const sequence &s) {
+                        return s.name == *meta_name;
+                    } );
+                if( protein_it != proteins.end() )
                 {
-                    std::vector<sequence>::iterator protein_it;
-                    protein_it = std::find_if( proteins.begin(), proteins.end(), 
-                        [&](const sequence &s) {
-                            return s.name == *meta_name;
-                        } );
-                    if( protein_it != proteins.end() )
-                    {
-                        get_patterned_kmers( target_kmers, protein_it->seq, patt, FILTER );
-                    }
-                }
-
-                std::vector<sequence>::iterator peptide_it;
-                for( peptide_it = peptides.begin(); peptide_it != peptides.end(); peptide_it++ )
-                {
-                    std::unordered_set<std::string> pep_kmers;
-                    std::unordered_set<std::string> inter_kmers;
-                    int score = 0;
-                    get_patterned_kmers( pep_kmers, peptide_it->seq, patt, FILTER );
-
-                    for( const auto& kmer : pep_kmers)
-                    {
-                        if( target_kmers.find(kmer) != target_kmers.end() )
-                        {
-                            score++;
-                        }
-                    }
-
-                    // update score if found higher than previous pattern
-                    // Note: accessing an undefined key in map will set it to 0
-                    if( score > peptide_scores[ peptide_it->name ] )
-                    {
-                        peptide_scores[ peptide_it->name ] = score;
-                    }
+                    get_patterned_kmers( target_kmers, protein_it->seq, patt, FILTER );
                 }
             }
 
-            // add the peptide scores to output map
-            for( const auto& pep_score : peptide_scores )
+            std::vector<sequence>::iterator peptide_it;
+            for( peptide_it = peptides.begin(); peptide_it != peptides.end(); peptide_it++ )
             {
-                if( pep_score.second > 0 )
+                std::unordered_set<std::string> pep_kmers;
+                std::unordered_set<std::string> inter_kmers;
+                int score = 0;
+                get_patterned_kmers( pep_kmers, peptide_it->seq, patt, FILTER );
+
+                for( const auto& kmer : pep_kmers)
                 {
-                    #pragma omp critical
+                    if( target_kmers.find(kmer) != target_kmers.end() )
                     {
-                        out_scores[ pep_score.first ][ meta_idx->first ] = pep_score.second;
+                        score++;
                     }
+                }
+
+                // update score if found higher than previous pattern
+                // Note: accessing an undefined key in map will set it to 0
+                if( score > peptide_scores[ peptide_it->name ] )
+                {
+                    peptide_scores[ peptide_it->name ] = score;
                 }
             }
         }
 
-        write_outputs( l_opts->output_fname, out_scores );
+        // add the peptide scores to output map
+        for( const auto& pep_score : peptide_scores )
+        {
+            if( pep_score.second > 0 )
+            {
+#ifndef __clang__
+                #pragma omp critical
+                {
+#endif
+                    out_scores[ pep_score.first ][ meta_idx->first ] = pep_score.second;
+#ifndef __clang__
+                }
+#endif
+            }
+        }
     }
+
+    write_outputs( l_opts->output_fname, out_scores );
 
     timer.stop();
     Log::info(
