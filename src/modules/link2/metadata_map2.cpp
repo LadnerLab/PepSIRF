@@ -54,16 +54,3 @@ void metadata_map2::build_map(std::unordered_map<std::string, std::unordered_set
         (*meta_map)[metadata_row.at(spec_index)].insert(metadata_row.at(name_index));
     }
 }
-
-std::string metadata_map2::get_id(std::string sequence_data, std::unordered_map<std::string, std::string> *meta_map)
-{
-    std::unordered_map<std::string, std::string>::const_iterator name = meta_map->find(sequence_data);
-    if(name != meta_map->end())
-    {
-        return name->second;
-    }
-    else
-    {
-        return "";
-    }
-}
