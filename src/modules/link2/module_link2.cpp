@@ -41,7 +41,6 @@ void module_link2::run( options *opts )
     omp_set_num_threads( l_opts->num_threads );
 
     std::unordered_map<std::string, std::unordered_set<std::string>>::iterator meta_idx;
-    #pragma omp parallel for private( meta_idx ) shared( peptides, proteins, meta_map )
 
     #pragma omp parallel shared(peptides, proteins, meta_map)
     {
