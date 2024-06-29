@@ -48,38 +48,29 @@ void module_link2::run( options *opts )
         map_iterators.push_back(it);
     }
 
+    int total_species = map_iterators.size();
+    int species_count = 0;
+
+    std::unordered_map<std::string, int> peptide_scores;
+    std::unordered_set<std::string> target_kmers;
+    std::unordered_set<std::string> pep_kmers;
+
     int iter_idx;
 #ifndef __clang__
-    #pragma omp parallel for private( iter_idx ) shared( peptides, proteins, map_iterators )
+    #pragma omp parallel for private( iter_idx, peptide_scores, target_kmers, pep_kmers ) \
+                            shared( peptides, proteins, map_iterators, species_count, total_species )
 #endif
     for( iter_idx = 0; iter_idx < map_iterators.size(); iter_idx++ )
     {
         auto meta_idx = map_iterators[ iter_idx ];
 
-        std::unordered_map<std::string, int> peptide_scores;
-
-        // Log::info(meta_idx->first + "\n");
+        peptide_scores.clear();
 
         for( const auto &patt : all_patts)
-        {
-            /*
-            Log::info("Pattern: ");
-            std::size_t temp_ct = 0;
-            for( const auto& val : patt )
-            {
-                Log::info(std::to_string(val));
-                if( temp_ct < patt.size() - 1 )
-                {
-                    Log::info(", ");
-                }
-                temp_ct++;
-            }
-            Log::info("\n");
-            */
-
+        {      
             // generate all target kmers (for names in the metadata that are in the protein file) for this pattern
-            std::unordered_set<std::string> target_kmers;
             std::unordered_set<std::string>::iterator meta_name;
+            target_kmers.clear();
             for( meta_name = (meta_idx->second).begin(); meta_name != (meta_idx->second).end(); meta_name++ )
             {
                 std::vector<sequence>::iterator protein_it;
@@ -96,8 +87,7 @@ void module_link2::run( options *opts )
             std::vector<sequence>::iterator peptide_it;
             for( peptide_it = peptides.begin(); peptide_it != peptides.end(); peptide_it++ )
             {
-                std::unordered_set<std::string> pep_kmers;
-                std::unordered_set<std::string> inter_kmers;
+                pep_kmers.clear();
                 int score = 0;
                 get_patterned_kmers( pep_kmers, peptide_it->seq, patt, FILTER );
 
@@ -133,6 +123,18 @@ void module_link2::run( options *opts )
 #endif
             }
         }
+
+#ifndef __clang__
+        #pragma omp critical
+        {
+#endif
+            species_count++;
+#ifndef __clang__
+        }
+#endif
+
+        Log::info( std::to_string(species_count) + " of " 
+                    + std::to_string(total_species) + " complete\n");
     }
 
     write_outputs( l_opts->output_fname, out_scores );
