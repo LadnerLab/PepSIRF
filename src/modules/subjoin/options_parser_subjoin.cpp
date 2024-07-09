@@ -128,7 +128,8 @@ bool options_parser_subjoin::parse( int argc, char ***argv, options *opts )
           "the output. To use multiple name lists with multiple "
           "score matrices, include this argument multiple times. "
           "Optionally, a name list can be omitted if all samples from the input "
-          "matrix should be included in the output.\n"
+          "matrix should be included in the output or a regex pattern can be used as the second entry "
+	  "to filter the score matrix names by.\n"
         )
         ( "filter_peptide_names", po::bool_switch( &opts_subjoin->use_sample_names )->default_value( false )
           ->notifier( [&]( bool val ){ opts_subjoin->use_sample_names = !val; } ),
