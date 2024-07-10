@@ -43,7 +43,7 @@ def main():
 
 				prop_df = pd.DataFrame(list(clust_props.items()), columns=["Protein Cluster Count", "Proportion"])
 
-				prop_df.to_csv(os.path.join(args.output_dir, os.path.basename(spec_dir), f"{os.path.basename(network)}_protein_cluster_count_proportions"), sep="\t", index=False)
+				prop_df.to_csv(os.path.join(args.output_dir, os.path.basename(spec_dir), f"{os.path.basename(network)}_protein_cluster_count_proportions.tsv"), sep="\t", index=False)
 
 
 if __name__ == "__main__":
