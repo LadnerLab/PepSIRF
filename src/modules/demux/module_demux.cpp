@@ -59,7 +59,6 @@ void module_demux::run( options *opts )
                 }
         }
 
-
     std::size_t read_index = 0;
     struct time_keep::timer total_time;
     parallel_map<sequence, std::vector<std::size_t>*> reference_counts;
@@ -250,6 +249,20 @@ void module_demux::run( options *opts )
             clear_file.open(build.str(), std::ios_base::out);
             clear_file.close();
             build.clear();
+        }
+    }
+
+    if( !d_opts->unmapped_reads_fname.empty() )
+    {
+        if( boost::filesystem::exists(d_opts->unmapped_reads_fname) )
+        {
+            Log::warn(
+                "The file '" + d_opts->unmapped_reads_fname + "' exists,"
+                " data will be overwritten!\n"
+            );
+
+            std::ofstream output(d_opts->unmapped_reads_fname, std::ios::trunc);
+            output.close();
         }
     }
 
@@ -482,7 +495,7 @@ void module_demux::run( options *opts )
 #endif
                                             
                                         }
-                                }
+                                }  
                             }
                             else if (
                                 seq_match == reference_counts.end()
@@ -545,7 +558,7 @@ void module_demux::run( options *opts )
                                         }
                                     #endif
                                     ++processed_success;
-                                }        
+                                }
                             }
                             else if (flexible_idx_data.size() > 1)
                             {
@@ -609,15 +622,22 @@ void module_demux::run( options *opts )
                 {
             #endif
                     write_fastq_output(fastq_output, d_opts->fastq_out);
+
+                    if( !d_opts->unmapped_reads_fname.empty() )
+                    {
+                        create_unmapped_reads_file(d_opts->unmapped_reads_fname, fastq_output, reads);
+                    }
             #ifndef __clang__
                 }
             #endif
 
-            fastq_output.clear();
+            
 
+            fastq_output.clear();
             reads.clear();
             r2_seqs.clear();
         }
+
     total_time.stop();
     // check for duplicates
 #ifndef __clang__
@@ -1056,5 +1076,46 @@ std::string module_demux::get_sample_info( std::vector<sample>& samplelist, std:
     }
 
     return info_str.str();
+}
+
+void module_demux::create_unmapped_reads_file( std::string filename, 
+                            std::map<std::string, std::vector<fastq_sequence>> samp_map, std::vector<fastq_sequence> reads_dup )
+{
+    std::unordered_set<std::string> to_remove_set;
+    std::stringstream info_str1;
+    std::stringstream info_str2;
+    std::stringstream info_str3;
+
+    for(auto samp : samp_map) 
+        {
+            for(auto fastq_seq : samp.second)
+                {
+                    to_remove_set.insert(fastq_seq.seq);
+                }
+        }
+
+    // delete from reads_dup
+    // info_str1 << "total reads: "<< reads_dup.size() << "\n";
+    // info_str2 << "mapped_reads: "<< to_remove_set.size() << "\n";
+    // Log::info(info_str1.str());
+    // Log::info(info_str2.str());
+    reads_dup.erase(std::remove_if(reads_dup.begin(), reads_dup.end(),
+                                   [&to_remove_set](const fastq_sequence& value) {
+                                       return to_remove_set.find(value.seq) != to_remove_set.end();
+                                   }),
+                    reads_dup.end());
+    // info_str3 << "unmapped_reads: "<< reads_dup.size() << "\n";
+    // Log::info(info_str3.str());
+
+    // write to file
+    std::ofstream output( filename, std::ios_base::app );
+    for(auto fastq_seq : reads_dup)
+        {
+            output << fastq_seq.name << "\n";
+            output << fastq_seq.seq << "\n";
+            output << "+" << "\n";
+            output << fastq_seq.scores << "\n";
+        }
+    output.close();
 }
 
