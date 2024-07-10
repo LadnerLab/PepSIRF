@@ -13,6 +13,7 @@ def main():
 	parser.add_argument('-i', '--enriched-peptide-dir',  help='Directory with enriched petide files for input', required=True)
 	parser.add_argument('-p', '--peptide-file',  help='Name of fasta file containing aa peptides of interest. These will generally be peptides that are contained in a particular assay.', required=True)
 	parser.add_argument('-o', '--output-file', default="aa_bias.tsv", help='Name of .tsv to output file with AA bias data')
+	parser.add_argument('-e', '--extension', default="enriched.txt", help='Expected extension at the end of the enriched peptide files in enriched-peptide-dir')
 	
 	args = parser.parse_args()
 
@@ -38,7 +39,7 @@ def main():
 
 	# get props for each set
 	out_data = list()
-	for enr_file in glob.glob(os.path.join(args.enriched_peptide_dir, "*enriched.txt")):
+	for enr_file in glob.glob(os.path.join(args.enriched_peptide_dir, f"*{args.extension}")):
 		pep_set_props = defaultdict(float)
 		peptide_set = list()
 		aa_bias = 0
