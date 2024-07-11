@@ -47,7 +47,7 @@ def main():
 	# get props for each set
 	out_data = list()
 	for enr_file in glob.glob(os.path.join(args.enriched_peptide_dir, f"*{args.extension}")):
-		pep_set_props = defaultdict(float)
+		pep_set_props = {let:0 for let in list(pep_file_props.keys())}
 		peptide_set = list()
 		aa_bias = 0
 
@@ -65,7 +65,8 @@ def main():
 		# get proportions
 		total_counts = sum(pep_set_props.values())
 		for let, count in pep_set_props.items():
-			pep_set_props[let] = count / total_counts
+			if total_counts > 0:
+				pep_set_props[let] = count / total_counts
 
 		for let in pep_set_props.keys():
 			aa_bias += abs(pep_file_props[let] - pep_set_props[let])
