@@ -12,10 +12,15 @@ def main():
  
 	parser.add_argument('-i', '--enriched-peptide-dir',  help='Directory with enriched petide files for input', required=True)
 	parser.add_argument('-p', '--peptide-file',  help='Name of fasta file containing aa peptides of interest. These will generally be peptides that are contained in a particular assay.', required=True)
-	parser.add_argument('-o', '--output-file', default="aa_bias.tsv", help='Name of .tsv to output file with AA bias data')
+	parser.add_argument('-o', '--output-dir', default="aa_bias_out", help='Name of .tsv to output file with AA bias data')
 	parser.add_argument('-e', '--extension', default="enriched.txt", help='Expected extension at the end of the enriched peptide files in enriched-peptide-dir')
 	
 	args = parser.parse_args()
+
+	if not os.path.exists(args.output_dir):
+		os.mkdir(args.output_dir)
+	else:
+		print(f"Warning: The directory \"{args.output_dir}\" already exists. Files may be overwritten.\n")
 
 	pep_2_counts = defaultdict(lambda: defaultdict(int))
 	pep_file_props = defaultdict(float)
@@ -36,6 +41,8 @@ def main():
 	total_counts = sum(pep_file_props.values())
 	for let, count in pep_file_props.items():
 		pep_file_props[let] = count / total_counts
+
+	raw_df = pd.DataFrame([(let, round(prop, 3)) for let, prop in pep_file_props.items()], columns=["Residue", "PM1 Total"])
 
 	# get props for each set
 	out_data = list()
@@ -65,8 +72,11 @@ def main():
 
 		out_data.append( ( os.path.basename(enr_file), len(peptide_set), round(aa_bias, 3) ) )
 
+		raw_df = pd.merge(raw_df, pd.DataFrame([(let, round(prop, 3)) for let, prop in pep_set_props.items()], columns=["Residue", os.path.basename(enr_file)]), how="left", on="Residue")
+
 	out_df = pd.DataFrame(out_data, columns=["Filename", "Peptide Count", "AA Bias"]).sort_values(by="AA Bias")
-	out_df.to_csv(args.output_file, sep="\t", index=False)
+	out_df.to_csv(os.path.join(args.output_dir, "aa_bias.tsv"), sep="\t", index=False)
+	raw_df.to_csv(os.path.join(args.output_dir, "raw_props.tsv"), sep="\t", index=False)
 
 if __name__ == "__main__":
 	main()

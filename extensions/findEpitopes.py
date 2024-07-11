@@ -7,6 +7,9 @@ def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
  
     parser.add_argument('-i', '--input-dir',  help='Directory with alignment output files and files that contain the mapped location of peptides', required=True)
+    parser.add_argument('--window-size', type=int, default=30,  help='Size of AA window to use for identifying core epitopes.', required=False)
+    parser.add_argument('--max-zeros', type=int, default=5, help='Maximum number of zero counts a window can contain.', required=False)
+    parser.add_argument('--max-overlap', type=int, default=8, help='Maximum AA overlap a window can have with a previously selected window.', required=False)
     parser.add_argument('-o', '--output-dir', default="clust_align_visualizations", help='Name of directory to output line plots.')
     
     args = parser.parse_args()
@@ -17,17 +20,93 @@ def main():
     alignCountsD = process_probes(alignment_to_use_dict, directory_path)
     #print(alignCountsD)
 
+    windows = find_core_epitopes(alignCountsD, args.window_size, args.max_zeros, args.max_overlap)
+    print(windows)
+
     if not os.path.exists(args.output_dir):
         os.mkdir(args.output_dir)
-    create_line_chart(alignCountsD, args.output_dir)
+
+    create_line_chart(alignCountsD, windows, args.output_dir)
 
 
-def create_line_chart(alignCountsD, out_dir):
+def find_core_epitopes(alignCountsD, window_size, max_zeros, max_overlap):
+    out_dict = dict()
+
+    for file in alignCountsD.keys():
+        windows = dict()
+
+        counts = list(alignCountsD[file].values())
+
+        # get windows
+        window_found = True
+        while window_found:
+            window_found = False
+            max_score = 0
+            # iterate through each possible window
+            start_idx = 0
+            while start_idx < len(counts) - window_size + 1:
+                end_idx = start_idx + window_size
+                window = counts[start_idx:end_idx]
+
+                # check no more than max zeros and does not overlap any previously selected window by more than max overlap
+                if window.count(0) <= max_zeros and all(get_overlap((start_idx, end_idx), (x[0], x[1])) <= max_overlap for x in list(windows.keys())):
+                    # check if greater than max score
+                    score = sum(window)                    
+                    if score > max_score:
+
+                        # center window around peak
+                        possible_windows = [(start_idx, end_idx)]
+                        temp_start = start_idx + 1
+                        temp_end = end_idx + 1
+                        temp_window = counts[temp_start:temp_end]
+                        while sum(temp_window) == score and temp_window.count(0) <= max_zeros and all(get_overlap((temp_start, temp_end), (x[0], x[1])) <= max_overlap for x in list(windows.keys())):
+                            possible_windows.append((temp_start,temp_end))
+                            temp_start += 1
+                            temp_end += 1
+                            temp_window = counts[temp_start:temp_end] 
+
+                        mid_window_scores = dict()
+                        for window in possible_windows:
+                            mid_window_scores[window] = sum(counts[window[0] + (window_size // 3):window[1] - (window_size // 3)])
+                        possible_windows = [x for x, y in mid_window_scores.items() if y == max(list(mid_window_scores.values()))]
+
+                        # use smaller median from odd cases
+                        if len(possible_windows) % 2 == 0:
+                            start_idx, end_idx = possible_windows[(len(possible_windows) // 2) - 1]
+                        else:
+                            start_idx, end_idx = possible_windows[(len(possible_windows) // 2)]
+
+                        # set max
+                        max_score = score
+                        max_window = (start_idx, end_idx)
+                        window_found = True
+
+                start_idx += 1
+
+            if window_found:
+                windows[max_window] = max_score
+
+        out_dict[file] = windows
+
+    return out_dict
+
+
+def get_overlap(a, b):
+    return max(0, min(a[1], b[1]) - max(a[0], b[0]))
+
+
+def create_line_chart(alignCountsD, windows, out_dir):
     for file, pos_dict in alignCountsD.items():
         x = list(pos_dict.keys())
         y = list(pos_dict.values())
+
         fig, ax = plt.subplots(figsize=(max(x)/10, 10), facecolor='w')
         ax.plot(x, y, linestyle='-')
+        #cmap = mpl.colormaps['Oranges']
+        #norm = colors.Normalize(vmin=0, vmax=len(windows[file])-1)
+        for idx, window in enumerate(list(windows[file].keys())):
+            plt.axvspan(window[0], window[1], color="#ff6b0f", alpha=0.75)
+
         ax.set_xticks(np.arange(min(x), max(x)+5, 5))
         ax.set_xlim(left=min(x))
         ax.set_ylim(bottom=min(y))
