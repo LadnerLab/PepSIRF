@@ -6,8 +6,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## []
-
 - #236, added a functionality to the "-i" option in Subjoin to accept a regex pattern instead of a filename which contains sample/peptide names. The sample/peptide names used from the score matrix file will be filtered by whether they contain the regex pattern.
 - #234, added "--unmapped-reads-output" option to Demux, which writes all reads that have not been mapped to a sample/peptide to the specified filename.
 - #233, changed Deconv "-t" option to accept a tab demilited file with a column for each TaxID and a column for the score threshold to use for that TaxID. The originally functionality still holds: if a number to included with option, each TaxID will use that score threshold.
