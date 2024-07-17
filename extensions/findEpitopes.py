@@ -1,7 +1,14 @@
+#-------DELETE LATER--------
+import sys
+sys.path.append("/Users/scg283/Documents/GitHub/Modules")
+#---------------------------
+
 import os
 import matplotlib.pyplot as plt
 import numpy as np
 import argparse
+import pandas as pd
+import fastatools as ft
 
 def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -10,23 +17,51 @@ def main():
     parser.add_argument('--window-size', type=int, default=30,  help='Size of AA window to use for identifying core epitopes.', required=False)
     parser.add_argument('--max-zeros', type=int, default=5, help='Maximum number of zero counts a window can contain.', required=False)
     parser.add_argument('--max-overlap', type=int, default=8, help='Maximum AA overlap a window can have with a previously selected window.', required=False)
-    parser.add_argument('-o', '--output-dir', default="clust_align_visualizations", help='Name of directory to output line plots.')
+    parser.add_argument('--peptide-overlap', type=int, default=9, help='Peptide sequence should overlap at least this amount to be included in output data.', required=False)
+    parser.add_argument('-o', '--output-dir', default="find_epitopes_out", help='Name of directory to output line plots.')
     
     args = parser.parse_args()
 
     directory_path = args.input_dir
     alignment_to_use_dict = read_check_align_file(directory_path)
     #print(probes_dict)
-    alignCountsD = process_probes(alignment_to_use_dict, directory_path)
+    alignCountsD, file_2_pep_pos_dict = process_probes(alignment_to_use_dict, directory_path)
+    #print(file_2_pep_pos_dict)
     #print(alignCountsD)
 
     windows = find_core_epitopes(alignCountsD, args.window_size, args.max_zeros, args.max_overlap)
-    print(windows)
 
     if not os.path.exists(args.output_dir):
         os.mkdir(args.output_dir)
+    else:
+        print(f"Warning: The directory \"{args.output_dir}\" already exists. Files may be overwritten.\n")
+
+    generate_out_data(args.output_dir, directory_path, windows, file_2_pep_pos_dict, args.peptide_overlap)
 
     create_line_chart(alignCountsD, windows, args.output_dir)
+
+
+def generate_out_data(out_dir, directory_path, windows, file_2_pep_pos_dict, peptide_overlap):
+    out_data = list()
+    clust_2_file = {fasta_file.split('_')[-2]: fasta_file for fasta_file in sorted(windows.keys())}
+    for cluster_id, fasta_file in clust_2_file.items():
+        file_path = os.path.join(directory_path, fasta_file)
+
+        fasta_dict = ft.read_fasta_dict(file_path)
+
+        for pep_num, window in enumerate(list(windows[fasta_file].keys()), 1):
+            for seq_name in sorted(fasta_dict.keys()):
+                # check if original peptide is overlapping >= 9
+                for probe_name, og_pep_window in file_2_pep_pos_dict[fasta_file].items():
+                    og_seq_name = '_'.join(probe_name.split('_')[0:-2])
+                    if og_seq_name == seq_name:
+                        if get_overlap(og_pep_window, window) >= peptide_overlap:
+                            new_pep_seq = fasta_dict[seq_name][window[0]:window[1]]
+                            og_pep_seq = fasta_dict[seq_name][og_pep_window[0]:og_pep_window[1]]
+                            out_data.append( (cluster_id, seq_name, f"Peptide_{pep_num}", new_pep_seq, probe_name, og_pep_seq) )
+
+    out_df = pd.DataFrame(out_data, columns=["ClusterID", "SequenceName", "PeptideID", "NewPeptideSeq", "OriginalProbeName", "OriginalPeptideSeq"])
+    out_df.to_csv(os.path.join(out_dir, "peptide_seq_data.tsv"), sep='\t', index=False)
 
 
 def find_core_epitopes(alignCountsD, window_size, max_zeros, max_overlap):
@@ -70,7 +105,7 @@ def find_core_epitopes(alignCountsD, window_size, max_zeros, max_overlap):
                             mid_window_scores[window] = sum(counts[window[0] + (window_size // 3):window[1] - (window_size // 3)])
                         possible_windows = [x for x, y in mid_window_scores.items() if y == max(list(mid_window_scores.values()))]
 
-                        # use smaller median from odd cases
+                        # use smaller median from even cases
                         if len(possible_windows) % 2 == 0:
                             start_idx, end_idx = possible_windows[(len(possible_windows) // 2) - 1]
                         else:
@@ -96,6 +131,9 @@ def get_overlap(a, b):
 
 
 def create_line_chart(alignCountsD, windows, out_dir):
+    out_dir = os.path.join(out_dir, "clust_align_visualizations")
+    if not os.path.exists(out_dir):
+        os.mkdir(out_dir)
     for file, pos_dict in alignCountsD.items():
         x = list(pos_dict.keys())
         y = list(pos_dict.values())
@@ -159,8 +197,10 @@ def read_check_align_file(directory):
 
 def process_probes(probes_dict, directory_path):
     result = {}
+    file_2_pep_pos_dict = dict()
 
     for filename, data in probes_dict.items():
+        pep_pos_dict = dict()
         aligned_probes_file = filename.replace('.fasta', '_probesAligned.txt')
         aligned_probes_path = os.path.join(directory_path, aligned_probes_file)
         
@@ -172,13 +212,17 @@ def process_probes(probes_dict, directory_path):
         with open(aligned_probes_path, 'r') as file:
             for line_count, line in enumerate(file):
                 if line_count > 0:
-                    seq_positions = line.split('\t')[-1].split('~')
+                    elems = line.split('\t')
+                    seq_positions = elems[-1].split('~')
                     for pos in seq_positions:
                         alignD[int(pos)] += 1
+
+                    pep_pos_dict[elems[0]] = (int(elems[1]), int(elems[2]))
         
         result[filename] = alignD
+        file_2_pep_pos_dict[filename] = pep_pos_dict
     
-    return result
+    return result, file_2_pep_pos_dict
 
 if __name__ == "__main__":
     main()
