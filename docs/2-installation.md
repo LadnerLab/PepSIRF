@@ -37,6 +37,8 @@ Finally, run:
 ```
 source ~/.zshrc
 ```
+Then recompile PepSIRF.
+
 ### Running Tests
 ```
 mkdir build
