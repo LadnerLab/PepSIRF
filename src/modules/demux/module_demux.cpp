@@ -590,12 +590,9 @@ void module_demux::run( options *opts )
         }
 
     // check for duplicates
-    #pragma omp critical
+    for( const auto& library_seq : library_seqs )
     {
-        for( const auto& library_seq : library_seqs )
-        {
-            ++duplicate_map[library_seq.seq];
-        }
+        ++duplicate_map[library_seq.seq];
     }
 
     Log::info(
