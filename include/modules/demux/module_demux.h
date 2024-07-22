@@ -99,6 +99,18 @@ class module_demux : public module
 
 
     /**
+     * Truncates library sequences to length provided by the user
+     * @param seq_length Sequence length specified with the "--seq" option
+     * @param lib_seqs Reference to library sequences received from file
+     *        specified by the "--library"
+     **/
+    void trunc_lib_seqs(
+        std::size_t seq_length,
+        std::vector<sequence> &lib_seqs
+    );
+
+
+    /**
      * Method to zero a vector of size_t elements.
      * @param vec Pointer to the vector to zero.
      * @pre vec must have been initialized with some number of
@@ -363,6 +375,15 @@ class module_demux : public module
      * Returns sample list information: 1) Number of samples 2) Number of replicates 3) Number of samples starting with “Sblk_”
      **/
     std::string get_sample_info( std::vector<sample>& samplelist, std::string outfile_name );
+
+    /**
+     * Creates a single output fastq file containing all of the reads that have not been mapped to a sample/peptide
+     * @param filename file to output to
+     * @param samp_map fastaq output map
+     * @reads_dup vector of all reads
+     **/
+    void create_unmapped_reads_file( std::string filename, 
+                            std::map<std::string, std::vector<fastq_sequence>> samp_map, std::vector<fastq_sequence> reads_dup );
 
 };
 
