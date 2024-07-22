@@ -208,9 +208,14 @@ bool options_parser_demux::parse(int argc, char ***argv, options *opts)
          "time the module started running.\n"
         )
         ("replicate_info", po::value<std::string>(&opts_demux->replicate_info_fname)->default_value(""),
-          "Include this flag with an output file name to provide a more thorough summary of "
-          " replicates in the sample list in an output file. The information will be tab-delimited "
-          " with two headers: “Sample Name” and “Number of Replicates”\"."
+          "Include this flag with an output file name to provide a more thorough summary of"
+          " replicates in the sample list in an output file. The information will be tab-delimited"
+          " with two headers: \"Sample Name\" and \"Number of Replicates\".\n"
+        )
+        ("unmapped_reads_output", po::value<std::string>(&opts_demux->unmapped_reads_fname)->default_value(""),
+          "Include this flag with a .fastq output file name to create a single output fastq file containing"
+          " all of the reads that have not been mapped to a sample/peptide (i.e., all of those that"
+          "would not be included in any of the files created by the -q option).\n"
         )
         ;
 
