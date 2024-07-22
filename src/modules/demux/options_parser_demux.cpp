@@ -202,7 +202,7 @@ bool options_parser_demux::parse(int argc, char ***argv, options *opts)
          "Number of threads to use for analyses.\n"
         )
         ("logfile", po::value( &opts_demux->logfile )
-            ->default_value( "" ),
+            ->default_value( options_demux::set_default_log() ),
          "Designated file to which the module's processes are logged. By "
          "default, the logfile's name will include the module's name and the "
          "time the module started running.\n"
