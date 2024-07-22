@@ -1964,6 +1964,25 @@ TEST_CASE( "filter_counts (vector template)", "[module_deconv]" )
     REQUIRE( std::min_element( filter_vec.begin(), filter_vec.end(), comp_pair )->second == 50 );
 }
 
+TEST_CASE( "custom id name map", "[module_deconv]" )
+{
+    module_deconv mod;
+
+    std::map<std::string, std::string> expected_name_map;
+    expected_name_map.insert( std::make_pair("sp1", "1234") );
+    expected_name_map.insert( std::make_pair("sp2", "5678") );
+    expected_name_map.insert( std::make_pair("sp3", "9123") );
+    expected_name_map.insert( std::make_pair("sp4", "4567") );
+    expected_name_map.insert( std::make_pair("sp5", "8912") );
+    expected_name_map.insert( std::make_pair("sp6", "3456") );
+
+    std::tuple<std::string, std::string, std::string> custom_id_name_map_info = std::make_tuple("../test/input_data/test_deconv_custom_id_map.tsv", "SpeciesID", "SpeciesName");
+    std::map<std::string, std::string> actual_name_map;
+    mod.parse_custom_name_map( custom_id_name_map_info, actual_name_map );
+
+	REQUIRE( expected_name_map == actual_name_map );
+}
+
 TEST_CASE( "peptide", "[peptide]" )
 {
     peptide pep( "pep1", "ATGC" );
