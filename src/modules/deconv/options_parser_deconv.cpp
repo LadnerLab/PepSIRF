@@ -166,7 +166,7 @@ bool options_parser_deconv::parse( int argc, char ***argv, options *opts )
                 [&](const std::string &vals)
                 {
                     opts_deconv->set_info(
-                        opts_deconv->custom_id_name_map_info, vals
+                        opts_deconv->custom_id_name_map_info, vals, "--custom_id_name_map_info"
                     );
                 }),
          "Optional file containing mappings from taxonomic IDs to taxon names."

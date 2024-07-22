@@ -146,12 +146,14 @@ class options_deconv : public options
      * information.
      * @param tup Reference to tuple which will be filled
      * @param info Comma-delimited string of information
+     * @param opt_name Name of option for error output
      */
     // TODO: make into a generic function in options class,
     // or a virtual method - whichever is more practical for the future
     void set_info(
         std::tuple<std::string, std::string, std::string>& tup,
-        std::string info
+        std::string info,
+        std::string opt_name
     );
 
     /**

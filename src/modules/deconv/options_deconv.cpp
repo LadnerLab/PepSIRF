@@ -36,7 +36,8 @@ std::string options_deconv::get_arguments()
 //template<typename T>
 void options_deconv::set_info(
     std::tuple<std::string, std::string, std::string>& tup,
-    std::string info
+    std::string info,
+    std::string opt_name
 ) {
     const char *COMMA = ",";
     const int  NUM_REQUIRED_ITEMS = 3;
@@ -47,8 +48,8 @@ void options_deconv::set_info(
     if (matches.size() != NUM_REQUIRED_ITEMS)
     {
         Log::error(
-            "Incorrect number of comma-separated values provided."
-            " Please try ./pepsirf demux -h for help"
+            "Incorrect number of comma-separated values provided for " + opt_name + "."
+            " Please try ./pepsirf deconv -h for help"
         );
     }
 
