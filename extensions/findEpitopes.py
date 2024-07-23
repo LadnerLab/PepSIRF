@@ -9,6 +9,7 @@ import numpy as np
 import argparse
 import pandas as pd
 import fastatools as ft
+from scipy.signal import find_peaks
 
 def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -18,27 +19,146 @@ def main():
     parser.add_argument('--max-zeros', type=int, default=5, help='Maximum number of zero counts a window can contain.', required=False)
     parser.add_argument('--max-overlap', type=int, default=8, help='Maximum AA overlap a window can have with a previously selected window.', required=False)
     parser.add_argument('--peptide-overlap', type=int, default=9, help='Peptide sequence should overlap at least this amount to be included in output data.', required=False)
+    parser.add_argument('--peak-overlap-window-size', type=int, default=10, help='Window size around found peaks in which containing peptides will be removed for the next iteration.', required=False)
+    parser.add_argument('--include-iter-vis', action="store_true", help='Output each chart given the iteration.', required=False)
     parser.add_argument('-o', '--output-dir', default="find_epitopes_out", help='Name of directory to output line plots.')
     
     args = parser.parse_args()
 
     directory_path = args.input_dir
     alignment_to_use_dict = read_check_align_file(directory_path)
-    #print(probes_dict)
-    alignCountsD, file_2_pep_pos_dict = process_probes(alignment_to_use_dict, directory_path)
-    #print(file_2_pep_pos_dict)
-    #print(alignCountsD)
 
-    windows = find_core_epitopes(alignCountsD, args.window_size, args.max_zeros, args.max_overlap)
+    # get original align counts and peptide positions 
+    alignCountsD, file_2_pep_pos_dict = process_files_probes(
+                                            probes_dict=alignment_to_use_dict, 
+                                            directory_path=directory_path
+                                            )
+
+    #windows = find_core_epitopes(alignCountsD, args.window_size, args.max_zeros, args.max_overlap)
 
     if not os.path.exists(args.output_dir):
         os.mkdir(args.output_dir)
     else:
         print(f"Warning: The directory \"{args.output_dir}\" already exists. Files may be overwritten.\n")
 
+    windows = iterative_peptide_finder(alignment_to_use_dict, directory_path, args.window_size, args.max_zeros, args.max_overlap, 
+                                                                args.peak_overlap_window_size, args.output_dir, args.include_iter_vis)
+
     generate_out_data(args.output_dir, directory_path, windows, file_2_pep_pos_dict, args.peptide_overlap)
 
-    create_line_chart(alignCountsD, windows, args.output_dir)
+    create_line_charts(alignCountsD, windows, args.output_dir)
+
+
+def iterative_peptide_finder(alignment_to_use_dict, directory_path, window_size, max_zeros, max_overlap, 
+                                                                    peak_ovlp_window_size, output_dir, include_iter_vis):
+    out_dict = dict()
+
+    for filename, data in alignment_to_use_dict.items():
+        if include_iter_vis:
+            iter_vis_out = os.path.join(output_dir, f"{filename.split('_')[-2]}_iterations")
+            if not os.path.exists(iter_vis_out):
+                os.mkdir(iter_vis_out)
+
+        iter_num = 1
+        windows = list()
+        removed_peptides = set()
+
+        aligned_probes_path = os.path.join(directory_path, filename.replace('.fasta', '_probesAligned.txt'))
+
+        peak_found = True
+        window_found = True
+        while peak_found:
+            peak_found = False
+            score = 0
+
+            # generate scores without used peptides
+            alignCountsD, pep_pos_dict = process_file_probes(
+                                                    data=data, 
+                                                    aligned_probes_path=aligned_probes_path,
+                                                    removed_peptides=removed_peptides
+                                                    )
+
+            y = list(alignCountsD.values())
+            
+            # find highest peak
+            peaks, _ = find_peaks(y)
+            peaks = list(peaks)
+
+            if len(peaks) > 0:
+                valid_window = False
+                peaks_empty = False
+                while not valid_window and not peaks_empty:
+                    # get max peak (center if there are multiple)
+                    max_peak = peaks[np.argmax([y[peak] for peak in peaks])]
+                    max_peaks = list()
+                    max_peak_indices = list()
+                    for peak_idx in range(len(peaks)):
+                        peak = peaks[peak_idx]
+                        if y[peak] == y[max_peak]:
+                            max_peaks.append(peak)
+                            max_peak_indices.append(peak_idx)
+                    max_peak_idx = len(max_peaks)//2
+                    max_peak = max_peaks[max_peak_idx]
+
+                    # get designed peptide window
+                    left_border, right_border = generate_window(max_peak, window_size, int(data))
+
+                    # test if window passes thresholds
+                    if y[left_border:right_border].count(0) <= max_zeros and \
+                                    all(get_overlap((left_border, right_border), (x[0], x[1])) <= max_overlap for x in windows):
+                        valid_window = True
+                    else:
+                        # remove possible mass peak
+                        peaks.pop(max_peak_indices[max_peak_idx])
+                        if len(peaks) == 0:
+                            peaks_empty = True
+
+                if not peaks_empty:
+                    peak_found = True
+
+                    # get the overlap window
+                    pep_ovlp_win = (max_peak - (peak_ovlp_window_size // 2), max_peak + (peak_ovlp_window_size // 2))
+
+                    # remove overlapping peptides
+                    for pep, pep_coords in pep_pos_dict.items():
+                        if get_overlap(pep_ovlp_win, pep_coords) > 0:
+                            removed_peptides.add(pep)
+
+                    windows.append((left_border, right_border))
+
+                    if include_iter_vis:
+                        create_line_chart(
+                                x = list(alignCountsD.keys()),
+                                y = list(alignCountsD.values()),
+                                windows = windows,
+                                title = filename,
+                                out_dir = os.path.join(iter_vis_out, f"step_{iter_num}.png")
+                                )
+
+                    iter_num += 1
+
+        out_dict[filename] = windows
+
+    return out_dict
+
+
+def generate_window(max_peak, window_size, max_x):
+    left_border = max_peak - (window_size // 2)
+    right_border = max_peak + (window_size // 2)
+    if left_border < 0:
+        shift = 0 - left_border
+        left_border += shift
+        right_border += shift
+    elif right_border > max_x:
+        shift = right_border - max_x
+        left_border -= shift
+        right_border -= shift
+
+    return left_border, right_border
+
+
+def get_overlap(a, b):
+    return max(0, min(a[1], b[1]) - max(a[0], b[0]))
 
 
 def generate_out_data(out_dir, directory_path, windows, file_2_pep_pos_dict, peptide_overlap):
@@ -49,7 +169,7 @@ def generate_out_data(out_dir, directory_path, windows, file_2_pep_pos_dict, pep
 
         fasta_dict = ft.read_fasta_dict(file_path)
 
-        for pep_num, window in enumerate(list(windows[fasta_file].keys()), 1):
+        for pep_num, window in enumerate(windows[fasta_file], 1):
             for seq_name in sorted(fasta_dict.keys()):
                 # check if original peptide is overlapping >= 9
                 for probe_name, og_pep_window in file_2_pep_pos_dict[fasta_file].items():
@@ -64,95 +184,34 @@ def generate_out_data(out_dir, directory_path, windows, file_2_pep_pos_dict, pep
     out_df.to_csv(os.path.join(out_dir, "peptide_seq_data.tsv"), sep='\t', index=False)
 
 
-def find_core_epitopes(alignCountsD, window_size, max_zeros, max_overlap):
-    out_dict = dict()
-
-    for file in alignCountsD.keys():
-        windows = dict()
-
-        counts = list(alignCountsD[file].values())
-
-        # get windows
-        window_found = True
-        while window_found:
-            window_found = False
-            max_score = 0
-            # iterate through each possible window
-            start_idx = 0
-            while start_idx < len(counts) - window_size + 1:
-                end_idx = start_idx + window_size
-                window = counts[start_idx:end_idx]
-
-                # check no more than max zeros and does not overlap any previously selected window by more than max overlap
-                if window.count(0) <= max_zeros and all(get_overlap((start_idx, end_idx), (x[0], x[1])) <= max_overlap for x in list(windows.keys())):
-                    # check if greater than max score
-                    score = sum(window)                    
-                    if score > max_score:
-
-                        # center window around peak
-                        possible_windows = [(start_idx, end_idx)]
-                        temp_start = start_idx + 1
-                        temp_end = end_idx + 1
-                        temp_window = counts[temp_start:temp_end]
-                        while sum(temp_window) == score and temp_window.count(0) <= max_zeros and all(get_overlap((temp_start, temp_end), (x[0], x[1])) <= max_overlap for x in list(windows.keys())):
-                            possible_windows.append((temp_start,temp_end))
-                            temp_start += 1
-                            temp_end += 1
-                            temp_window = counts[temp_start:temp_end] 
-
-                        mid_window_scores = dict()
-                        for window in possible_windows:
-                            mid_window_scores[window] = sum(counts[window[0] + (window_size // 3):window[1] - (window_size // 3)])
-                        possible_windows = [x for x, y in mid_window_scores.items() if y == max(list(mid_window_scores.values()))]
-
-                        # use smaller median from even cases
-                        if len(possible_windows) % 2 == 0:
-                            start_idx, end_idx = possible_windows[(len(possible_windows) // 2) - 1]
-                        else:
-                            start_idx, end_idx = possible_windows[(len(possible_windows) // 2)]
-
-                        # set max
-                        max_score = score
-                        max_window = (start_idx, end_idx)
-                        window_found = True
-
-                start_idx += 1
-
-            if window_found:
-                windows[max_window] = max_score
-
-        out_dict[file] = windows
-
-    return out_dict
-
-
-def get_overlap(a, b):
-    return max(0, min(a[1], b[1]) - max(a[0], b[0]))
-
-
-def create_line_chart(alignCountsD, windows, out_dir):
-    out_dir = os.path.join(out_dir, "clust_align_visualizations")
+def create_line_charts(alignCountsD, windows, out_dir):
+    out_dir = os.path.join(out_dir, "final_window_visualizations")
     if not os.path.exists(out_dir):
         os.mkdir(out_dir)
     for file, pos_dict in alignCountsD.items():
-        x = list(pos_dict.keys())
-        y = list(pos_dict.values())
+        create_line_chart(
+                x = list(pos_dict.keys()),
+                y = list(pos_dict.values()),
+                windows = windows[file],
+                title = file,
+                out_dir = os.path.join(out_dir, f"{file.split('_')[-2]}_epitopes_lineplot.png")
+                )
 
-        fig, ax = plt.subplots(figsize=(max(x)/10, 10), facecolor='w')
-        ax.plot(x, y, linestyle='-')
-        #cmap = mpl.colormaps['Oranges']
-        #norm = colors.Normalize(vmin=0, vmax=len(windows[file])-1)
-        for idx, window in enumerate(list(windows[file].keys())):
-            plt.axvspan(window[0], window[1], color="#ff6b0f", alpha=0.75)
+def create_line_chart(x, y, windows, out_dir, title):
+    fig, ax = plt.subplots(figsize=(max(x)/10, 10), facecolor='w')
+    ax.plot(x, y, linestyle='-')
 
-        ax.set_xticks(np.arange(min(x), max(x)+5, 5))
-        ax.set_xlim(left=min(x))
-        ax.set_ylim(bottom=min(y))
-        plt.grid()
-        plt.xlabel("Sequence Position")
-        plt.ylabel("Count")
-        plt.title(file) 
-        plt.savefig(os.path.join(out_dir, f"{file.split('_')[-2]}_epitopes_lineplot.png"), dpi=300, bbox_inches='tight')
+    for window in windows:
+        plt.axvspan(window[0], window[1], color="#ff6b0f", alpha=0.75)
+
+    ax.set_xticks(np.arange(min(x), max(x)+5, 5))
+    ax.set_xlim(left=min(x))
+    ax.set_ylim(bottom=min(y))
+    plt.grid()
+    plt.xlabel("Sequence Position")
+    plt.ylabel("Count")
+    plt.title(title) 
+    plt.savefig(out_dir, dpi=300, bbox_inches='tight')
 
 
 def find_smallest_value_with_substring(data_dict, substring):
@@ -195,34 +254,37 @@ def read_check_align_file(directory):
     return results
 
 
-def process_probes(probes_dict, directory_path):
+def process_files_probes(probes_dict, directory_path):
     result = {}
     file_2_pep_pos_dict = dict()
 
     for filename, data in probes_dict.items():
-        pep_pos_dict = dict()
         aligned_probes_file = filename.replace('.fasta', '_probesAligned.txt')
         aligned_probes_path = os.path.join(directory_path, aligned_probes_file)
         
-        aligned_length = int(data)
-        #print(range(0, aligned_length))
-        
-        alignD = {key: 0 for key in range(aligned_length + 1)}
+        result[filename], file_2_pep_pos_dict[filename] = process_file_probes(data, aligned_probes_path)
+    
+    return result, file_2_pep_pos_dict
 
-        with open(aligned_probes_path, 'r') as file:
-            for line_count, line in enumerate(file):
-                if line_count > 0:
-                    elems = line.split('\t')
+def process_file_probes(data, aligned_probes_path, removed_peptides = set()):
+    aligned_length = int(data)
+    
+    alignD = {key: 0 for key in range(aligned_length + 1)}
+    pep_pos_dict = dict()
+
+    with open(aligned_probes_path, 'r') as file:
+        for line_count, line in enumerate(file):
+            if line_count > 0:
+                elems = line.split('\t')
+                if elems[0] not in removed_peptides:
                     seq_positions = elems[-1].split('~')
                     for pos in seq_positions:
                         alignD[int(pos)] += 1
 
                     pep_pos_dict[elems[0]] = (int(elems[1]), int(elems[2]))
-        
-        result[filename] = alignD
-        file_2_pep_pos_dict[filename] = pep_pos_dict
-    
-    return result, file_2_pep_pos_dict
+
+    return alignD, pep_pos_dict
+
 
 if __name__ == "__main__":
     main()
