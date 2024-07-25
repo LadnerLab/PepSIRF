@@ -686,7 +686,8 @@ void module_demux::run( options *opts )
     write_outputs( d_opts->output_fname, reference_counts, duplicate_map, !d_opts->library_fname.empty(), samplelist);
 
     total_time.stop();
-    Log::info("Total took " + std::to_string(total_time.get_elapsed()) + " seconds.\n");
+  
+    Log::info("Took " + std::to_string(total_time.get_elapsed()) + " seconds.\n");
 }
 
 void module_demux::aggregate_counts( parallel_map<sequence, std::vector<std::size_t>*>& agg_map,

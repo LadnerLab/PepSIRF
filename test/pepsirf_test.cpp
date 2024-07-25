@@ -1895,7 +1895,7 @@ TEST_CASE( "Deconv end_to_end", "[module_deconv]" )
     opts.enriched_fname = std::string( "../test/input_data/test_enriched_file.tsv" );
     opts.id_name_map_fname = std::string();
 
-    opts.thresholds_fname = std::string( "../test/input_data/test_spec_thesholds.tsv" );
+    opts.thresholds_fname = std::string( "../test/input_data/test_spec_thresholds.tsv" );
     opts.single_threaded = false;
     opts.scoring_strategy = "summation";
     opts.score_filtering = true;
@@ -2071,6 +2071,25 @@ TEST_CASE( "filter_counts (vector template)", "[module_deconv]" )
                          const std::pair<size_t,double> second
                          ){ return first.first < second.first; };
     REQUIRE( std::min_element( filter_vec.begin(), filter_vec.end(), comp_pair )->second == 50 );
+}
+
+TEST_CASE( "custom id name map", "[module_deconv]" )
+{
+    module_deconv mod;
+
+    std::map<std::string, std::string> expected_name_map;
+    expected_name_map.insert( std::make_pair("sp1", "1234") );
+    expected_name_map.insert( std::make_pair("sp2", "5678") );
+    expected_name_map.insert( std::make_pair("sp3", "9123") );
+    expected_name_map.insert( std::make_pair("sp4", "4567") );
+    expected_name_map.insert( std::make_pair("sp5", "8912") );
+    expected_name_map.insert( std::make_pair("sp6", "3456") );
+
+    std::tuple<std::string, std::string, std::string> custom_id_name_map_info = std::make_tuple("../test/input_data/test_deconv_custom_id_map.tsv", "SpeciesID", "SpeciesName");
+    std::map<std::string, std::string> actual_name_map;
+    mod.parse_custom_name_map( custom_id_name_map_info, actual_name_map );
+
+	REQUIRE( expected_name_map == actual_name_map );
 }
 
 TEST_CASE( "peptide", "[peptide]" )
@@ -4302,7 +4321,7 @@ TEST_CASE( "Run Subjoin exclude option with regex input", "[module_subjoin]" )
 
     ifexpected.close();
     ifactual.close();
-
+  
     // all lines and names of expected outfile are in the actual outfile
     if( expected_names_set == actual_names_set )
     	{
