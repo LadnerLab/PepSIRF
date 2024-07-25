@@ -1,8 +1,3 @@
-#-------DELETE LATER--------
-import sys
-sys.path.append("/Users/scg283/Documents/GitHub/Modules")
-#---------------------------
-
 import os
 import matplotlib.pyplot as plt
 import numpy as np
@@ -97,7 +92,17 @@ def iterative_peptide_finder(alignment_to_use_dict, directory_path, window_size,
                         if y[peak] == y[max_peak]:
                             max_peaks.append(peak)
                             max_peak_indices.append(peak_idx)
-                    max_peak_idx = len(max_peaks)//2
+
+                    # find which peak has the hiest score across the window
+                    max_peak_window_score = 0
+                    max_peak_idx_ties=list()
+                    for peak_idx in range(len(max_peaks)):
+                        left_border, right_border = generate_window(peak, window_size, int(data))
+                        if sum(y[left_border:right_border]) > max_peak_window_score:
+                            max_peak_window_score = sum(y[left_border:right_border])
+                            max_peak_idx_ties.append(peak_idx)
+
+                    max_peak_idx = max_peak_idx_ties[len(max_peak_idx_ties)//2]
                     max_peak = max_peaks[max_peak_idx]
 
                     # get designed peptide window
@@ -117,7 +122,7 @@ def iterative_peptide_finder(alignment_to_use_dict, directory_path, window_size,
                     peak_found = True
 
                     # get the overlap window
-                    pep_ovlp_win = (max_peak - (peak_ovlp_window_size // 2), max_peak + (peak_ovlp_window_size // 2))
+                    pep_ovlp_win = generate_window(max_peak, peak_ovlp_window_size, int(data))
 
                     # remove overlapping peptides
                     for pep, pep_coords in pep_pos_dict.items():
@@ -212,6 +217,7 @@ def create_line_chart(x, y, windows, out_dir, title):
     plt.ylabel("Count")
     plt.title(title) 
     plt.savefig(out_dir, dpi=300, bbox_inches='tight')
+    plt.close()
 
 
 def find_smallest_value_with_substring(data_dict, substring):
