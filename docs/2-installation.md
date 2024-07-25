@@ -24,6 +24,21 @@ chmod +x build.sh
 ```
 Both of these options will create a ```pepsirf``` executable in the build directory.
 
+### If OpenMP is not found on MacOS
+First, ensure it is installed:
+```
+brew install libomp
+```
+Then, open ```~./zshrc``` and add ```export OpenMP_ROOT=$(brew --prefix)/opt/libomp``` manually, or use:
+```
+echo "export OpenMP_ROOT=$(brew --prefix)/opt/libomp" >> ~/.zshrc
+```
+Finally, run:
+```
+source ~/.zshrc
+```
+Then recompile PepSIRF.
+
 ### Running Tests
 ```
 mkdir build
