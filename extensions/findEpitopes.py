@@ -39,7 +39,9 @@ def main():
     windows = iterative_peptide_finder(alignment_to_use_dict, directory_path, args.window_size, args.max_zeros, args.max_overlap, 
                                                                 args.peak_overlap_window_size, args.output_dir, args.include_iter_vis)
 
-    generate_out_data(args.output_dir, directory_path, windows, file_2_pep_pos_dict, args.peptide_overlap)
+    # generate_out_data(args.output_dir, directory_path, windows, file_2_pep_pos_dict, args.peptide_overlap)
+
+    generate_out_data(args.output_dir, directory_path, alignCountsD, windows, args.window_size)
 
     create_line_charts(alignCountsD, windows, args.output_dir)
 
@@ -104,8 +106,18 @@ def iterative_peptide_finder(alignment_to_use_dict, directory_path, window_size,
                         for max_peak_borders in max_peak_borders_ties:
                             for peak in range(max_peak_borders[0], max_peak_borders[1] + 1):
                                 if peak not in invalid_peaks:
-                                    left_border, right_border = generate_window(peak, window_size, int(data))
-                                    total_window_score = sum(y[left_border:right_border + 1])
+                                    # center window on whichever has greater sum
+                                    left_border_l, right_border_l = generate_window(peak, window_size, int(data), "left")
+                                    left_border_r, right_border_r = generate_window(peak, window_size, int(data), "right")
+                                    if sum(y[left_border_l:right_border_l]) >= sum(y[left_border_r:right_border_r]) or window_size % 2 == 0:
+                                        left_border = left_border_l
+                                        right_border = right_border_l
+                                    else:
+                                        left_border = left_border_r
+                                        right_border = right_border_r
+
+                                    # generate window will 
+                                    total_window_score = sum(y[left_border:right_border])
                                     if total_window_score > max_peak_window_score:
                                         max_peak_ties.clear()
                                         max_peak_window_score = total_window_score
@@ -119,7 +131,7 @@ def iterative_peptide_finder(alignment_to_use_dict, directory_path, window_size,
                         left_border, right_border = generate_window(max_peak, window_size, int(data))
 
                         # test if window passes thresholds
-                        if y[left_border:right_border + 1].count(0) <= max_zeros and \
+                        if y[left_border:right_border].count(0) <= max_zeros and \
                                         all(get_overlap((left_border, right_border), (x[0], x[1])) <= max_overlap for x in windows):
                             valid_window = True
                         else:
@@ -159,9 +171,16 @@ def iterative_peptide_finder(alignment_to_use_dict, directory_path, window_size,
     return out_dict
 
 
-def generate_window(max_peak, window_size, max_x):
+def generate_window(max_peak, window_size, max_x, how="left"):
     left_border = max_peak - (window_size // 2)
     right_border = max_peak + (window_size // 2)
+
+    if how == "right":
+        left_border += 1
+        right_border += 1
+    elif how != "left":
+        raise NotImplementedError(f"{how} not a valid argumentd for how to generate window.")
+
     if left_border < 0:
         shift = 0 - left_border
         left_border += shift
@@ -177,7 +196,7 @@ def generate_window(max_peak, window_size, max_x):
 def get_overlap(a, b):
     return max(0, min(a[1], b[1]) - max(a[0], b[0]))
 
-
+'''
 def generate_out_data(out_dir, directory_path, windows, file_2_pep_pos_dict, peptide_overlap):
     out_data = list()
     clust_2_file = {fasta_file.split('_')[-2]: fasta_file for fasta_file in sorted(windows.keys())}
@@ -198,7 +217,50 @@ def generate_out_data(out_dir, directory_path, windows, file_2_pep_pos_dict, pep
                             out_data.append( (cluster_id, seq_name, f"Peptide_{pep_num}", new_pep_seq, probe_name, og_pep_seq) )
 
     out_df = pd.DataFrame(out_data, columns=["ClusterID", "SequenceName", "PeptideID", "NewPeptideSeq", "OriginalProbeName", "OriginalPeptideSeq"])
+    out_df.to_csv(os.path.join(out_dir, "prev_peptide_seq_data.tsv"), sep='\t', index=False)
+'''
+
+
+def generate_out_data(out_dir, directory_path, alignCountsD, windows, window_size):
+    out_data = list()
+    sum_data = list()
+    clust_2_file = {fasta_file.split('_')[-2]: fasta_file for fasta_file in sorted(windows.keys())}
+    for cluster_id, fasta_file in clust_2_file.items():
+        # create output file
+        file_path = os.path.join(directory_path, fasta_file)
+
+        fasta_dict = ft.read_fasta_dict(file_path)
+
+        for pep_num, window in enumerate(windows[fasta_file], 1):
+            counts_sum = sum(list(alignCountsD[fasta_file].values())[window[0]:window[1]])
+            counts_avg = counts_sum / window_size
+
+            ovlp_count = 0
+            for pep_num_2, window_2 in enumerate(windows[fasta_file], 1):
+                if pep_num != pep_num_2:
+                    if get_overlap(window, window_2) > 0:
+                        ovlp_count += 1
+
+            out_data.append( (cluster_id, f"Peptide_{pep_num}", window[0], window[1], round(counts_avg, 3), counts_sum, ovlp_count) )
+
+        # create summary stats
+        not_covered_pos_count = 0
+        not_covered_total = 0
+        for pos, count in alignCountsD[fasta_file].items():
+            # check is position is not covered by any window
+            if count > 0 and all([pos not in range(window[0],window[1]) for window in windows[fasta_file]]):
+                not_covered_pos_count += 1
+                not_covered_total += count
+
+            norm_not_covered_pos_count = not_covered_pos_count / max([int(pos) for pos in alignCountsD[fasta_file].keys()])
+
+        sum_data.append( (cluster_id, not_covered_pos_count, round(norm_not_covered_pos_count, 3), not_covered_total ) )
+
+    out_df = pd.DataFrame(out_data, columns=["ClusterID", "PeptideID", "Start Position", "Stop Position", "Peptide Counts Average", "Peptide Counts Sum", "Peptide Overlap"])
     out_df.to_csv(os.path.join(out_dir, "peptide_seq_data.tsv"), sep='\t', index=False)
+
+    sum_df = pd.DataFrame(sum_data, columns=["ClusterID", "Number of Uncovered Positions (with count > 0)", "Normalized Number of Uncovered Positions", "Uncovered Positions Counts Sum"])
+    sum_df.to_csv(os.path.join(out_dir, "summary_data.tsv"), sep='\t', index=False)
 
 
 def create_line_charts(alignCountsD, windows, out_dir):
@@ -219,7 +281,7 @@ def create_line_chart(x, y, windows, out_dir, title):
     ax.plot(x, y, linestyle='-')
 
     for window in windows:
-        plt.axvspan(window[0], window[1], color="#ff6b0f", alpha=0.75)
+        plt.axvspan(window[0], window[1] - 1, color="#ff6b0f", alpha=0.75)
 
     ax.set_xticks(np.arange(min(x), max(x)+5, 5))
     ax.set_xlim(left=min(x))
