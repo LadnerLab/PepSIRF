@@ -78,7 +78,7 @@ def iterative_peptide_finder(alignment_to_use_dict, directory_path, window_size,
             # get all peaks
             _, peak_plateaus = find_peaks(y, plateau_size = 1)
             peaks = [(peak_plateaus["left_edges"][i], peak_plateaus["right_edges"][i]) for i in range(len(peak_plateaus["plateau_sizes"]))]
-
+            
             if len(peaks) > 0:
                 valid_window = False
                 valid_peaks_exist = True
@@ -87,21 +87,31 @@ def iterative_peptide_finder(alignment_to_use_dict, directory_path, window_size,
                     # get max borders (such that entire plateau is not invalid)
                     valid_peaks = [peak for peak in peaks if any(x not in invalid_peaks for x in range(peak[0], peak[1] + 1))]
                     if valid_peaks:
-                        max_peak_borders = valid_peaks[np.argmax([y[peak[0]] for peak in valid_peaks])]
+                        max_peak_borders_ties = list()
+                        max_height = 0
+                        for peak in valid_peaks:
+                            if y[peak[0]] > max_height:
+                                max_peak_borders_ties.clear()
+                                max_height = y[peak[0]]
+                                max_peak_borders_ties.append(peak)
+                            elif y[peak[0]] == max_height:
+                                max_peak_borders_ties.append(peak)
+
 
                         # find which point has the highest score across the window
                         max_peak_window_score = 0
                         max_peak_ties=list()
-                        for peak in range(max_peak_borders[0], max_peak_borders[1] + 1):
-                            if peak not in invalid_peaks:
-                                left_border, right_border = generate_window(peak, window_size, int(data))
-                                total_window_score = sum(y[left_border:right_border + 1])
-                                if total_window_score > max_peak_window_score:
-                                    max_peak_ties.clear()
-                                    max_peak_window_score = total_window_score
-                                    max_peak_ties.append(peak)
-                                elif total_window_score == max_peak_window_score:
-                                    max_peak_ties.append(peak)
+                        for max_peak_borders in max_peak_borders_ties:
+                            for peak in range(max_peak_borders[0], max_peak_borders[1] + 1):
+                                if peak not in invalid_peaks:
+                                    left_border, right_border = generate_window(peak, window_size, int(data))
+                                    total_window_score = sum(y[left_border:right_border + 1])
+                                    if total_window_score > max_peak_window_score:
+                                        max_peak_ties.clear()
+                                        max_peak_window_score = total_window_score
+                                        max_peak_ties.append(peak)
+                                    elif total_window_score == max_peak_window_score:
+                                        max_peak_ties.append(peak)
 
                         max_peak = max_peak_ties[len(max_peak_ties)//2]
 
