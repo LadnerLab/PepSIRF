@@ -124,9 +124,9 @@ def iterative_peptide_finder(alignment_to_use_dict, directory_path, window_size,
                     # get the overlap window
                     pep_ovlp_win = generate_window(max_peak, peak_ovlp_window_size, int(data))
 
-                    # remove overlapping peptides
+                    # remove overlapping peptides that completely cover window
                     for pep, pep_coords in pep_pos_dict.items():
-                        if get_overlap(pep_ovlp_win, pep_coords) > 0:
+                        if get_overlap(pep_ovlp_win, pep_coords) == peak_ovlp_window_size:
                             removed_peptides.add(pep)
 
                     windows.append((left_border, right_border))
