@@ -95,7 +95,7 @@ void module_subjoin::run( options *opts )
     name_replacement_list replacement_names;
 
     #pragma omp parallel for num_threads( 2 ) private( idx ) schedule( dynamic ) \
-            shared( matrix_name_pairs, parsed_score_data )
+            shared( matrix_name_pairs, parsed_score_data ) firstprivate(orig_names, replacement_names)
     for( idx = 0; idx < matrix_name_pairs.size(); ++idx )
         {
             auto &score_name_pair = matrix_name_pairs[ idx ];
