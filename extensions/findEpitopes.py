@@ -64,7 +64,8 @@ def iterative_peptide_finder(alignment_to_use_dict, directory_path, window_size,
 
         peak_found = True
         window_found = True
-        while peak_found:
+        invalid_peaks_found = False
+        while peak_found and not invalid_peaks_found:
             peak_found = False
             score = 0
 
@@ -137,13 +138,13 @@ def iterative_peptide_finder(alignment_to_use_dict, directory_path, window_size,
                         else:
                             # remove possible mass peak
                             invalid_peaks.add(max_peak)
+                            invalid_peaks_found = True
+                                
                     else:
                         valid_peaks_exist = False
 
                 if valid_peaks_exist:
                     peak_found = True
-
-                    # get the overlap window
                     pep_ovlp_win = generate_window(max_peak, peak_ovlp_window_size, int(data))
 
                     # remove overlapping peptides that completely cover window
@@ -166,6 +167,40 @@ def iterative_peptide_finder(alignment_to_use_dict, directory_path, window_size,
                 else:
                     peak_found = False
 
+        while peak_found and invalid_peaks_found:
+            
+            alignCountsD, pep_pos_dict = process_file_probes(
+                                        data=data, 
+                                        aligned_probes_path=aligned_probes_path,
+                                        removed_peptides=removed_peptides,
+                                            )
+            max_window, number_of_windows = find_core_epitopes(alignCountsD, window_size, max_zeros, max_overlap, windows)
+            print(f"Number of windows: {number_of_windows}")
+            if number_of_windows == 0:
+                break
+            if number_of_windows == 1:
+                peak_found = False
+                invalid_peaks_found = False
+            left_border,right_border = max_window
+            # remove overlapping peptides that completely cover window
+            for pep, pep_coords in pep_pos_dict.items():
+                if get_overlap(max_window, pep_coords) == peak_ovlp_window_size:
+                    removed_peptides.add(pep)
+
+            windows.append((left_border, right_border))
+
+            if include_iter_vis:
+                create_line_chart(
+                        x = list(alignCountsD.keys()),
+                        y = list(alignCountsD.values()),
+                        windows = windows,
+                        title = filename,
+                        out_dir = os.path.join(iter_vis_out, f"step_{iter_num}.png")
+                        )
+
+            iter_num += 1
+            print(left_border,right_border)
+            print(windows)
         out_dict[filename] = windows
 
     return out_dict
@@ -277,7 +312,7 @@ def create_line_charts(alignCountsD, windows, out_dir):
                 )
 
 def create_line_chart(x, y, windows, out_dir, title):
-    fig, ax = plt.subplots(figsize=(max(x)/10, 10), facecolor='w')
+    fig, ax = plt.subplots(figsize=(25, 10), facecolor='w')
     ax.plot(x, y, linestyle='-')
 
     for window in windows:
@@ -364,6 +399,72 @@ def process_file_probes(data, aligned_probes_path, removed_peptides = set()):
                     pep_pos_dict[elems[0]] = (int(elems[1]), int(elems[2]))
 
     return alignD, pep_pos_dict
+    
+
+def find_core_epitopes(alignCountsD, window_size, max_zeros, max_overlap, peak_windows):
+    peak_windows = peak_windows
+    new_windows = dict()
+
+    counts = list(alignCountsD.values())
+
+    # get windows
+    window_found = True
+    while window_found:
+        window_found = False
+        max_score = 0
+        # iterate through each possible window
+        start_idx = 0
+        while start_idx < len(counts) - window_size + 1:
+            end_idx = start_idx + window_size
+            window = counts[start_idx:end_idx]
+            current_windows = peak_windows + list(new_windows.keys())
+
+            # check no more than max zeros and does not overlap any previously selected window by more than max overlap
+            if window.count(0) <= max_zeros and all(get_overlap((start_idx, end_idx), (x[0], x[1])) <= max_overlap for x in current_windows):
+                # check if greater than max score
+                score = sum(window)                    
+                if score > max_score:
+
+                    # center window around peak
+                    possible_windows = [(start_idx, end_idx)]
+                    temp_start = start_idx + 1
+                    temp_end = end_idx + 1
+                    temp_window = counts[temp_start:temp_end]
+                    while sum(temp_window) == score and temp_window.count(0) <= max_zeros and all(get_overlap((temp_start, temp_end), (x[0], x[1])) <= max_overlap for x in current_windows):
+                        possible_windows.append((temp_start,temp_end))
+                        temp_start += 1
+                        temp_end += 1
+                        temp_window = counts[temp_start:temp_end] 
+
+                    mid_window_scores = dict()
+                    for window in possible_windows:
+                        mid_window_scores[window] = sum(counts[window[0] + (window_size // 3):window[1] - (window_size // 3)])
+                    possible_windows = [x for x, y in mid_window_scores.items() if y == max(list(mid_window_scores.values()))]
+
+                    # use smaller median from odd cases
+                    if len(possible_windows) % 2 == 0:
+                        start_idx, end_idx = possible_windows[(len(possible_windows) // 2) - 1]
+                    else:
+                        start_idx, end_idx = possible_windows[(len(possible_windows) // 2)]
+
+                    # set max
+                    max_score = score
+                    max_window = (start_idx, end_idx)
+                    window_found = True
+
+            start_idx += 1
+
+        if window_found:
+                new_windows[max_window] = max_score
+                
+        number_of_windows = len(new_windows)
+        
+        if number_of_windows > 0:
+            max_window = max(zip(new_windows.values(), new_windows.keys()))[1]
+        if number_of_windows == 0:
+            max_window = None
+
+    return max_window, number_of_windows
 
 
 if __name__ == "__main__":
