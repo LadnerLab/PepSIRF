@@ -66,139 +66,140 @@ def iterative_peptide_finder(alignment_to_use_dict, directory_path, window_size,
         peak_found = True
         window_found = True
         invalid_peaks_found = False
-        while peak_found and not invalid_peaks_found:
-            peak_found = False
-            score = 0
-
-            # generate scores without used peptides
-            alignCountsD, pep_pos_dict = process_file_probes(
-                                                    data=data, 
-                                                    aligned_probes_path=aligned_probes_path,
-                                                    removed_peptides=removed_peptides
-                                                    )
-
-            y = list(alignCountsD.values())
-            
-            # get all peaks
-            _, peak_plateaus = find_peaks(y, plateau_size = 1)
-            peaks = [(peak_plateaus["left_edges"][i], peak_plateaus["right_edges"][i]) for i in range(len(peak_plateaus["plateau_sizes"]))]
-            
-            if len(peaks) > 0:
-                valid_window = False
-                valid_peaks_exist = True
-                invalid_peaks = set()
-                while not valid_window and valid_peaks_exist:
-                    # get max borders (such that entire plateau is not invalid)
-                    valid_peaks = [peak for peak in peaks if any(x not in invalid_peaks for x in range(peak[0], peak[1] + 1))]
-                    if valid_peaks:
-                        max_peak_borders_ties = list()
-                        max_height = 0
-                        for peak in valid_peaks:
-                            if y[peak[0]] > max_height:
-                                max_peak_borders_ties.clear()
-                                max_height = y[peak[0]]
-                                max_peak_borders_ties.append(peak)
-                            elif y[peak[0]] == max_height:
-                                max_peak_borders_ties.append(peak)
-
-
-                        # find which point has the highest score across the window
-                        max_peak_window_score = 0
-                        max_peak_ties=list()
-                        for max_peak_borders in max_peak_borders_ties:
-                            for peak in range(max_peak_borders[0], max_peak_borders[1] + 1):
-                                if peak not in invalid_peaks:
-                                    # center window on whichever has greater sum
-                                    left_border_l, right_border_l = generate_window(peak, window_size, int(data), "left")
-                                    left_border_r, right_border_r = generate_window(peak, window_size, int(data), "right")
-                                    if sum(y[left_border_l:right_border_l]) >= sum(y[left_border_r:right_border_r]) or window_size % 2 == 0:
-                                        left_border = left_border_l
-                                        right_border = right_border_l
-                                    else:
-                                        left_border = left_border_r
-                                        right_border = right_border_r
-
-                                    # generate window will 
-                                    total_window_score = sum(y[left_border:right_border])
-                                    if total_window_score > max_peak_window_score:
-                                        max_peak_ties.clear()
-                                        max_peak_window_score = total_window_score
-                                        max_peak_ties.append(peak)
-                                    elif total_window_score == max_peak_window_score:
-                                        max_peak_ties.append(peak)
-
-                        max_peak = max_peak_ties[len(max_peak_ties)//2]
-
-                        # get designed peptide window
-                        left_border, right_border = generate_window(max_peak, window_size, int(data))
-
-                        # test if window passes thresholds
-                        if y[left_border:right_border].count(0) <= max_zeros and \
-                                        all(get_overlap((left_border, right_border), (x[0], x[1])) <= max_overlap for x in windows):
-                            valid_window = True
-                        else:
-                            # remove possible mass peak
-                            invalid_peaks.add(max_peak)
-                            invalid_peaks_found = True
-                                
-                    else:
-                        valid_peaks_exist = False
-
-                if valid_peaks_exist:
-                    peak_found = True
-                    pep_ovlp_win = generate_window(max_peak, peak_ovlp_window_size, int(data))
-
-                    # remove overlapping peptides that completely cover window
-                    for pep, pep_coords in pep_pos_dict.items():
-                        if get_overlap(pep_ovlp_win, pep_coords) == peak_ovlp_window_size:
-                            removed_peptides.add(pep)
-
-                    windows.append((left_border, right_border))
-
-                    if include_iter_vis:
-                        create_line_chart(
-                                x = list(alignCountsD.keys()),
-                                y = list(alignCountsD.values()),
-                                windows = windows,
-                                title = filename,
-                                out_dir = os.path.join(iter_vis_out, f"step_{iter_num}.png")
-                                )
-
-                    iter_num += 1
-                else:
-                    peak_found = False
-
-        while peak_found and invalid_peaks_found:
-            
-            alignCountsD, pep_pos_dict = process_file_probes(
-                                        data=data, 
-                                        aligned_probes_path=aligned_probes_path,
-                                        removed_peptides=removed_peptides,
-                                            )
-            max_window, number_of_windows = find_core_epitopes(alignCountsD, window_size, max_zeros, max_overlap, windows)
-            if number_of_windows == 0:
-                break
-            if number_of_windows == 1:
+        while peak_found:
+            if not invalid_peaks_found:
                 peak_found = False
-                invalid_peaks_found = False
-            left_border,right_border = max_window
-            # remove overlapping peptides that completely cover window
-            for pep, pep_coords in pep_pos_dict.items():
-                if get_overlap(max_window, pep_coords) == peak_ovlp_window_size:
-                    removed_peptides.add(pep)
+                score = 0
 
-            windows.append((left_border, right_border))
+                # generate scores without used peptides
+                alignCountsD, pep_pos_dict = process_file_probes(
+                                                        data=data, 
+                                                        aligned_probes_path=aligned_probes_path,
+                                                        removed_peptides=removed_peptides
+                                                        )
 
-            if include_iter_vis:
-                create_line_chart(
-                        x = list(alignCountsD.keys()),
-                        y = list(alignCountsD.values()),
-                        windows = windows,
-                        title = filename,
-                        out_dir = os.path.join(iter_vis_out, f"step_{iter_num}.png")
-                        )
+                y = list(alignCountsD.values())
+                
+                # get all peaks
+                _, peak_plateaus = find_peaks(y, plateau_size = 1)
+                peaks = [(peak_plateaus["left_edges"][i], peak_plateaus["right_edges"][i]) for i in range(len(peak_plateaus["plateau_sizes"]))]
+                
+                if len(peaks) > 0:
+                    valid_window = False
+                    valid_peaks_exist = True
+                    invalid_peaks = set()
+                    while not valid_window and valid_peaks_exist:
+                        # get max borders (such that entire plateau is not invalid)
+                        valid_peaks = [peak for peak in peaks if any(x not in invalid_peaks for x in range(peak[0], peak[1] + 1))]
+                        if valid_peaks:
+                            max_peak_borders_ties = list()
+                            max_height = 0
+                            for peak in valid_peaks:
+                                if y[peak[0]] > max_height:
+                                    max_peak_borders_ties.clear()
+                                    max_height = y[peak[0]]
+                                    max_peak_borders_ties.append(peak)
+                                elif y[peak[0]] == max_height:
+                                    max_peak_borders_ties.append(peak)
 
-            iter_num += 1
+
+                            # find which point has the highest score across the window
+                            max_peak_window_score = 0
+                            max_peak_ties=list()
+                            for max_peak_borders in max_peak_borders_ties:
+                                for peak in range(max_peak_borders[0], max_peak_borders[1] + 1):
+                                    if peak not in invalid_peaks:
+                                        # center window on whichever has greater sum
+                                        left_border_l, right_border_l = generate_window(peak, window_size, int(data), "left")
+                                        left_border_r, right_border_r = generate_window(peak, window_size, int(data), "right")
+                                        if sum(y[left_border_l:right_border_l]) >= sum(y[left_border_r:right_border_r]) or window_size % 2 == 0:
+                                            left_border = left_border_l
+                                            right_border = right_border_l
+                                        else:
+                                            left_border = left_border_r
+                                            right_border = right_border_r
+
+                                        # generate window will 
+                                        total_window_score = sum(y[left_border:right_border])
+                                        if total_window_score > max_peak_window_score:
+                                            max_peak_ties.clear()
+                                            max_peak_window_score = total_window_score
+                                            max_peak_ties.append(peak)
+                                        elif total_window_score == max_peak_window_score:
+                                            max_peak_ties.append(peak)
+
+                            max_peak = max_peak_ties[len(max_peak_ties)//2]
+
+                            # get designed peptide window
+                            left_border, right_border = generate_window(max_peak, window_size, int(data))
+
+                            # test if window passes thresholds
+                            if y[left_border:right_border].count(0) <= max_zeros and \
+                                            all(get_overlap((left_border, right_border), (x[0], x[1])) <= max_overlap for x in windows):
+                                valid_window = True
+                            else:
+                                # remove possible mass peak
+                                invalid_peaks.add(max_peak)
+                                invalid_peaks_found = True
+                                    
+                        else:
+                            valid_peaks_exist = False
+
+                    if valid_peaks_exist:
+                        peak_found = True
+                        pep_ovlp_win = generate_window(max_peak, peak_ovlp_window_size, int(data))
+
+                        # remove overlapping peptides that completely cover window
+                        for pep, pep_coords in pep_pos_dict.items():
+                            if get_overlap(pep_ovlp_win, pep_coords) == peak_ovlp_window_size:
+                                removed_peptides.add(pep)
+
+                        windows.append((left_border, right_border))
+
+                        if include_iter_vis:
+                            create_line_chart(
+                                    x = list(alignCountsD.keys()),
+                                    y = list(alignCountsD.values()),
+                                    windows = windows,
+                                    title = filename,
+                                    out_dir = os.path.join(iter_vis_out, f"step_{iter_num}.png")
+                                    )
+
+                        iter_num += 1
+                    else:
+                        peak_found = False
+
+            else:
+                alignCountsD, pep_pos_dict = process_file_probes(
+                                            data=data, 
+                                            aligned_probes_path=aligned_probes_path,
+                                            removed_peptides=removed_peptides,
+                                                )
+                max_window, number_of_windows = find_core_epitopes(alignCountsD, window_size, max_zeros, max_overlap, windows)
+                if number_of_windows == 0:
+                    break
+                if number_of_windows == 1:
+                    peak_found = False
+                    invalid_peaks_found = False
+                left_border,right_border = max_window
+                # remove overlapping peptides that completely cover window
+                for pep, pep_coords in pep_pos_dict.items():
+                    if get_overlap(max_window, pep_coords) == peak_ovlp_window_size:
+                        removed_peptides.add(pep)
+
+                windows.append((left_border, right_border))
+
+                if include_iter_vis:
+                    create_line_chart(
+                            x = list(alignCountsD.keys()),
+                            y = list(alignCountsD.values()),
+                            windows = windows,
+                            title = filename,
+                            out_dir = os.path.join(iter_vis_out, f"step_{iter_num}.png")
+                            )
+
+                iter_num += 1
+
         out_dict[filename] = windows
         last_iter_counts[filename] = alignCountsD
 
@@ -229,30 +230,6 @@ def generate_window(max_peak, window_size, max_x, how="left"):
 
 def get_overlap(a, b):
     return max(0, min(a[1], b[1]) - max(a[0], b[0]))
-
-'''
-def generate_out_data(out_dir, directory_path, windows, file_2_pep_pos_dict, peptide_overlap):
-    out_data = list()
-    clust_2_file = {fasta_file.split('_')[-2]: fasta_file for fasta_file in sorted(windows.keys())}
-    for cluster_id, fasta_file in clust_2_file.items():
-        file_path = os.path.join(directory_path, fasta_file)
-
-        fasta_dict = ft.read_fasta_dict(file_path)
-
-        for pep_num, window in enumerate(windows[fasta_file], 1):
-            for seq_name in sorted(fasta_dict.keys()):
-                # check if original peptide is overlapping >= 9
-                for probe_name, og_pep_window in file_2_pep_pos_dict[fasta_file].items():
-                    og_seq_name = '_'.join(probe_name.split('_')[0:-2])
-                    if og_seq_name == seq_name:
-                        if get_overlap(og_pep_window, window) >= peptide_overlap:
-                            new_pep_seq = fasta_dict[seq_name][window[0]:window[1]]
-                            og_pep_seq = fasta_dict[seq_name][og_pep_window[0]:og_pep_window[1]]
-                            out_data.append( (cluster_id, seq_name, f"Peptide_{pep_num}", new_pep_seq, probe_name, og_pep_seq) )
-
-    out_df = pd.DataFrame(out_data, columns=["ClusterID", "SequenceName", "PeptideID", "NewPeptideSeq", "OriginalProbeName", "OriginalPeptideSeq"])
-    out_df.to_csv(os.path.join(out_dir, "prev_peptide_seq_data.tsv"), sep='\t', index=False)
-'''
 
 
 def generate_out_data(out_dir, directory_path, last_iter_counts, alignCountsD, windows, window_size):
@@ -431,10 +408,13 @@ def find_core_epitopes(alignCountsD, window_size, max_zeros, max_overlap, peak_w
                     temp_window = counts[temp_start:temp_end]
                     while sum(temp_window) == score and temp_window.count(0) <= max_zeros and all(get_overlap((temp_start, temp_end), (x[0], x[1])) <= max_overlap for x in current_windows):
                         possible_windows.append((temp_start,temp_end))
+
+                        # increment window
                         temp_start += 1
                         temp_end += 1
                         temp_window = counts[temp_start:temp_end] 
 
+                    # find window with highest center score
                     mid_window_scores = dict()
                     for window in possible_windows:
                         mid_window_scores[window] = sum(counts[window[0] + (window_size // 3):window[1] - (window_size // 3)])
@@ -454,14 +434,14 @@ def find_core_epitopes(alignCountsD, window_size, max_zeros, max_overlap, peak_w
             start_idx += 1
 
         if window_found:
-                new_windows[max_window] = max_score
+            new_windows[max_window] = max_score
                 
-        number_of_windows = len(new_windows)
-        
-        if number_of_windows > 0:
-            max_window = max(zip(new_windows.values(), new_windows.keys()))[1]
-        if number_of_windows == 0:
-            max_window = None
+    number_of_windows = len(new_windows)
+    
+    if number_of_windows > 0:
+        max_window = max(zip(new_windows.values(), new_windows.keys()))[1]
+    if number_of_windows == 0:
+        max_window = None
 
     return max_window, number_of_windows
 
