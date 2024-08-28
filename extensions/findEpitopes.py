@@ -36,12 +36,12 @@ def main():
     else:
         print(f"Warning: The directory \"{args.output_dir}\" already exists. Files may be overwritten.\n")
 
-    windows = iterative_peptide_finder(alignment_to_use_dict, directory_path, args.window_size, args.max_zeros, args.max_overlap, 
+    windows, last_iter_counts = iterative_peptide_finder(alignment_to_use_dict, directory_path, args.window_size, args.max_zeros, args.max_overlap, 
                                                                 args.peak_overlap_window_size, args.output_dir, args.include_iter_vis)
 
     # generate_out_data(args.output_dir, directory_path, windows, file_2_pep_pos_dict, args.peptide_overlap)
 
-    generate_out_data(args.output_dir, directory_path, alignCountsD, windows, args.window_size)
+    generate_out_data(args.output_dir, directory_path, last_iter_counts, alignCountsD, windows, args.window_size)
 
     create_line_charts(alignCountsD, windows, args.output_dir)
 
@@ -49,6 +49,7 @@ def main():
 def iterative_peptide_finder(alignment_to_use_dict, directory_path, window_size, max_zeros, max_overlap, 
                                                                     peak_ovlp_window_size, output_dir, include_iter_vis):
     out_dict = dict()
+    last_iter_counts = dict()
 
     for filename, data in alignment_to_use_dict.items():
         if include_iter_vis:
@@ -175,7 +176,6 @@ def iterative_peptide_finder(alignment_to_use_dict, directory_path, window_size,
                                         removed_peptides=removed_peptides,
                                             )
             max_window, number_of_windows = find_core_epitopes(alignCountsD, window_size, max_zeros, max_overlap, windows)
-            print(f"Number of windows: {number_of_windows}")
             if number_of_windows == 0:
                 break
             if number_of_windows == 1:
@@ -199,11 +199,10 @@ def iterative_peptide_finder(alignment_to_use_dict, directory_path, window_size,
                         )
 
             iter_num += 1
-            print(left_border,right_border)
-            print(windows)
         out_dict[filename] = windows
+        last_iter_counts[filename] = alignCountsD
 
-    return out_dict
+    return out_dict, last_iter_counts
 
 
 def generate_window(max_peak, window_size, max_x, how="left"):
@@ -256,7 +255,7 @@ def generate_out_data(out_dir, directory_path, windows, file_2_pep_pos_dict, pep
 '''
 
 
-def generate_out_data(out_dir, directory_path, alignCountsD, windows, window_size):
+def generate_out_data(out_dir, directory_path, last_iter_counts, alignCountsD, windows, window_size):
     out_data = list()
     sum_data = list()
     clust_2_file = {fasta_file.split('_')[-2]: fasta_file for fasta_file in sorted(windows.keys())}
@@ -281,13 +280,13 @@ def generate_out_data(out_dir, directory_path, alignCountsD, windows, window_siz
         # create summary stats
         not_covered_pos_count = 0
         not_covered_total = 0
-        for pos, count in alignCountsD[fasta_file].items():
+        for pos, count in last_iter_counts[fasta_file].items():
             # check is position is not covered by any window
             if count > 0 and all([pos not in range(window[0],window[1]) for window in windows[fasta_file]]):
                 not_covered_pos_count += 1
                 not_covered_total += count
 
-            norm_not_covered_pos_count = not_covered_pos_count / max([int(pos) for pos in alignCountsD[fasta_file].keys()])
+            norm_not_covered_pos_count = not_covered_pos_count / max([int(pos) for pos in last_iter_counts[fasta_file].keys()])
 
         sum_data.append( (cluster_id, not_covered_pos_count, round(norm_not_covered_pos_count, 3), not_covered_total ) )
 
@@ -312,7 +311,7 @@ def create_line_charts(alignCountsD, windows, out_dir):
                 )
 
 def create_line_chart(x, y, windows, out_dir, title):
-    fig, ax = plt.subplots(figsize=(25, 10), facecolor='w')
+    fig, ax = plt.subplots(figsize=(max(x)/10, 10), facecolor='w')
     ax.plot(x, y, linestyle='-')
 
     for window in windows:
