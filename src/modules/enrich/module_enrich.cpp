@@ -47,6 +47,15 @@ void module_enrich::run( options *opts )
                 {
                     return std::stod( val );
                 });
+
+            // check if all sample names are equivalent
+            if( curr_matrix > 0 )
+                {  
+                    if( matrix_thresh_pairs[curr_matrix].first.sample_names != matrix_thresh_pairs[curr_matrix - 1].first.sample_names )
+                    {
+                        Log::error("Threshold files do not have identical sample names!");
+                    }
+                }
         }
 
     std::ifstream samples_file;
@@ -64,6 +73,20 @@ void module_enrich::run( options *opts )
             samples_file.close();
 
         }
+
+    // check that all samples in sample list exist in theshold files
+    std::vector<std::string> all_sample_names = matrix_thresh_pairs[0].first.sample_names;
+    for( auto samples : samples_list )
+    {
+        for( auto sample : samples )
+        {
+            if( std::find(all_sample_names.begin(), all_sample_names.end(), sample) == all_sample_names.end() )
+                {
+                   Log::error("The sample \"" + sample + "\" is not in the threshold files");
+                }
+        }
+    }
+
     // if no samples file is given, then all samples will be included and treated as samples assayed in single replicate.
     if( samples_list.empty() )
         {
