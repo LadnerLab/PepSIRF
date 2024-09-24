@@ -223,6 +223,8 @@ def read_check_align_file(directory):
 
     # Construct the full file path
     filepath = os.path.join(directory, 'checkAlignLength.out')
+    #filepath = os.path.join('checkAlignLength.out')
+
     # Read the file content
     with open(filepath, 'r') as file:
         alignedCluster = None
@@ -306,17 +308,16 @@ def find_core_epitopes(alignCountsD, window_size, max_zeros, max_overlap, peak_w
         if mid_window_score > max_mid_window_score:
             max_mid_window_score = mid_window_score
             max_window = window
-
     # If multiple windows have the same middle window score, pick the window with the largest total score
     max_mid_windows = [w for w, score in mid_window_scoresD.items() if score == max_mid_window_score]
     if len(max_mid_windows) > 1:
         max_window = max(max_mid_windows, key=lambda w: possible_windowsD[w])
         max_window_score = possible_windowsD[max_window]
         max_window_scores = [w for w, score in possible_windowsD.items() if score == max_window_score]
+        max_full_mid_window_scores = [w for w in max_window_scores if w in max_mid_windows]
         # If there are multiple windows with the same full window score, take the middle one
-        if len(max_window_scores) > 1:
-            max_window = max_window_scores[len(max_window_scores)//2]
-            
+        if len(max_full_mid_window_scores) > 1:
+            max_window = max_full_mid_window_scores[len(max_full_mid_window_scores)//2]            
 
     return max_window, number_of_windows
 
