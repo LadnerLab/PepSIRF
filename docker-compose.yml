@@ -1,0 +1,6 @@
+services:
+  pepsirf:
+    image: pepsirf-image
+    build:
+      context: .
+      dockerfile: Dockerfile
