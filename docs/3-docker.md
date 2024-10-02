@@ -10,11 +10,17 @@ permalink: /docker/
 docker-compose up --build
 ```
 
+**Excpected Error**:
+
+```Error: Invalid module name entered```
+
+This just means that the pepsirf command was not given arguments. You can ignore since you will be providing arguments when running the image.
+
 ### Running the PepSIRF image
 
 ```
 docker run --mount type=bind,src=<path/to/local/directory>,target=/app/<new_directory> \
-pepsirf-image [ --help | module_name <module_args*> ]
+pepsirf [ --help | module_name <module_args*> ]
 ```
 
 **Note:** 
