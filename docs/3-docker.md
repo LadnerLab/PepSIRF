@@ -21,3 +21,4 @@ pepsirf-image [ --help | module_name <module_args*> ]
 - Replace <path/to/local/directory> with the actual path to your local directory.
 - Replace <new_directory> with the desired name for the directory in the container.
 - If you are specifying a file (for reading or writing) from the source directory, use /app/<new_directory/file>
+- Make sure that Docker is granted permission for file sharing with the local directory.
