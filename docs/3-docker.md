@@ -14,7 +14,7 @@ docker-compose up --build
 
 ```Error: Invalid module name entered```
 
-This just means that the pepsirf command was not given arguments. You can ignore since you will be providing arguments when running the image.
+This just means that the pepsirf command was not given arguments. You can ignore this since you will be providing arguments when running the image.
 
 ### Running the PepSIRF image
 
