@@ -1,12 +1,13 @@
 #ifndef MODULE_DECONV_HH_INCLUDED 
 #define MODULE_DECONV_HH_INCLUDED 
+#include <algorithm>
+#include <boost/algorithm/string.hpp>
+#include <map>
+#include <memory>
+#include <set>
 #include <string>
 #include <vector>
-#include <algorithm>
-#include <set>
-#include <memory>
 #include <unordered_map>
-#include <map>
 #include <unordered_set>
 
 #include "overlap_data.h"
@@ -107,25 +108,36 @@ class module_deconv : public module
      * @note id is only used for summation scoring
      * @returns The score the id contributes to the species, as defined by 
      *          score_strat
-     **/
-    double score_peptide_for_species( const peptide& peptide,
-                                      std::unordered_map
-                                      <std::string,
-                                      std::vector<std::pair<std::string,double>
-                                      >>&
-                                      spec_count_map,
-                                      std::string id,
-                                      evaluation_strategy::score_strategy score_strat
-                                    );
-    /**
-     * Parse a map that will provide name->tax id mappings. This map should be formatted 
-     * in the same manner as that of 'lineage.dmp' from NCBI. 
-     * @param fname The name fo the file to parse
-     * @param name_map the destination map that will store the mappings of id->name
-     **/
-    void
-        parse_name_map( std::string fname, std::map<std::string,std::string>& name_map );
+     */
+    double score_peptide_for_species(
+        const peptide& peptide,
+        std::unordered_map<
+            std::string, std::vector<std::pair<std::string,double>>
+        >& spec_count_map,
+        std::string id,
+        evaluation_strategy::score_strategy score_strat
+    );
 
+    /**
+     * Parse a map which provides name->taxID mappings. This map should be
+     * formatted in the same manner as that of 'lineage.dmp' from NCBI. 
+     * @param fname Name of the file to parse
+     * @param name_map Destination map which stores mappings of ID->name
+     */
+    void parse_ncbi_name_map(
+        std::string fname, std::map<std::string, std::string>& name_map
+    );
+
+    /**
+     * Parse a map which providing name->tax ID mappings. This map shoudl be
+     * tab-delimited.
+     * @param fname Name of file to be parsed
+     * @param name_map Destination map which stores mappings of ID->name
+     */
+    void parse_custom_name_map(
+        std::tuple<std::string, std::string, std::string>& tup,
+        std::map<std::string, std::string>& name_map
+    );
 
     /**
      * Write output to a file that will be named 'out_name'
@@ -137,7 +149,7 @@ class module_deconv : public module
      *        used for outputting what the original count/score of each enriched species is.
      *        This is useful for seeing how the scores and counts have changed for each 
      *        of the enriched species.
-     **/
+     */
     void write_outputs( std::string out_name,
                         std::map<std::string,std::string>*
                         id_name_map,
@@ -146,7 +158,8 @@ class module_deconv : public module
                         >&
                         out_counts,
                         std::unordered_map<std::string,std::pair<double,double>>&
-                        original_scores
+                        original_scores,
+                        std::string custom_id_header
                       );
 
     /**
@@ -389,7 +402,7 @@ class module_deconv : public module
      * @param scores The vector of species and scores to search 
      *        for ties. This vector must be sorted in non-increasing order
      *        of the scores.
-     * @param threshold The threshold for species to be enriched.
+     * @param thresholds Map of the thresholds for each species to be enriched.
      *        This method terminates if if reaches a species whose score does 
      *        not reach this threshold.
      * @param ovlp_threshold The score threshold species scores must be within 
@@ -407,7 +420,7 @@ class module_deconv : public module
                             candidates,
                             std::vector<std::pair<std::string,double>>&
                             scores,
-                            double threshold,
+                            std::unordered_map<std::string, std::size_t> thresholds,
                             double ovlp_threshold,
                             DistanceCalc distance
                           )
@@ -427,7 +440,7 @@ class module_deconv : public module
 
             for( index = 1;
                  index < scores.size()
-                     && scores[ index ].second >= threshold;
+                     && scores[ index ].second >= thresholds[scores[ index ].first];
                  ++index
                  )
                 {
@@ -604,18 +617,18 @@ class module_deconv : public module
     /**
      * Filter counts that do not have a high enough score out of the id_counts structure.
      * @param id_counts Structure containing <species_id, score> pairs.
-     * @param thresh The threshold value. Any pairs in id_counts whose second 
+     * @param thresholds Map of thresholds for each species. Any pairs in id_counts whose second 
      *        entry is strictly less than this value will be removed.
      * @note This method has the side effect of removing items from id_counts
      **/
-    template<class K, class V>
+    template<class K, class V, class T>
         void filter_counts( std::unordered_map<K,V>& id_counts,
-                            V thresh
+                            std::unordered_map<K,T> thresholds
                           )
     {
         for( auto& item : id_counts )
             {
-                if( item.second < thresh )
+                if( item.second < thresholds[item.first] )
                     {
                         id_counts.erase( item.first );
                     }
@@ -626,20 +639,20 @@ class module_deconv : public module
      * Filter counts that do not have a high enough score out of the id_counts structure.
      * This is a partial specialization for filter_counts.
      * @param id_counts Structure containing <species_id, score> pairs.
-     * @param thresh The threshold value. Any pairs in id_counts whose second 
+     * @param thresholds Map of thresholds for each species. Any pairs in id_counts whose second 
      *        entry is strictly less than this value will be removed.
      * @note This method has the side effect of removing items from id_counts
      **/
-    template<class K, class V>
+    template<class K, class V, class T>
         void filter_counts( std::vector<std::pair<K,V>>& in_vec,
-                       V thresh
+                       std::unordered_map<K,T> thresholds
                     )
     {
         auto it = std::remove_if( in_vec.begin(),
                                   in_vec.end(),
                                   [&]( const std::pair<K,V>& p ) -> bool
                                   {
-                                      return p.second < thresh;
+                                      return p.second < thresholds[p.first];
                                   }
                                 );
 
@@ -819,7 +832,6 @@ class module_deconv : public module
         return get_map_value( *map, search, default_return );
     }
 
-
     /**
      * The base case for to_stream_if.
      * @param stream The stream to write output to (if cond is true)
@@ -889,6 +901,15 @@ class module_deconv : public module
      *          false otherwise
      **/
     bool use_ratio_overlap_threshold( double threshold );
+
+    /**
+     * Created a map of threshold for each taxaID from linkage map
+     * @param thresh_map to populated with taxID as key and threshold as value
+     * @param filename filepath to tab-delimited file
+     * @returns map of taxID and threshold
+     **/
+    void thresh_file_to_map( std::unordered_map<std::string, std::size_t>& thresh_map, std::string filename, 
+                        const std::vector<std::pair<std::string, std::vector<std::pair<std::string, double>>>> pep_species_vec );
 };
 
 #endif // MODULE_DECONV_HH_INCLUDED 

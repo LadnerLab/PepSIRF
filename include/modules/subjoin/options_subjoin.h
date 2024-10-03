@@ -52,6 +52,7 @@ class options_subjoin : public options
      * used.
      **/
     bool use_sample_names;
+    bool exclude_names;
 
     evaluation_strategy::duplicate_resolution_strategy duplicate_resolution_strategy;
 };

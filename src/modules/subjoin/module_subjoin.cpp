@@ -2,14 +2,19 @@
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string.hpp>
+#include "logger.h"
 #include "module_subjoin.h"
 #include "matrix.h"
 #include <iostream>
+#include <regex>
 #include <stdexcept>
 #include <algorithm>
 #include "time_keep.h"
 
-module_subjoin::module_subjoin() = default;
+module_subjoin::module_subjoin()
+{
+    name = "Subjoin";
+}
 
 module_subjoin::name_replacement_list
 module_subjoin::parse_namelist( std::vector<std::string>& dest,
@@ -42,6 +47,7 @@ module_subjoin::parse_namelist( std::vector<std::string>& dest,
                         }
                 }
         }
+
     return ret_val;
 }
 
@@ -54,7 +60,11 @@ void module_subjoin::run( options *opts )
     std::vector<std::pair<std::string,std::string>> matrix_name_pairs;
     if( s_opts->input_matrix_name_pairs.size() + s_opts->multi_matrix_name_pairs.size() == 0 )
         {
-            throw std::runtime_error( "No -i (--input) or -m (--multi_file) input has been provided. Manipulation cannot proceed.\n" );
+            Log::error(
+                "No -i (--input) or -m (--multi_file) input has"
+                " been provided."
+                " Manipulation cannot proceed.\n"
+            );
         }
     matrix_name_pairs.reserve( s_opts->input_matrix_name_pairs.size() + s_opts->multi_matrix_name_pairs.size() );
     if( !s_opts->multi_matrix_name_pairs.empty() )
@@ -75,13 +85,17 @@ void module_subjoin::run( options *opts )
     std::uint32_t idx = 0;
 
     bool use_peptide_names = !s_opts->use_sample_names;
+    bool exclude = s_opts->exclude_names;
 
     time_keep::timer time;
 
     time.start();
 
+    std::vector<std::string> orig_names;
+    name_replacement_list replacement_names;
+
     #pragma omp parallel for num_threads( 2 ) private( idx ) schedule( dynamic ) \
-            shared( matrix_name_pairs, parsed_score_data )
+            shared( matrix_name_pairs, parsed_score_data ) firstprivate(orig_names, replacement_names)
     for( idx = 0; idx < matrix_name_pairs.size(); ++idx )
         {
             auto &score_name_pair = matrix_name_pairs[ idx ];
@@ -89,7 +103,7 @@ void module_subjoin::run( options *opts )
             peptide_score_data_sample_major&
                 my_data = parsed_score_data[ idx ];
 
-            std::string& matrix_name_list  = score_name_pair.first;
+            std::string& matrix_name_list = score_name_pair.first;
             // parse the matrix
             peptide_scoring::parse_peptide_scores( my_data,
                                                 matrix_name_list
@@ -97,21 +111,6 @@ void module_subjoin::run( options *opts )
             if( use_peptide_names )
                 {
                     my_data.scores = my_data.scores.transpose();
-                }
-
-            // parse the peptide scores
-            std::vector<std::string> orig_names;
-            name_replacement_list replacement_names;
-            if( !score_name_pair.second.empty() )
-                {
-                    std::ifstream names_list( score_name_pair.second,
-                                            std::ios_base::in
-                                            );
-                    if( names_list.fail() )
-                        {
-                            throw std::runtime_error( "Unable to open name list '" + score_name_pair.second + "'.\n" );
-                        }
-                    replacement_names = parse_namelist( orig_names, names_list );
                 }
 
             std::unordered_set<std::string> names;
@@ -128,21 +127,79 @@ void module_subjoin::run( options *opts )
                                     my_data.sample_names.end()
                                 );
                 }
+
+            // parse the peptide scores
+            if( !score_name_pair.second.empty() )
+                {   
+                    std::ifstream names_list( score_name_pair.second,
+                                            std::ios_base::in
+                                            );
+
+                    replacement_names = parse_namelist( orig_names, names_list );
+
+                    if( names_list.fail() )
+                        {
+                            for( const std::string& name : names )
+                                {
+                                    if (std::regex_search( name, std::regex(score_name_pair.second) ))
+                                    {
+                                        orig_names.emplace_back( name );
+                                        replacement_names.insert( {name, name} );
+                                    }
+                                }
+                            if( orig_names.empty() )
+                                {
+                                    Log::error(
+                                        "Unable to open name list '"
+                                        + score_name_pair.second + "'.\n"
+                                        +"If regex expression was provided, no matches were found.\n"
+                                        +"Including all sample/peptide names.\n"
+                                    );
+                                }
+                        }   
+                }
+
+            std::unordered_set<std::string> nonexcluded_names;
+
+            // if exclude, create a names set for the names that are not excluded
+            if( exclude )
+               {
+                nonexcluded_names = names;
+               }
+
             std::size_t curr_name_idx;
-            // verify given names from namelist exist
+            // verify given names from namelist exist and set up nonexluded names
             for( curr_name_idx = 0; curr_name_idx < orig_names.size(); curr_name_idx++ )
                 {
-                    if( names.find( orig_names[ curr_name_idx ] )  == names.end()
+                    if( !exclude && names.find( orig_names[ curr_name_idx ] ) == names.end()
                         && boost::to_lower_copy( orig_names[ curr_name_idx ] ) != "sequence name" )
                         {
-                            std::cout << "WARNING: The sample "
-                                    << orig_names[ curr_name_idx ]
-                                    << " was not found in "
-                                    << "the input matrix, "
-                                    << "and will not be included in the output.\n";
+                            Log::warn(
+                                "The sample " + orig_names[curr_name_idx]
+                                + " was not found in the input matrix, and"
+                                " will not be included in the output.\n"
+                            );
                             orig_names.erase( orig_names.begin() + curr_name_idx );
                         }
+                    else
+                        {
+                            // remove the name from the non excluded names
+                            nonexcluded_names.erase( orig_names[ curr_name_idx ] );
+                        }
                 }
+
+            // test for exlude option, update names
+            if( exclude )
+                {  
+                    orig_names.clear();
+                    replacement_names.clear();
+                    for( std::string name : nonexcluded_names )
+                        {
+                            orig_names.emplace_back( name );
+                            replacement_names.insert( {name, name} );
+                        }
+                }
+
             if( !score_name_pair.second.empty() )
                 {
                     // filter out unused rows using namelist file.
@@ -155,17 +212,24 @@ void module_subjoin::run( options *opts )
                         {
                             output_names.emplace(output_name.second);
                         }
-                    if( output_names.size() != replacement_names.size() )
+                    if( output_names.size() != replacement_names.size() )   
                         {
-                            throw std::runtime_error(
-                            "Duplicate name found in output names provided by '--input' or '--multi_file'. "
-                            "Verify name list sample/peptide names do not include duplicate names.\n"
-                                                    );
+                            Log::error(
+                                "Duplicate name found in output names provided"
+                                " by '--input' or '--multi_file'. Verify"
+                                " name list sample/peptide names do not"
+                                " include duplicate names.\n"
+                            );
                         }
                     // replace original names with updates for output
                     for( auto& orig_name : my_data.scores.get_row_labels() )
                         {
-                            std::pair<std::string,std::uint32_t> new_name = std::make_pair(replacement_names.find(orig_name.first)->second, orig_name.second);
+                            std::pair<std::string,std::uint32_t> new_name
+                                = std::make_pair(
+                                    replacement_names
+                                        .find(orig_name.first)->second,
+                                    orig_name.second
+                                );
                             new_rows[new_name.second] = new_name.first;
                         }
                     my_data.scores.update_row_labels( new_rows );
@@ -174,7 +238,6 @@ void module_subjoin::run( options *opts )
         }
 
     std::ofstream output( s_opts->out_matrix_fname, std::ios_base::out );
-
 
     peptide_score_data_sample_major& joined_data =
         parsed_score_data[ 0 ];
@@ -201,7 +264,7 @@ void module_subjoin::run( options *opts )
 
     time.stop();
 
-    std::cout << "Took " << time.get_elapsed() << " seconds.\n";
+    Log::info("Took " + std::to_string(time.get_elapsed()) + " seconds.\n");
 }
 
 labeled_matrix<double,std::string>
@@ -225,10 +288,12 @@ labeled_matrix<double,std::string>
 
     if( !row_intersection.empty() )
         {
-            std::cout << "WARNING: Duplicate names have been encountered, duplicates will "
-                         "be resolved with the '"
-                      << evaluation_strategy::to_string( resolution_strategy )
-                      << "' duplicate resolution strategy.\n";
+            Log::warn(
+                "Duplicate names have been encountered, duplicates will be"
+                " resolved with the '"
+                + evaluation_strategy::to_string(resolution_strategy)
+                + "' duplicate resolution strategy.\n"
+            );
             setops::set_intersection( col_intersection,
                                       first.scores.get_col_labels(),
                                       second.scores.get_col_labels(),

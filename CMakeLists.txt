@@ -3,6 +3,8 @@ project(PepSIRF LANGUAGES CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+cmake_policy(SET CMP0074 NEW)
+
 set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
@@ -78,6 +80,7 @@ add_executable(pepsirf src/main.cpp)
 
 # Library common to all modules
 add_library(pepsirf_common STATIC src/modules/parsers/options_parser.cpp src/modules/core/options.cpp
+            src/modules/core/logger.cpp
             src/modules/core/sequence.cpp
             src/modules/core/file_io.cpp
 			src/modules/parsers/fastq_parser.cpp src/modules/parsers/fasta_parser.cpp

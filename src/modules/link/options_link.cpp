@@ -19,7 +19,8 @@ std::string options_link::get_arguments()
                           " --tax_id_index                   " << id_index << "\n" <<
                           " --kmer_redundancy_control        " << bool_str( penalize_kmers )  << "\n" <<
                           " --output                         " << output_fname <<  "\n" <<
-                          " --kmer_size                      " << k <<  "\n"
+                          " --kmer_size                      " << k <<  "\n" <<
+                          " --logfile                        " << logfile << "\n"
                                                                << "\n"
                               ;
     return str_stream.str();

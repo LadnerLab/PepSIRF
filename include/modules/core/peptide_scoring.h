@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <iomanip>
+#include "logger.h"
 #include "matrix.h"
 
 /**

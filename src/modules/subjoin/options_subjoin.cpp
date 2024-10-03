@@ -3,7 +3,6 @@
 
 #include "options_subjoin.h"
 
-
 namespace std
 {
     // template specialization of std::hash
@@ -21,8 +20,6 @@ namespace std
     };
 
 }; // namespace std
-
-
 
 namespace evaluation_strategy
 {
@@ -50,13 +47,11 @@ namespace evaluation_strategy
         { duplicate_resolution_strategy::IGNORE,  "ignore" }
     };
 
-
     std::string to_string( duplicate_resolution_strategy strategy )
     {
         return string_drs_map.find( strategy )->second;
     }
-
-};
+}; // namespace evaluation_strategy
 
 options_subjoin::options_subjoin() = default;
 
@@ -64,31 +59,35 @@ std::string options_subjoin::get_arguments()
 {
     std::ostringstream str_stream;
 
-    std::for_each( multi_matrix_name_pairs.begin(),
-                   multi_matrix_name_pairs.end(),
-                   [&]( const std::pair<std::string,std::string>& str )
-                   {
-                       str_stream << "--multi_file        "
-                                  << str.first << "," << str.second
-                                  << "\n ";
-                   }
-                 );
+    std::for_each(
+        multi_matrix_name_pairs.begin(),
+        multi_matrix_name_pairs.end(),
+        [&]( const std::pair<std::string,std::string>& str )
+        {
+            str_stream << "--multi_file        "
+                << str.first << "," << str.second << "\n";
+        }
+    );
 
-    std::for_each( input_matrix_name_pairs.begin(),
-                   input_matrix_name_pairs.end(),
-                   [&]( const std::pair<std::string,std::string>& str )
-                   {
-                       str_stream << "--input        "
-                                  << str.first << "," << str.second
-                                  << "\n ";
-                   }
-                 );
-    str_stream << "--filter_peptide_names " << std::boolalpha << !use_sample_names << "\n ";
-    str_stream << "--duplicate_evaluation " <<
-        evaluation_strategy::string_drs_map[ duplicate_resolution_strategy ]
-               << "\n ";
-    str_stream << "--output               " << out_matrix_fname << "\n " <<
-                  "\n";
+    std::for_each(
+        input_matrix_name_pairs.begin(),
+        input_matrix_name_pairs.end(),
+        [&]( const std::pair<std::string,std::string>& str )
+        {
+            str_stream << "--input                "
+                << str.first << "," << str.second << "\n";
+        }
+    );
+
+    str_stream << "--filter_peptide_names "
+        << std::boolalpha << !use_sample_names << "\n";
+    str_stream << "--exclude " << std::boolalpha << exclude_names << "\n ";
+    str_stream << "--duplicate_evaluation "
+        << evaluation_strategy::string_drs_map[ duplicate_resolution_strategy ]
+        << "\n";
+
+    str_stream << "--output               " << out_matrix_fname << "\n";
+    str_stream << "--logfile              " << logfile << "\n\n";
 
     return str_stream.str();
 }

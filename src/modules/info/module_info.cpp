@@ -4,9 +4,15 @@
 #include <iomanip>
 #include <boost/algorithm/find_backward.hpp> //TODO: include in header file
 
+#include "logger.h"
 #include "module_info.h"
 #include "peptide_scoring.h"
 #include "file_io.h"
+
+module_info::module_info()
+{
+    name = "Info";
+}
 
 void module_info::run( options *opts )
 {
@@ -18,9 +24,14 @@ void module_info::run( options *opts )
                                            i_opts.in_fname
                                          );
 
-
-    std::cout << "Number of samples:  " << scores.sample_names.size() << "\n";
-    std::cout << "Number of peptides: " << scores.pep_names.size() << "\n";
+    Log::info(
+        "Number of samples: "
+        + std::to_string(scores.sample_names.size()) + "\n"
+    );
+    Log::info(
+        "Number of peptides: "
+        + std::to_string(scores.pep_names.size()) + "\n"
+    );
 
     if( !i_opts.out_samples_fname.empty() )
         {
@@ -131,7 +142,7 @@ void module_info::run( options *opts )
                                         {
                                             // add sample name to invalid samples and write warning
                                             invalid_samples.emplace_back( samples.first );
-                                            std::cout << "Warning: invalid replicate name found in " << samples.first << std::endl;
+                                            Log::warn("Invalid replicate name found in " + samples.first + "\n");
                                         }
                                 }
                         }
@@ -170,12 +181,11 @@ void module_info::run( options *opts )
             // Print warning with all duplicate samples found
             if ( duplicate_samples_found )
                 {
-                    std::cout << "Warning: duplicate samples in input"
-                              << " file:\n";
+                    Log::warn("Duplicate samples in input file:\n");
 
                     for ( std::string sample : duplicate_samples )
                         {
-                            std::cout << sample << std::endl;
+                            Log::info(sample + "\n");
                         }
                 }
 
@@ -235,3 +245,4 @@ void module_info::run( options *opts )
                 }
         }
 }
+

@@ -16,11 +16,7 @@ class module_normalize : public module
 {
 
  public:
-    std::string name;
-
     module_normalize();
-
-    std::string get_name();
 
     void run( options *opts );
 
@@ -65,7 +61,12 @@ class module_normalize : public module
                                       );
 
     /**
-     *
+     * Collects sample names which contain the sub-string specified as 'start'.
+	 * @param score_data The pointer to data which contains the samples to
+	 *        query.
+	 * @param neg_filter The pointer to location to store samples identified as
+	 *        negative filter samples.
+	 * @param start Sub-string for which to look for in a sample name
      **/
     void filter_neg_control_start( peptide_score_data_sample_major *score_data,
                               std::unordered_set<std::string> *neg_filter,
@@ -127,4 +128,5 @@ class module_normalize : public module
                         std::unordered_map<std::string,double> *peptide_avgs );
 };
 
-#endif // MODULE_NORMALIZE_HH_INCLUDED
+#endif /* MODULE_NORMALIZE_HH_INCLUDED */
+

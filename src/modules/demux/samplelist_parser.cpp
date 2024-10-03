@@ -1,4 +1,5 @@
 #include "samplelist_parser.h"
+#include "logger.h"
 #include <sstream>
 #include <boost/algorithm/string.hpp>
 
@@ -24,7 +25,9 @@ std::vector<sample> samplelist_parser::parse( const options_demux *d_opts, const
 
     if( !samplelist_stream.is_open() )
         {
-            throw std::runtime_error( "File could not be opened. Verify sample list file exists." );
+            Log::error(
+                "File could not be opened. Verify sample list file exists."
+            );
         }
 
     std::getline( samplelist_stream, header_row );
@@ -52,20 +55,32 @@ std::vector<sample> samplelist_parser::parse( const options_demux *d_opts, const
         }
     if( !sname_found )
         {
-            throw std::runtime_error( "The flag \"--sname\" value \'" + d_opts->samplename + "\' could not be found in the sample sheet. "
-                                "Verify the sample sheet contains the specified column header names. See demux \"--help\" flag for further help.\n" );
+            Log::error(
+                "The flag \"--sname\" value \'" + d_opts->samplename + "\'"
+                " could not be found in the sample sheet. Verify the sample"
+                " sheet contains the specified column header names. See demux"
+                " \"--help\" flag for further help.\n"
+            );
         }
     if( !index_found )
         {
-            throw std::runtime_error( "The provided sample sheet does not contain index names found in either the \"--sindex\" option or the \"--fif\" option "
-                                      "(depending on which was provided). "
-                                      "Verify the sample sheet contains the correct column header names. See demux \"--help\" flag for further information.\n" );
+            Log::error(
+                "The provided sample sheet does not contain index names found"
+                " in either the \"--sindex\" option or the \"--fif\" option"
+                " (depending on which was provided). Verify the sample sheet"
+                " contains the correct column header names. See demux"
+                " \"--help\" flag for further information.\n"
+            );
         }
     if( index_cols.size() != flexible_idx_data.size() )
         {
-            throw std::runtime_error( "The provided sample sheet does not contain all of the index names provided by either the \"--sindex\" or the "
-                                      "\"--fif\" option. Verify the correct indexes are provided and matching for both the \"--sindex\" option or the \"--fif\" option "
-                                      "(depending on which is provided).\n" );
+            Log::error(
+                "The provided sample sheet does not contain all of the index"
+                " names provided by either the \"--sindex\" or the \"--fif\""
+                " option. Verify the correct indexes are provided and matching"
+                " for both the \"--sindex\" option or the \"--fif\" option"
+                " (depending on which is provided).\n"
+            );
         }
 
 
@@ -97,12 +112,15 @@ std::vector<sample> samplelist_parser::parse( const options_demux *d_opts, const
         {                
             if( member.second > 1 )
                 {
+                    std::ostringstream info_str;
                     if( !duplicate_name )
                         {
-                            std::cout << "WARNING: The following sequence names appear multiple times" << std::endl;
+                            Log::warn("The following sequence names appear multiple times.\n");
                             duplicate_name = true;
                         }
-                    std::cout << member.first << " Counts: " << member.second << std::endl;
+
+                    info_str << member.first << "Counts: " << member.second << "\n";
+                    Log::info(info_str.str());
                 }
         }
     // check for duplicate id sets
@@ -110,26 +128,32 @@ std::vector<sample> samplelist_parser::parse( const options_demux *d_opts, const
         {
             if( member.second > 1 )
                 {
+                    std::ostringstream info_str;
                     if(!duplicate_id)
                         {
-                            std::cout << "WARNING: The following index pairs appear muptiple times" << std::endl;
+                            Log::warn("The following index pairs appear muptiple times.\n");
                             duplicate_id = true;
                         }
-                    std::cout << member.first << " Counts: " << member.second << std::endl;
+
+                    info_str << member.first << "Counts: " << member.second << "\n";
+                    Log::info(info_str.str());
                 }
         }
     if(duplicate_id)
         {
-            throw std::runtime_error("Execution will be terminated");
+            Log::error("Execution will be terminated");
         }
     if( samplelist_stream.bad() )
         {
-            throw std::runtime_error( "Encountered error while reading file. Verify sample list file is in .tsv format." );
+            Log::error(
+                "Encountered error while reading file."
+                " Verify sample list file is in .tsv format."
+            );
         }
     std::ifstream index_stream( d_opts->index_fname );
     if( !index_stream.is_open() )
         {
-            throw std::runtime_error( "File could not be opened. Verify fasta file exists." );
+            Log::error("File could not be opened. Verify fasta file exists." );
         }
     while( std::getline( index_stream, line ) )
         {
@@ -159,11 +183,14 @@ void samplelist_parser::check_samples( std::unordered_set<std::string>& index_se
             }
         if( !missing_ids.empty() )
             {
-                std::cout << "WARNING: The following index/barcode names from '--samplelist' are not present in the '--index' file:\n";
+                Log::warn(
+                    "The following index/barcode names from '--samplelist' are"
+                    " not present in the '--index' file:\n"
+                );
                 for( auto& id : missing_ids )
                     {
-                        std::cout << id << "\n";
+                        Log::info(id + "\n");
                     }
             }
-
     }
+
