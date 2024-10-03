@@ -8,6 +8,10 @@ permalink: /changelog/
 
 ## Unreleased
 
+## 1.7.0 | 2024-10-3
+
+<strong>Docker: added new feature (Issue #254).</strong> Added the ability to run PepSIRF as a Docker image and added a page for instructions.
+
 <strong>CMakelists: bug fix (Issue #197).</strong> Resolved CMake not locating OpenMP on MacOS. Tutorial for fix added to installation page.
 
 <strong>Subjoin: added new feature (Issue #236).</strong> Added a functionality to the "-i" option in Subjoin to accept a regex pattern instead of a filename which contains sample/peptide names. The sample/peptide names used from the score matrix file will be filtered by whether they contain the regex pattern.

@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.0] - 2024-10-3
+
+- #254, added the ability to run PepSIRF as a Docker image and added a page for instructions
 - #197, resolved CMake not locating OpenMP on MacOS. Tutorial for fix added to installation page.
 - #236, added a functionality to the "-i" option in Subjoin to accept a regex pattern instead of a filename which contains sample/peptide names. The sample/peptide names used from the score matrix file will be filtered by whether they contain the regex pattern.
 - #234, added "--unmapped-reads-output" option to Demux, which writes all reads that have not been mapped to a sample/peptide to the specified filename.
