@@ -18,7 +18,7 @@ void peptide_scoring::parse_peptide_scores( peptide_score_data_sample_major& des
         {
             std::stringstream error_msg;
             error_msg << "Unable to open file '" << ifname << "'";
-            throw std::runtime_error( error_msg.str() );
+            Log::error(error_msg.str());
         }
 
     std::vector<std::string> lines_from_file;
@@ -125,5 +125,3 @@ void peptide_scoring::write_peptide_scores( std::ostream& output,
             output << "\n";
         }
 }
-
-

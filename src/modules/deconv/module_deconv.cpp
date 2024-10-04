@@ -1,3 +1,5 @@
+#include <tuple>
+#include <ios>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -10,7 +12,9 @@
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/iterator_range.hpp>
 #include <algorithm>
+#include <type_traits>
 
+#include "logger.h"
 #include "fs_tools.h"
 #include "module_deconv.h"
 #include "kmer_tools.h"
@@ -21,132 +25,142 @@
 #include "overlap_data.h"
 #include "distance_matrix.h"
 
-module_deconv::module_deconv() = default;
-
-std::string module_deconv::get_name()
+module_deconv::module_deconv()
 {
-    return "Deconv";
+    name = "Deconv";
 }
 
-void module_deconv::run( options *opts )
+void module_deconv::run(options *opts)
 {
-    options_deconv *d_opts = ( options_deconv * ) opts;
+    options_deconv *d_opts = (options_deconv*) opts;
     time_keep::timer timer;
 
     timer.start();
 
     fs_tools::path input_base{ d_opts->enriched_fname };
 
-    if( fs_tools::is_directory( input_base ) )
+    if (fs_tools::is_directory(input_base))
+    {
+        if (d_opts->output_fname == "deconv_output.tsv")
         {
-            if( d_opts->output_fname == "deconv_output.tsv" )
-                {
-                    d_opts->output_fname = "deconv_output";
-                }
+            d_opts->output_fname = "deconv_output";
+        }
 
-            fs_tools::path output_base{ d_opts->output_fname };
-            fs_tools::path assign_map_base{ d_opts->species_peptides_out };
+        fs_tools::path output_base{ d_opts->output_fname };
+        fs_tools::path assign_map_base{ d_opts->species_peptides_out };
+
+        if (!assign_map_base.empty())
+        {
+            fs_tools::create_directory(assign_map_base);
+        }
+
+        bool output_existed = !fs_tools::create_directory(output_base);
+
+        if (output_existed)
+        {
+            Log::warn(
+                "Output directory '"
+                + output_base.string()
+                + "' already exists. Any "
+                "files with colliding names will be "
+                "overwritten.\n"
+            );
+        }
+
+        auto in_dir_iter = fs_tools::directory_iterator(input_base);
+
+        for (auto& input_f : boost::make_iterator_range(in_dir_iter, {}))
+        {
+            std::string file_name = input_f.path().filename().string();
+
+            if (boost::algorithm::ends_with(file_name, d_opts->enriched_file_ending) == 0)
+            {
+                continue;
+            }
+
+            if(d_opts->remove_file_types)
+            {
+                file_name = input_f.path().filename().stem().string();
+            }
+
+            fs_tools::path in_path = input_f;
+            fs_tools::path out_path = output_base/( file_name + d_opts->outfile_suffix );
 
             if( !assign_map_base.empty() )
-                {
-                    fs_tools::create_directory( assign_map_base );
-                }
+            {
+                fs_tools::path map_path = assign_map_base/( file_name + d_opts->map_suffix );
 
-            bool output_existed = !fs_tools::create_directory( output_base );
+                d_opts->species_peptides_out = map_path.string();
+            }
 
-            if( output_existed )
-                {
-                    std::cout << "WARNING: Output directory '"
-                              << output_base.string()
-                              << "' already exists. Any "
-                              << "files with colliding names will be "
-                              << "overwritten.\n";
-                }
+            d_opts->enriched_fname = in_path.string();
+            d_opts->output_fname   = out_path.string();
 
-            auto in_dir_iter = fs_tools::directory_iterator( input_base );
-
-            for( auto& input_f : boost::make_iterator_range( in_dir_iter, {} ) )
-                {
-                    std::string file_name = input_f.path().filename().string();
-
-                    if ( boost::algorithm::ends_with(file_name, d_opts->enriched_file_ending) == 0 )
-                    {
-                        continue;
-                    }
-
-                    if( d_opts->remove_file_types )
-                        {
-                            file_name = input_f.path().filename().stem().string();
-                        }
-
-                    fs_tools::path in_path = input_f;
-                    fs_tools::path out_path = output_base/( file_name + d_opts->outfile_suffix );
-
-                    if( !assign_map_base.empty() )
-                        {
-                            fs_tools::path map_path = assign_map_base/( file_name + d_opts->map_suffix );
-
-                            d_opts->species_peptides_out = map_path.string();
-                        }
-
-                    d_opts->enriched_fname = in_path.string();
-                    d_opts->output_fname   = out_path.string();
-
-                    choose_kmers( d_opts );
-                }
-        }
-    else
-        {
             choose_kmers( d_opts );
         }
+    }
+    else
+    {
+        choose_kmers(d_opts);
+    }
 
     timer.stop();
 
-    std::cout << "Took " << time_keep::get_elapsed( timer ) << " second(s).\n";
+    Log::info(
+        "Took " + std::to_string(time_keep::get_elapsed(timer))
+        + " second(s).\n"
+    );
 }
 
-void module_deconv::choose_kmers( options_deconv *opts )
+void module_deconv::choose_kmers(options_deconv *opts)
 {
     options_deconv *d_opts = opts;
 
-    auto enriched_species = parse_enriched_file( d_opts->enriched_fname );
-    auto pep_species_vec  = parse_linked_file( d_opts->linked_fname );
+    auto enriched_species = parse_enriched_file(d_opts->enriched_fname);
+    auto pep_species_vec  = parse_linked_file(d_opts->linked_fname);
 
-    evaluation_strategy::score_strategy score_strat   = get_evaluation_strategy( d_opts );
-    evaluation_strategy::filter_strategy filter_strat = get_filter_method( d_opts );
-    evaluation_strategy::tie_eval_strategy tie_eval_strat = get_tie_eval_strategy( d_opts );
+    evaluation_strategy::score_strategy score_strat = get_evaluation_strategy(d_opts);
+    evaluation_strategy::filter_strategy filter_strat = get_filter_method(d_opts);
+    evaluation_strategy::tie_eval_strategy tie_eval_strat = get_tie_eval_strategy(d_opts);
 
     // filter out the peptides that are not enriched
-    auto it = std::remove_if( pep_species_vec.begin(), pep_species_vec.end(),
-                              [&]( std::pair<std::string,std::vector<std::pair<std::string,double>>>& i) -> bool
-                              { return enriched_species.find( std::get<0>( i ) )
-                                      == enriched_species.end();
-                              }
+    auto it = std::remove_if(
+        pep_species_vec.begin(), pep_species_vec.end(),
+        [&](std::pair<
+                std::string,
+                std::vector<std::pair<std::string, double>>
+            >& i
+        ) -> bool
+        {
+            return enriched_species.find(std::get<0>(i)) == enriched_species.end();
+        }
                             );
-    pep_species_vec.erase( it, pep_species_vec.end() );
+    pep_species_vec.erase(it, pep_species_vec.end());
 
     std::unordered_map<std::string,std::vector<std::pair<std::string,double>>>
         peptide_assignment_global;
 
-    std::unordered_map<species_id<std::string>,
-                       scored_entity<peptide, double>
-                       >
+    std::unordered_map<species_id<std::string>, scored_entity<peptide, double>>
         species_highest_peptide;
 
     // add what species were originally shown to "hit" which peptides
-    for( const auto& x : pep_species_vec )
+    for (const auto& x : pep_species_vec)
+    {
+        auto ref = peptide_assignment_global
+            .emplace(x.first, std::vector<std::pair<std::string,double>>())
+            .first;
+        for (const auto& i : x.second)
         {
-            auto ref = peptide_assignment_global
-                .emplace( x.first, std::vector<std::pair<std::string,double>>() ).first;
-            for( const auto& i : x.second )
-                {
-                    ref->second.emplace_back( i );
-                }
+            ref->second.emplace_back( i );
         }
+    }
 
-    std::size_t thresh = d_opts->threshold;
+    // std::size_t thresh = d_opts->threshold;
+    // create dictionary from theshold file
+    std::unordered_map<std::string, std::size_t> thresholds;
+    thresh_file_to_map(thresholds, d_opts->thresholds_fname, pep_species_vec);
 
-    omp_set_num_threads( d_opts->single_threaded ? 1 : 2 );
+    omp_set_num_threads(d_opts->single_threaded ? 1 : 2);
 
     std::unordered_map<std::string, std::vector<std::string>> id_pep_map;
     std::unordered_map<std::string, std::vector<std::pair<std::string,double>>>
@@ -158,24 +172,27 @@ void module_deconv::choose_kmers( options_deconv *opts )
 
     std::vector<std::pair<species_data, bool>> output_counts;
 
-    std::string id_name_map_fname;
-
     std::map<std::string,std::string> name_id_map;
     std::map<std::string,std::string>* name_id_map_ptr = nullptr;
 
-    if( !util::empty( d_opts->id_name_map_fname ) )
-        {
-            parse_name_map( d_opts->id_name_map_fname, name_id_map );
-            name_id_map_ptr = &name_id_map;
-        }
+    if (!d_opts->id_name_map_fname.empty())
+    {
+        parse_ncbi_name_map(d_opts->id_name_map_fname, name_id_map);
+        name_id_map_ptr = &name_id_map;
+    }
+    else if (!std::get<0>(d_opts->custom_id_name_map_info).empty())
+    {
+        parse_custom_name_map(d_opts->custom_id_name_map_info, name_id_map);
+        name_id_map_ptr = &name_id_map;
+    }
 
     auto filter = [&]( evaluation_strategy::filter_strategy filter_strat )
         {
             if( filter_strat
                 == evaluation_strategy::filter_strategy::SCORE_FILTER )
-                {
-                    filter_counts<std::string,double>
-                    ( species_scores, thresh );
+                {   
+                    filter_counts<std::string,double,std::size_t>
+                    ( species_scores, thresholds );
 
 
                 }
@@ -185,101 +202,99 @@ void module_deconv::choose_kmers( options_deconv *opts )
                 {
 
                     // recreate species_scores
-                    filter_counts<std::string,double>
-                    ( species_peptide_counts, thresh );
+                    filter_counts<std::string,double,std::size_t>
+                    ( species_peptide_counts, thresholds );
                 }
         };
 
     auto make_map = [&]()
-        {
+    {
         #pragma omp parallel
+        {
+            #pragma omp sections
             {
-                #pragma omp sections
+                #pragma omp section
                 {
-                    #pragma omp section
-                    {
-                        id_to_pep( id_pep_map, pep_species_vec );
-                    }
-
-                    #pragma omp section
-                    {
-                        pep_to_id( pep_id_map, pep_species_vec );
-                    }
+                    id_to_pep(id_pep_map, pep_species_vec);
                 }
 
-                // implicit barrier
-                #pragma omp sections
+                #pragma omp section
                 {
-                    #pragma omp section
-                    {
-                        score_species( species_scores, id_pep_map, pep_id_map,
-                                       score_strat
-                                     );
-                    }
-
-                    #pragma omp section
-                    {
-                        get_species_counts_per_peptide( id_pep_map,
-                                                        species_peptide_counts
-                                                      );
-                    }
+                    pep_to_id(pep_id_map, pep_species_vec);
                 }
             }
-        };
 
-    auto make_map_and_filter = [&]( evaluation_strategy::filter_strategy filter_strat )
-        {
-            make_map();
-            filter( filter_strat );
-        };
+            // implicit barrier
+            #pragma omp sections
+            {
+                #pragma omp section
+                {
+                    score_species(
+                        species_scores, id_pep_map,
+                        pep_id_map, score_strat
+                    );
+                }
+
+                #pragma omp section
+                {
+                    get_species_counts_per_peptide(
+                        id_pep_map, species_peptide_counts
+                    );
+                }
+            }
+        }
+    };
+
+    auto make_map_and_filter = [&](evaluation_strategy::filter_strategy filter_strat)
+    {
+        make_map();
+        filter(filter_strat);
+    };
 
     make_map();
 
+    auto write_round_scores = [&](std::size_t round_no)
+    {
+        std::unordered_map<std::string,std::pair<double,double>> round_scores;
 
-    auto write_round_scores = [&]( std::size_t round_no )
-        {
-            std::unordered_map<std::string,std::pair<double,double>> round_scores;
+        std::ofstream out_f;
+        std::string fname;
+        fs_tools::create_fname(
+            fname, d_opts->orig_scores_dname,
+            "round_", round_no
+        );
 
-            std::ofstream out_f;
-            std::string fname;
-            fs_tools::create_fname( fname,
-                                    d_opts->orig_scores_dname,
-                                    "round_", round_no
-                                  );
+        // populate the unfiltered scores with counts, scores for all species
+        combine_count_and_score(
+            round_scores, species_peptide_counts,
+            species_scores
+        );
 
-            // populate the unfiltered scores with counts, scores for all species
-            combine_count_and_score( round_scores,
-                                     species_peptide_counts,
-                                     species_scores
-                                   );
+        out_f.open(fname);
 
-            out_f.open( fname );
+        write_scores(out_f, name_id_map_ptr, round_scores);
 
-            write_scores( out_f,
-                          name_id_map_ptr,
-                          round_scores
-                        );
+        out_f.close();
+    };
 
-            out_f.close();
-        };
-
-    filter( filter_strat );
+    filter(filter_strat);
 
     // used to track the original scores for each species
     std::unordered_map<std::string,std::pair<double,double>> original_scores;
     std::size_t round_no = 0;
 
-    if( !util::empty( d_opts->orig_scores_dname ) )
-        {
-            write_round_scores( round_no );
-        }
+    if (!util::empty(d_opts->orig_scores_dname))
+    {
+        write_round_scores(round_no);
+    }
 
-    combine_count_and_score( original_scores,
-                             species_peptide_counts,
-                             species_scores
-                           );
+    combine_count_and_score(
+        original_scores, species_peptide_counts,
+        species_scores
+    );
 
-    std::unordered_map<std::string,std::vector<std::string>> peptide_assignment_map;
+    std::unordered_map<std::string,std::vector<std::string>>
+        peptide_assignment_map;
 
     std::unordered_map<std::string,std::unordered_map<std::string,double>>
         pep_spec_map_w_counts;
@@ -321,7 +336,7 @@ void module_deconv::choose_kmers( options_deconv *opts )
         species_with_highest_peptide;
 
     while( species_peptide_counts.size()
-           && species_scores[ 0 ].second > thresh )
+           && species_scores[ 0 ].second > thresholds[species_scores[ 0 ].first] )
         {
             pep_species_vec.clear();
             std::vector<std::pair<std::string,double>>
@@ -335,7 +350,7 @@ void module_deconv::choose_kmers( options_deconv *opts )
                 {
                         tie = get_tie_candidates( tie_candidates,
                                                   species_scores,
-                                                  thresh,
+                                                  thresholds,
                                                   d_opts->score_tie_threshold,
                                                   util::difference<double>()
                                                 );
@@ -344,7 +359,7 @@ void module_deconv::choose_kmers( options_deconv *opts )
                 {
                         tie = get_tie_candidates( tie_candidates,
                                                   species_scores,
-                                                  thresh,
+                                                  thresholds,
                                                   d_opts->score_tie_threshold,
                                                   util::ratio<double>()
                                                 );
@@ -410,15 +425,15 @@ void module_deconv::choose_kmers( options_deconv *opts )
                         }
                 }
 
-            for( auto it = pep_id_map.begin(); it != pep_id_map.end(); ++it )
-                {
-                    pep_species_vec.emplace_back( it->first, it->second );
-                }
+            for (auto it = pep_id_map.begin(); it != pep_id_map.end(); ++it)
+            {
+                pep_species_vec.emplace_back(it->first, it->second);
+            }
 
-            if( !util::empty( d_opts->orig_scores_dname ) )
-                {
-                    write_round_scores( round_no );
-                }
+            if (!util::empty(d_opts->orig_scores_dname))
+            {
+                write_round_scores(round_no);
+            }
 
             tied_species.clear();
             tie_candidates.clear();
@@ -429,24 +444,23 @@ void module_deconv::choose_kmers( options_deconv *opts )
             species_peptide_scores.clear();
             species_with_highest_peptide.clear();
 
-            make_map_and_filter( filter_strat );
+            make_map_and_filter(filter_strat);
 
             ++round_no;
         }
 
-    write_outputs( d_opts->output_fname,
-                   name_id_map_ptr,
-                   output_counts,
-                   original_scores
-                 );
+    write_outputs(
+        d_opts->output_fname, name_id_map_ptr,
+        output_counts, original_scores, std::get<2>(d_opts->custom_id_name_map_info)
+    );
 
-    if( d_opts->species_peptides_out.compare( "" ) )
-        {
-            write_species_assign_map( d_opts->species_peptides_out,
-                                      peptide_assignment_global,
-                                      peptide_assignment_map
-                                    );
-        }
+    if (d_opts->species_peptides_out.compare(""))
+    {
+        write_species_assign_map(
+            d_opts->species_peptides_out, peptide_assignment_global,
+            peptide_assignment_map
+        );
+    }
 }
 
 
@@ -492,15 +506,21 @@ module_deconv::parse_linked_file( std::string fname )
                                     if( match[ 1 ] != ""
                                         && match[ 2 ] == "" )
                                         {
-                                            throw std::runtime_error( "No score count found "
-                                            "for ID: " + item + ".\n"
-                                            "The format follows the link module output. "
-                                            "The link module outputs linkage maps with "
-                                            "\":score\" after each ID that is linked to "
-                                            "a given peptide. This score is utilized in "
-                                            "the summation scoring method, but "
-                                            "not utilized in the fractional or integer "
-                                            "scoring methods.\n" );
+                                            Log::error(
+                                                "No score count found"
+                                                " for ID: " + item + ".\n"
+                                                "The format follows the link"
+                                                " module output. The link"
+                                                " module outputs linkage maps"
+                                                " with \":score\" after each"
+                                                " ID that is linked to a given"
+                                                " peptide. This score is"
+                                                " utilized in the summation"
+                                                " scoring method, but not"
+                                                " utilized in the fractional"
+                                                " or integer scoring methods."
+                                                "\n"
+                                            );
                                         }
                                     // matched 'id:count'
                                     else if( match[ 1 ] != ""
@@ -516,8 +536,10 @@ module_deconv::parse_linked_file( std::string fname )
                                         }
                                     else
                                         {
-                                            std::cout << "Failed to line: \n";
-                                            std::cout << item << "\n";
+                                            Log::info(
+                                                "Failed to line: \n"
+                                                + item + "\n"
+                                            );
                                         }
 
                                 }
@@ -744,7 +766,8 @@ void module_deconv::write_outputs( std::string out_name,
                                    >&
                                    out_counts,
                                    std::unordered_map<std::string,std::pair<double,double>>&
-                                   original_scores
+                                   original_scores,
+                                   std::string custom_id_header
                                  )
 
 {
@@ -752,115 +775,208 @@ void module_deconv::write_outputs( std::string out_name,
 
     if( id_name_map != nullptr )
         {
-            out_file << "Species Name\t";
+            if( !custom_id_header.empty() )
+                {
+                    out_file << custom_id_header << '\t';
+                }
+            else
+                {
+                    out_file << "Species Name\t";
+                }
         }
-
 
     out_file << "Species ID\tCount\tScore\tOriginal Count\tOriginal Score\tMax Probe Score\n";
 
-    bool tied = false;
-    std::vector<std::pair<species_data,bool>> tied_items;
-
-    for( auto it = out_counts.begin();
-         it != out_counts.end();
-         ++it
-       )
+    for(
+        auto out_count = out_counts.begin();
+        out_count != out_counts.end();
+        out_count++
+    )
         {
-            auto tied_item = it;
-            while( tied_item->second ) // *it and the next species are tied, report together
+            bool tied = false;
+            std::vector<std::pair<species_data, bool>> tied_items;
+            
+            // using out_count allows traversal of out_counts without having
+            // to update main loop to next non-tied sample
+            while (out_count != out_counts.end() && out_count->second)
                 {
-                    tied_item = std::next( tied_item, 1 );
-                    tied_items.push_back( *tied_item );
+                    tied_items.push_back(*out_count);
+                    out_count++;
+                    tied = true;
+                }
+            // necessary check to capture last tied item into vector
+            if (out_count != out_counts.end() && (out_count - 1)->second)
+                {
+                    tied_items.push_back(*out_count);
                     tied = true;
                 }
 
+			// use naming information if provided
             if( id_name_map != nullptr )
                 {
-                    for( auto tied_i : tied_items )
+                    // check tied_items has data
+                    if (tied)
                         {
-                            to_stream_if( out_file, tied,
-                                          get_map_value( id_name_map,
-                                                         tied_i.first.get_id(),
-                                                         tied_i.first.get_id()
-                                                       ),
-                                          ","
-                                );
-                        }
-                    out_file << get_map_value( id_name_map,
-                                               it->first.get_id(),
-                                               it->first.get_id()
-                                             ) << "\t";
-                }
+                            std::sort(tied_items.begin(), tied_items.end(),
+                                [this, &id_name_map](
+                                    const std::pair<species_data, bool> pair1,
+                                    const std::pair<species_data, bool> pair2
+                                )
+                                {
+                                    std::string pair1_name = get_map_value(
+                                        id_name_map,
+                                        pair1.first.get_id(),
+                                        pair1.first.get_id()
+                                    );
+                                    std::string pair2_name = get_map_value(
+                                        id_name_map,
+                                        pair2.first.get_id(),
+                                        pair2.first.get_id()
+                                    );
 
+                                    return pair1_name.compare(pair2_name) < 0;
+                                }
+                            );
+
+                            for(
+                                auto tied_item = tied_items.begin();
+                                tied_item != tied_items.end() - 1;
+                                tied_item++
+                            )
+                                {
+                                    out_file << get_map_value(
+                                        id_name_map, tied_item->first.get_id(),
+                                        tied_item->first.get_id()
+                                    ) << ",";
+                                }
+                            out_file << get_map_value(
+                                id_name_map, (tied_items.end() - 1)->first.get_id(),
+                                (tied_items.end() - 1)->first.get_id()
+                            ) << "\t";
+                        }    
+                    else    // assume out_count has no ties
+                        {
+                            out_file << get_map_value(
+                                id_name_map, out_count->first.get_id(),
+                                out_count->first.get_id()
+                            ) << "\t";
+                        }
+                }
+			// otherwise, sort by species ID
             else
                 {
-                    out_file << "\t";
+                    // check tied_items has data
+                    if (tied)
+                        {
+                            std::sort(tied_items.begin(), tied_items.end(),
+                                [](
+                                    const std::pair<species_data, bool> pair1,
+                                    const std::pair<species_data, bool> pair2
+                                )
+                                {
+                                    return pair1.first.get_id().compare(pair2.first.get_id()) < 0;
+                                }
+                            );
+                        }
                 }
 
-            auto orig_id = it->first.get_id();
-
-            // species id for both (both are only written if tied is true)
-            for( auto tied_i : tied_items )
+            // check for ties
+            if (tied)
                 {
+                    // report IDs
+                    for (
+                        auto tied_item = tied_items.begin();
+                        tied_item != tied_items.end() - 1;
+                        tied_item++
+                    )
+                        {
+                            out_file << tied_item->first.get_id() << ",";
+                        }
+                    out_file << (tied_items.end() - 1)->first.get_id() << "\t";
 
-                    auto tied_id = tied_i.first;
-                    to_stream_if( out_file, tied, tied_id.get_id(), "," );
+                    // report counts
+                    for (
+                        auto tied_item = tied_items.begin();
+                        tied_item != tied_items.end() - 1;
+                        tied_item++
+                    )
+                        {
+                            out_file << tied_item->first.get_count() << ",";
+                        }
+                    out_file << (tied_items.end() - 1)->first.get_count() << "\t";
+
+                    // report scores
+                    for (
+                        auto tied_item = tied_items.begin();
+                        tied_item != tied_items.end() - 1;
+                        tied_item++
+                    )
+                        {
+                            out_file << tied_item->first.get_score() << ",";
+                        }
+                    out_file << (tied_items.end() - 1)->first.get_score() << "\t";
+
+                    // report original counts
+                    for (
+                        auto tied_item = tied_items.begin();
+                        tied_item != tied_items.end() - 1;
+                        tied_item++
+                    )
+                        {
+                            out_file << original_scores
+                                            .find(tied_item->first.get_id())
+                                            ->second.first << ",";
+                        }
+                    out_file << original_scores
+                                    .find((tied_items.end() - 1)->first.get_id())
+                                    ->second.first << "\t";
+
+                    // report original scores
+                    for (
+                        auto tied_item = tied_items.begin();
+                        tied_item != tied_items.end() - 1;
+                        tied_item++
+                    )
+                        {
+                            out_file << original_scores
+                                            .find(tied_item->first.get_id())
+                                            ->second.second << ",";
+                        }
+                    out_file << original_scores
+                                    .find((tied_items.end() - 1)->first.get_id())
+                                    ->second.second << "\t";
+
+                    // report highest scoring peptides
+                    for (
+                        auto tied_item = tied_items.begin();
+                        tied_item != tied_items.end() - 1;
+                        tied_item++
+                    )
+                        {
+                            out_file << tied_item->first
+                                            .get_highest_scoring_peptide()
+                                            .get_score() << ",";
+                        }
+                    out_file << (tied_items.end() - 1)->first
+                                    .get_highest_scoring_peptide()
+                                    .get_score() << "\n";
                 }
-            out_file << orig_id << "\t";
-
-            // count for both
-            for( auto tied_i : tied_items )
+            // otherwise, assume no tied items
+            else
                 {
-                    to_stream_if( out_file, tied, tied_i.first.get_count(), "," );
-                }
-
-            out_file << it->first.get_count() << "\t";
-
-            // score for both
-            for( auto tied_i : tied_items )
-                {
-                    to_stream_if( out_file, tied, tied_i.first.get_score(), "," );
-                }
-
-            out_file << it->first.get_score() << "\t";
-
-            // original count for both
-            for( auto tied_i : tied_items )
-                {
-                    auto tied_id = std::get<0>( tied_i );
-                    to_stream_if( out_file, tied,
-                                  original_scores
-                                  .find( tied_id.get_id() )->second.first,
-                                  ","
-                                  );
-                }
-
-            out_file << original_scores.find( orig_id )->second.first << "\t";
-
-            // original score for both
-            for( auto tied_i : tied_items )
-                {
-                    auto tied_id = std::get<0>( tied_i );
-                    to_stream_if( out_file, tied,
-                                  original_scores
-                                  .find( tied_id.get_id() )->second.second,
-                                  ","
-                                );
-                }
-
-            out_file << original_scores.find( orig_id )->second.second << "\t";
-
-            for( auto tied_i : tied_items )
-                {
-                    out_file << tied_i.first.get_highest_scoring_peptide().get_score() << ",";
-                }
-            out_file << it->first.get_highest_scoring_peptide().get_score() << "\n";
-
-            if( tied )
-                {
-                    it = tied_item;
-                    tied = false;
-                    tied_items.clear();
+                    auto orig_id = out_count->first.get_id();
+                    // report ID
+                    out_file << orig_id << "\t";
+                    // report count
+                    out_file << out_count->first.get_count() << "\t";
+                    // report score
+                    out_file << out_count->first.get_score() << "\t";
+                    // report original count
+                    out_file << original_scores.find(orig_id)->second.first << "\t";
+                    // report original score
+                    out_file << original_scores.find(orig_id)->second.second << "\t";
+                    // report highest scoring peptide
+                    out_file << out_count->first.get_highest_scoring_peptide().get_score() << "\n";
                 }
         }
 }
@@ -907,61 +1023,115 @@ module_deconv::get_evaluation_strategy( options_deconv *opts )
         {
             return evaluation_strategy::score_strategy::SUMMATION_SCORING;
         }
-    throw std::runtime_error( "The scoring strategy, " + opts->scoring_strategy
-            + ", provided for '--scoring_strategy' is not a valid argument. "
-            "Valid arguments include: \"summation\", \"integer\", and \"fraction\"." );
+    Log::error(
+        "The scoring strategy, " + opts->scoring_strategy + ", provided for"
+        " '--scoring_strategy' is not a valid argument. Valid arguments"
+        " include: \"summation\", \"integer\", and \"fraction\"."
+    );
 }
 
 evaluation_strategy::tie_eval_strategy
-module_deconv::get_tie_eval_strategy( options_deconv *opts )
+module_deconv::get_tie_eval_strategy(options_deconv *opts)
 {
-    if( opts->scoring_strategy.compare( "summation" ) == 0 )
-        {
-            return evaluation_strategy::tie_eval_strategy::SUMMATION_SCORING_TIE_EVAL;
-        }
+    if(opts->scoring_strategy.compare("summation") == 0)
+    {
+        return evaluation_strategy
+            ::tie_eval_strategy::SUMMATION_SCORING_TIE_EVAL;
+    }
 
-    return use_ratio_overlap_threshold( opts->score_overlap_threshold ) ?
+    return use_ratio_overlap_threshold(opts->score_overlap_threshold) ?
         evaluation_strategy::tie_eval_strategy::PERCENT_TIE_EVAL        :
         evaluation_strategy::tie_eval_strategy::INTEGER_TIE_EVAL;
 }
 
 
-void
-module_deconv::parse_name_map( std::string fname,
-                               std::map<std::string,std::string>& name_map
-                             )
-{
-    std::ifstream in_stream( fname );
+void module_deconv::parse_ncbi_name_map(
+    std::string fname,
+    std::map<std::string,std::string>& name_map
+) {
+    std::ifstream in_stream(fname);
     std::size_t lineno = 0;
 
     std::string line;
 
-    while( std::getline( in_stream, line ) )
+    while (std::getline(in_stream, line))
+    {
+        std::vector<std::string> split_line;
+
+        if (lineno)
         {
-            std::vector<std::string> split_line;
-            if( lineno )
-                {
+            boost::trim_right(line);
+            boost::split(split_line, line, boost::is_any_of("|"));
 
-                    boost::trim_right( line );
-                    boost::split( split_line, line,
-                                  boost::is_any_of( "|" )
-                                );
+            // if this is a species-level ID,
+            // then this will provide the mapping.
+            // Otherwise some space is wasted, but that's not
+            // a major concern.
+            boost::trim(split_line[0]);
+            boost::trim(split_line[1]);
 
-                    // if this is a species-level ID,
-                    // then this will provide the mapping.
-                    // Otherwise some space is wasted, but that's not
-                    // a major concern.
-                    boost::trim( split_line[ 0 ] );
-                    boost::trim( split_line[ 1 ] );
+            std::string id   = (split_line[0]);
+            std::string name = split_line[1];
 
-                    std::string id   = ( split_line[ 0 ] );
-                    std::string name = split_line[ 1 ];
-
-                    name_map.insert( std::make_pair( id, name ) );
-                }
-
-            ++lineno;
+            name_map.insert(std::make_pair(id, name));
         }
+
+        ++lineno;
+    }
+}
+
+
+void module_deconv::parse_custom_name_map(
+    std::tuple<std::string, std::string, std::string>& tup,
+    std::map<std::string, std::string>& name_map
+) {
+    std::ifstream map_stream(std::get<0>(tup), std::ios::in);
+    std::string line;
+    std::vector<std::string> split_line;
+
+    // get indices to taxon ID and species name
+    std::size_t taxID_idx = 0;
+    std::size_t spec_name_idx = 0;
+
+    std::getline(map_stream, line);
+    boost::split(split_line, line, boost::is_any_of("\t"));
+    for( auto& header: split_line )
+        {
+            boost::trim(header);
+        }
+
+    for (
+        std::size_t header_col_idx = 0;
+        header_col_idx < split_line.size();
+        header_col_idx += 1
+    ) {
+        // check for taxon ID index
+        if (std::get<1>(tup).compare(split_line[header_col_idx]) == 0)
+        {
+            taxID_idx = header_col_idx;
+        }
+        // otherwise, check for species name index
+        else if (std::get<2>(tup).compare(split_line[header_col_idx]) == 0)
+        {
+            spec_name_idx = header_col_idx;
+        }
+    }
+
+    // map taxon IDs to species names
+    while (std::getline(map_stream, line))
+    {
+        // TODO: make sure don't need to trim anything
+        boost::split(split_line, line, boost::is_any_of("\t"));
+        for( auto& val: split_line )
+        {
+            boost::trim(val);
+        }
+
+        std::string id = split_line[taxID_idx];
+        std::string name = split_line[spec_name_idx];
+
+        name_map.insert(std::make_pair(id, name));
+    }
 }
 
 
@@ -1052,7 +1222,7 @@ module_deconv::get_tie_type( std::size_t to_convert )
     switch( to_convert )
         {
         case 0:
-            throw std::runtime_error( "to_convert must be > 0" );
+            Log::error("to_convert must be > 0");
             break;
         case 1:
             ret_val =  tie_data::tie_type::SINGLE_WAY_TIE;
@@ -1228,4 +1398,64 @@ bool module_deconv
 ::use_ratio_overlap_threshold( double threshold )
 {
     return !util::is_integer( threshold );
+}
+
+void module_deconv::thresh_file_to_map( std::unordered_map<std::string, std::size_t>& thresh_map, std::string filename, 
+                                        const std::vector<std::pair<std::string, std::vector<std::pair<std::string, double>>>> pep_species_vec )
+{   
+    bool is_digit = false;
+
+    // test if input is a digit
+    if (!filename.empty() && std::find_if(filename.begin(), filename.end(), [](unsigned char c) { return !std::isdigit(c); }) == filename.end() )
+        {
+            is_digit = true;
+        }
+
+    // set all values to number or initialze as 0
+    for( const auto& pep: pep_species_vec)
+        {
+            for( const auto& spec: pep.second )
+                {
+                    if( is_digit )
+                        {  
+                            thresh_map[spec.first] = std::stoi(filename);
+                        }
+                    else
+                        {
+                            thresh_map[spec.first] = 0;
+                        }
+                }
+        }
+
+    if( !is_digit )
+        {
+            std::ifstream file( filename );
+            std::string line;
+            std::vector<std::string> split_line;
+
+            if( file.fail() )
+                {
+                    Log::error("Threshold linkage map file does not exist or negative threshold was given.");
+                }
+
+            // skip header
+            std::getline( file, line );
+
+            // read each line of file
+            while( std::getline( file, line ) )
+                {
+                    // assign values to map (use boost:split)
+                    boost::split( split_line, line, boost::is_any_of("\t") );
+
+                    if( split_line.size() == 2 )
+                        {
+                            thresh_map[ split_line[0] ] = std::stoi(split_line[1]);
+                        }
+                    else
+                        {
+                            Log::error("Incorrect formatting of threshold linkage map."
+                                        " Make sure it is tab delimited with 2 columns.");
+                        }
+                }
+        }
 }

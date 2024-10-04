@@ -1,12 +1,16 @@
 #include <numeric>
 
+#include "logger.h"
 #include "module_bin.h"
 #include "omp_opt.h"
 #include "time_keep.h"
 #include <fstream>
 #include <iomanip>
 
-module_bin::module_bin() = default;
+module_bin::module_bin()
+{
+    name = "Bin";
+}
 
 void module_bin::run( options *opts )
 {
@@ -59,7 +63,7 @@ void module_bin::run( options *opts )
 
     timer.stop();
 
-    std::cout << "Took " << timer.get_elapsed() << " seconds.\n";
+    Log::info("Took " + std::to_string(timer.get_elapsed()) + " seconds.\n");
 }
 
 bin_collection module_bin::bin_ranked_probes( const probe_rank& ranked_probes,

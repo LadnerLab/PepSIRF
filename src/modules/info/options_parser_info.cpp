@@ -1,3 +1,4 @@
+#include "logger.h"
 #include "options_parser_info.h"
 #include <boost/program_options.hpp>
 
@@ -57,22 +58,33 @@ bool options_parser_info
           "peptide names as row names. Each entry consists of the average of the replicate "
           "values for the given sample and peptide. \n"
         )
+        ("logfile", po::value( &opts_info->logfile )
+         ->default_value( options_info::set_default_log() ),
+         "Designated file to which the module's processes are logged. By "
+         "default, the logfile's name will include the module's name and the "
+         "time the module started running.\n"
+        )
         ;
 
     po::store( po::command_line_parser( argc, *argv ).options( desc ).run(), vm);
 
-    if( vm.count( "help" )
+    if (
+        vm.count( "help" )
         || argc == 2
-        )
-        {
-            std::cout << desc << std::endl;
-            return false;
-        }
+    )
+    {
+        std::ostringstream info_str;
+        info_str << desc << "\n";
+
+        Log::info(info_str.str());
+
+        return false;
+    }
     else
-        {
-            po::notify( vm );
-            return true;
-        }
+    {
+        po::notify( vm );
+        return true;
+    }
 
     return true;
 }

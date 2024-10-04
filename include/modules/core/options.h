@@ -1,5 +1,7 @@
 #ifndef OPTIONS_HH_INCLUDED
 #define OPTIONS_HH_INCLUDED
+
+#include <ctime>
 #include <string>
 
 /*! Data class to contain and handle 
@@ -12,6 +14,9 @@ public:
     options(): DEFAULT_NUM_THREADS( 2 ){} //!< Default constructor.
     virtual ~options();
 
+    // name of file to which runtime logs will be written
+    static std::string logfile;
+
     int num_threads; //!< The number of threads to use for computation.
     const int DEFAULT_NUM_THREADS; //!< The default number of threads to use
 
@@ -20,8 +25,22 @@ public:
      * class by the command-line.
      * @returns String containing arguments, one per line. Arguments are formatted in 
      *          '--arg_name argument' format.
-     **/
+     */
     virtual std::string get_arguments();
+
+    /**
+     * Gets the module's log file
+     * @return module's log file name
+     */
+    static std::string get_logfile();
+
+    /**
+     * Sets the logfile name to the default dynamic name
+     * @return dynamic name which includes the module name and time of run
+     */
+    static std::string set_default_log();
 };
 
-#endif //OPTIONS_HH_INCLUDED
+
+#endif /* OPTIONS_HH_INCLUDED */
+
