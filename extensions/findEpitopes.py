@@ -280,6 +280,7 @@ def process_file_probes(data, aligned_probes_path, removed_peptides = set()):
 def find_core_epitopes(alignCountsD, window_size, max_zeros, max_overlap, peak_windows):
     counts = list(alignCountsD.values())
     possible_windowsD = {}
+    possible_windows_avgD = {}
     start_idx = 0
     while start_idx < len(counts) - window_size + 1:
         end_idx = start_idx + window_size
@@ -288,37 +289,53 @@ def find_core_epitopes(alignCountsD, window_size, max_zeros, max_overlap, peak_w
         # Check no more than max_zeros and no overlap beyond max_overlap
         if window.count(0) <= max_zeros and all(get_overlap((start_idx, end_idx), x) <= max_overlap for x in peak_windows):
             possible_windowsD[(start_idx, end_idx)] = sum(window)
+            possible_windows_avgD[(start_idx, end_idx)] = sum(window) / len(window)
 
         start_idx += 1
 
     number_of_windows = len(possible_windowsD)
     if number_of_windows == 0:
         return None, 0
-
-    # Find max score window(s)
-    max_score = max(possible_windowsD.values())
-    max_windowList = [w for w, score in possible_windowsD.items() if score >= max_score * 0.9]
-
-    # Find window with highest center score
-    mid_window_scoresD = {}
-    max_mid_window_score = 0
-    for window in max_windowList:
-        mid_window_score = sum(counts[window[0] + (window_size // 3):window[1] - (window_size // 3)])
-        mid_window_scoresD[window] = mid_window_score
-        if mid_window_score > max_mid_window_score:
-            max_mid_window_score = mid_window_score
-            max_window = window
-    # If multiple windows have the same middle window score, pick the window with the largest total score
-    max_mid_windows = [w for w, score in mid_window_scoresD.items() if score == max_mid_window_score]
-    if len(max_mid_windows) > 1:
-        max_window = max(max_mid_windows, key=lambda w: possible_windowsD[w])
-        max_window_score = possible_windowsD[max_window]
-        max_window_scores = [w for w, score in possible_windowsD.items() if score == max_window_score]
-        max_full_mid_window_scores = [w for w in max_window_scores if w in max_mid_windows]
-        # If there are multiple windows with the same full window score, take the middle one
-        if len(max_full_mid_window_scores) > 1:
-            max_window = max_full_mid_window_scores[len(max_full_mid_window_scores)//2]            
-
+    # If remaining possible windows have an average score > 1.3333 (overlap of 10 or more
+    # positions for single overlapping peptides)
+    if max(possible_windows_avgD.values()) >= 1.3333:
+        # Find max score window(s)
+        max_score = max(possible_windowsD.values())
+        max_windowList = [w for w, score in possible_windowsD.items() if score >= max_score * 0.9]
+        print(f"max_windowList: {max_windowList}")
+        for ele in max_windowList:
+            print(ele,possible_windowsD[ele])
+    
+        # Find window with highest center score
+        mid_window_scoresD = {}
+        max_mid_window_score = 0
+        for window in max_windowList:
+            mid_window_score = sum(counts[window[0] + (window_size // 3):window[1] - (window_size // 3)])
+            mid_window_scoresD[window] = mid_window_score
+            if mid_window_score > max_mid_window_score:
+                max_mid_window_score = mid_window_score
+                max_window = window
+        print(f"mid_window_scoresD: {mid_window_scoresD}")
+        # If multiple windows have the same middle window score, pick the window with the largest total score
+        max_mid_windows = [w for w, score in mid_window_scoresD.items() if score == max_mid_window_score]
+        if len(max_mid_windows) > 1:
+            max_window = max(max_mid_windows, key=lambda w: possible_windowsD[w])
+            max_window_score = possible_windowsD[max_window]
+            max_window_scores = [w for w, score in possible_windowsD.items() if score == max_window_score]
+            max_full_mid_window_scores = [w for w in max_window_scores if w in max_mid_windows]
+            # If there are multiple windows with the same full window score, take the middle one
+            if len(max_full_mid_window_scores) > 1:
+                max_window = max_full_mid_window_scores[len(max_full_mid_window_scores)//2]  
+                print(max_window)
+    # If remaining possible windows are all individual peptides with little overlap
+    # switch to simple sliding window approach choosing all windows that pass thresholds
+    if  max(possible_windows_avgD.values()) < 1.3333:
+        start_count = alignCountsD[list(possible_windowsD.keys())[0][0]]
+        possible_windows_noZeroStart = [w for w, score in possible_windowsD.items() if alignCountsD[w[0]] != 0]
+        print(f"possible_windows_noZeroStart: {possible_windows_noZeroStart}")
+        max_window = possible_windows_noZeroStart[0]
+        print(max_window)
+    
     return max_window, number_of_windows
 
 if __name__ == "__main__":
