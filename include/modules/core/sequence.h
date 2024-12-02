@@ -72,6 +72,14 @@ class sequence
      **/
     bool operator==( const sequence& s ) const;
 
+    /**
+     * Less than operator override. 
+     * For two sequences a and b we say a < b iff 
+     * a.seq < b.seq. 
+     * @param s Sequence to compare against.
+     **/
+    bool operator<( const sequence& s ) const;
+
 
     /**
      * Get the length of the 'seq' member of this class.

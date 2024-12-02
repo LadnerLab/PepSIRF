@@ -186,7 +186,7 @@ bool options_parser_demux::parse(int argc, char ***argv, options *opts)
         )
         ("fastq_output,q", po::value<std::string>(&opts_demux->fastq_out)
          ->default_value(""),
-         "Include this to output sample-level fastq files"
+         "Include this to output sample-level fastq files\n"
         )
         ("include_toggle", po::value<bool>(&opts_demux->pos_toggle)
             ->default_value(true),
@@ -216,6 +216,11 @@ bool options_parser_demux::parse(int argc, char ***argv, options *opts)
           "Include this flag with a .fastq output file name to create a single output fastq file containing"
           " all of the reads that have not been mapped to a sample/peptide (i.e., all of those that"
           "would not be included in any of the files created by the -q option).\n"
+        )
+        ("trunc_info_output", po::value<std::string>(&opts_demux->trunc_info_outdir)
+         ->default_value(""),
+         "Name of directory to output truncated sequence information. This willl include outputs for"
+         " unqiue sequences, non-unqiue sequences, and the new fasta-formatted file.\n\n"
         )
         ;
 
