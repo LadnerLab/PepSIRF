@@ -1102,11 +1102,11 @@ void module_demux::output_trunc_info(
         if(seq_counts[lib_seq.seq] > 1)
         {
             duplicates[lib_seq.seq].insert(name);
-            unique.emplace_back(name);
+            nonunique.emplace_back(name);
         }
         else
         {
-            nonunique.emplace_back(name);
+            unique.emplace_back(name);
         }
     }
 
