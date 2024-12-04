@@ -219,7 +219,7 @@ bool options_parser_demux::parse(int argc, char ***argv, options *opts)
         )
         ("trunc_info_output", po::value<std::string>(&opts_demux->trunc_info_outdir)
          ->default_value(""),
-         "Name of directory to output truncated sequence information. This willl include outputs for"
+         "Name of directory to output truncated sequence information. This will include outputs for"
          " unqiue sequences, non-unqiue sequences, and the new fasta-formatted file.\n\n"
         )
         ;
