@@ -109,6 +109,22 @@ class module_demux : public module
         std::vector<sequence> &lib_seqs
     );
 
+    /**
+     * Outputs truncated sequence info for unqiue sequences, non-unqiue 
+     * sequences, and the new fasta-formatted file
+     * @param seq_length Sequence length specified with the "--seq" option
+     * @param lib_seqs Value of library sequences received from file
+     *        specified by the "--library"
+     * @param library_fname Library file name, specified by "--library"
+     * @param trunc_info_outdir Specified output directory with the 
+     *        "--trunc_info_outdir" option
+     **/
+    void output_trunc_info(
+        std::size_t seq_length,
+        std::vector<sequence> lib_seqs,
+        std::string library_fname,
+        std::string trunc_info_outdir
+    );
 
     /**
      * Method to zero a vector of size_t elements.
@@ -380,10 +396,31 @@ class module_demux : public module
      * Creates a single output fastq file containing all of the reads that have not been mapped to a sample/peptide
      * @param filename file to output to
      * @param samp_map fastaq output map
-     * @reads_dup vector of all reads
+     * @param reads_dup vector of all reads
      **/
     void create_unmapped_reads_file( std::string filename, 
                             std::map<std::string, std::vector<fastq_sequence>> samp_map, std::vector<fastq_sequence> reads_dup );
+
+    /**
+     * Outputs a vector to a file with a delemiter between entries
+     * @param vector vector to be outputted, make sure the type of its values can use the << operator for output
+     * @param filename file to output to
+     * @param delimiter delimiter to output between values
+     **/
+    template <typename T>
+    void simple_vector_out(std::vector<T> vector, std::string output_file, std::string delimiter)
+    {
+        std::ofstream outfile(output_file, std::ios::out);
+        for (unsigned int i=0; i<vector.size(); i++)
+        {
+            outfile << vector[i];
+            if( i < vector.size()-1 )
+            {
+                outfile << delimiter;
+            }
+        }
+        outfile.close();
+    }
 
 };
 

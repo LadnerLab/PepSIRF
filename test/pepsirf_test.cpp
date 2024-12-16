@@ -520,6 +520,7 @@ TEST_CASE("Automatic truncation of library sequences", "[module_demux]")
     d_opts.sample_indexes = { "Index1", "Index2" };
     d_opts.set_info(&options_demux::index1_data, "12,10,1");
     d_opts.set_info(&options_demux::index2_data, "0,8,1");
+    d_opts.num_threads = 1;
 
     SECTION("Library sequences are resized to expected size from user")
     {
@@ -576,19 +577,21 @@ TEST_CASE("Automatic truncation of library sequences", "[module_demux]")
         d_opts.set_info(&options_demux::seq_data, "41,100,2");
         REQUIRE_THROWS(d_mod.run(&d_opts));
     }
-    SECTION("Demux outputs unmapped reads file.")
+    SECTION("Output of truncated sequence information is correct")
     {
         d_opts.set_info(&options_demux::seq_data, "41,40,2");
-        d_opts.unmapped_reads_fname = "../test/test_unmapped_reads.fastq";
+        d_opts.trunc_info_outdir = "../test/test_demux_trunc_info";
         d_mod.run(&d_opts);
 
-        std::string expected = "../test/expected/test_expected_demux_unmapped_reads.fastq";
-        std::string actual = "../test/test_unmapped_reads.fastq";
+        // test if not unique sequences file is identical
+        std::string expected = "../test/expected/test_expected_demux_trunc_info/trunc40_test_extended_demux_library_NS30_notUniq.txt";
+        std::string actual = "../test/test_demux_trunc_info/trunc40_test_extended_demux_library_NS30_notUniq.txt";
         std::ifstream ifexpected(expected, std::ios_base::in);
         std::ifstream ifactual(actual, std::ios_base::in);
         std::string expected_line;
         std::string actual_line;
 
+        // construct set of lines for each actual demux output
         std::unordered_set<std::string> actual_line_set;
         while (!ifactual.eof())
         {
@@ -603,6 +606,131 @@ TEST_CASE("Automatic truncation of library sequences", "[module_demux]")
                 actual_line_set.find(expected_line) != actual_line_set.end()
             );
         }
+
+        // test if not unique grouped file is identical
+        expected = "../test/expected/test_expected_demux_trunc_info/trunc40_test_extended_demux_library_NS30_notUniqGrouped.tsv";
+        actual = "../test/test_demux_trunc_info/trunc40_test_extended_demux_library_NS30_notUniqGrouped.tsv";
+        ifexpected = std::ifstream(expected, std::ios_base::in);
+        ifactual = std::ifstream(actual, std::ios_base::in);
+
+        std::unordered_map<std::string, std::unordered_set<std::string>> expected_duplicates;
+        std::unordered_map<std::string, std::unordered_set<std::string>> actual_duplicates;
+
+        while (std::getline(ifexpected, expected_line)) {
+            boost::algorithm::trim(expected_line);
+            
+            std::vector<std::string> split_line;
+            boost::split(split_line, expected_line, boost::is_any_of("\t"));
+            
+            std::string seq;
+            for (size_t i = 0; i < split_line.size(); ++i) {
+                if (i == 0) {
+                    seq = split_line[i];
+                } else {
+                    expected_duplicates[seq].insert(split_line[i]);
+                }
+            }
+        }
+
+        while (std::getline(ifactual, actual_line)) {
+            boost::algorithm::trim(actual_line);
+
+            std::vector<std::string> split_line;
+            boost::split(split_line, actual_line, boost::is_any_of("\t"));
+            
+            std::string seq;
+            for (size_t i = 0; i < split_line.size(); ++i) {
+                if (i == 0) {
+                    seq = split_line[i];
+                } else {
+                    actual_duplicates[seq].insert(split_line[i]);
+                }
+            }
+        }
+
+        REQUIRE(expected_duplicates == actual_duplicates);
+
+        // test if unique sequences file is identical
+        expected = "../test/expected/test_expected_demux_trunc_info/trunc40_test_extended_demux_library_NS30_uniq.txt";
+        actual = "../test/test_demux_trunc_info/trunc40_test_extended_demux_library_NS30_uniq.txt";
+        ifexpected = std::ifstream(expected, std::ios_base::in);
+        ifactual = std::ifstream(actual, std::ios_base::in);
+
+        // construct set of lines for each actual demux output
+        actual_line_set = std::unordered_set<std::string>();
+        while (!ifactual.eof())
+        {
+            std::getline(ifactual, actual_line);
+            actual_line_set.insert(actual_line);
+        }
+
+        while (!ifexpected.eof())
+        {
+            std::getline(ifexpected, expected_line);
+            REQUIRE(
+                actual_line_set.find(expected_line) != actual_line_set.end()
+            );
+        }
+
+        // test if truncated fasta output is identical
+        fasta_parser fp;
+        std::vector<sequence> expected_sequences;
+        std::vector<sequence> actual_sequences;
+        expected_sequences = fp.parse( "../test/expected/test_expected_demux_trunc_info/trunc40_test_extended_demux_library_NS30.fna" );
+        actual_sequences = fp.parse( "../test/test_demux_trunc_info/trunc40_test_extended_demux_library_NS30.fna" );
+        REQUIRE(expected_sequences==actual_sequences);
+    }
+}
+
+TEST_CASE("Demux outputs unmapped reads file", "[module_demux]")
+{
+    // run demux using a real-world dataset (31250 records) with diagnostic output
+    module_demux d_mod;
+    options_demux d_opts;
+
+    d_opts.input_r1_fname = std::string("../test/input_data/test_input_r1_NS30.fastq");
+    d_opts.input_r2_fname = std::string("../test/input_data/test_input_r2_NS30.fastq");
+    d_opts.index_fname = std::string("../test/input_data/test_barcodes.fa");
+    d_opts.library_fname = std::string("../test/input_data/test_extended_demux_library_NS30.fna");
+    d_opts.samplelist_fname = std::string("../test/input_data/test_samplelist_NS30.tsv");
+    d_opts.flexible_idx_fname = std::string("");
+    d_opts.output_fname = std::string("../test/test_actual_trunc_demux_output.tsv");
+    d_opts.diagnostic_fname = std::string("../test/test_actual_trunc_diagnostic_output.tsv");
+    d_opts.read_per_loop = 80000;
+    d_opts.aggregate_fname = std::string();
+    d_opts.concatemer = std::string();
+    d_opts.min_phred_score = 0;
+    d_opts.phred_base = 33;
+    d_opts.samplename = "SampleName";
+    d_opts.indexes = "Index1,Index2";
+    d_opts.sample_indexes = { "Index1", "Index2" };
+    d_opts.set_info(&options_demux::index1_data, "12,10,1");
+    d_opts.set_info(&options_demux::index2_data, "0,8,1");
+    d_opts.set_info(&options_demux::seq_data, "41,40,2");
+    d_opts.unmapped_reads_fname = "../test/test_unmapped_reads.fastq";
+    d_opts.num_threads = 1;
+    d_mod.run(&d_opts);
+
+    std::string expected = "../test/expected/test_expected_demux_unmapped_reads.fastq";
+    std::string actual = "../test/test_unmapped_reads.fastq";
+    std::ifstream ifexpected(expected, std::ios_base::in);
+    std::ifstream ifactual(actual, std::ios_base::in);
+    std::string expected_line;
+    std::string actual_line;
+
+    std::unordered_set<std::string> actual_line_set;
+    while (!ifactual.eof())
+    {
+        std::getline(ifactual, actual_line);
+        actual_line_set.insert(actual_line);
+    }
+
+    while (!ifexpected.eof())
+    {
+        std::getline(ifexpected, expected_line);
+        REQUIRE(
+            actual_line_set.find(expected_line) != actual_line_set.end()
+        );
     }
 }
 

@@ -35,7 +35,8 @@ std::string options_demux::get_arguments()
         << "--fastq_output          " << fastq_out << "\n"
         << "--logfile               " << logfile << "\n"
         << "--replicate_info        " << replicate_info_fname << "\n"
-        << "--unmapped_reads_output " << unmapped_reads_fname <<  "\n\n";
+        << "--unmapped_reads_output " << unmapped_reads_fname <<  "\n"
+        << "--trunc_info_output     " << trunc_info_outdir <<  "\n\n";
 
     return str_stream.str();
 }
