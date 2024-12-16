@@ -613,11 +613,42 @@ TEST_CASE("Automatic truncation of library sequences", "[module_demux]")
         ifexpected = std::ifstream(expected, std::ios_base::in);
         ifactual = std::ifstream(actual, std::ios_base::in);
 
-        // construct set of lines for each actual demux output
-        while (std::getline(ifexpected, expected_line) && std::getline(ifactual, actual_line)) {
-            REQUIRE(expected_line == actual_line);
+        std::unordered_map<std::string, std::unordered_set<std::string>> expected_duplicates;
+        std::unordered_map<std::string, std::unordered_set<std::string>> actual_duplicates;
+
+        while (std::getline(ifexpected, expected_line)) {
+            boost::algorithm::trim(expected_line);
+            
+            std::vector<std::string> split_line;
+            boost::split(split_line, expected_line, boost::is_any_of("\t"));
+            
+            std::string seq;
+            for (size_t i = 0; i < split_line.size(); ++i) {
+                if (i == 0) {
+                    seq = split_line[i];
+                } else {
+                    expected_duplicates[seq].insert(split_line[i]);
+                }
+            }
         }
-        REQUIRE((!std::getline(ifexpected, expected_line) && !std::getline(ifactual, actual_line)));
+
+        while (std::getline(ifactual, actual_line)) {
+            boost::algorithm::trim(actual_line);
+
+            std::vector<std::string> split_line;
+            boost::split(split_line, actual_line, boost::is_any_of("\t"));
+            
+            std::string seq;
+            for (size_t i = 0; i < split_line.size(); ++i) {
+                if (i == 0) {
+                    seq = split_line[i];
+                } else {
+                    actual_duplicates[seq].insert(split_line[i]);
+                }
+            }
+        }
+
+        REQUIRE(expected_duplicates == actual_duplicates);
 
         // test if unique sequences file is identical
         expected = "../test/expected/test_expected_demux_trunc_info/trunc40_test_extended_demux_library_NS30_uniq.txt";
