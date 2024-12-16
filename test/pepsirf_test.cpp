@@ -614,20 +614,10 @@ TEST_CASE("Automatic truncation of library sequences", "[module_demux]")
         ifactual = std::ifstream(actual, std::ios_base::in);
 
         // construct set of lines for each actual demux output
-        actual_line_set = std::unordered_set<std::string>();
-        while (!ifactual.eof())
-        {
-            std::getline(ifactual, actual_line);
-            actual_line_set.insert(actual_line);
+        while (std::getline(ifexpected, expected_line) && std::getline(ifactual, actual_line)) {
+            REQUIRE(expected_line == actual_line);
         }
-
-        while (!ifexpected.eof())
-        {
-            std::getline(ifexpected, expected_line);
-            REQUIRE(
-                actual_line_set.find(expected_line) != actual_line_set.end()
-            );
-        }
+        REQUIRE((!std::getline(ifexpected, expected_line) && !std::getline(ifactual, actual_line)));
 
         // test if unique sequences file is identical
         expected = "../test/expected/test_expected_demux_trunc_info/trunc40_test_extended_demux_library_NS30_uniq.txt";
