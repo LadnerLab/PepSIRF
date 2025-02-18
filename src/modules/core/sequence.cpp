@@ -53,3 +53,8 @@ bool sequence::operator==( const sequence& s ) const
 {
     return !s.seq.compare( seq );
 }
+
+bool sequence::operator<( const sequence& s ) const
+{
+    return seq < s.seq;
+}

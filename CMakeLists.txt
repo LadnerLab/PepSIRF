@@ -52,13 +52,24 @@ list( APPEND PepSIRF_LINK_LIBS
 )
 
 if(OpenMP_FOUND)
-  message( "OpenMP enabled" )
-  list( APPEND PepSIRF_LINK_LIBS OpenMP::OpenMP_CXX )
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Xpreprocessor -fopenmp")
-  add_definitions( -DENABLE_OPENMP )
+  message("OpenMP enabled")
+  
+  if(APPLE)
+    # Get libomp filepath
+    execute_process(COMMAND brew --prefix libomp OUTPUT_VARIABLE BREW_PREFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
+      
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Xpreprocessor -fopenmp -I${BREW_PREFIX}/include")
+    list(APPEND PepSIRF_LINK_LIBS "${BREW_PREFIX}/lib/libomp.dylib")
+  else()
+    list(APPEND PepSIRF_LINK_LIBS OpenMP::OpenMP_CXX)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Xpreprocessor -fopenmp")
+  endif()
+
+  # Define OpenMP macro
+  add_definitions(-DENABLE_OPENMP)
 
 else()
-  message( "WARNING: OpenMP not found, parallelism disabled." )
+  message("WARNING: OpenMP not found, parallelism disabled.")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-pragmas -Wno-unused-value")
 endif()
 

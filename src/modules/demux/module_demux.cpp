@@ -132,6 +132,11 @@ void module_demux::run( options *opts )
         if (seq_length < lib_length)
         {
             trunc_lib_seqs(seq_length, library_seqs);
+
+            if(!d_opts->trunc_info_outdir.empty())
+            {
+                output_trunc_info(seq_length, library_seqs, d_opts->library_fname, d_opts->trunc_info_outdir);
+            }
         }
         else if (seq_length > lib_length)
         {
@@ -208,7 +213,7 @@ void module_demux::run( options *opts )
     #else
         Log::error(
             "A gzipped file was required, but boost zlib is not available."
-            " Please either configure boost with zlib or unzip the file
+            " Please either configure boost with zlib or unzip the file"
             " before attempting to demux."
         );
     #endif
@@ -1041,18 +1046,11 @@ void module_demux::create_unmapped_reads_file( std::string filename,
                 }
         }
 
-    // delete from reads_dup
-    // info_str1 << "total reads: "<< reads_dup.size() << "\n";
-    // info_str2 << "mapped_reads: "<< to_remove_set.size() << "\n";
-    // Log::info(info_str1.str());
-    // Log::info(info_str2.str());
     reads_dup.erase(std::remove_if(reads_dup.begin(), reads_dup.end(),
                                    [&to_remove_set](const fastq_sequence& value) {
                                        return to_remove_set.find(value.seq) != to_remove_set.end();
                                    }),
                     reads_dup.end());
-    // info_str3 << "unmapped_reads: "<< reads_dup.size() << "\n";
-    // Log::info(info_str3.str());
 
     // write to file
     std::ofstream output( filename, std::ios_base::app );
@@ -1066,3 +1064,72 @@ void module_demux::create_unmapped_reads_file( std::string filename,
     output.close();
 }
 
+void module_demux::output_trunc_info(
+    std::size_t seq_length,
+    std::vector<sequence> lib_seqs,
+    std::string library_fname,
+    std::string trunc_info_outdir
+) {
+    boost::filesystem::path outdir_path = trunc_info_outdir;
+    if (!boost::filesystem::exists(outdir_path)) 
+    {
+        boost::filesystem::create_directory(outdir_path);
+    }
+
+    boost::filesystem::path library_path(library_fname);
+    std::string new_fasta_filename =  "trunc" + std::to_string(seq_length) + "_" + library_path.filename().string();
+    boost::filesystem::path new_fasta_path = outdir_path / new_fasta_filename;
+
+    std::unordered_map<std::string, unsigned int> seq_counts;
+
+    std::ofstream outfile(new_fasta_path.string(), std::ios::out);
+    for (sequence lib_seq : lib_seqs)
+    {
+        outfile << ">" + lib_seq.name << std::endl;
+        outfile << lib_seq.seq << std::endl;
+
+        seq_counts[lib_seq.seq]++;
+    }
+    outfile.close();
+
+    std::unordered_map<std::string, std::unordered_set<std::string>> duplicates;
+    std::vector<std::string> nonunique;
+    std::vector<std::string> unique;
+
+    for (sequence lib_seq : lib_seqs)
+    {
+        std::string name = lib_seq.name;
+        if(seq_counts[lib_seq.seq] > 1)
+        {
+            duplicates[lib_seq.seq].insert(name);
+            nonunique.emplace_back(name);
+        }
+        else
+        {
+            unique.emplace_back(name);
+        }
+    }
+
+    outfile.open(new_fasta_path.replace_extension("").string() + "_notUniqGrouped.tsv", std::ios::out);
+    for( const auto& dup : duplicates) 
+    {
+        outfile << dup.first << "\t";
+        std::unordered_set<std::string> peptides = dup.second;
+        for( auto it = peptides.begin(); it != peptides.end(); ++it) 
+        {
+            outfile << *it;
+            if( std::next(it) != peptides.end()) 
+            {
+                outfile << '\t';
+            }
+            else
+            {
+                outfile << std::endl;
+            }
+        }
+    }
+    outfile.close();
+
+    simple_vector_out<std::string>(unique, new_fasta_path.replace_extension("").string() + "_uniq.txt", "\n");
+    simple_vector_out<std::string>(nonunique, new_fasta_path.replace_extension("").string() + "_notUniq.txt", "\n");
+}
