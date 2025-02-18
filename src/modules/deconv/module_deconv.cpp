@@ -11,6 +11,7 @@
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/iterator_range.hpp>
+#include <boost/filesystem.hpp>
 #include <algorithm>
 #include <type_traits>
 
@@ -67,7 +68,7 @@ void module_deconv::run(options *opts)
             );
         }
 
-        auto in_dir_iter = fs_tools::directory_iterator(input_base);
+        auto in_dir_iter = boost::filesystem::directory_iterator(input_base);
 
         for (auto& input_f : boost::make_iterator_range(in_dir_iter, {}))
         {
