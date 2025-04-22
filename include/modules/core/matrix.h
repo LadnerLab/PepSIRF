@@ -85,7 +85,7 @@ class matrix
         bool end()
         {
             return current_idx >=
-                 this->matr.access_to_1d( this->matr.N, this->matr.M );
+                 this->matr->access_to_1d( this->matr->N, this->matr->M );
         }
 
         /**
@@ -126,7 +126,7 @@ class matrix
          **/
         mutable_iterator& next_row()
             {
-                this += this->matr.M;
+                this += this->matr->M;
                 return *this;
             }
 
@@ -139,7 +139,7 @@ class matrix
          **/
         mutable_iterator &next_col()
             {
-                this += this->matr.N;
+                this += this->matr->N;
                 return *this;
             }
 
@@ -240,7 +240,7 @@ class matrix
         bool end()
         {
             return current_idx >=
-                 this->matr.access_to_1d( this->matr.N, this->matr.M );
+                 this->matr->access_to_1d( this->matr->N, this->matr->M );
         }
 
         /**
@@ -281,7 +281,7 @@ class matrix
          **/
         iterator& next_row()
             {
-                this += this->matr.M;
+                this += this->matr->M;
                 return *this;
             }
 
@@ -294,7 +294,7 @@ class matrix
          **/
         iterator &next_col()
             {
-                this += this->matr.N;
+                this += this->matr->N;
                 return *this;
             }
 
