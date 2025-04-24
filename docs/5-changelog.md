@@ -8,6 +8,12 @@ permalink: /changelog/
 
 ## Unreleased
 
+## 1.7.1 | 2025-4-24
+
+### Bug Fixes:
+
+Fix compiling errors and update CMakeLists.txt for Mac compatibility.
+
 ## 1.7.0 | 2024-10-3
 
 ### Bug Fixes:
