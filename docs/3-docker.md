@@ -10,7 +10,7 @@ permalink: /docker/
 docker-compose up --build
 ```
 
-**Excpected Error**:
+**Expected Error**:
 
 ```Error: Invalid module name entered```
 
