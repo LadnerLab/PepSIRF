@@ -223,6 +223,7 @@ def read_check_align_file(directory):
 
     # Construct the full file path
     filepath = os.path.join(directory, 'checkAlignLength.out')
+
     #filepath = os.path.join('checkAlignLength.out')
 
     # Read the file content
@@ -253,6 +254,7 @@ def process_files_probes(probes_dict, directory_path):
         aligned_probes_file = filename.replace('.fasta', '_probesAligned.txt')
         aligned_probes_path = os.path.join(directory_path, aligned_probes_file)
         
+
         result[filename], file_2_pep_pos_dict[filename] = process_file_probes(data, aligned_probes_path)
     
     return result, file_2_pep_pos_dict

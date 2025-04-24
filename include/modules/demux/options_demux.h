@@ -36,9 +36,9 @@ public:
     int num_indexes;
     std::string replicate_info_fname;
     std::string unmapped_reads_fname;
-
     bool translation_aggregation;
     std::string fastq_out;
+    std::string trunc_info_outdir;
 
     /**
      * The number of fastq records to read per loop. A higher value here will result in higher memory usage by the program.
