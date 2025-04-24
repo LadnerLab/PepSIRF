@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.1] - 2025-4-24
+
+- Fix compiling errors and update CMakeLists.txt for Mac compatibility.
+
 ## [1.7.0] - 2024-10-3
 
 - #254, added the ability to run PepSIRF as a Docker image and added a page for instructions
