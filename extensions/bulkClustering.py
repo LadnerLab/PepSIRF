@@ -33,7 +33,7 @@ def main():
 																							"protein id for each network to create. Optionally, an entry can be left blank and it will not be contributed to that network")
 	parser.add_argument("--same-prot-linkage", required=False, default=False, action="store_true", help="Whether or not to allow linkage between clusters of the same protein.")
 	parser.add_argument("--seq-name-header", default="SequenceName", type=str, required=False, help="Header for sequence name column in the metadata file.")
-	parser.add_argument("--linkage-cols", nargs="+", default=["NCBIaccession-NT"], type=str, required=False, help="Header of columns in the metadata file t consider for linkage. "
+	parser.add_argument("--linkage-cols", nargs="+", default=["NCBIaccession-NT"], type=str, required=False, help="Header of columns in the metadata file to consider for linkage. "
 																											"Any given sequence only contributes one point to a linkage score")
 	parser.add_argument("--col-val-delim", default=",", type=str, required=False, help="Delimiter for multiple values of a column associated with a single sequence in the metadata file.")
 	parser.add_argument("--make-network-vis", required=False, default=False, action="store_true", help="If provided, network visualization will be created for each threshold. The size of the nodes are based on the "
