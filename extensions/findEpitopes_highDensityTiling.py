@@ -23,23 +23,32 @@ def main():
 
 	reqArgs = parser.add_argument_group('required arguments')
 	# Note that these arguments are added directly to the new argument group "reqArgs", not "parser" 
+	reqArgs.add_argument('-e', '--epDir',  help='Path to directory containing enriched peptide files.', required=True)
 	reqArgs.add_argument('-m', '--libMF',  help='A metadata file with info about the library peptides.', required=True)
-	reqArgs.add_argument('-f', '--libFF', help='Fasta file with amino acid sequences for all peptides within the target library. ')
-	reqArgs.add_argument('-p', '--plF', help='Tab-delimited file with info about the target sequences. Expected columns: "Source", "Protein", "Sequence"')
-	reqArgs.add_argument('-o', '--out', help='Name for the ab-delimited output file that will be generated with information about the putative epitopes.')
+	reqArgs.add_argument('-f', '--libFF', help='Fasta file with amino acid sequences for all peptides within the target library.', required=True)
+	reqArgs.add_argument('-p', '--plF', help='Tab-delimited file with info about the target sequences. Expected columns: "Source", "Protein", "Sequence"', required=True)
+	reqArgs.add_argument('-o', '--out', help='Name for the ab-delimited output file that will be generated with information about the putative epitopes.', required=True)
 
 	parser.add_argument('--minEpiSize', default=5, type=int, help='Minimum size of epitope to consider.')
 	parser.add_argument('--maxEpiSize', default=30, type=int, help='Maximum size of epitope to consider. This should generally be the same as the size of the peptides. Otherwise, the epitope selected for individual enriched peptides will be somewhat arbitrary.')
 	parser.add_argument('--maxEpisPerReg', default=2, type=int, help='Maximum number of epitopes per region to attempt to identify using the exhaustive approach.')
 	parser.add_argument('--run2ndRound', default=False, action="store_true", help='Use this flag if you want to read in the inidivdual sample epitope calls and further process to the best dataset levels epitopes.')
+	parser.add_argument('--ctos_parent_header', default="CtoS", help='Header for column in metadata file that contains the parent peptide code name for any CtoS peptides for which a wild type version is also present in the design.')
+	parser.add_argument('--focal_category', default="Focal", help='Your metadata file is expected to contain a column with the header "Category." Use this flag to provide a comma separated list of categories to include when identifying epitopes.')
+	parser.add_argument('--log_interval', default=5, type=int, help='Interval for printing progress messages to the screen. Measured in number of individual samples processed.')
 
 
 	args = parser.parse_args()
 	
 	# Read in Library metadata
 	libMD = pd.read_csv(args.libMF, sep="\t", header=0, index_col=0, keep_default_na=False)
+	inclPepNameD = {k:"" for k in libMD.index}
 	# Read in library peptide sequneces
 	libFD = ft.read_fasta_dict(args.libFF)
+	
+	# Parse out focal categories
+	focalCats = args.focal_category.split(",")
+	focalCats = {k:"" for k in focalCats}
 	
 	#Read in target sequence info
 	plDF = pd.read_csv(args.plF, sep="\t", header=0)
@@ -47,15 +56,22 @@ def main():
 	plD, kpD = parseTargetSeqs(plDF, args.minEpiSize, args.maxEpiSize)
 
 	# Read in enriched peptides and find epitopes
-	epDir = "/Users/jtl276/Library/CloudStorage/OneDrive-NorthernArizonaUniversity/DTRA_Projects/RAPTER/RPTR2/IM0206/aps/flexible/z10/aps-tsv/10Z-HDI95_0CS_75000raw"
-	epFL = glob.glob(f"{epDir}/*_enriched.txt")
+	epFL = glob.glob(f"{args.epDir}/*_enriched.txt")
 	
 	allEpsD = {k:[] for k in ["Sample", "Virus", "Protein", "EpitopeSequence", "StartPos", "EndPos", "EpitopePositions", "Approach"]}
 	
-	# Step through the list of enriched peptides for each sample
+	# Step through the lists of enriched peptides, one per sample
+	sampCount=0
 	for fp in epFL:
+		sampCount+=1
+		if sampCount%args.log_interval==0:
+			print(f"{sampCount} samples processed ({sampCount/len(epFL)*100:.2f}%)")
+		
 		sampT = tuple(sorted(os.path.basename(fp)[:-13].split("~")))
 		epL = io.fileList(fp, header=False)
+		# Exclude any peptides that are not present in the library metadata file
+		epL = [epn for epn in epL if epn in inclPepNameD]
+		
 		
 		# Skip any samples that don't have enriched peptides
 		if epL != [" "]:
@@ -63,10 +79,10 @@ def main():
 			# Make sure that CtoS peptides are removed IF the WT version is also enriched
 			# No double counting!
 			# And, for the sake of simplicity, I'm also replacing CtoS with WT, if only CtoS is present
-			c2s = [pn for pn in epL if libMD["CtoS"][pn]]
-			toSwap = [pn for pn in c2s if libMD["CtoS"][pn] not in epL]
+			c2s = [pn for pn in epL if libMD[args.ctos_parent_header][pn]]
+			toSwap = [pn for pn in c2s if libMD[args.ctos_parent_header][pn] not in epL]
 			for pn in toSwap:
-				epL.append(libMD["CtoS"][pn])
+				epL.append(libMD[args.ctos_parent_header][pn])
 			epL = [pn for pn in epL if pn not in c2s]
 	
 			# Generate starting lists (contained in a dictionary) for each protein with 0's for every position
@@ -84,7 +100,7 @@ def main():
 			for pn in epL:
 				vir = libMD["Virus"][pn]
 				prot = libMD["Protein"][pn]
-				if libMD["Category"][pn] == "Focal":
+				if libMD["Category"][pn] in focalCats:
 					for i in range(int(libMD["StartPos"][pn]), int(libMD["EndPos"][pn])):
 						epD[(vir,prot)][i]+=1
 						pepsByPosD[(vir,prot)][i][pn]=""
@@ -105,6 +121,7 @@ def main():
 	epsDF.to_csv(args.out, sep="\t", index=False)
 	
 	if args.run2ndRound:
+		print("Staring to merge overlapping epitopes across samples.")
 		comboEpsD = {k:[] for k in ["Sample", "Virus", "Protein", "EpitopeSequence", "StartPos", "EndPos", "EpitopePositions", "Approach"]}
 
 		epFD = {}
@@ -141,7 +158,7 @@ def main():
 		# Add column with information about which peptides fully contain the selected epitopes
 		kmers2Peps = {}
 		for n,s in libFD.items():
-			if libMD["Category"][n]=="Focal":
+			if libMD["Category"][n] in focalCats:
 				vir = libMD["Virus"][n]
 				prot = libMD["Protein"][n]
 				if (vir,prot) not in kmers2Peps:
@@ -153,8 +170,8 @@ def main():
 					seqKmers+=these
 					
 					# Add in the WT kmers for CtoS peptides
-					if libMD["CtoS"][n]:
-						these = kt.kmerList(libFD[libMD["CtoS"][n]],k)
+					if libMD[args.ctos_parent_header][n]:
+						these = kt.kmerList(libFD[libMD[args.ctos_parent_header][n]],k)
 						seqKmers+=these
 						
 				for km in set(seqKmers):
