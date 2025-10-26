@@ -32,6 +32,9 @@ def main():
 	parser.add_argument('--minEpiSize', default=5, type=int, help='Minimum size of epitope to consider.')
 	parser.add_argument('--maxEpiSize', default=30, type=int, help='Maximum size of epitope to consider. This should generally be the same as the size of the peptides. Otherwise, the epitope selected for individual enriched peptides will be somewhat arbitrary.')
 	parser.add_argument('--maxEpisPerReg', default=2, type=int, help='Maximum number of epitopes per region to attempt to identify using the exhaustive approach.')
+	parser.add_argument('--pepFileSuffix', default="_enriched.txt", help='Suffix shared in common between all files containing peptides of interest.')
+	parser.add_argument('--ovlpPropToMerge', default=0.5, type=float, help='Suffix shared in common between all files containing peptides of interest.')
+	parser.add_argument('--assumeEnrichFilesAsInput', default=False, action="store_true", help='Use this flag if your input peptide files are coming directly from running the PepSIRF enrich module. In this case, the script will parse out the sample names.')
 	parser.add_argument('--run2ndRound', default=False, action="store_true", help='Use this flag if you want to read in the inidivdual sample epitope calls and further process to the best dataset levels epitopes.')
 	parser.add_argument('--ctos_parent_header', default="CtoS", help='Header for column in metadata file that contains the parent peptide code name for any CtoS peptides for which a wild type version is also present in the design.')
 	parser.add_argument('--focal_category', default="Focal", help='Your metadata file is expected to contain a column with the header "Category." Use this flag to provide a comma separated list of categories to include when identifying epitopes.')
@@ -43,6 +46,7 @@ def main():
 	# Read in Library metadata
 	libMD = pd.read_csv(args.libMF, sep="\t", header=0, index_col=0, keep_default_na=False)
 	inclPepNameD = {k:"" for k in libMD.index}
+
 	# Read in library peptide sequneces
 	libFD = ft.read_fasta_dict(args.libFF)
 	
@@ -55,29 +59,37 @@ def main():
 	# Extract needed info about the target sequences
 	plD, kpD = parseTargetSeqs(plDF, args.minEpiSize, args.maxEpiSize)
 
-	# Read in enriched peptides and find epitopes
-	epFL = glob.glob(f"{args.epDir}/*_enriched.txt")
+	# Generate list of filepaths for files containing lists of peptides of interest
+	epFL = glob.glob(f"{args.epDir}/*{args.pepFileSuffix}")
 	
+	# Initiate dictionary to hold inferred epitope info
 	allEpsD = {k:[] for k in ["Sample", "Virus", "Protein", "EpitopeSequence", "StartPos", "EndPos", "EpitopePositions", "Approach"]}
 	
-	# Step through the lists of enriched peptides, one per sample
+	# Step through the lists of peptides of interest
 	sampCount=0
 	for fp in epFL:
+		
+		# Track info for logging purposes
 		sampCount+=1
 		if sampCount%args.log_interval==0:
 			print(f"{sampCount} samples processed ({sampCount/len(epFL)*100:.2f}%)")
 		
-		sampT = tuple(sorted(os.path.basename(fp)[:-13].split("~")))
+		# Parse out the name that will be used in the output file to refer to each input file
+		if args.assumeEnrichFilesAsInput:
+			sampT = tuple(sorted(os.path.basename(fp)[:-13].split("~")))
+		else:
+			sampT = os.path.basename(fp)[:-len(args.pepFileSuffix)]
+		
+		# Read in names of peptides of interest
 		epL = io.fileList(fp, header=False)
 		# Exclude any peptides that are not present in the library metadata file
 		epL = [epn for epn in epL if epn in inclPepNameD]
 		
-		
-		# Skip any samples that don't have enriched peptides
-		if epL != [" "]:
+		# Skip any files/samples that don't contain any peptides
+		if len(epL)>1 and epL != [" "]:
 
 			# Make sure that CtoS peptides are removed IF the WT version is also enriched
-			# No double counting!
+				# No double counting!
 			# And, for the sake of simplicity, I'm also replacing CtoS with WT, if only CtoS is present
 			c2s = [pn for pn in epL if libMD[args.ctos_parent_header][pn]]
 			toSwap = [pn for pn in c2s if libMD[args.ctos_parent_header][pn] not in epL]
@@ -86,8 +98,8 @@ def main():
 			epL = [pn for pn in epL if pn not in c2s]
 	
 			# Generate starting lists (contained in a dictionary) for each protein with 0's for every position
-			# And another dictionary to store info about which peptides overlap each position
 			epD = {}
+			# And another dictionary to store info about which peptides overlap each position
 			pepsByPosD = {}
 			# Stepping through each protein in the library
 			for prot, l in plD.items():
@@ -109,19 +121,22 @@ def main():
 			for protT, covL in epD.items():
 				# Check to see if there are reactive peptides
 				if sum(covL) > 0:
+					# Run algorithm for identifying putative epitopes, which returns info for regions in which epitopes were not identified
 					failedRegs = findEpis(covL, sampT, allEpsD, protT, pepsByPosD, libMD, libFD, kpD, args)
 					individual=0
+					# Continue to run epitope id algorithm until all peptides of interest have been accounted for
 					while len(failedRegs)>0:
 						individual+=1
 						newCovL = list(sum([np.array(x) for x in failedRegs]))
 						failedRegs = findEpis(newCovL, sampT, allEpsD, protT, pepsByPosD, libMD, libFD, kpD, args, extraNote=f" after Individualx{individual}")
 			
-	# Write out putative epitopes
+	# Write out putative epitopes, just one file with epitopes for all input files and proteins
 	epsDF = pd.DataFrame(allEpsD)
 	epsDF.to_csv(args.out, sep="\t", index=False)
 	
+	# Initiate process of combining calls across input files
 	if args.run2ndRound:
-		print("Staring to merge overlapping epitopes across samples.")
+		print("Starting to merge overlapping epitopes across samples.")
 		comboEpsD = {k:[] for k in ["Sample", "Virus", "Protein", "EpitopeSequence", "StartPos", "EndPos", "EpitopePositions", "Approach"]}
 
 		epFD = {}
@@ -200,7 +215,11 @@ def main():
 			else:
 				thesePeps = set(row["Peptides"].split("~"))
 				thesePos = set([int(j) for j in row["EpitopePositions"].split("~")])
-				if len(thesePos.intersection(priorPos))>0:
+				
+				# This is where we are checking to see if there is a substantial enough intersection to warrant combining the epitopes
+#				if len(thesePos.intersection(priorPos))>0:  #Previously, I was basing this decision on overlap of epitope positions
+				ovlpPeps = thesePeps.intersection(priorPeps)
+				if len(ovlpPeps)/len(thesePeps) >= args.ovlpPropToMerge or len(ovlpPeps)/len(priorPeps) >= args.ovlpPropToMerge:
 					priorRow["EpitopeSequence"] = f"{priorRow['EpitopeSequence']},{row['EpitopeSequence']}"
 					priorRow["EndPos"] = row['EndPos']
 					priorRow["EpitopePositions"] = "~".join([str(j) for j in list(range(priorRow["StartPos"],priorRow["EndPos"]))])
@@ -215,8 +234,25 @@ def main():
 					priorPeps = thesePeps
 					priorPos = thesePos
 		mergedRows.append(priorRow)
+
+		# Identify peptides that are linked to multiple epitopes
+		pepCountD = defaultdict(int)
+		for eachRow in mergedRows:
+			for eachPepName in eachRow["Peptides"].split("~"):
+				pepCountD[eachPepName]+=1
+		multiEpiSet = set([k for k,v in pepCountD.items() if v>1])
+		
+		# Add a new peptide list for each epitope, removing peptides linked to multiple epitopes
+		for i in range(len(mergedRows)):
+			thesePepsUnique = set(mergedRows[i]["Peptides"].split("~")).difference(multiEpiSet)
+			mergedRows[i]["PeptidesUnique"] = "~".join(sorted(list(thesePepsUnique)))
+			
+
 		mergedDF = pd.DataFrame(mergedRows)
-		mergedDF.to_csv(f"{args.out}_comboMerged.tsv", sep="\t", index=False)
+		for protN in set(mergedDF["Protein"]):
+			subMergedDF = mergedDF[mergedDF["Protein"]==protN]
+			subMergedDF.to_csv(f"{args.out}_comboMerged_{protN}.tsv", sep="\t", index=False)
+			
 
 #####-------------------->>>
 
