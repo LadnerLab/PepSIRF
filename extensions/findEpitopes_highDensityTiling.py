@@ -15,7 +15,7 @@ import pandas as pd
 import numpy as np
 from scipy.signal import find_peaks
 
-# This script is designed to read in lists of enriched peptides from high density PepSeq libraries (like RPTR1 and RPTR2) and output putative antibody epitopes
+# This script is designed to read in lists of enriched peptides from high density PepSeq libraries and output putative antibody epitopes
 
 def main():
 
