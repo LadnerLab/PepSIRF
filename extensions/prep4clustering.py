@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import argparse, os
 import fastatools as ft # Available from https://github.com/jtladner/Modules
