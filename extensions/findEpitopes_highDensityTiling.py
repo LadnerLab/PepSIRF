@@ -79,7 +79,7 @@ def main():
 		if args.assumeEnrichFilesAsInput:
 			sampT = tuple(sorted(os.path.basename(fp)[:-13].split("~")))
 		else:
-			sampT = os.path.basename(fp)[:-len(args.pepFileSuffix)]
+			sampT = tuple([os.path.basename(fp)[:-len(args.pepFileSuffix)]])
 		
 		# Read in names of peptides of interest
 		epL = io.fileList(fp, header=False)
@@ -202,7 +202,7 @@ def main():
 		# Write out putative epitopes
 		comboEpsDF = pd.DataFrame(comboEpsD)
 		comboEpsDF = comboEpsDF.sort_values(by=['Source', 'Protein', 'StartPos', 'EndPos'])
-		comboEpsDF.to_csv(f"{args.out}_combo.tsv", sep="\t", index=False)
+		comboEpsDF.to_csv(f"{args.out[:-4]}_combo.tsv", sep="\t", index=False)
 		
 		# Combine overlapping epitopes 
 		mergedRows = []
@@ -224,6 +224,7 @@ def main():
 				if len(ovlpPeps)/len(thesePeps) >= args.ovlpPropToMerge or len(ovlpPeps)/len(priorPeps) >= args.ovlpPropToMerge:
 					priorRow["EpitopeSequence"] = f"{priorRow['EpitopeSequence']},{row['EpitopeSequence']}"
 					priorRow["EndPos"] = row['EndPos']
+					priorRow["EpitopeName"] = f"{priorRow['StartPos']}-{row['EndPos']}"
 					priorRow["EpitopePositions"] = "~".join([str(j) for j in list(range(priorRow["StartPos"],priorRow["EndPos"]))])
 					priorRow["Approach"] = "Merged"
 					priorPeps = thesePeps.union(priorPeps)
@@ -231,10 +232,12 @@ def main():
 					priorRow["Peptides"] = "~".join(sorted(list(priorPeps)))
 					
 				else:
+					priorRow["EpitopeName"] = f"{priorRow['StartPos']}-{priorRow['EndPos']}"
 					mergedRows.append(priorRow)
 					priorRow = row
 					priorPeps = thesePeps
 					priorPos = thesePos
+		priorRow["EpitopeName"] = f"{priorRow['StartPos']}-{priorRow['EndPos']}"
 		mergedRows.append(priorRow)
 
 		# Identify peptides that are linked to multiple epitopes
@@ -253,7 +256,7 @@ def main():
 		mergedDF = pd.DataFrame(mergedRows)
 		for protN in set(mergedDF["Protein"]):
 			subMergedDF = mergedDF[mergedDF["Protein"]==protN]
-			subMergedDF.to_csv(f"{args.out}_comboMerged_{protN}.tsv", sep="\t", index=False)
+			subMergedDF.to_csv(f"{args.out[:-4]}_comboMerged_{protN}.tsv", sep="\t", index=False)
 			
 
 #####-------------------->>>
