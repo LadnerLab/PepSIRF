@@ -224,7 +224,7 @@ def main():
 				if len(ovlpPeps)/len(thesePeps) >= args.ovlpPropToMerge or len(ovlpPeps)/len(priorPeps) >= args.ovlpPropToMerge:
 					priorRow["EpitopeSequence"] = f"{priorRow['EpitopeSequence']},{row['EpitopeSequence']}"
 					priorRow["EndPos"] = row['EndPos']
-					priorRow["EpitopeName"] = f"{priorRow['StartPos']}-{row['EndPos']}"
+					priorRow["EpitopeName"] = f"{priorRow['StartPos']+1}-{row['EndPos']}"
 					priorRow["EpitopePositions"] = "~".join([str(j) for j in list(range(priorRow["StartPos"],priorRow["EndPos"]))])
 					priorRow["Approach"] = "Merged"
 					priorPeps = thesePeps.union(priorPeps)
@@ -232,12 +232,12 @@ def main():
 					priorRow["Peptides"] = "~".join(sorted(list(priorPeps)))
 					
 				else:
-					priorRow["EpitopeName"] = f"{priorRow['StartPos']}-{priorRow['EndPos']}"
+					priorRow["EpitopeName"] = f"{priorRow['StartPos']+1}-{priorRow['EndPos']}"
 					mergedRows.append(priorRow)
 					priorRow = row
 					priorPeps = thesePeps
 					priorPos = thesePos
-		priorRow["EpitopeName"] = f"{priorRow['StartPos']}-{priorRow['EndPos']}"
+		priorRow["EpitopeName"] = f"{priorRow['StartPos']+1}-{priorRow['EndPos']}"
 		mergedRows.append(priorRow)
 
 		# Identify peptides that are linked to multiple epitopes
